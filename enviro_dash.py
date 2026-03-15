@@ -34,30 +34,48 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)-5s %(message)s",
     level=logging.INFO, datefmt="%H:%M:%S")
 
-# ── MQTT ──────────────────────────────────────────────────────────────────────
-MQTT_BROKER = os.environ.get("MQTT_BROKER", "localhost")
-MQTT_PORT   = int(os.environ.get("MQTT_PORT", 1883))
-MQTT_TOPIC  = os.environ.get("MQTT_TOPIC",  "enviroplus")
+# ── MQTT (Adafruit IO) ────────────────────────────────────────────────────────
+MQTT_BROKER           = os.environ.get("MQTT_BROKER", "io.adafruit.com")
+MQTT_PORT             = int(os.environ.get("MQTT_PORT", 1883))
+MQTT_USER             = os.environ.get("MQTT_USER", "")
+MQTT_KEY              = os.environ.get("MQTT_KEY",  "")
+MQTT_PUBLISH_INTERVAL = int(os.environ.get("MQTT_PUBLISH_INTERVAL", 60))
 
 _mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+_mqtt.username_pw_set(MQTT_USER, MQTT_KEY)
 _mqtt.connect(MQTT_BROKER, MQTT_PORT, keepalive=60)
 _mqtt.loop_start()
 
+_AIO_FEEDS = {
+    "temperature": None,
+    "humidity":    None,
+    "pressure":    None,
+    "light":       None,
+    "oxidising":   None,
+    "reducing":    None,
+    "ammonia":     None,
+    "pm01":        None,
+    "pm025":       None,
+    "pm10":        None,
+}
+
 def write_mqtt(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     try:
-        payload = json.dumps({
+        values = {
             "temperature": round(temp_f, 1),
             "humidity":    round(hum,    1),
             "pressure":    round(pres,   2),
             "light":       round(lux,    1),
             "oxidising":   round(ox,     1),
             "reducing":    round(rd,     1),
-            "nh3":         round(nh3,    1),
-            "pm1":         round(pm1,    1),
-            "pm2_5":       round(pm25,   1),
+            "ammonia":     round(nh3,    1),
+            "pm01":        round(pm1,    1),
+            "pm025":       round(pm25,   1),
             "pm10":        round(pm10,   1),
-        })
-        _mqtt.publish(MQTT_TOPIC, payload)
+        }
+        for feed, val in values.items():
+            _mqtt.publish(f"{MQTT_USER}/feeds/{feed}", val)
+        logging.info("MQTT published to Adafruit IO")
     except Exception as e:
         logging.warning(f"MQTT publish failed: {e}")
 
@@ -102,10 +120,6 @@ ltr559_sensor  = LTR559()
 pms5003_sensor = PMS5003()
 
 # ── CPU temp compensation ─────────────────────────────────────────────────────
-# Set to 0.0 when Enviro+ is physically separated from the Pi.
-# Increase if still reading high when HAT is mounted directly on GPIO header.
-CPU_FACTOR = 0.0
-
 _cpu_hist = deque([45.0] * 5, maxlen=5)
 
 def _cpu_temp():
@@ -114,6 +128,19 @@ def _cpu_temp():
 
 def _bme_sample():
     return bme280.sample(_bus, _bme_addr, _bme_params)
+
+# CAL_ACTUAL_F in .env = known actual temperature used to derive CPU_FACTOR.
+# Set CAL_ACTUAL_F=0 when Enviro+ is physically separated from the Pi.
+_cal_actual_f = float(os.environ.get("CAL_ACTUAL_F", "0"))
+if _cal_actual_f:
+    _cal_actual_c = (_cal_actual_f - 32) * 5 / 9
+    _cal_raw_c    = sum(_bme_sample().temperature for _ in range(5)) / 5
+    _cal_cpu_c    = sum(_cpu_temp() for _ in range(5)) / 5
+    _denom        = _cal_raw_c - _cal_actual_c
+    CPU_FACTOR    = (_cal_cpu_c - _cal_raw_c) / _denom if _denom else 0.0
+    logging.info(f"CPU_FACTOR={CPU_FACTOR:.2f} (raw={_cal_raw_c*9/5+32:.1f}°F cpu={_cal_cpu_c:.1f}°C actual={_cal_actual_f}°F)")
+else:
+    CPU_FACTOR = 0.0
 
 def read_temp_c():
     raw = _bme_sample().temperature
@@ -184,7 +211,7 @@ def draw_hbar(draw, x, y, w, h, frac, col):
     frac = max(0.0, min(1.0, frac))
     draw.rectangle((x, y, x+w-1, y+h-1), fill=BAR_BG)
     if frac > 0:
-        draw.rectangle((x, y, x+int(w*frac)-1, y+h-1), fill=col)
+        draw.rectangle((x, y, x+max(1, int(w*frac))-1, y+h-1), fill=col)
 
 # ── History for dual sparkline ────────────────────────────────────────────────
 SPARK_W = (W - 1) // 2
@@ -281,6 +308,7 @@ def draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
 
 # ── Main loop ─────────────────────────────────────────────────────────────────
 pm1 = pm25 = pm10 = 0.0
+_last_publish = 0.0
 
 logging.info("Enviro+ dashboard starting")
 
@@ -309,7 +337,11 @@ while True:
         pm25_hist.append(pm25)
         tf = c2f(temp_c)
         draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
-        write_mqtt(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
+
+        now = time.time()
+        if now - _last_publish >= MQTT_PUBLISH_INTERVAL:
+            write_mqtt(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
+            _last_publish = now
 
         time.sleep(2)
 
