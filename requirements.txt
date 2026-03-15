@@ -1,0 +1,10 @@
+smbus2
+RPi.bme280
+st7735
+pillow
+font-roboto
+ltr559
+enviroplus
+pms5003
+python-dotenv
+influxdb-client
