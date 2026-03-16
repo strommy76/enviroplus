@@ -198,6 +198,12 @@ ORDER BY ts DESC LIMIT 20;
 
 ---
 
+## 📡 Live Dashboard
+
+**Adafruit IO:** https://io.adafruit.com/strommy/dashboards/bsenviropi
+
+---
+
 ## 🔗 Upstream Sources
 
 | Resource | Link |
