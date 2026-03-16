@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """
-File:        enviro_dash.py
 Path:        ~/projects/enviroplus/enviro_dash.py
 Description: High-density dashboard for Enviro+ (160×80 ST7735 display).
              Displays all 10 sensors with color-coded bar graphs and dual

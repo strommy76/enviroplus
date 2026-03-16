@@ -1,6 +1,5 @@
 {
   "_meta": {
-    "file":        "dynamic_config.json",
     "path":        "~/projects/enviroplus/dynamic_config.json",
     "description": "Runtime tuning values for enviro_dash.py. Hot-reloaded automatically — no restart needed. Secrets and paths belong in .env, not here.",
     "changelog": [
