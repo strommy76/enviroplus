@@ -8,44 +8,62 @@ and dual sparklines (temp + PM2.5). Green=good, yellow=warning, red=danger.
 Usage: python3 enviro_dash.py
 """
 
-import os
-import time
-from dotenv import load_dotenv
-load_dotenv()
-import logging
-from logging.handlers import RotatingFileHandler
-from datetime import datetime
-from collections import deque
-
-import smbus2
-import bme280
-import st7735
-from PIL import Image, ImageDraw, ImageFont
-from importlib.resources import files
-UserFont = str(files("font_roboto.files").joinpath("Roboto-Medium.ttf"))
-from ltr559 import LTR559
-from enviroplus import gas
-from pms5003 import PMS5003, ReadTimeoutError, SerialTimeoutError
 import json
+import logging
+import os
 import sqlite3
+import time
+from collections import deque
+from datetime import datetime
+from importlib.resources import files
+from logging.handlers import RotatingFileHandler
+
+import bme280
 import paho.mqtt.client as mqtt
+import smbus2
+import st7735
+from dotenv import load_dotenv
+from enviroplus import gas
+from ltr559 import LTR559
+from PIL import Image, ImageDraw, ImageFont
+from pms5003 import PMS5003, ReadTimeoutError, SerialTimeoutError
+
+load_dotenv()
+
 # from influxdb_client import InfluxDBClient, Point
 # from influxdb_client.client.write_api import SYNCHRONOUS
 
+UserFont = str(files("font_roboto.files").joinpath("Roboto-Medium.ttf"))
+
+# ── Logging ───────────────────────────────────────────────────────────────────
 LOG_PATH = os.environ.get("LOG_PATH", "/home/pistrommy/projects/enviroplus/enviro.log")
-_log_fmt  = logging.Formatter("%(asctime)s %(levelname)-5s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+_log_fmt = logging.Formatter("%(asctime)s %(levelname)-5s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 _handler_file = RotatingFileHandler(LOG_PATH, maxBytes=1_000_000, backupCount=5)
 _handler_file.setFormatter(_log_fmt)
 _handler_console = logging.StreamHandler()
 _handler_console.setFormatter(_log_fmt)
 logging.basicConfig(level=logging.INFO, handlers=[_handler_file, _handler_console])
 
+# ── Dynamic config ────────────────────────────────────────────────────────────
+CONFIG_PATH = os.environ.get("CONFIG_PATH", "/home/pistrommy/projects/enviroplus/dynamic_config.json")
+_config_mtime = 0.0
+
+
+def load_config():
+    global _config_mtime
+    with open(CONFIG_PATH) as f:
+        cfg = json.load(f)
+    _config_mtime = os.path.getmtime(CONFIG_PATH)
+    return cfg
+
+
+cfg = load_config()
+
 # ── MQTT (Adafruit IO) ────────────────────────────────────────────────────────
-MQTT_BROKER           = os.environ.get("MQTT_BROKER", "io.adafruit.com")
-MQTT_PORT             = int(os.environ.get("MQTT_PORT", 1883))
-MQTT_USER             = os.environ.get("MQTT_USER", "")
-MQTT_KEY              = os.environ.get("MQTT_KEY",  "")
-MQTT_PUBLISH_INTERVAL = int(os.environ.get("MQTT_PUBLISH_INTERVAL", 60))
+MQTT_BROKER = os.environ.get("MQTT_BROKER", "io.adafruit.com")
+MQTT_PORT   = int(os.environ.get("MQTT_PORT", 1883))
+MQTT_USER   = os.environ.get("MQTT_USER", "")
+MQTT_KEY    = os.environ.get("MQTT_KEY", "")
 
 _mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 _mqtt.username_pw_set(MQTT_USER, MQTT_KEY)
@@ -55,18 +73,6 @@ try:
 except Exception as e:
     logging.warning(f"MQTT connect failed at startup: {e} — will retry on publish")
 
-_AIO_FEEDS = {
-    "temperature": None,
-    "humidity":    None,
-    "pressure":    None,
-    "light":       None,
-    "oxidising":   None,
-    "reducing":    None,
-    "ammonia":     None,
-    "pm01":        None,
-    "pm025":       None,
-    "pm10":        None,
-}
 
 def write_mqtt(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     try:
@@ -88,9 +94,9 @@ def write_mqtt(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     except Exception as e:
         logging.warning(f"MQTT publish failed: {e}")
 
+
 # ── SQLite ────────────────────────────────────────────────────────────────────
-SQLITE_PATH     = os.environ.get("SQLITE_PATH", "/home/pistrommy/projects/enviroplus/enviro.db")
-SQLITE_INTERVAL = int(os.environ.get("SQLITE_INTERVAL", 60))
+SQLITE_PATH = os.environ.get("SQLITE_PATH", "/home/pistrommy/projects/enviroplus/enviro.db")
 
 _db = sqlite3.connect(SQLITE_PATH, check_same_thread=False)
 _db.execute("""
@@ -102,14 +108,14 @@ _db.execute("""
         cpu_temp_c  REAL, cpu_load REAL, mem_free_mb REAL, uptime_s INTEGER
     )
 """)
-# Migrate existing DB if Pi telemetry columns are missing
-for col, typedef in [("cpu_temp_c","REAL"), ("cpu_load","REAL"),
-                     ("mem_free_mb","REAL"), ("uptime_s","INTEGER")]:
+for col, typedef in [("cpu_temp_c", "REAL"), ("cpu_load", "REAL"),
+                     ("mem_free_mb", "REAL"), ("uptime_s", "INTEGER")]:
     try:
         _db.execute(f"ALTER TABLE readings ADD COLUMN {col} {typedef}")
     except sqlite3.OperationalError:
         pass  # column already exists
 _db.commit()
+
 
 def _pi_telemetry():
     cpu_temp = _cpu_temp()
@@ -124,23 +130,25 @@ def _pi_telemetry():
         uptime_s = int(float(f.read().split()[0]))
     return cpu_temp, cpu_load, mem_free_mb, uptime_s
 
+
 def write_sqlite(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     try:
         cpu_temp, cpu_load, mem_free_mb, uptime_s = _pi_telemetry()
         _db.execute(
             "INSERT INTO readings VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-             round(temp_f,1), round(hum,1), round(pres,2), round(lux,1),
-             round(ox,1),     round(rd,1),  round(nh3,1),
-             round(pm1,1),    round(pm25,1),round(pm10,1),
-             round(cpu_temp,1), round(cpu_load,2), round(mem_free_mb,1), uptime_s)
+             round(temp_f, 1), round(hum, 1), round(pres, 2), round(lux, 1),
+             round(ox, 1),     round(rd, 1),  round(nh3, 1),
+             round(pm1, 1),    round(pm25, 1), round(pm10, 1),
+             round(cpu_temp, 1), round(cpu_load, 2), round(mem_free_mb, 1), uptime_s)
         )
         _db.commit()
         logging.info("SQLite row written")
     except Exception as e:
         logging.warning(f"SQLite write failed: {e}")
 
-# ── InfluxDB (pending setup) ───────────────────────────────────────────────────
+
+# ── InfluxDB (pending setup) ──────────────────────────────────────────────────
 # INFLUX_URL    = os.environ.get("INFLUX_URL",    "http://100.x.x.x:8086")
 # INFLUX_TOKEN  = os.environ.get("INFLUX_TOKEN",  "")
 # INFLUX_ORG    = os.environ.get("INFLUX_ORG",    "home")
@@ -148,7 +156,7 @@ def write_sqlite(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
 # _influx = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG)
 # _write  = _influx.write_api(write_options=SYNCHRONOUS)
 # def write_influx(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
-#     ...swap write_aio for write_influx in main loop when ready
+#     ...swap write_mqtt for write_influx in main loop when ready
 
 # ── Display ───────────────────────────────────────────────────────────────────
 disp = st7735.ST7735(port=0, cs=1, dc="GPIO9", backlight="GPIO12",
@@ -174,115 +182,155 @@ MAGENTA = (205,  45, 205)
 DIM     = (55,  60,  80)
 
 # ── Sensors ───────────────────────────────────────────────────────────────────
-_bus           = smbus2.SMBus(1)
-_bme_addr      = 0x76
-_bme_params    = bme280.load_calibration_params(_bus, _bme_addr)
-ltr559_sensor  = LTR559()
+_bus          = smbus2.SMBus(1)
+_bme_addr     = 0x76
+_bme_params   = bme280.load_calibration_params(_bus, _bme_addr)
+ltr559_sensor = LTR559()
 pms5003_sensor = PMS5003()
 
 # ── CPU temp compensation ─────────────────────────────────────────────────────
-_cpu_hist = deque([45.0] * 5, maxlen=5)
+_cpu_hist  = deque([45.0] * cfg["calibration"]["cpu_hist_size"],
+                   maxlen=cfg["calibration"]["cpu_hist_size"])
+CPU_FACTOR = 0.0
+
 
 def _cpu_temp():
     with open("/sys/class/thermal/thermal_zone0/temp") as f:
         return int(f.read()) / 1000.0
 
+
 def _bme_sample():
     return bme280.sample(_bus, _bme_addr, _bme_params)
 
-# CAL_ACTUAL_F in .env = known actual temperature used to derive CPU_FACTOR.
-# Set CAL_ACTUAL_F=0 when Enviro+ is physically separated from the Pi.
-_cal_actual_f = float(os.environ.get("CAL_ACTUAL_F", "0"))
-if _cal_actual_f:
-    _cal_actual_c = (_cal_actual_f - 32) * 5 / 9
-    _cal_raw_c    = sum(_bme_sample().temperature for _ in range(5)) / 5
-    _cal_cpu_c    = sum(_cpu_temp() for _ in range(5)) / 5
-    _denom        = _cal_raw_c - _cal_actual_c
-    CPU_FACTOR    = (_cal_cpu_c - _cal_raw_c) / _denom if _denom else 0.0
-    logging.info(f"CPU_FACTOR={CPU_FACTOR:.2f} (raw={_cal_raw_c*9/5+32:.1f}°F cpu={_cal_cpu_c:.1f}°C actual={_cal_actual_f}°F)")
-else:
-    CPU_FACTOR = 0.0
+
+def _calibrate(cal_actual_f):
+    """Derive CPU_FACTOR from a known reference temperature."""
+    global CPU_FACTOR
+    if not cal_actual_f:
+        CPU_FACTOR = 0.0
+        return
+    cal_actual_c = (cal_actual_f - 32) * 5 / 9
+    cal_raw_c    = sum(_bme_sample().temperature for _ in range(10)) / 10
+    cal_cpu_c    = sum(_cpu_temp()               for _ in range(10)) / 10
+    denom        = cal_raw_c - cal_actual_c
+    CPU_FACTOR   = (cal_cpu_c - cal_raw_c) / denom if denom else 0.0
+    logging.info(
+        f"CPU_FACTOR={CPU_FACTOR:.2f} "
+        f"(raw={cal_raw_c * 9 / 5 + 32:.1f}°F  cpu={cal_cpu_c:.1f}°C  actual={cal_actual_f}°F)"
+    )
+
+
+_calibrate(cfg["calibration"]["cal_actual_f"])
+
 
 def read_temp_c():
-    raw = _bme_sample().temperature
+    n = cfg["calibration"]["bme_samples"]
+    raw = sum(_bme_sample().temperature for _ in range(n)) / n
     cpu = _cpu_temp()
     _cpu_hist.append(cpu)
     avg_cpu = sum(_cpu_hist) / len(_cpu_hist)
-    compensated = raw - ((avg_cpu - raw) / CPU_FACTOR) if CPU_FACTOR else raw
-    return compensated
+    return raw - ((avg_cpu - raw) / CPU_FACTOR) if CPU_FACTOR else raw
+
 
 def c2f(c):
     return c * 9 / 5 + 32
 
+
 # ── Quality colors ────────────────────────────────────────────────────────────
 def qcolor(val, good_max, warn_max):
     """Higher = worse (oxidising, PM)."""
-    if val <= good_max: return GREEN
-    if val <= warn_max: return YELLOW
+    if val <= good_max:
+        return GREEN
+    if val <= warn_max:
+        return YELLOW
     return RED
+
 
 def iqcolor(val, warn_min, good_min):
     """Lower = worse (reducing, NH3)."""
-    if val >= good_min: return GREEN
-    if val >= warn_min: return YELLOW
+    if val >= good_min:
+        return GREEN
+    if val >= warn_min:
+        return YELLOW
     return RED
+
 
 def temp_color(f):
-    if 65 <= f <= 80: return GREEN
-    if 55 <= f <= 90: return YELLOW
+    t = cfg["thresholds"]["temp_f"]
+    if t["green_min"] <= f <= t["green_max"]:
+        return GREEN
+    if t["yellow_min"] <= f <= t["yellow_max"]:
+        return YELLOW
     return ORANGE
 
+
 def hum_color(h):
-    if 30 <= h <= 70: return GREEN
-    if 20 <= h <= 80: return YELLOW
+    t = cfg["thresholds"]["humidity"]
+    if t["green_min"] <= h <= t["green_max"]:
+        return GREEN
+    if t["yellow_min"] <= h <= t["yellow_max"]:
+        return YELLOW
     return RED
 
+
 def aq_info(pm25):
-    if pm25 <= 12:  return "GOOD", GREEN
-    if pm25 <= 35:  return "MOD",  YELLOW
-    if pm25 <= 55:  return "USG",  ORANGE
-    if pm25 <= 150: return "UNHL", RED
-    return "HAZ",   MAGENTA
+    t = cfg["thresholds"]["aq_pm25"]
+    if pm25 <= t["good"]:
+        return "GOOD", GREEN
+    if pm25 <= t["moderate"]:
+        return "MOD", YELLOW
+    if pm25 <= t["usg"]:
+        return "USG", ORANGE
+    if pm25 <= t["unhealthy"]:
+        return "UNHL", RED
+    return "HAZ", MAGENTA
+
 
 # ── Pixel icons (PIL primitive drawing) ───────────────────────────────────────
 def icon_therm(draw, x, y, col):
     """Thermometer, 7×10px."""
-    draw.rectangle((x+2, y, x+4, y+5), outline=col)
-    draw.ellipse((x, y+5, x+6, y+9), fill=col)
-    draw.line([(x+3, y+2), (x+3, y+5)], fill=col)
+    draw.rectangle((x + 2, y, x + 4, y + 5), outline=col)
+    draw.ellipse((x, y + 5, x + 6, y + 9), fill=col)
+    draw.line([(x + 3, y + 2), (x + 3, y + 5)], fill=col)
+
 
 def icon_drop(draw, x, y, col):
     """Water drop, 7×9px."""
-    draw.polygon([(x+3, y), (x+6, y+5), (x+3, y+8), (x, y+5)], fill=col)
+    draw.polygon([(x + 3, y), (x + 6, y + 5), (x + 3, y + 8), (x, y + 5)], fill=col)
+
 
 def icon_gas(draw, x, y, col):
     """Gas cloud (3 overlapping circles), 10×8px."""
-    draw.ellipse((x+0, y+2, x+4, y+7), outline=col)
-    draw.ellipse((x+3, y+0, x+7, y+5), outline=col)
-    draw.ellipse((x+5, y+2, x+9, y+7), outline=col)
+    draw.ellipse((x + 0, y + 2, x + 4, y + 7), outline=col)
+    draw.ellipse((x + 3, y + 0, x + 7, y + 5), outline=col)
+    draw.ellipse((x + 5, y + 2, x + 9, y + 7), outline=col)
+
 
 def icon_dust(draw, x, y, col):
     """Particulates (scattered dots), 10×7px."""
-    for dx, dy in [(0,2),(2,0),(4,3),(6,1),(8,2),(1,5),(3,4),(5,6),(7,5),(9,3)]:
-        draw.point((x+dx, y+dy), fill=col)
+    for dx, dy in [(0, 2), (2, 0), (4, 3), (6, 1), (8, 2), (1, 5), (3, 4), (5, 6), (7, 5), (9, 3)]:
+        draw.point((x + dx, y + dy), fill=col)
+
 
 def icon_sun(draw, x, y, col):
     """Sun (circle + 8 rays), 9×9px."""
-    draw.ellipse((x+2, y+2, x+6, y+6), outline=col)
-    for dx, dy in [(4,0),(4,8),(0,4),(8,4)]:
-        draw.point((x+dx, y+dy), fill=col)
-    for dx, dy in [(1,1),(7,1),(1,7),(7,7)]:
-        draw.point((x+dx, y+dy), fill=col)
+    draw.ellipse((x + 2, y + 2, x + 6, y + 6), outline=col)
+    for dx, dy in [(4, 0), (4, 8), (0, 4), (8, 4)]:
+        draw.point((x + dx, y + dy), fill=col)
+    for dx, dy in [(1, 1), (7, 1), (1, 7), (7, 7)]:
+        draw.point((x + dx, y + dy), fill=col)
+
 
 # ── Bar graph ─────────────────────────────────────────────────────────────────
 def draw_hbar(draw, x, y, w, h, frac, col):
     frac = max(0.0, min(1.0, frac))
-    draw.rectangle((x, y, x+w-1, y+h-1), fill=BAR_BG)
+    draw.rectangle((x, y, x + w - 1, y + h - 1), fill=BAR_BG)
     if frac > 0:
-        draw.rectangle((x, y, x+max(1, int(w*frac))-1, y+h-1), fill=col)
+        draw.rectangle((x, y, x + max(1, int(w * frac)) - 1, y + h - 1), fill=col)
+
 
 # ── History for dual sparkline ────────────────────────────────────────────────
-SPARK_W = (W - 1) // 2
+SPARK_W   = (W - 1) // 2
 temp_hist = deque([20.0] * SPARK_W, maxlen=SPARK_W)
 pm25_hist = deque([0.0]  * SPARK_W, maxlen=SPARK_W)
 
@@ -298,9 +346,11 @@ SPARK_H = H - Y_SPARK
 def draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     img  = Image.new("RGB", (W, H), BG)
     draw = ImageDraw.Draw(img)
+    d    = cfg["display"]
+    thr  = cfg["thresholds"]
 
     # ── Header ────────────────────────────────────────────────────────────────
-    draw.rectangle((0, 0, W-1, 9), fill=HEADER)
+    draw.rectangle((0, 0, W - 1, 9), fill=HEADER)
     draw.text((3, 1), "ENVIRO+", font=FONT_S, fill=CYAN)
     now = datetime.now().strftime("%-I:%M %p")
     draw.text((W - 44, 1), now, font=FONT_S, fill=CYAN)
@@ -310,7 +360,8 @@ def draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     tc = temp_color(tf)
     icon_therm(draw, 2, Y_WX + 1, tc)
     draw.text((11, Y_WX), f"{tf:.1f}\u00b0F", font=FONT_M, fill=tc)
-    draw_hbar(draw, 2, Y_WX + 13, 76, 3, (tf - 40) / 80.0, tc)
+    draw_hbar(draw, 2, Y_WX + 13, 76, 3,
+              (tf - d["temp_bar_min_f"]) / d["temp_bar_range_f"], tc)
 
     hc = hum_color(hum)
     icon_drop(draw, 84, Y_WX + 2, hc)
@@ -323,29 +374,28 @@ def draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     # Reducing (CO/VOCs): lower resistance = more pollution, baseline ~200k
     # NH3:                lower resistance = more pollution, baseline ~750k
     icon_gas(draw, 2, Y_GAS + 1, DIM)
-    c_ox  = qcolor( ox,   40,   60)   # >60k = red
-    c_rd  = iqcolor(rd,  100,  150)   # <100k = red
-    c_nh3 = iqcolor(nh3, 200,  500)   # <200k = red
-    draw.text((13, Y_GAS), f"Ox:{ox:.0f}k",  font=FONT_S, fill=c_ox)
-    draw.text((62, Y_GAS), f"Rd:{rd:.0f}k",  font=FONT_S, fill=c_rd)
-    draw.text((111,Y_GAS), f"N3:{nh3:.0f}k", font=FONT_S, fill=c_nh3)
-    # Bars: ox fills as it rises; rd/nh3 fill as they fall (inverted)
-    draw_hbar(draw, 13,  Y_GAS + 10, 44, 2, min(ox  / 100, 1.0),        c_ox)
-    draw_hbar(draw, 62,  Y_GAS + 10, 44, 2, max(0, 1 - rd  / 300),      c_rd)
-    draw_hbar(draw, 111, Y_GAS + 10, 44, 2, max(0, 1 - nh3 / 1000),     c_nh3)
+    c_ox  = qcolor( ox,  thr["oxidising_k"]["green_max"],  thr["oxidising_k"]["yellow_max"])
+    c_rd  = iqcolor(rd,  thr["reducing_k"]["yellow_min"],  thr["reducing_k"]["green_min"])
+    c_nh3 = iqcolor(nh3, thr["ammonia_k"]["yellow_min"],   thr["ammonia_k"]["green_min"])
+    draw.text((13,  Y_GAS), f"Ox:{ox:.0f}k",  font=FONT_S, fill=c_ox)
+    draw.text((62,  Y_GAS), f"Rd:{rd:.0f}k",  font=FONT_S, fill=c_rd)
+    draw.text((111, Y_GAS), f"N3:{nh3:.0f}k", font=FONT_S, fill=c_nh3)
+    draw_hbar(draw, 13,  Y_GAS + 10, 44, 2, min(ox  / d["ox_bar_max_k"],  1.0), c_ox)
+    draw_hbar(draw, 62,  Y_GAS + 10, 44, 2, max(0, 1 - rd  / d["rd_bar_max_k"]),  c_rd)
+    draw_hbar(draw, 111, Y_GAS + 10, 44, 2, max(0, 1 - nh3 / d["nh3_bar_max_k"]), c_nh3)
     draw.line((0, 39, W, 39), fill=SEP)
 
     # ── PM row ────────────────────────────────────────────────────────────────
     icon_dust(draw, 2, Y_PM + 2, DIM)
-    c_p1  = qcolor(pm1,  12, 35)
-    c_p25 = qcolor(pm25, 12, 35)
-    c_p10 = qcolor(pm10, 25, 50)
-    draw.text((13, Y_PM), f"1:{pm1:.0f}",    font=FONT_S, fill=c_p1)
-    draw.text((62, Y_PM), f"2.5:{pm25:.0f}", font=FONT_S, fill=c_p25)
-    draw.text((111,Y_PM), f"10:{pm10:.0f}",  font=FONT_S, fill=c_p10)
-    draw_hbar(draw, 13,  Y_PM + 10, 44, 2, min(pm1  / 50, 1.0), c_p1)
-    draw_hbar(draw, 62,  Y_PM + 10, 44, 2, min(pm25 / 50, 1.0), c_p25)
-    draw_hbar(draw, 111, Y_PM + 10, 44, 2, min(pm10 / 50, 1.0), c_p10)
+    c_p1  = qcolor(pm1,  thr["pm1"]["green_max"],  thr["pm1"]["yellow_max"])
+    c_p25 = qcolor(pm25, thr["pm25"]["green_max"], thr["pm25"]["yellow_max"])
+    c_p10 = qcolor(pm10, thr["pm10"]["green_max"], thr["pm10"]["yellow_max"])
+    draw.text((13,  Y_PM), f"1:{pm1:.0f}",    font=FONT_S, fill=c_p1)
+    draw.text((62,  Y_PM), f"2.5:{pm25:.0f}", font=FONT_S, fill=c_p25)
+    draw.text((111, Y_PM), f"10:{pm10:.0f}",  font=FONT_S, fill=c_p10)
+    draw_hbar(draw, 13,  Y_PM + 10, 44, 2, min(pm1  / d["pm_bar_max"], 1.0), c_p1)
+    draw_hbar(draw, 62,  Y_PM + 10, 44, 2, min(pm25 / d["pm_bar_max"], 1.0), c_p25)
+    draw_hbar(draw, 111, Y_PM + 10, 44, 2, min(pm10 / d["pm_bar_max"], 1.0), c_p10)
     draw.line((0, 52, W, 52), fill=SEP)
 
     # ── Light + AQ row ────────────────────────────────────────────────────────
@@ -353,14 +403,14 @@ def draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     draw.text((13, Y_AQ + 1), f"Lux:{int(lux)}", font=FONT_S, fill=CYAN)
     draw.text((75, Y_AQ + 1), f"P:{pres:.0f}",   font=FONT_S, fill=DIM)
     label, badge_col = aq_info(pm25)
-    draw.rectangle((119, Y_AQ, W-2, Y_AQ + 10), fill=badge_col)
+    draw.rectangle((119, Y_AQ, W - 2, Y_AQ + 10), fill=badge_col)
     draw.text((121, Y_AQ + 1), label, font=FONT_S, fill=BG)
     draw.line((0, 64, W, 64), fill=SEP)
 
     # ── Dual sparkline: temperature (left) | PM2.5 (right) ───────────────────
     mid = SPARK_W
-    draw.text((1,      Y_SPARK), "T\u00b0F",  font=FONT_S, fill=DIM)
-    draw.text((mid+2,  Y_SPARK), "PM2.5",     font=FONT_S, fill=DIM)
+    draw.text((1,     Y_SPARK), "T\u00b0F", font=FONT_S, fill=DIM)
+    draw.text((mid + 2, Y_SPARK), "PM2.5",   font=FONT_S, fill=DIM)
 
     def draw_spark(hist, x0, col_fn):
         vals = list(hist)
@@ -372,8 +422,8 @@ def draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
             draw.point((x0 + i, py), fill=col_fn(v))
 
     draw_spark(temp_hist, 0,       lambda v: temp_color(c2f(v)))
-    draw.line((mid, Y_SPARK, mid, H-1), fill=SEP)
-    draw_spark(pm25_hist, mid + 1, lambda v: qcolor(v, 12, 35))
+    draw.line((mid, Y_SPARK, mid, H - 1), fill=SEP)
+    draw_spark(pm25_hist, mid + 1, lambda v: qcolor(v, thr["pm25"]["green_max"], thr["pm25"]["yellow_max"]))
 
     disp.display(img)
 
@@ -386,6 +436,18 @@ logging.info("Enviro+ dashboard starting")
 
 while True:
     try:
+        # ── Hot-reload config if file changed ─────────────────────────────────
+        if os.path.getmtime(CONFIG_PATH) != _config_mtime:
+            old_cal = cfg["calibration"]["cal_actual_f"]
+            old_hist_size = cfg["calibration"]["cpu_hist_size"]
+            cfg = load_config()
+            logging.info("dynamic_config.json reloaded")
+            if cfg["calibration"]["cpu_hist_size"] != old_hist_size:
+                new_size = cfg["calibration"]["cpu_hist_size"]
+                _cpu_hist.__init__(list(_cpu_hist)[-new_size:], maxlen=new_size)
+            if cfg["calibration"]["cal_actual_f"] != old_cal:
+                _calibrate(cfg["calibration"]["cal_actual_f"])
+
         temp_c  = read_temp_c()
         _sample = _bme_sample()
         hum     = _sample.humidity
@@ -414,12 +476,12 @@ while True:
         draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
 
         now = time.time()
-        if now - _last_publish >= MQTT_PUBLISH_INTERVAL:
+        if now - _last_publish >= cfg["intervals"]["publish_s"]:
             write_mqtt(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
             write_sqlite(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
             _last_publish = now
 
-        time.sleep(2)
+        time.sleep(cfg["intervals"]["display_refresh_s"])
 
     except KeyboardInterrupt:
         logging.info("Stopped by user")
