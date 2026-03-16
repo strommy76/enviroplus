@@ -319,32 +319,32 @@ def noise_color(amp):
 
 # ── Pixel icons (PIL primitives) ───────────────────────────────────────────────
 def icon_bulb(draw, x, y, col):
-    """Lightbulb 11×15px. x,y = top-left."""
-    draw.ellipse((x, y, x + 10, y + 8), fill=col)
-    draw.rectangle((x + 2, y + 8, x + 8, y + 13), fill=col)
-    draw.line([(x + 2, y + 10), (x + 8, y + 10)], fill=BG)
-    draw.line([(x + 2, y + 12), (x + 8, y + 12)], fill=BG)
+    """Lightbulb ~18×20px. x,y = top-left."""
+    draw.ellipse((x, y, x + 17, y + 13), fill=col)
+    draw.rectangle((x + 4, y + 13, x + 13, y + 19), fill=col)
+    draw.line([(x + 4, y + 15), (x + 13, y + 15)], fill=BG)
+    draw.line([(x + 4, y + 18), (x + 13, y + 18)], fill=BG)
 
 
 def icon_speaker(draw, x, y, col):
-    """Speaker body + cone + arc, 15×12px. x,y = top-left."""
-    draw.rectangle((x, y + 3, x + 3, y + 8), fill=col)
-    draw.polygon([(x + 3, y + 3), (x + 8, y), (x + 8, y + 11), (x + 3, y + 8)], fill=col)
-    draw.arc((x + 9, y + 2, x + 14, y + 9), -60, 60, fill=col)
+    """Speaker body + cone + arc, ~20×16px. x,y = top-left."""
+    draw.rectangle((x, y + 4, x + 5, y + 11), fill=col)
+    draw.polygon([(x + 5, y + 4), (x + 12, y), (x + 12, y + 15), (x + 5, y + 11)], fill=col)
+    draw.arc((x + 13, y + 3, x + 19, y + 12), -60, 60, fill=col)
 
 
 # ── Layout constants ────────────────────────────────────────────────────────────
-#   x:  0    17|18    77|78        159
+#   x:  0    24|25    93|94        159
 #       LEFT   |  MID   |   RIGHT
 #   y:  0..79 throughout; right column split at y=40
-X_SEP1   = 17           # separator: left | mid
-X_SEP2   = 78           # separator: mid  | right
-MID_X0   = X_SEP1 + 1  # 18
-RIGHT_X0 = X_SEP2 + 1  # 79
-PLOT_W   = W - RIGHT_X0 # 81 — pixels wide per plot (one pixel per data point)
+X_SEP1   = 24           # separator: left | mid
+X_SEP2   = 94           # separator: mid  | right
+MID_X0   = X_SEP1 + 1  # 25
+RIGHT_X0 = X_SEP2 + 1  # 95
+PLOT_W   = W - RIGHT_X0 # 65 — pixels wide per plot (one pixel per data point)
 PLOT_H   = H // 2       # 40 — height of each plot half
 
-# ── History buffers (81 points — one per plot pixel column) ───────────────────
+# ── History buffers (65 points — one per plot pixel column) ───────────────────
 pm1_hist  = deque([0.0] * PLOT_W, maxlen=PLOT_W)
 pm25_hist = deque([0.0] * PLOT_W, maxlen=PLOT_W)
 pm10_hist = deque([0.0] * PLOT_W, maxlen=PLOT_W)
@@ -391,8 +391,8 @@ def draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10, amp):
     draw.line((RIGHT_X0, PLOT_H, W - 1, PLOT_H), fill=SEP)
 
     # ── Left column: lux state (bulb, top) and noise state (speaker, bottom) ──
-    icon_bulb(draw,    3, 8,  lux_color(lux))
-    icon_speaker(draw, 1, 52, noise_color(amp))
+    icon_bulb(draw,    3, 10, lux_color(lux))    # centered in top half (y=10..29)
+    icon_speaker(draw, 2, 52, noise_color(amp))  # centered in bottom half (y=52..67)
 
     # ── Middle column ──────────────────────────────────────────────────────────
     # Temperature                             y=3..15
