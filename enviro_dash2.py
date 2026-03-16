@@ -2,7 +2,7 @@
 """
 Path:        ~/projects/enviroplus/enviro_dash2.py
 Description: Alternative Enviro+ display layout (160×80 ST7735).
-             Left column  — lux (bulb) and noise (speaker) state icons.
+             Left column  — lux (bulb) and MQTT status (signal) state icons.
              Middle column — temperature, RH, heat index, barometric pressure icon.
              Right column  — PM1/2.5/10 line plot (top), VOC line plot (bottom).
              Same MQTT, SQLite, and dynamic_config hot-reload as enviro_dash.py.
@@ -10,6 +10,8 @@ Description: Alternative Enviro+ display layout (160×80 ST7735).
 
 Changelog:
   2026-03-16 00:30:00 EDT  Initial implementation.
+  2026-03-16 00:45:00 EDT  Replace noise/speaker (no mic on HAT) with MQTT
+                           status signal icon (green=ok, yellow=init, red=fail).
 """
 
 import json
@@ -28,7 +30,6 @@ import smbus2
 import st7735
 from dotenv import load_dotenv
 from enviroplus import gas
-from enviroplus.noise import Noise
 from ltr559 import LTR559
 from PIL import Image, ImageDraw, ImageFont
 from pms5003 import PMS5003, ReadTimeoutError, SerialTimeoutError
@@ -92,7 +93,11 @@ def _round_readings(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     }
 
 
+_mqtt_status = "init"  # "init" | "ok" | "fail"
+
+
 def write_mqtt(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
+    global _mqtt_status
     try:
         r = _round_readings(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
         feeds = {
@@ -105,8 +110,10 @@ def write_mqtt(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
         for feed, val in feeds.items():
             _mqtt.publish(f"{MQTT_USER}/feeds/{feed}", val)
             time.sleep(0.5)
+        _mqtt_status = "ok"
         logging.info("MQTT published to Adafruit IO")
     except Exception as e:
+        _mqtt_status = "fail"
         logging.warning(f"MQTT publish failed: {e}")
 
 
@@ -191,7 +198,6 @@ _bme_addr      = 0x76
 _bme_params    = bme280.load_calibration_params(_bus, _bme_addr)
 ltr559_sensor  = LTR559()
 pms5003_sensor = PMS5003()
-noise_sensor   = Noise()
 
 # ── CPU temp compensation ──────────────────────────────────────────────────────
 _cpu_hist  = deque([45.0] * cfg["calibration"]["cpu_hist_size"],
@@ -309,12 +315,12 @@ def lux_color(lux):
     return WHITE
 
 
-def noise_color(amp):
-    if amp < 0.05:
+def mqtt_color():
+    if _mqtt_status == "ok":
         return GREEN
-    if amp < 0.15:
-        return YELLOW
-    return RED
+    if _mqtt_status == "fail":
+        return RED
+    return YELLOW  # "init" — not yet published
 
 
 # ── Pixel icons (PIL primitives) ───────────────────────────────────────────────
@@ -326,11 +332,12 @@ def icon_bulb(draw, x, y, col):
     draw.line([(x + 4, y + 18), (x + 13, y + 18)], fill=BG)
 
 
-def icon_speaker(draw, x, y, col):
-    """Speaker body + cone + arc, ~20×16px. x,y = top-left."""
-    draw.rectangle((x, y + 4, x + 5, y + 11), fill=col)
-    draw.polygon([(x + 5, y + 4), (x + 12, y), (x + 12, y + 15), (x + 5, y + 11)], fill=col)
-    draw.arc((x + 13, y + 3, x + 19, y + 12), -60, 60, fill=col)
+def icon_signal(draw, x, y, col):
+    """WiFi-style signal icon ~18×14px. x,y = top-left."""
+    draw.ellipse((x + 7, y + 11, x + 10, y + 13), fill=col)
+    draw.arc((x + 4, y + 7, x + 13, y + 12), 210, 330, fill=col)
+    draw.arc((x + 1, y + 3, x + 16, y + 11), 210, 330, fill=col)
+    draw.arc((x + 0, y + 0, x + 17, y + 10), 210, 330, fill=col)
 
 
 # ── Layout constants ────────────────────────────────────────────────────────────
@@ -380,7 +387,7 @@ def draw_lines(draw, histories, colors, vmaxes, x0, y0, w, h):
 
 
 # ── Frame renderer ─────────────────────────────────────────────────────────────
-def draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10, amp):
+def draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     img  = Image.new("RGB", (W, H), BG)
     draw = ImageDraw.Draw(img)
     d    = cfg["display"]
@@ -390,9 +397,9 @@ def draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10, amp):
     draw.line((X_SEP2, 0, X_SEP2, H - 1),        fill=SEP)
     draw.line((RIGHT_X0, PLOT_H, W - 1, PLOT_H), fill=SEP)
 
-    # ── Left column: lux state (bulb, top) and noise state (speaker, bottom) ──
-    icon_bulb(draw,    3, 10, lux_color(lux))    # centered in top half (y=10..29)
-    icon_speaker(draw, 2, 52, noise_color(amp))  # centered in bottom half (y=52..67)
+    # ── Left column: lux state (bulb, top) and MQTT status (signal, bottom) ──
+    icon_bulb(draw,   3, 10, lux_color(lux))    # centered in top half (y=10..29)
+    icon_signal(draw, 3, 53, mqtt_color())       # centered in bottom half (y=53..66)
 
     # ── Middle column ──────────────────────────────────────────────────────────
     # Temperature                             y=3..15
@@ -433,7 +440,6 @@ def draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10, amp):
 
 # ── Main loop ─────────────────────────────────────────────────────────────────
 pm1 = pm25 = pm10 = 0.0
-amp = 0.0
 _last_publish = time.time()
 
 logging.info("Enviro+ dash v2 starting")
@@ -464,11 +470,6 @@ while True:
         nh3 = g.nh3       / 1000
 
         try:
-            _, _, _, amp = noise_sensor.get_noise_profile()
-        except Exception as e:
-            logging.warning(f"Noise read failed: {e}")
-
-        try:
             p    = pms5003_sensor.read()
             pm1  = float(p.pm_ug_per_m3(1.0))
             pm25 = float(p.pm_ug_per_m3(2.5))
@@ -487,7 +488,7 @@ while True:
         rd_hist.append(rd)
         nh3_hist.append(nh3)
 
-        draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10, amp)
+        draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
 
         now = time.time()
         if now - _last_publish >= cfg["intervals"]["publish_s"]:
