@@ -2,8 +2,8 @@
 """
 Path:        ~/projects/enviroplus/enviro_dash3.py
 Description: AQM-inspired Enviro+ display layout (160×80 ST7735).
-             Left strip  — vertical AQ color bar (PM2.5-based, green→red) with
-                           white level marker.
+             Left strip  — vertical EPA AQI bar (0-500, 6-band color scale)
+                           computed from PM2.5 and PM10 sub-indices.
              Center      — CO₂ ppm as dominant large value (placeholder until
                            SCD-41 arrives), temperature, RH, pressure below.
              Right       — PM2.5 large with bar, PM1/PM10 side by side,
@@ -14,6 +14,14 @@ Description: AQM-inspired Enviro+ display layout (160×80 ST7735).
 Changelog:
   2026-03-16 01:15:00 EDT  Initial implementation, AQM-345 inspired layout.
                            CO₂ is placeholder (---) until SCD-41 connected.
+  2026-03-16 02:30:00 EDT  Replace raw PM2.5 bar with proper EPA AQI (0-500).
+                           AQI = max(PM2.5 sub-index, PM10 sub-index) per EPA
+                           linear interpolation breakpoints. Added PURPLE and
+                           MAROON for Very Unhealthy / Hazardous bands.
+  2026-03-16 03:00:00 EDT  Remove DB/RH labels; enlarge temp+RH to FONT_L,
+                           side-by-side. Remove pressure display. Replace right
+                           column PM bar/values with PM+VOC dual line plots
+                           (same overlapping draw_lines style as dash2).
 """
 
 import json
@@ -185,12 +193,14 @@ FONT_XL = ImageFont.truetype(UserFont, 24)  # 23px tall — CO₂ dominant value
 # ── Palette ────────────────────────────────────────────────────────────────────
 BG      = (8,    8,  16)
 SEP     = (25,  30,  50)
-BAR_BG  = (20,  24,  40)
 CYAN    = (0,  215, 195)
 GREEN   = (40, 215,  75)
 YELLOW  = (235, 195,  0)
 ORANGE  = (255, 125,  0)
 RED     = (255,  45,  45)
+PURPLE  = (148,   0, 211)   # EPA "Very Unhealthy" (AQI 201-300)
+MAROON  = (126,   0,  35)   # EPA "Hazardous"      (AQI 301-500)
+MAGENTA = (205,  45, 205)   # NH3 VOC trace
 WHITE   = (240, 240, 240)
 DIM     = (55,  60,  80)
 
@@ -285,24 +295,6 @@ def co2_color(ppm):
     return RED
 
 
-def pm25_color(v):
-    t = cfg["thresholds"]["pm25"]
-    if v <= t["green_max"]:
-        return GREEN
-    if v <= t["yellow_max"]:
-        return YELLOW
-    return RED
-
-
-def pm_color(v, key):
-    t = cfg["thresholds"][key]
-    if v <= t["green_max"]:
-        return GREEN
-    if v <= t["yellow_max"]:
-        return YELLOW
-    return RED
-
-
 def mqtt_color():
     if _mqtt_status == "ok":
         return GREEN
@@ -311,22 +303,44 @@ def mqtt_color():
     return YELLOW
 
 
-def pressure_desc(pres):
-    if pres < 970:
-        return "storm"
-    if pres < 990:
-        return "rain"
-    if pres < 1010:
-        return "chng"
-    if pres < 1030:
-        return "fair"
-    return "dry"
+# ── EPA AQI (PM2.5 + PM10 sub-indices) ─────────────────────────────────────────
+# Breakpoints: (C_lo, C_hi, AQI_lo, AQI_hi)
+_PM25_BP = [
+    (  0.0,  12.0,   0,  50),
+    ( 12.1,  35.4,  51, 100),
+    ( 35.5,  55.4, 101, 150),
+    ( 55.5, 150.4, 151, 200),
+    (150.5, 250.4, 201, 300),
+    (250.5, 350.4, 301, 400),
+    (350.5, 500.4, 401, 500),
+]
+_PM10_BP = [
+    (  0,  54,    0,  50),
+    ( 55, 154,   51, 100),
+    (155, 254,  101, 150),
+    (255, 354,  151, 200),
+    (355, 424,  201, 300),
+    (425, 504,  301, 400),
+    (505, 604,  401, 500),
+]
+
+
+def _aqi_sub(c, breakpoints):
+    for c_lo, c_hi, aqi_lo, aqi_hi in breakpoints:
+        if c <= c_hi:
+            return round((aqi_hi - aqi_lo) / (c_hi - c_lo) * (c - c_lo) + aqi_lo)
+    return 500
+
+
+def pm_aqi(pm25, pm10):
+    """EPA AQI: max of PM2.5 and PM10 sub-indices."""
+    return max(_aqi_sub(pm25, _PM25_BP), _aqi_sub(pm10, _PM10_BP))
 
 
 # ── Layout constants ────────────────────────────────────────────────────────────
 #   x:  0   11|12          88|89        159
-#       BAR  |   CENTER      |   PM RIGHT
-AQ_BAR_MAX = 100   # μg/m³ PM2.5 scale for color bar
+#       BAR  |   CENTER      |   PLOTS RIGHT
+AQ_BAR_MAX = 500   # EPA AQI scale for color bar
 BAR_W      = 12    # left AQ bar width
 X_SEP1     = BAR_W           # 12
 X_SEP2     = 89
@@ -334,53 +348,58 @@ MID_X0     = X_SEP1 + 1     # 13
 RIGHT_X0   = X_SEP2 + 1     # 90
 RIGHT_W    = W - RIGHT_X0   # 70
 MID_W      = X_SEP2 - MID_X0  # 76
-SPARK_H    = 21   # PM sparkline height (bottom of right col, y=59..79)
-SPARK_Y    = H - SPARK_H    # 59
+PLOT_H     = H // 2          # 40 — height of each plot half
 
-# ── PM sparkline history (70 points = RIGHT_W) ────────────────────────────────
+# ── History buffers (70 points = RIGHT_W) ─────────────────────────────────────
 pm1_hist  = deque([0.0] * RIGHT_W, maxlen=RIGHT_W)
 pm25_hist = deque([0.0] * RIGHT_W, maxlen=RIGHT_W)
 pm10_hist = deque([0.0] * RIGHT_W, maxlen=RIGHT_W)
+ox_hist   = deque([0.0] * RIGHT_W, maxlen=RIGHT_W)
+rd_hist   = deque([0.0] * RIGHT_W, maxlen=RIGHT_W)
+nh3_hist  = deque([0.0] * RIGHT_W, maxlen=RIGHT_W)
 
 
 # ── AQ color bar ───────────────────────────────────────────────────────────────
-def draw_aq_bar(draw, pm25):
-    """Gauge bar: dim outline, bottom-filled to current PM2.5 level.
-    Fill color reflects current AQ quality."""
-    pm = min(max(pm25, 0), AQ_BAR_MAX)
-    # Outline
+def draw_aq_bar(draw, aqi):
+    """EPA AQI gauge: 6-band color scale 0-500, filled from bottom up to current
+    AQI level, outline only above. Always shows at least a sliver of green."""
+    val = max(aqi, 1)
+    val = min(val, AQ_BAR_MAX)
     draw.rectangle((0, 0, BAR_W - 1, H - 1), outline=DIM)
-    # Fill from bottom up to current level
-    fill_top = H - 2 - int(pm / AQ_BAR_MAX * (H - 3))
-    if fill_top < H - 2:
-        if pm25 <= 12:
-            col = GREEN
-        elif pm25 <= 35:
-            col = YELLOW
-        elif pm25 <= 55:
-            col = ORANGE
-        else:
-            col = RED
-        draw.rectangle((1, fill_top, BAR_W - 2, H - 2), fill=col)
+    bands = [
+        (  0,  50,  GREEN),
+        ( 50, 100,  YELLOW),
+        (100, 150,  ORANGE),
+        (150, 200,  RED),
+        (200, 300,  PURPLE),
+        (300, 500,  MAROON),
+    ]
+    for lo, hi, col in bands:
+        if lo >= val:
+            break
+        effective_hi = min(hi, val)
+        y_top = H - 2 - int(effective_hi / AQ_BAR_MAX * (H - 3))
+        y_bot = H - 2 - int(lo          / AQ_BAR_MAX * (H - 3))
+        draw.rectangle((1, y_top, BAR_W - 2, y_bot), fill=col)
 
 
-# ── PM sparkline (overlapping, each on its own vmax) ──────────────────────────
-def draw_pm_spark(draw, pm_max):
-    for hist, col in [(pm10_hist, RED), (pm25_hist, YELLOW), (pm1_hist, CYAN)]:
-        vmax = max(pm_max, 1)
+# ── Line plot (multiple overlapping series, each on its own vmax) ──────────────
+def draw_lines(draw, histories, colors, vmaxes, x0, y0, w, h):
+    for hist, col, vmax in zip(histories, colors, vmaxes):
+        vmax = max(vmax, 1)
         vals = list(hist)
         prev = None
         for i, v in enumerate(vals):
             norm = min(v / vmax, 1.0)
-            py   = SPARK_Y + SPARK_H - 1 - int(norm * (SPARK_H - 2))
-            px   = RIGHT_X0 + i
+            py   = y0 + h - 1 - int(norm * (h - 2))
+            px   = x0 + i
             if prev is not None:
                 draw.line([prev, (px, py)], fill=col)
             prev = (px, py)
 
 
 # ── Frame renderer ─────────────────────────────────────────────────────────────
-def draw_frame(tf, hum, pres, pm1, pm25, pm10):
+def draw_frame(tf, hum, pm1, pm25, pm10, ox, rd, nh3):
     img  = Image.new("RGB", (W, H), BG)
     draw = ImageDraw.Draw(img)
     d    = cfg["display"]
@@ -389,8 +408,9 @@ def draw_frame(tf, hum, pres, pm1, pm25, pm10):
     draw.line((X_SEP1, 0, X_SEP1, H - 1), fill=SEP)
     draw.line((X_SEP2, 0, X_SEP2, H - 1), fill=SEP)
 
-    # ── Left: AQ color bar ─────────────────────────────────────────────────────
-    draw_aq_bar(draw, pm25)
+    # ── Left: AQ color bar (EPA AQI) ───────────────────────────────────────────
+    aqi = pm_aqi(pm25, pm10)
+    draw_aq_bar(draw, aqi)
 
     # ── MQTT status dot (top-right corner, 4×4px) ──────────────────────────────
     draw.ellipse((W - 6, 1, W - 1, 6), fill=mqtt_color())
@@ -404,36 +424,28 @@ def draw_frame(tf, hum, pres, pm1, pm25, pm10):
     # Center divider
     draw.line((MID_X0, 48, X_SEP2 - 1, 48), fill=SEP)
 
-    # Temperature + RH
-    draw.text((MID_X0 + 2, 51), f"DB {tf:.1f}\u00b0F", font=FONT_M, fill=temp_color(tf))
-    draw.text((MID_X0 + 2, 65), f"RH {hum:.0f}%",   font=FONT_S, fill=hum_color(hum))
+    # Temperature + RH — no labels, side-by-side, FONT_L
+    draw.text((MID_X0 + 2,  54), f"{tf:.0f}\u00b0F", font=FONT_L, fill=temp_color(tf))
+    draw.text((MID_X0 + 44, 54), f"{hum:.0f}%",      font=FONT_L, fill=hum_color(hum))
 
-    # Pressure (description + hPa)
-    pdesc = pressure_desc(pres)
-    draw.text((MID_X0 + 38, 65), f"{pdesc} {pres:.0f}", font=FONT_S, fill=DIM)
+    # ── Right: PM (top) + VOC (bottom) line plots ──────────────────────────────
+    draw.line((RIGHT_X0, PLOT_H, W - 1, PLOT_H), fill=SEP)
 
-    # ── Right: PM ─────────────────────────────────────────────────────────────
-    # PM2.5 — dominant value
-    p25c = pm25_color(pm25)
-    draw.text((RIGHT_X0 + 2, 1),  "PM2.5",      font=FONT_S, fill=DIM)
-    draw.text((RIGHT_X0 + 2, 11), f"{pm25:.1f}", font=FONT_L, fill=p25c)
+    pm_max = d["pm_bar_max"]
+    draw_lines(draw,
+               [pm10_hist, pm25_hist, pm1_hist],
+               [RED, YELLOW, CYAN],
+               [pm_max, pm_max, pm_max],
+               RIGHT_X0, 0, RIGHT_W, PLOT_H)
 
-    # PM2.5 bar (full right-col width, 3px)
-    draw.rectangle((RIGHT_X0, 29, W - 1, 31), fill=BAR_BG)
-    fill_w = int((RIGHT_W - 1) * min(pm25 / d["pm_bar_max"], 1.0))
-    if fill_w > 0:
-        draw.rectangle((RIGHT_X0, 29, RIGHT_X0 + fill_w, 31), fill=p25c)
+    draw_lines(draw,
+               [nh3_hist, rd_hist, ox_hist],
+               [MAGENTA, CYAN, YELLOW],
+               [d["nh3_bar_max_k"], d["rd_bar_max_k"], d["ox_bar_max_k"]],
+               RIGHT_X0, PLOT_H + 1, RIGHT_W, PLOT_H - 1)
 
-    # PM1 / PM10 side by side
-    mid_pm = RIGHT_X0 + RIGHT_W // 2
-    draw.text((RIGHT_X0 + 2, 34), "PM1",         font=FONT_S, fill=DIM)
-    draw.text((mid_pm + 2,   34), "PM10",         font=FONT_S, fill=DIM)
-    draw.text((RIGHT_X0 + 2, 44), f"{pm1:.0f}",  font=FONT_M, fill=pm_color(pm1,  "pm1"))
-    draw.text((mid_pm + 2,   44), f"{pm10:.0f}",  font=FONT_M, fill=pm_color(pm10, "pm10"))
-
-    # Sparkline separator + plot
-    draw.line((RIGHT_X0, SPARK_Y - 1, W - 1, SPARK_Y - 1), fill=SEP)
-    draw_pm_spark(draw, d["pm_bar_max"])
+    draw.text((RIGHT_X0 + 2, 1),          "PM",  font=FONT_S, fill=DIM)
+    draw.text((RIGHT_X0 + 2, PLOT_H + 1), "VOC", font=FONT_S, fill=DIM)
 
     disp.display(img)
 
@@ -484,8 +496,11 @@ while True:
         pm1_hist.append(pm1)
         pm25_hist.append(pm25)
         pm10_hist.append(pm10)
+        ox_hist.append(ox)
+        rd_hist.append(rd)
+        nh3_hist.append(nh3)
 
-        draw_frame(tf, hum, pres, pm1, pm25, pm10)
+        draw_frame(tf, hum, pm1, pm25, pm10, ox, rd, nh3)
 
         now = time.time()
         if now - _last_publish >= cfg["intervals"]["publish_s"]:
