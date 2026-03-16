@@ -209,6 +209,14 @@ _cpu_hist  = deque([45.0] * cfg["calibration"]["cpu_hist_size"],
 CPU_FACTOR = 0.0
 
 
+def c2f(c):
+    return c * 9 / 5 + 32
+
+
+def f2c(f):
+    return (f - 32) * 5 / 9
+
+
 def _cpu_temp():
     with open("/sys/class/thermal/thermal_zone0/temp") as f:
         return int(f.read()) / 1000.0
@@ -245,14 +253,6 @@ def read_temp_c():
     _cpu_hist.append(cpu)
     avg_cpu = sum(_cpu_hist) / len(_cpu_hist)
     return raw - ((avg_cpu - raw) / CPU_FACTOR) if CPU_FACTOR else raw
-
-
-def c2f(c):
-    return c * 9 / 5 + 32
-
-
-def f2c(f):
-    return (f - 32) * 5 / 9
 
 
 def _round_readings(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):

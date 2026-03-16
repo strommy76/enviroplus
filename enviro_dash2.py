@@ -171,7 +171,7 @@ def write_sqlite(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
 
 # ── Display ────────────────────────────────────────────────────────────────────
 disp = st7735.ST7735(port=0, cs=1, dc="GPIO9", backlight="GPIO12",
-                     rotation=270, spi_speed_hz=10000000)
+                     rotation=270, spi_speed_hz=40000000)
 disp.begin()
 W, H = disp.width, disp.height  # 160 × 80
 
