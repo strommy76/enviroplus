@@ -13,6 +13,7 @@ import time
 from dotenv import load_dotenv
 load_dotenv()
 import logging
+from logging.handlers import RotatingFileHandler
 from datetime import datetime
 from collections import deque
 
@@ -26,13 +27,18 @@ from ltr559 import LTR559
 from enviroplus import gas
 from pms5003 import PMS5003, ReadTimeoutError, SerialTimeoutError
 import json
+import sqlite3
 import paho.mqtt.client as mqtt
 # from influxdb_client import InfluxDBClient, Point
 # from influxdb_client.client.write_api import SYNCHRONOUS
 
-logging.basicConfig(
-    format="%(asctime)s %(levelname)-5s %(message)s",
-    level=logging.INFO, datefmt="%H:%M:%S")
+LOG_PATH = os.environ.get("LOG_PATH", "/home/pistrommy/projects/enviroplus/enviro.log")
+_log_fmt  = logging.Formatter("%(asctime)s %(levelname)-5s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+_handler_file = RotatingFileHandler(LOG_PATH, maxBytes=1_000_000, backupCount=5)
+_handler_file.setFormatter(_log_fmt)
+_handler_console = logging.StreamHandler()
+_handler_console.setFormatter(_log_fmt)
+logging.basicConfig(level=logging.INFO, handlers=[_handler_file, _handler_console])
 
 # ── MQTT (Adafruit IO) ────────────────────────────────────────────────────────
 MQTT_BROKER           = os.environ.get("MQTT_BROKER", "io.adafruit.com")
@@ -43,8 +49,11 @@ MQTT_PUBLISH_INTERVAL = int(os.environ.get("MQTT_PUBLISH_INTERVAL", 60))
 
 _mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 _mqtt.username_pw_set(MQTT_USER, MQTT_KEY)
-_mqtt.connect(MQTT_BROKER, MQTT_PORT, keepalive=60)
-_mqtt.loop_start()
+try:
+    _mqtt.connect(MQTT_BROKER, MQTT_PORT, keepalive=60)
+    _mqtt.loop_start()
+except Exception as e:
+    logging.warning(f"MQTT connect failed at startup: {e} — will retry on publish")
 
 _AIO_FEEDS = {
     "temperature": None,
@@ -78,6 +87,35 @@ def write_mqtt(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
         logging.info("MQTT published to Adafruit IO")
     except Exception as e:
         logging.warning(f"MQTT publish failed: {e}")
+
+# ── SQLite ────────────────────────────────────────────────────────────────────
+SQLITE_PATH     = os.environ.get("SQLITE_PATH", "/home/pistrommy/projects/enviroplus/enviro.db")
+SQLITE_INTERVAL = int(os.environ.get("SQLITE_INTERVAL", 60))
+
+_db = sqlite3.connect(SQLITE_PATH, check_same_thread=False)
+_db.execute("""
+    CREATE TABLE IF NOT EXISTS readings (
+        ts          TEXT PRIMARY KEY,
+        temp_f      REAL, humidity REAL, pressure REAL, lux REAL,
+        oxidising   REAL, reducing REAL, ammonia  REAL,
+        pm1         REAL, pm25     REAL, pm10     REAL
+    )
+""")
+_db.commit()
+
+def write_sqlite(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
+    try:
+        _db.execute(
+            "INSERT INTO readings VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            (datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+             round(temp_f,1), round(hum,1), round(pres,2), round(lux,1),
+             round(ox,1),     round(rd,1),  round(nh3,1),
+             round(pm1,1),    round(pm25,1),round(pm10,1))
+        )
+        _db.commit()
+        logging.info("SQLite row written")
+    except Exception as e:
+        logging.warning(f"SQLite write failed: {e}")
 
 # ── InfluxDB (pending setup) ───────────────────────────────────────────────────
 # INFLUX_URL    = os.environ.get("INFLUX_URL",    "http://100.x.x.x:8086")
@@ -155,8 +193,15 @@ def c2f(c):
 
 # ── Quality colors ────────────────────────────────────────────────────────────
 def qcolor(val, good_max, warn_max):
+    """Higher = worse (oxidising, PM)."""
     if val <= good_max: return GREEN
     if val <= warn_max: return YELLOW
+    return RED
+
+def iqcolor(val, warn_min, good_min):
+    """Lower = worse (reducing, NH3)."""
+    if val >= good_min: return GREEN
+    if val >= warn_min: return YELLOW
     return RED
 
 def temp_color(f):
@@ -251,16 +296,20 @@ def draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     draw.line((0, 26, W, 26), fill=SEP)
 
     # ── Gas row ───────────────────────────────────────────────────────────────
+    # Oxidising (NO2/O3): higher resistance = more pollution, baseline ~20k
+    # Reducing (CO/VOCs): lower resistance = more pollution, baseline ~200k
+    # NH3:                lower resistance = more pollution, baseline ~750k
     icon_gas(draw, 2, Y_GAS + 1, DIM)
-    c_ox  = qcolor(ox,   40,  50)
-    c_rd  = qcolor(rd,  450, 550)
-    c_nh3 = qcolor(nh3, 200, 300)
+    c_ox  = qcolor( ox,   40,   60)   # >60k = red
+    c_rd  = iqcolor(rd,  100,  150)   # <100k = red
+    c_nh3 = iqcolor(nh3, 200,  500)   # <200k = red
     draw.text((13, Y_GAS), f"Ox:{ox:.0f}k",  font=FONT_S, fill=c_ox)
     draw.text((62, Y_GAS), f"Rd:{rd:.0f}k",  font=FONT_S, fill=c_rd)
     draw.text((111,Y_GAS), f"N3:{nh3:.0f}k", font=FONT_S, fill=c_nh3)
-    draw_hbar(draw, 13,  Y_GAS + 10, 44, 2, min(ox  /  60, 1.0), c_ox)
-    draw_hbar(draw, 62,  Y_GAS + 10, 44, 2, min(rd  / 600, 1.0), c_rd)
-    draw_hbar(draw, 111, Y_GAS + 10, 44, 2, min(nh3 / 400, 1.0), c_nh3)
+    # Bars: ox fills as it rises; rd/nh3 fill as they fall (inverted)
+    draw_hbar(draw, 13,  Y_GAS + 10, 44, 2, min(ox  / 100, 1.0),        c_ox)
+    draw_hbar(draw, 62,  Y_GAS + 10, 44, 2, max(0, 1 - rd  / 300),      c_rd)
+    draw_hbar(draw, 111, Y_GAS + 10, 44, 2, max(0, 1 - nh3 / 1000),     c_nh3)
     draw.line((0, 39, W, 39), fill=SEP)
 
     # ── PM row ────────────────────────────────────────────────────────────────
@@ -308,7 +357,7 @@ def draw_frame(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
 
 # ── Main loop ─────────────────────────────────────────────────────────────────
 pm1 = pm25 = pm10 = 0.0
-_last_publish = 0.0
+_last_publish = time.time()
 
 logging.info("Enviro+ dashboard starting")
 
@@ -331,7 +380,10 @@ while True:
             pm25 = float(p.pm_ug_per_m3(2.5))
             pm10 = float(p.pm_ug_per_m3(10))
         except (ReadTimeoutError, SerialTimeoutError):
-            pms5003_sensor = PMS5003()
+            try:
+                pms5003_sensor = PMS5003()
+            except Exception as e:
+                logging.warning(f"PMS5003 reinit failed: {e}")
 
         temp_hist.append(temp_c)
         pm25_hist.append(pm25)
@@ -341,6 +393,7 @@ while True:
         now = time.time()
         if now - _last_publish >= MQTT_PUBLISH_INTERVAL:
             write_mqtt(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
+            write_sqlite(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
             _last_publish = now
 
         time.sleep(2)

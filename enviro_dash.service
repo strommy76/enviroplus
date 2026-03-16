@@ -1,0 +1,14 @@
+[Unit]
+Description=Enviro+ Dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=pistrommy
+WorkingDirectory=/home/pistrommy/projects/enviroplus
+ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python enviro_dash.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
