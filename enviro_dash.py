@@ -98,19 +98,42 @@ _db.execute("""
         ts          TEXT PRIMARY KEY,
         temp_f      REAL, humidity REAL, pressure REAL, lux REAL,
         oxidising   REAL, reducing REAL, ammonia  REAL,
-        pm1         REAL, pm25     REAL, pm10     REAL
+        pm1         REAL, pm25     REAL, pm10     REAL,
+        cpu_temp_c  REAL, cpu_load REAL, mem_free_mb REAL, uptime_s INTEGER
     )
 """)
+# Migrate existing DB if Pi telemetry columns are missing
+for col, typedef in [("cpu_temp_c","REAL"), ("cpu_load","REAL"),
+                     ("mem_free_mb","REAL"), ("uptime_s","INTEGER")]:
+    try:
+        _db.execute(f"ALTER TABLE readings ADD COLUMN {col} {typedef}")
+    except sqlite3.OperationalError:
+        pass  # column already exists
 _db.commit()
+
+def _pi_telemetry():
+    cpu_temp = _cpu_temp()
+    with open("/proc/loadavg") as f:
+        cpu_load = float(f.read().split()[0])
+    with open("/proc/meminfo") as f:
+        for line in f:
+            if line.startswith("MemAvailable"):
+                mem_free_mb = int(line.split()[1]) / 1024
+                break
+    with open("/proc/uptime") as f:
+        uptime_s = int(float(f.read().split()[0]))
+    return cpu_temp, cpu_load, mem_free_mb, uptime_s
 
 def write_sqlite(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     try:
+        cpu_temp, cpu_load, mem_free_mb, uptime_s = _pi_telemetry()
         _db.execute(
-            "INSERT INTO readings VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO readings VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
              round(temp_f,1), round(hum,1), round(pres,2), round(lux,1),
              round(ox,1),     round(rd,1),  round(nh3,1),
-             round(pm1,1),    round(pm25,1),round(pm10,1))
+             round(pm1,1),    round(pm25,1),round(pm10,1),
+             round(cpu_temp,1), round(cpu_load,2), round(mem_free_mb,1), uptime_s)
         )
         _db.commit()
         logging.info("SQLite row written")
