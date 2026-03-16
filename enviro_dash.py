@@ -1,11 +1,22 @@
 #!/usr/bin/env python3
 """
-enviro_dash.py - High-density dashboard for Enviro+ (160×80 display)
+File:        enviro_dash.py
+Path:        ~/projects/enviroplus/enviro_dash.py
+Description: High-density dashboard for Enviro+ (160×80 ST7735 display).
+             Displays all 10 sensors with color-coded bar graphs and dual
+             sparklines (temp + PM2.5). Publishes to Adafruit IO via MQTT
+             and logs to SQLite. All tuning values hot-reloaded from
+             dynamic_config.json with no restart required.
 
-All 10 sensors on one screen with pixel icons, color-coded bar graphs,
-and dual sparklines (temp + PM2.5). Green=good, yellow=warning, red=danger.
+Usage:       python3 enviro_dash.py
+             (normally managed by systemd: enviro_dash.service)
 
-Usage: python3 enviro_dash.py
+Changelog:
+  2026-03-15 23:34:22 EDT  Initial working dashboard with MQTT, SQLite,
+                           systemd service, rotating log, CPU temp
+                           compensation, dynamic_config.json hot-reload,
+                           BME280 averaging, Pi telemetry logging, and
+                           Adafruit IO rate-limit throttling.
 """
 
 import json
