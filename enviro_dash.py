@@ -16,6 +16,10 @@ Changelog:
                            compensation, dynamic_config.json hot-reload,
                            BME280 averaging, Pi telemetry logging, and
                            Adafruit IO rate-limit throttling.
+  2026-03-15 23:53:35 EDT  Simplify pass: BASE_PATH eliminates repeated path
+                           literals; f2c() helper used in _calibrate();
+                           _round_readings() is now single source of truth
+                           for sensor rounding shared by MQTT and SQLite.
 """
 
 import json
@@ -45,8 +49,13 @@ load_dotenv()
 
 UserFont = str(files("font_roboto.files").joinpath("Roboto-Medium.ttf"))
 
+# ── Paths ─────────────────────────────────────────────────────────────────────
+_BASE = os.environ.get("BASE_PATH", "/home/pistrommy/projects/enviroplus")
+LOG_PATH    = os.environ.get("LOG_PATH",    os.path.join(_BASE, "enviro.log"))
+CONFIG_PATH = os.environ.get("CONFIG_PATH", os.path.join(_BASE, "dynamic_config.json"))
+SQLITE_PATH = os.environ.get("SQLITE_PATH", os.path.join(_BASE, "enviro.db"))
+
 # ── Logging ───────────────────────────────────────────────────────────────────
-LOG_PATH = os.environ.get("LOG_PATH", "/home/pistrommy/projects/enviroplus/enviro.log")
 _log_fmt = logging.Formatter("%(asctime)s %(levelname)-5s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 _handler_file = RotatingFileHandler(LOG_PATH, maxBytes=1_000_000, backupCount=5)
 _handler_file.setFormatter(_log_fmt)
@@ -55,7 +64,6 @@ _handler_console.setFormatter(_log_fmt)
 logging.basicConfig(level=logging.INFO, handlers=[_handler_file, _handler_console])
 
 # ── Dynamic config ────────────────────────────────────────────────────────────
-CONFIG_PATH = os.environ.get("CONFIG_PATH", "/home/pistrommy/projects/enviroplus/dynamic_config.json")
 _config_mtime = 0.0
 
 
@@ -86,19 +94,15 @@ except Exception as e:
 
 def write_mqtt(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     try:
-        values = {
-            "temperature": round(temp_f, 1),
-            "humidity":    round(hum,    1),
-            "pressure":    round(pres,   2),
-            "light":       round(lux,    1),
-            "oxidising":   round(ox,     1),
-            "reducing":    round(rd,     1),
-            "ammonia":     round(nh3,    1),
-            "pm01":        round(pm1,    1),
-            "pm025":       round(pm25,   1),
-            "pm10":        round(pm10,   1),
+        r = _round_readings(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
+        feeds = {
+            "temperature": r["temperature"], "humidity": r["humidity"],
+            "pressure":    r["pressure"],    "light":    r["light"],
+            "oxidising":   r["oxidising"],   "reducing": r["reducing"],
+            "ammonia":     r["ammonia"],     "pm01":     r["pm1"],
+            "pm025":       r["pm25"],        "pm10":     r["pm10"],
         }
-        for feed, val in values.items():
+        for feed, val in feeds.items():
             _mqtt.publish(f"{MQTT_USER}/feeds/{feed}", val)
             time.sleep(0.5)
         logging.info("MQTT published to Adafruit IO")
@@ -107,7 +111,6 @@ def write_mqtt(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
 
 
 # ── SQLite ────────────────────────────────────────────────────────────────────
-SQLITE_PATH = os.environ.get("SQLITE_PATH", "/home/pistrommy/projects/enviroplus/enviro.db")
 
 _db = sqlite3.connect(SQLITE_PATH, check_same_thread=False)
 _db.execute("""
@@ -144,13 +147,14 @@ def _pi_telemetry():
 
 def write_sqlite(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     try:
+        r = _round_readings(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
         cpu_temp, cpu_load, mem_free_mb, uptime_s = _pi_telemetry()
         _db.execute(
             "INSERT INTO readings VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-             round(temp_f, 1), round(hum, 1), round(pres, 2), round(lux, 1),
-             round(ox, 1),     round(rd, 1),  round(nh3, 1),
-             round(pm1, 1),    round(pm25, 1), round(pm10, 1),
+             r["temperature"], r["humidity"], r["pressure"], r["light"],
+             r["oxidising"],   r["reducing"], r["ammonia"],
+             r["pm1"],         r["pm25"],     r["pm10"],
              round(cpu_temp, 1), round(cpu_load, 2), round(mem_free_mb, 1), uptime_s)
         )
         _db.commit()
@@ -220,7 +224,7 @@ def _calibrate(cal_actual_f):
     if not cal_actual_f:
         CPU_FACTOR = 0.0
         return
-    cal_actual_c = (cal_actual_f - 32) * 5 / 9
+    cal_actual_c = f2c(cal_actual_f)
     cal_raw_c    = sum(_bme_sample().temperature for _ in range(10)) / 10
     cal_cpu_c    = sum(_cpu_temp()               for _ in range(10)) / 10
     denom        = cal_raw_c - cal_actual_c
@@ -245,6 +249,26 @@ def read_temp_c():
 
 def c2f(c):
     return c * 9 / 5 + 32
+
+
+def f2c(f):
+    return (f - 32) * 5 / 9
+
+
+def _round_readings(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
+    """Single source of truth for sensor rounding — used by MQTT and SQLite."""
+    return {
+        "temperature": round(temp_f, 1),
+        "humidity":    round(hum,    1),
+        "pressure":    round(pres,   2),
+        "light":       round(lux,    1),
+        "oxidising":   round(ox,     1),
+        "reducing":    round(rd,     1),
+        "ammonia":     round(nh3,    1),
+        "pm1":         round(pm1,    1),
+        "pm25":        round(pm25,   1),
+        "pm10":        round(pm10,   1),
+    }
 
 
 # ── Quality colors ────────────────────────────────────────────────────────────
