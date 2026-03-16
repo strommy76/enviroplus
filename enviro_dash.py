@@ -90,6 +90,7 @@ def write_mqtt(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
         }
         for feed, val in values.items():
             _mqtt.publish(f"{MQTT_USER}/feeds/{feed}", val)
+            time.sleep(0.5)
         logging.info("MQTT published to Adafruit IO")
     except Exception as e:
         logging.warning(f"MQTT publish failed: {e}")
