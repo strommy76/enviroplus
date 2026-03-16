@@ -52,7 +52,7 @@ from dotenv import load_dotenv
 from enviroplus import gas
 from ltr559 import LTR559
 from PIL import Image, ImageDraw, ImageFont
-from pms5003 import PMS5003, ReadTimeoutError, SerialTimeoutError
+from pms5003 import PMS5003, ChecksumMismatchError, ReadTimeoutError, SerialTimeoutError
 
 load_dotenv()
 
@@ -552,9 +552,9 @@ while True:
             pm1  = float(p.pm_ug_per_m3(1.0))
             pm25 = float(p.pm_ug_per_m3(2.5))
             pm10 = float(p.pm_ug_per_m3(10))
-        except (ReadTimeoutError, SerialTimeoutError):
+        except (ReadTimeoutError, SerialTimeoutError, ChecksumMismatchError):
             try:
-                pms5003_sensor = PMS5003()
+                pms5003_sensor.setup()  # reinit serial without re-claiming GPIO
             except Exception as e:
                 logging.warning(f"PMS5003 reinit failed: {e}")
 
