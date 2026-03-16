@@ -345,23 +345,23 @@ pm10_hist = deque([0.0] * RIGHT_W, maxlen=RIGHT_W)
 
 # ── AQ color bar ───────────────────────────────────────────────────────────────
 def draw_aq_bar(draw, pm25):
-    """Full-height vertical bar: green (bottom=clean) → red (top=bad).
-    White horizontal marker shows current PM2.5 level."""
+    """Gauge bar: dim outline, bottom-filled to current PM2.5 level.
+    Fill color reflects current AQ quality."""
     pm = min(max(pm25, 0), AQ_BAR_MAX)
-    # Bands: (lo_μg, hi_μg, color) — drawn top-to-bottom
-    bands = [
-        (55, AQ_BAR_MAX, RED),
-        (35, 55,         ORANGE),
-        (12, 35,         YELLOW),
-        (0,  12,         GREEN),
-    ]
-    for lo, hi, col in bands:
-        y_top = H - 1 - int(hi / AQ_BAR_MAX * (H - 1))
-        y_bot = H - 1 - int(lo / AQ_BAR_MAX * (H - 1))
-        draw.rectangle((0, y_top, BAR_W - 1, y_bot), fill=col)
-    # Level marker
-    marker_y = H - 1 - int(pm / AQ_BAR_MAX * (H - 1))
-    draw.line((0, marker_y, BAR_W - 1, marker_y), fill=WHITE)
+    # Outline
+    draw.rectangle((0, 0, BAR_W - 1, H - 1), outline=DIM)
+    # Fill from bottom up to current level
+    fill_top = H - 2 - int(pm / AQ_BAR_MAX * (H - 3))
+    if fill_top < H - 2:
+        if pm25 <= 12:
+            col = GREEN
+        elif pm25 <= 35:
+            col = YELLOW
+        elif pm25 <= 55:
+            col = ORANGE
+        else:
+            col = RED
+        draw.rectangle((1, fill_top, BAR_W - 2, H - 2), fill=col)
 
 
 # ── PM sparkline (overlapping, each on its own vmax) ──────────────────────────
@@ -405,7 +405,7 @@ def draw_frame(tf, hum, pres, pm1, pm25, pm10):
     draw.line((MID_X0, 48, X_SEP2 - 1, 48), fill=SEP)
 
     # Temperature + RH
-    draw.text((MID_X0 + 2, 51), f"{tf:.1f}\u00b0F", font=FONT_M, fill=temp_color(tf))
+    draw.text((MID_X0 + 2, 51), f"DB {tf:.1f}\u00b0F", font=FONT_M, fill=temp_color(tf))
     draw.text((MID_X0 + 2, 65), f"RH {hum:.0f}%",   font=FONT_S, fill=hum_color(hum))
 
     # Pressure (description + hPa)
