@@ -38,7 +38,7 @@ A high-density, real-time air quality and environment monitor running on a Raspb
 
 | Sensor | Chip | Measures | Notes |
 |--------|------|----------|-------|
-| Temperature | BME280 | °F (CPU-compensated) | CPU heat correction via `CAL_ACTUAL_F` |
+| Temperature | BME280 | °F (CPU-compensated) | Factor derived from `cal_actual_f` in `dynamic_config.json` |
 | Humidity | BME280 | % RH | |
 | Pressure | BME280 | hPa | |
 | Light | LTR559 | Lux | Also used as proximity sensor |
@@ -66,6 +66,7 @@ flowchart LR
 
     subgraph PI["Raspberry Pi"]
         enviro_dash.py
+        dynamic_config.json
     end
 
     subgraph Outputs
@@ -76,6 +77,7 @@ flowchart LR
         GRAFANA["📈 Grafana\n(planned)"]
     end
 
+    dynamic_config.json -->|hot-reload| enviro_dash.py
     enviro_dash.py --> DISPLAY
     enviro_dash.py -->|every 60s| SQLITE
     enviro_dash.py -->|every 60s| MQTT
@@ -122,19 +124,19 @@ pip install -r requirements.txt
 ### 4. Configure
 
 ```bash
-cp .env.example .env   # then edit with your values
+cp .env.example .env   # add credentials — secrets only, no tuning values here
 ```
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `CAL_ACTUAL_F` | `0` | Known actual temp (°F) from a reference thermometer. Set `0` if sensor is physically separated from the Pi. |
-| `MQTT_BROKER` | `io.adafruit.com` | MQTT broker hostname |
-| `MQTT_USER` | | Adafruit IO username |
-| `MQTT_KEY` | | Adafruit IO key |
-| `MQTT_PUBLISH_INTERVAL` | `60` | Seconds between MQTT publishes |
-| `SQLITE_PATH` | `enviro.db` | Path to SQLite database |
-| `SQLITE_INTERVAL` | `60` | Seconds between SQLite writes |
-| `LOG_PATH` | `enviro.log` | Rotating log file path |
+| Variable | Description |
+|----------|-------------|
+| `MQTT_BROKER` | MQTT broker hostname (default: `io.adafruit.com`) |
+| `MQTT_USER` | Adafruit IO username |
+| `MQTT_KEY` | Adafruit IO key |
+| `SQLITE_PATH` | Path to SQLite database |
+| `LOG_PATH` | Rotating log file path |
+| `CONFIG_PATH` | Path to `dynamic_config.json` |
+
+All tuning values (calibration, thresholds, intervals) live in `dynamic_config.json` — see below.
 
 ### 5. Run as a systemd service
 
@@ -152,22 +154,46 @@ tail -f ~/projects/enviroplus/enviro.log
 
 ---
 
+## ⚙️ dynamic_config.json
+
+All tunable runtime values live here. The running script watches this file and **hot-reloads within 2 seconds** of any change — no restart needed.
+
+```json
+{
+  "calibration": {
+    "cal_actual_f": 74.4,   ← set to your reference thermometer reading
+    "bme_samples":  3,       ← BME280 readings averaged per loop (reduces noise)
+    "cpu_hist_size": 30      ← CPU temp history depth (~1 min of smoothing)
+  },
+  "intervals": {
+    "publish_s":        60,  ← seconds between MQTT + SQLite writes
+    "display_refresh_s": 2   ← display update rate
+  },
+  "thresholds": { ... },     ← color breakpoints for all sensors
+  "display":    { ... }      ← bar graph scaling factors
+}
+```
+
+**To recalibrate temperature:** just update `cal_actual_f` with your current reference thermometer reading and save. The script recalculates `CPU_FACTOR` automatically.
+
+---
+
 ## 🌡️ CPU Temperature Compensation
 
-The BME280 sits millimetres from the Pi's CPU and reads several degrees high. The script auto-derives a correction factor at startup using a reference reading:
+The BME280 sits millimetres from the Pi's CPU and reads several degrees high. The script auto-derives a correction factor at startup (and on config hot-reload) from a known reference:
 
 ```
 CPU_FACTOR = (cpu_temp - raw_temp) / (raw_temp - actual_temp)
-compensated = raw - (avg_cpu - raw) / CPU_FACTOR
+compensated = avg(N raw samples) - (avg_cpu - avg_raw) / CPU_FACTOR
 ```
 
-Set `CAL_ACTUAL_F` in `.env` to your reference thermometer reading and restart. The log will confirm:
+The log confirms the calibration on each startup:
 
 ```
-2026-03-15 21:45:52 INFO  CPU_FACTOR=1.42 (raw=99.1°F cpu=58.3°C actual=72.3°F)
+2026-03-15 22:54:51 INFO  CPU_FACTOR=1.80 (raw=98.4°F  cpu=61.0°C  actual=74.4°F)
 ```
 
-> 💡 The Pi 5 with active cooling runs significantly cooler than the 3 B+, resulting in a much smaller correction factor.
+> 💡 The Pi 5 with active cooling runs significantly cooler than the 3 B+, so `CPU_FACTOR` will be much smaller — possibly close to 0.
 
 ---
 
@@ -175,25 +201,30 @@ Set `CAL_ACTUAL_F` in `.env` to your reference thermometer reading and restart. 
 
 ```sql
 CREATE TABLE readings (
-    ts        TEXT PRIMARY KEY,   -- local time: "2026-03-15 21:30:00"
-    temp_f    REAL,
-    humidity  REAL,
-    pressure  REAL,
-    lux       REAL,
-    oxidising REAL,
-    reducing  REAL,
-    ammonia   REAL,
-    pm1       REAL,
-    pm25      REAL,
-    pm10      REAL
+    ts          TEXT PRIMARY KEY,   -- local time: "2026-03-15 21:30:00"
+    temp_f      REAL,
+    humidity    REAL,
+    pressure    REAL,
+    lux         REAL,
+    oxidising   REAL,
+    reducing    REAL,
+    ammonia     REAL,
+    pm1         REAL,
+    pm25        REAL,
+    pm10        REAL,
+    cpu_temp_c  REAL,               -- Pi CPU temperature (°C)
+    cpu_load    REAL,               -- 1-minute load average
+    mem_free_mb REAL,               -- available memory (MB)
+    uptime_s    INTEGER             -- system uptime (seconds)
 );
 ```
 
-Query example:
+Query example — correlate CPU temp with sensor drift:
 ```sql
-SELECT ts, temp_f, pm25 FROM readings
-WHERE ts >= '2026-03-15 20:00:00'
-ORDER BY ts DESC LIMIT 20;
+SELECT ts, temp_f, cpu_temp_c, cpu_load
+FROM readings
+WHERE ts >= '2026-03-15 22:00:00'
+ORDER BY ts;
 ```
 
 ---
@@ -222,11 +253,14 @@ ORDER BY ts DESC LIMIT 20;
 ## 📋 Roadmap
 
 - [x] 10-sensor dashboard on ST7735 display
-- [x] CPU temperature compensation
+- [x] CPU temperature compensation with auto-derived factor
 - [x] MQTT publish to Adafruit IO
-- [x] SQLite logging with local timestamps
+- [x] SQLite logging with local timestamps + Pi telemetry
 - [x] Rotating log file
 - [x] systemd service with auto-restart
+- [x] `dynamic_config.json` — hot-reloadable config, single source of truth
+- [x] BME280 averaging + CPU history smoothing for noise reduction
+- [x] Ruff linting with pre-commit hook
 - [ ] Adafruit SCD-41 CO₂ sensor integration
 - [ ] InfluxDB writer (stub in code, pending Docker setup)
 - [ ] Grafana dashboard on AI host via Tailscale
