@@ -22,10 +22,20 @@ Changelog:
                            side-by-side. Remove pressure display. Replace right
                            column PM bar/values with PM+VOC dual line plots
                            (same overlapping draw_lines style as dash2).
+  2026-03-16 04:00:00 EDT  Humidity correction for BME280 self-heating: apply
+                           Magnus formula RH_actual = RH_sensor × Psat(T_chip)
+                           / Psat(T_room). T_chip is raw BME280 reading; T_room
+                           is CPU-compensated value. Also update cal_actual_f
+                           to 75.1°F per overnight hygrometer reference.
+  2026-03-16 03:30:00 EDT  Plot backgrounds tinted by worst-case severity:
+                           PM panel uses EPA AQI band color; VOC panel uses
+                           config thresholds (ox/rd/nh3). Dark 25% blend keeps
+                           lines readable at all severity levels.
 """
 
 import json
 import logging
+import math
 import os
 import sqlite3
 import time
@@ -241,8 +251,8 @@ def _calibrate(cal_actual_f):
     denom        = cal_raw_c - cal_actual_c
     CPU_FACTOR   = (cal_cpu_c - cal_raw_c) / denom if denom else 0.0
     logging.info(
-        f"CPU_FACTOR={CPU_FACTOR:.2f} "
-        f"(raw={cal_raw_c * 9 / 5 + 32:.1f}°F  cpu={cal_cpu_c:.1f}°C  actual={cal_actual_f}°F)"
+        f"CPU_FACTOR={CPU_FACTOR:.2f}  "
+        f"raw={c2f(cal_raw_c):.1f}°F  cpu={cal_cpu_c:.1f}°C  actual={cal_actual_f}°F"
     )
 
 
@@ -250,12 +260,25 @@ _calibrate(cfg["calibration"]["cal_actual_f"])
 
 
 def read_temp_c():
+    """Returns (compensated_c, raw_chip_c). raw_chip_c is used for RH correction."""
     n = cfg["calibration"]["bme_samples"]
     raw = sum(_bme_sample().temperature for _ in range(n)) / n
     cpu = _cpu_temp()
     _cpu_hist.append(cpu)
     avg_cpu = sum(_cpu_hist) / len(_cpu_hist)
-    return raw - ((avg_cpu - raw) / CPU_FACTOR) if CPU_FACTOR else raw
+    comp = raw - ((avg_cpu - raw) / CPU_FACTOR) if CPU_FACTOR else raw
+    return comp, raw
+
+
+def correct_humidity(rh, raw_c, actual_c):
+    """Correct BME280 RH for chip self-heating using the Magnus formula.
+    rh      — raw sensor reading (%)
+    raw_c   — BME280 chip temperature (°C), elevated by Pi CPU heat
+    actual_c — compensated room temperature (°C)
+    """
+    def psat(t):
+        return math.exp(17.625 * t / (243.04 + t))
+    return min(rh * psat(raw_c) / psat(actual_c), 100.0)
 
 
 # ── CO₂ placeholder — assign real value here when SCD-41 is connected ─────────
@@ -301,6 +324,47 @@ def mqtt_color():
     if _mqtt_status == "fail":
         return RED
     return YELLOW
+
+
+def _aqi_color(aqi):
+    """EPA AQI band color for the given AQI value."""
+    if aqi <= 50:
+        return GREEN
+    if aqi <= 100:
+        return YELLOW
+    if aqi <= 150:
+        return ORANGE
+    if aqi <= 200:
+        return RED
+    if aqi <= 300:
+        return PURPLE
+    return MAROON
+
+
+def _voc_severity(ox, rd, nh3):
+    """Worst-case severity across all three gas channels using config thresholds.
+    Oxidising: lower kΩ = more NO2 = worse.
+    Reducing/NH3: lower kΩ = more gas = worse."""
+    t = cfg["thresholds"]
+    sev = 0  # 0=green, 1=yellow, 2=red
+    if ox <= t["oxidising_k"]["green_max"]:
+        sev = max(sev, 2)
+    elif ox <= t["oxidising_k"]["yellow_max"]:
+        sev = max(sev, 1)
+    if rd < t["reducing_k"]["yellow_min"]:
+        sev = max(sev, 2)
+    elif rd < t["reducing_k"]["green_min"]:
+        sev = max(sev, 1)
+    if nh3 < t["ammonia_k"]["yellow_min"]:
+        sev = max(sev, 2)
+    elif nh3 < t["ammonia_k"]["green_min"]:
+        sev = max(sev, 1)
+    return [GREEN, YELLOW, RED][sev]
+
+
+def _plot_bg(color, alpha=0.25):
+    """Dark tint of severity color blended into BG at alpha — keeps lines readable."""
+    return tuple(int(BG[i] + (color[i] - BG[i]) * alpha) for i in range(3))
 
 
 # ── EPA AQI (PM2.5 + PM10 sub-indices) ─────────────────────────────────────────
@@ -429,6 +493,8 @@ def draw_frame(tf, hum, pm1, pm25, pm10, ox, rd, nh3):
     draw.text((MID_X0 + 44, 54), f"{hum:.0f}%",      font=FONT_L, fill=hum_color(hum))
 
     # ── Right: PM (top) + VOC (bottom) line plots ──────────────────────────────
+    draw.rectangle((RIGHT_X0, 0,          W - 1, PLOT_H - 1), fill=_plot_bg(_aqi_color(aqi)))
+    draw.rectangle((RIGHT_X0, PLOT_H + 1, W - 1, H - 1),      fill=_plot_bg(_voc_severity(ox, rd, nh3)))
     draw.line((RIGHT_X0, PLOT_H, W - 1, PLOT_H), fill=SEP)
 
     pm_max = d["pm_bar_max"]
@@ -470,9 +536,9 @@ while True:
             if cfg["calibration"]["cal_actual_f"] != old_cal:
                 _calibrate(cfg["calibration"]["cal_actual_f"])
 
-        temp_c  = read_temp_c()
+        temp_c, raw_c = read_temp_c()
         _sample = _bme_sample()
-        hum     = _sample.humidity
+        hum     = correct_humidity(_sample.humidity, raw_c, temp_c)
         pres    = _sample.pressure
         lux     = ltr559_sensor.get_lux()
 

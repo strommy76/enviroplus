@@ -3,11 +3,13 @@
     "path":        "~/projects/enviroplus/dynamic_config.json",
     "description": "Runtime tuning values for enviro_dash.py. Hot-reloaded automatically — no restart needed. Secrets and paths belong in .env, not here.",
     "changelog": [
-      "2026-03-15 23:34:22 EDT  Initial config: calibration, intervals, sensor thresholds, display scaling factors."
+      "2026-03-15 23:34:22 EDT  Initial config: calibration, intervals, sensor thresholds, display scaling factors.",
+      "2026-03-16 03:45:00 EDT  Calibrate gas thresholds to observed indoor baseline (247 rows). rd baseline 97-113 kΩ, nh3 baseline 152-187 kΩ. Old thresholds (rd green_min=150, nh3 green_min=500) were unrealistic.",
+      "2026-03-16 04:00:00 EDT  Update cal_actual_f 74.4→75.1 per overnight hygrometer reference (74.9-75.3°F)."
     ]
   },
   "calibration": {
-    "cal_actual_f": 74.4,
+    "cal_actual_f": 75.1,
     "bme_samples": 3,
     "cpu_hist_size": 30
   },
@@ -19,17 +21,17 @@
     "temp_f":      {"green_min": 65, "green_max": 80, "yellow_min": 55, "yellow_max": 90},
     "humidity":    {"green_min": 30, "green_max": 70, "yellow_min": 20, "yellow_max": 80},
     "oxidising_k": {"green_max": 40, "yellow_max": 60},
-    "reducing_k":  {"yellow_min": 100, "green_min": 150},
-    "ammonia_k":   {"yellow_min": 200, "green_min": 500},
+    "reducing_k":  {"yellow_min": 60,  "green_min": 90},
+    "ammonia_k":   {"yellow_min": 80,  "green_min": 140},
     "pm1":         {"green_max": 12, "yellow_max": 35},
     "pm25":        {"green_max": 12, "yellow_max": 35},
     "pm10":        {"green_max": 25, "yellow_max": 50},
     "aq_pm25":     {"good": 12, "moderate": 35, "usg": 55, "unhealthy": 150}
   },
   "display": {
-    "ox_bar_max_k":     100,
-    "rd_bar_max_k":     300,
-    "nh3_bar_max_k":    1000,
+    "ox_bar_max_k":     120,
+    "rd_bar_max_k":     150,
+    "nh3_bar_max_k":    250,
     "pm_bar_max":       50,
     "temp_bar_min_f":   40,
     "temp_bar_range_f": 80
