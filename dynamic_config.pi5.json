@@ -1,0 +1,53 @@
+{
+  "_meta": {
+    "path":        "~/projects/enviroplus/dynamic_config.pi5.json",
+    "description": "Pi 5 runtime tuning values. Hot-reloaded automatically — no restart needed. Selected via CONFIG_PATH in .env. Secrets and paths belong in .env, not here.",
+    "changelog": [
+      "2026-03-15 23:34:22 EDT  Initial config: calibration, intervals, sensor thresholds, display scaling factors.",
+      "2026-03-16 03:45:00 EDT  Calibrate gas thresholds to observed indoor baseline (247 rows). rd baseline 97-113 kΩ, nh3 baseline 152-187 kΩ. Old thresholds (rd green_min=150, nh3 green_min=500) were unrealistic.",
+      "2026-03-16 04:00:00 EDT  Update cal_actual_f 74.4→75.1 per overnight hygrometer reference (74.9-75.3°F).",
+      "2026-03-16 00:00:00 EDT  Add hardware section for Pi 5 port — SPI, GPIO pins, I2C addr. Values here match Pi 3 B+ / Pi 5 wiring (Enviro+ HAT pinout is identical).",
+      "2026-03-16 00:00:00 EDT  Add cpu_factor_override=1.8488. Pi 5 runs hotter so BME280 is at 34.7°C steady-state vs 22.7°C at cold startup, making the computed CPU_FACTOR wrong. Override bypasses startup calibration with a steady-state-measured value. Null = revert to computed.",
+      "2026-03-18 00:00:00 EDT  Split from dynamic_config.json into Pi 5-specific file. Pi 3 B+ uses dynamic_config.json; Pi 5 selects this file via CONFIG_PATH in .env."
+    ]
+  },
+  "calibration": {
+    "cal_actual_f": 72.25,
+    "bme_samples": 3,
+    "cpu_hist_size": 30,
+    "cpu_factor_override": 1.2154
+  },
+  "intervals": {
+    "publish_s": 60,
+    "display_refresh_s": 2
+  },
+  "thresholds": {
+    "temp_f":      {"green_min": 65, "green_max": 80, "yellow_min": 55, "yellow_max": 90},
+    "humidity":    {"green_min": 30, "green_max": 70, "yellow_min": 20, "yellow_max": 80},
+    "oxidising_k": {"green_max": 40, "yellow_max": 60},
+    "reducing_k":  {"yellow_min": 60,  "green_min": 90},
+    "ammonia_k":   {"yellow_min": 80,  "green_min": 140},
+    "pm1":         {"green_max": 12, "yellow_max": 35},
+    "pm25":        {"green_max": 12, "yellow_max": 35},
+    "pm10":        {"green_max": 25, "yellow_max": 50},
+    "aq_pm25":     {"good": 12, "moderate": 35, "usg": 55, "unhealthy": 150}
+  },
+  "display": {
+    "ox_bar_max_k":     120,
+    "rd_bar_max_k":     150,
+    "nh3_bar_max_k":    250,
+    "pm_bar_max":       50,
+    "temp_bar_min_f":   40,
+    "temp_bar_range_f": 80
+  },
+  "hardware": {
+    "_comment":          "Enviro+ HAT pinout is the same on Pi 3 B+ and Pi 5 — only serial device may differ (set PMS5003_DEVICE in .env)",
+    "spi_port":          0,
+    "spi_cs":            1,
+    "display_dc":        "GPIO9",
+    "display_backlight": "GPIO12",
+    "display_rotation":  270,
+    "spi_speed_hz":      40000000,
+    "bme280_addr":       118
+  }
+}

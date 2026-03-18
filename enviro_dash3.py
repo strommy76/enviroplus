@@ -31,6 +31,23 @@ Changelog:
                            PM panel uses EPA AQI band color; VOC panel uses
                            config thresholds (ox/rd/nh3). Dark 25% blend keeps
                            lines readable at all severity levels.
+  2026-03-16 00:00:00 EDT  Pi 5 port: move all hardware-specific values to
+                           config/env. Display SPI/GPIO, I2C bus, BME280 addr,
+                           PMS5003 serial device, and CPU temp path are now
+                           read from dynamic_config.json ["hardware"] and .env.
+                           Switch bme280 to Pimoroni BME280 class API
+                           (pimoroni-bme280 shadows RPi.bme280 in venv);
+                           _bme_sample() return interface unchanged.
+                           Add cpu_factor_override to _calibrate(): if set in
+                           config, skips startup sampling and uses the value
+                           directly. Pi 5 BME280 is at ~35°C cold-start vs
+                           ~35°C steady-state but CPU is hotter at startup,
+                           making computed factor wrong. Set null to revert.
+  2026-03-18 09:30:00 EDT  Fix MQTT silent failure on DNS-delayed startup: move
+                           loop_start() before connect() so network thread always
+                           runs. Add is_connected() check + reconnect in
+                           write_mqtt() so messages aren't silently queued when
+                           connection was never established.
 """
 
 import json
@@ -43,6 +60,7 @@ from collections import deque
 from datetime import datetime
 from importlib.resources import files
 from logging.handlers import RotatingFileHandler
+from types import SimpleNamespace
 
 import bme280
 import paho.mqtt.client as mqtt
@@ -94,9 +112,9 @@ MQTT_KEY    = os.environ.get("MQTT_KEY",  "")
 
 _mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 _mqtt.username_pw_set(MQTT_USER, MQTT_KEY)
+_mqtt.loop_start()  # always start network thread; connect/reconnect handled separately
 try:
     _mqtt.connect(MQTT_BROKER, MQTT_PORT, keepalive=60)
-    _mqtt.loop_start()
 except Exception as e:
     logging.warning(f"MQTT connect failed at startup: {e} — will retry on publish")
 
@@ -118,6 +136,8 @@ _mqtt_status = "init"  # "init" | "ok" | "fail"
 def write_mqtt(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     global _mqtt_status
     try:
+        if not _mqtt.is_connected():
+            _mqtt.connect(MQTT_BROKER, MQTT_PORT, keepalive=60)
         r = _round_readings(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
         feeds = {
             "temperature": r["temperature"], "humidity": r["humidity"],
@@ -138,6 +158,7 @@ def write_mqtt(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
 
 # ── SQLite ─────────────────────────────────────────────────────────────────────
 _db = sqlite3.connect(SQLITE_PATH, check_same_thread=False)
+_db.execute("PRAGMA journal_mode=WAL")
 _db.execute("""
     CREATE TABLE IF NOT EXISTS readings (
         ts          TEXT PRIMARY KEY,
@@ -189,8 +210,11 @@ def write_sqlite(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
 
 
 # ── Display ────────────────────────────────────────────────────────────────────
-disp = st7735.ST7735(port=0, cs=1, dc="GPIO9", backlight="GPIO12",
-                     rotation=270, spi_speed_hz=40000000)
+_hw = cfg["hardware"]
+disp = st7735.ST7735(port=_hw["spi_port"], cs=_hw["spi_cs"],
+                     dc=_hw["display_dc"], backlight=_hw["display_backlight"],
+                     rotation=_hw["display_rotation"],
+                     spi_speed_hz=_hw["spi_speed_hz"])
 disp.begin()
 W, H = disp.width, disp.height  # 160 × 80
 
@@ -215,11 +239,14 @@ WHITE   = (240, 240, 240)
 DIM     = (55,  60,  80)
 
 # ── Sensors ────────────────────────────────────────────────────────────────────
-_bus           = smbus2.SMBus(1)
-_bme_addr      = 0x76
-_bme_params    = bme280.load_calibration_params(_bus, _bme_addr)
+_i2c_bus       = int(os.environ.get("I2C_BUS", 1))
+_pms_device    = os.environ.get("PMS5003_DEVICE", "/dev/ttyAMA0")
+_cpu_temp_path = os.environ.get("CPU_TEMP_PATH", "/sys/class/thermal/thermal_zone0/temp")
+_bus           = smbus2.SMBus(_i2c_bus)
+_bme_addr      = _hw["bme280_addr"]
+_bme_sensor    = bme280.BME280(i2c_addr=_bme_addr, i2c_dev=_bus)
 ltr559_sensor  = LTR559()
-pms5003_sensor = PMS5003()
+pms5003_sensor = PMS5003(device=_pms_device)
 
 # ── CPU temp compensation ──────────────────────────────────────────────────────
 _cpu_hist  = deque([45.0] * cfg["calibration"]["cpu_hist_size"],
@@ -232,16 +259,24 @@ def f2c(f): return (f - 32) * 5 / 9
 
 
 def _cpu_temp():
-    with open("/sys/class/thermal/thermal_zone0/temp") as f:
+    with open(_cpu_temp_path) as f:
         return int(f.read()) / 1000.0
 
 
 def _bme_sample():
-    return bme280.sample(_bus, _bme_addr, _bme_params)
+    _bme_sensor.update_sensor()
+    return SimpleNamespace(temperature=_bme_sensor.temperature,
+                           humidity=_bme_sensor.humidity,
+                           pressure=_bme_sensor.pressure)
 
 
 def _calibrate(cal_actual_f):
     global CPU_FACTOR
+    override = cfg["calibration"].get("cpu_factor_override")
+    if override is not None:
+        CPU_FACTOR = float(override)
+        logging.info(f"CPU_FACTOR={CPU_FACTOR:.4f} (override from config)")
+        return
     if not cal_actual_f:
         CPU_FACTOR = 0.0
         return

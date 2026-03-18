@@ -1,0 +1,19 @@
+[Unit]
+Description=Enviro+ Dashboard
+After=network-online.target dev-ttyAMA0.device dev-spidev0.1.device
+Wants=network-online.target
+BindsTo=dev-ttyAMA0.device
+
+[Service]
+Type=simple
+User=pistrommy
+WorkingDirectory=/home/pistrommy/projects/enviroplus
+ExecStartPre=/bin/sleep 5
+ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python enviro_dash3.py
+Restart=on-failure
+RestartSec=30
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target
