@@ -20,6 +20,9 @@ Changelog:
                            literals; f2c() helper used in _calibrate();
                            _round_readings() is now single source of truth
                            for sensor rounding shared by MQTT and SQLite.
+  2026-03-31 20:13:00 UTC  Store timestamps as UTC (datetime.utcnow) so
+                           SQLite epoch conversions are correct for Grafana.
+                           Existing rows migrated via datetime(ts, '+4 hours').
 """
 
 import json
@@ -151,7 +154,7 @@ def write_sqlite(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
         cpu_temp, cpu_load, mem_free_mb, uptime_s = _pi_telemetry()
         _db.execute(
             "INSERT INTO readings VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
              r["temperature"], r["humidity"], r["pressure"], r["light"],
              r["oxidising"],   r["reducing"], r["ammonia"],
              r["pm1"],         r["pm25"],     r["pm10"],

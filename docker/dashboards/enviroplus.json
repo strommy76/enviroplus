@@ -1,0 +1,637 @@
+{
+  "panels": [
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "cfhpdda09qq68e"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 65
+              },
+              {
+                "color": "yellow",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "fahrenheit"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "queryText": "SELECT temp_f as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "queryType": "table",
+          "rawQueryText": "SELECT temp_f as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Temperature",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "cfhpdda09qq68e"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 30
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 0,
+        "y": 3
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "queryText": "SELECT humidity as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "queryType": "table",
+          "rawQueryText": "SELECT humidity as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Humidity",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "cfhpdda09qq68e"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 40
+              },
+              {
+                "color": "green",
+                "value": 60
+              }
+            ]
+          },
+          "unit": "kohm"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 0,
+        "y": 6
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "queryText": "SELECT oxidising as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "queryType": "table",
+          "rawQueryText": "SELECT oxidising as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Oxidising",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "cfhpdda09qq68e"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "SCD-41 pending",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1000
+              },
+              {
+                "color": "orange",
+                "value": 1500
+              },
+              {
+                "color": "red",
+                "value": 2000
+              }
+            ]
+          },
+          "unit": "ppm"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 4,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "text": {
+          "valueSize": 72
+        }
+      },
+      "targets": [
+        {
+          "queryText": "SELECT NULL as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "queryType": "table",
+          "rawQueryText": "SELECT NULL as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
+      "title": "CO\u2082",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "cfhpdda09qq68e"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 12
+              },
+              {
+                "color": "red",
+                "value": 35
+              }
+            ]
+          },
+          "unit": "\u00b5g/m\u00b3"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 12,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "queryText": "SELECT pm1 as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "queryType": "table",
+          "rawQueryText": "SELECT pm1 as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
+      "title": "PM1.0",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "cfhpdda09qq68e"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 12
+              },
+              {
+                "color": "red",
+                "value": 35
+              }
+            ]
+          },
+          "unit": "\u00b5g/m\u00b3"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 12,
+        "y": 3
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "queryText": "SELECT pm25 as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "queryType": "table",
+          "rawQueryText": "SELECT pm25 as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
+      "title": "PM2.5",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "cfhpdda09qq68e"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 25
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          },
+          "unit": "\u00b5g/m\u00b3"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 12,
+        "y": 6
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "queryText": "SELECT pm10 as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "queryType": "table",
+          "rawQueryText": "SELECT pm10 as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
+      "title": "PM10",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "cfhpdda09qq68e"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 2
+          }
+        }
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 8,
+      "targets": [
+        {
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as Temperature, humidity as Humidity FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "queryType": "table",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as Temperature, humidity as Humidity FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "title": "Temperature & Humidity",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "cfhpdda09qq68e"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 2
+          },
+          "unit": "\u00b5g/m\u00b3"
+        }
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 9,
+      "targets": [
+        {
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, pm1 as PM1, pm25 as 'PM2.5', pm10 as PM10 FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "queryType": "table",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, pm1 as PM1, pm25 as 'PM2.5', pm10 as PM10 FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "title": "Particulates (PM1 / PM2.5 / PM10)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "cfhpdda09qq68e"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "orange",
+            "mode": "fixed"
+          },
+          "custom": {
+            "lineWidth": 2
+          },
+          "unit": "kohm"
+        }
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 23
+      },
+      "id": 10,
+      "targets": [
+        {
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, oxidising as Oxidising FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "queryType": "table",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, oxidising as Oxidising FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "title": "Oxidising",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "cfhpdda09qq68e"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "custom": {
+            "lineWidth": 2
+          },
+          "unit": "kohm"
+        }
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 23
+      },
+      "id": 11,
+      "targets": [
+        {
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, reducing as Reducing FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "queryType": "table",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, reducing as Reducing FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "title": "Reducing",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "cfhpdda09qq68e"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "purple",
+            "mode": "fixed"
+          },
+          "custom": {
+            "lineWidth": 2
+          },
+          "unit": "kohm"
+        }
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 23
+      },
+      "id": 12,
+      "targets": [
+        {
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, ammonia as Ammonia FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "queryType": "table",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, ammonia as Ammonia FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "title": "Ammonia",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "cfhpdda09qq68e"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "yellow",
+            "mode": "fixed"
+          },
+          "custom": {
+            "fillOpacity": 10,
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "id": 13,
+      "targets": [
+        {
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "cfhpdda09qq68e"
+          },
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, lux as Lux FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "queryType": "table",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, lux as Lux FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "title": "Light Intensity",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "1m",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "Enviro+ Air Quality",
+  "uid": "1ccfb92c-35e1-4d82-94ae-0a1e1d9336d7"
+}

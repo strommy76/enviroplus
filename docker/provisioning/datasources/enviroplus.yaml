@@ -1,0 +1,11 @@
+apiVersion: 1
+
+datasources:
+  - name: EnviroPlus SQLite
+    type: frser-sqlite-datasource
+    uid: cfhpdda09qq68e
+    access: proxy
+    jsonData:
+      path: /data/enviroplus/enviro.db
+    version: 1
+    editable: true
