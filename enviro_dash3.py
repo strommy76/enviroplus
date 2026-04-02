@@ -48,6 +48,9 @@ Changelog:
                            runs. Add is_connected() check + reconnect in
                            write_mqtt() so messages aren't silently queued when
                            connection was never established.
+  2026-04-02 14:56:00 UTC  Store timestamps as UTC via datetime.utcnow() so
+                           SQLite epoch conversions are correct for Grafana.
+                           Existing EDT rows migrated via datetime(ts, '+4 hours').
 """
 
 import json
@@ -197,7 +200,7 @@ def write_sqlite(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
         cpu_temp, cpu_load, mem_free_mb, uptime_s = _pi_telemetry()
         _db.execute(
             "INSERT INTO readings VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
              r["temperature"], r["humidity"], r["pressure"], r["light"],
              r["oxidising"],   r["reducing"], r["ammonia"],
              r["pm1"],         r["pm25"],     r["pm10"],

@@ -23,7 +23,8 @@ Always append a new changelog entry when modifying a file.
 ## Key files
 | File | Purpose |
 |------|---------|
-| `enviro_dash.py` | Main script — sensors, display, MQTT, SQLite |
+| `enviro_dash3.py` | **Active script** — AQM-345 layout, sensors, display, MQTT, SQLite |
+| `enviro_dash.py` | Older layout — not currently in service |
 | `dynamic_config.json` | Runtime config — thresholds, calibration, intervals |
 | `enviro_dash.service` | systemd service definition |
 | `enviro.db` | SQLite database (gitignored) |
@@ -37,7 +38,7 @@ tail -f ~/projects/enviroplus/enviro.log
 
 ## Linting
 ```bash
-/home/pistrommy/.virtualenvs/pimoroni/bin/ruff check enviro_dash.py
+/home/pistrommy/.virtualenvs/pimoroni/bin/ruff check enviro_dash3.py
 ```
 Pre-commit hook runs automatically on staged `.py` files.
 
