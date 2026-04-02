@@ -422,9 +422,9 @@
       "id": 8,
       "targets": [
         {
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as Temperature, humidity as Humidity FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as Temperature, humidity as Humidity FROM readings ORDER BY ts",
           "queryType": "table",
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as Temperature, humidity as Humidity FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as Temperature, humidity as Humidity FROM readings ORDER BY ts",
           "refId": "A",
           "timeColumns": [
             "time"
@@ -456,9 +456,9 @@
       "id": 9,
       "targets": [
         {
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, pm1 as PM1, pm25 as 'PM2.5', pm10 as PM10 FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, pm1 as PM1, pm25 as 'PM2.5', pm10 as PM10 FROM readings ORDER BY ts",
           "queryType": "table",
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, pm1 as PM1, pm25 as 'PM2.5', pm10 as PM10 FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, pm1 as PM1, pm25 as 'PM2.5', pm10 as PM10 FROM readings ORDER BY ts",
           "refId": "A",
           "timeColumns": [
             "time"
@@ -494,9 +494,9 @@
       "id": 10,
       "targets": [
         {
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, oxidising as Oxidising FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, oxidising as Oxidising FROM readings ORDER BY ts",
           "queryType": "table",
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, oxidising as Oxidising FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, oxidising as Oxidising FROM readings ORDER BY ts",
           "refId": "A",
           "timeColumns": [
             "time"
@@ -532,9 +532,9 @@
       "id": 11,
       "targets": [
         {
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, reducing as Reducing FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, reducing as Reducing FROM readings ORDER BY ts",
           "queryType": "table",
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, reducing as Reducing FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, reducing as Reducing FROM readings ORDER BY ts",
           "refId": "A",
           "timeColumns": [
             "time"
@@ -570,9 +570,9 @@
       "id": 12,
       "targets": [
         {
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, ammonia as Ammonia FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, ammonia as Ammonia FROM readings ORDER BY ts",
           "queryType": "table",
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, ammonia as Ammonia FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, ammonia as Ammonia FROM readings ORDER BY ts",
           "refId": "A",
           "timeColumns": [
             "time"
@@ -596,7 +596,8 @@
           "custom": {
             "fillOpacity": 10,
             "lineWidth": 1
-          }
+          },
+          "min": 0
         },
         "overrides": []
       },
@@ -613,9 +614,9 @@
             "type": "frser-sqlite-datasource",
             "uid": "cfhpdda09qq68e"
           },
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, lux as Lux FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, lux as Lux FROM readings ORDER BY ts",
           "queryType": "table",
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, lux as Lux FROM readings WHERE ts >= datetime('now', '-6 hours') ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, lux as Lux FROM readings ORDER BY ts",
           "refId": "A",
           "timeColumns": [
             "time"
@@ -628,7 +629,7 @@
   ],
   "refresh": "1m",
   "time": {
-    "from": "now-6h",
+    "from": "now-24h",
     "to": "now"
   },
   "timezone": "browser",
