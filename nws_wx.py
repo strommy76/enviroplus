@@ -7,38 +7,49 @@ Description: Polls NWS API (Patrick SFB / KCOF) every 10 min and writes
 
 Changelog:
   2026-04-08 16:00:00 EDT  Initial implementation.
+  2026-04-09 00:00:00 UTC  Phase 3 refactor: use shared services library for
+                           config, logging, DB writes, and signal handling.
+                           Added load_env (was missing), moved hardcoded
+                           NWS_URL and USER_AGENT to .env via require().
 """
 
 import json
-import logging
 import os
 import sqlite3
+import sys
 import time
 import urllib.error
 import urllib.request
-from logging.handlers import RotatingFileHandler
+
+sys.path.insert(0, "/home/pistrommy/projects")
+
+from shared.config_service import load_env, require
+from shared.db_service import connect, write_row
+from shared.logging_service import setup_logger
+from shared.signal_handler import install_shutdown_handler
 
 # ── Paths / config ─────────────────────────────────────────────────────────────
-_BASE       = os.environ.get("BASE_PATH",   "/home/pistrommy/projects/enviroplus")
-LOG_PATH    = os.environ.get("LOG_PATH",    os.path.join(_BASE, "enviro.log"))
-SQLITE_PATH = os.environ.get("SQLITE_PATH", os.path.join(_BASE, "enviro.db"))
+_BASE       = os.path.dirname(os.path.abspath(__file__))
+_ENV_PATH   = os.path.join(_BASE, ".env")
+LOG_PATH    = os.path.join(_BASE, "enviro.log")
+SQLITE_PATH = os.path.join(_BASE, "enviro.db")
 
-POLL_S      = 600  # 10 minutes
-NWS_URL     = "https://api.weather.gov/stations/KCOF/observations/latest"
-USER_AGENT  = "BSPiLHX-NWS/1.0 (pistrommy@bspilhx)"
+load_env(_ENV_PATH, expect_key="NWS_STATION")
+
+NWS_STATION = require("NWS_STATION")
+USER_AGENT  = require("NWS_USER_AGENT")
+POLL_S      = int(require("NWS_POLL_S"))
+
+NWS_URL = f"https://api.weather.gov/stations/{NWS_STATION}/observations/latest"
 
 # ── Logging ────────────────────────────────────────────────────────────────────
-_fmt     = logging.Formatter("%(asctime)s %(levelname)-5s %(message)s",
-                             datefmt="%Y-%m-%d %H:%M:%S")
-_fh      = RotatingFileHandler(LOG_PATH, maxBytes=1_000_000, backupCount=5)
-_fh.setFormatter(_fmt)
-_ch      = logging.StreamHandler()
-_ch.setFormatter(_fmt)
-logging.basicConfig(level=logging.INFO, handlers=[_fh, _ch])
+log = setup_logger("nws_wx", LOG_PATH)
+
+# ── Signal handler ─────────────────────────────────────────────────────────────
+is_shutting_down = install_shutdown_handler(logger=log)
 
 # ── SQLite ─────────────────────────────────────────────────────────────────────
-_db = sqlite3.connect(SQLITE_PATH, check_same_thread=False)
-_db.execute("PRAGMA journal_mode=WAL")
+_db = connect(SQLITE_PATH)
 _db.execute("""
     CREATE TABLE IF NOT EXISTS nws_weather (
         ts              TEXT PRIMARY KEY,
@@ -129,46 +140,27 @@ def _parse(p):
 def _write(d):
     ts = d["ts"]
     if ts is None:
-        logging.warning("NWS observation has no timestamp, skipping")
+        log.warning("NWS observation has no timestamp, skipping")
         return
-    try:
-        _db.execute(
-            """
-            INSERT OR IGNORE INTO nws_weather VALUES
-            (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-            """,
-            (
-                ts,
-                d["temp_f"],        d["humidity"],
-                d["wind_speed_mph"], d["wind_gust_mph"],
-                d["wind_direction"],
-                d["barometer_inhg"],
-                d["visibility_miles"],
-                d["dewpoint_f"],
-                d["heat_index_f"],  d["wind_chill_f"],
-                d["precip_1h_in"],
-                d["cloud_cover"],   d["conditions"],
-            ),
-        )
-        _db.commit()
+    if write_row(_db, "nws_weather", d, or_ignore=True):
         temp_s = f"{d['temp_f']:.1f}°F" if d["temp_f"] is not None else "n/a"
         wind_s = f"{d['wind_speed_mph']:.1f}mph" if d["wind_speed_mph"] is not None else "calm"
-        logging.info(f"nws_weather row written  ts={ts}  temp={temp_s}  "
-                     f"wind={wind_s}  cond={d['conditions']}")
-    except Exception as e:
-        logging.warning(f"SQLite write failed: {e}")
+        log.info("nws_weather row written  ts=%s  temp=%s  wind=%s  cond=%s",
+                 ts, temp_s, wind_s, d["conditions"])
 
 
 # ── Main loop ──────────────────────────────────────────────────────────────────
-logging.info("nws_wx starting — station KCOF (Patrick SFB)")
+log.info("nws_wx starting — station %s", NWS_STATION)
 
-while True:
+while not is_shutting_down():
     try:
         _write(_parse(_fetch()))
     except urllib.error.URLError as e:
-        logging.warning(f"NWS API fetch failed: {e}")
+        log.warning("NWS API fetch failed: %s", e)
     except (KeyError, IndexError, ValueError) as e:
-        logging.warning(f"Unexpected NWS API response: {e}")
+        log.warning("Unexpected NWS API response: %s", e)
     except Exception as e:
-        logging.error(f"Unexpected error: {e}")
+        log.error("Unexpected error: %s", e, exc_info=True)
     time.sleep(POLL_S)
+
+log.info("nws_wx stopped")

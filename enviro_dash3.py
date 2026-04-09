@@ -51,6 +51,12 @@ Changelog:
   2026-04-02 14:56:00 UTC  Store timestamps as UTC via datetime.utcnow() so
                            SQLite epoch conversions are correct for Grafana.
                            Existing EDT rows migrated via datetime(ts, '+4 hours').
+  2026-04-09 00:00:00 UTC  Phase 3 refactor: use shared services library for
+                           config and logging. Replace datetime.utcnow() with
+                           shared.utils.utc_now(). Fail-loud on MQTT creds via
+                           require(). Add PMS5003 read-failure warning logging
+                           and stale-data tracking. Add EPA AQI breakpoint
+                           comment explaining regulatory constants.
 """
 
 import json
@@ -58,40 +64,41 @@ import logging
 import math
 import os
 import sqlite3
+import sys
 import time
 from collections import deque
-from datetime import datetime
 from importlib.resources import files
-from logging.handlers import RotatingFileHandler
 from types import SimpleNamespace
+
+sys.path.insert(0, "/home/pistrommy/projects")
 
 import bme280
 import paho.mqtt.client as mqtt
 import smbus2
 import st7735
-from dotenv import load_dotenv
 from enviroplus import gas
 from ltr559 import LTR559
 from PIL import Image, ImageDraw, ImageFont
 from pms5003 import PMS5003, ChecksumMismatchError, ReadTimeoutError, SerialTimeoutError
 
-load_dotenv()
+from shared.config_service import load_env, require
+from shared.logging_service import setup_logger
+from shared.utils import utc_now
 
 UserFont = str(files("font_roboto.files").joinpath("Roboto-Medium.ttf"))
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-_BASE       = os.environ.get("BASE_PATH",    "/home/pistrommy/projects/enviroplus")
-LOG_PATH    = os.environ.get("LOG_PATH",    os.path.join(_BASE, "enviro.log"))
+_BASE       = os.path.dirname(os.path.abspath(__file__))
+_ENV_PATH   = os.path.join(_BASE, ".env")
+LOG_PATH    = os.path.join(_BASE, "enviro.log")
+SQLITE_PATH = os.path.join(_BASE, "enviro.db")
+
+load_env(_ENV_PATH, expect_key="MQTT_BROKER")
+
 CONFIG_PATH = os.environ.get("CONFIG_PATH", os.path.join(_BASE, "dynamic_config.json"))
-SQLITE_PATH = os.environ.get("SQLITE_PATH", os.path.join(_BASE, "enviro.db"))
 
 # ── Logging ────────────────────────────────────────────────────────────────────
-_log_fmt      = logging.Formatter("%(asctime)s %(levelname)-5s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-_handler_file = RotatingFileHandler(LOG_PATH, maxBytes=1_000_000, backupCount=5)
-_handler_file.setFormatter(_log_fmt)
-_handler_con  = logging.StreamHandler()
-_handler_con.setFormatter(_log_fmt)
-logging.basicConfig(level=logging.INFO, handlers=[_handler_file, _handler_con])
+log = setup_logger("enviro_dash", LOG_PATH)
 
 # ── Dynamic config ─────────────────────────────────────────────────────────────
 _config_mtime = 0.0
@@ -108,10 +115,10 @@ def load_config():
 cfg = load_config()
 
 # ── MQTT (Adafruit IO) ────────────────────────────────────────────────────────
-MQTT_BROKER = os.environ.get("MQTT_BROKER", "io.adafruit.com")
-MQTT_PORT   = int(os.environ.get("MQTT_PORT", 1883))
-MQTT_USER   = os.environ.get("MQTT_USER", "")
-MQTT_KEY    = os.environ.get("MQTT_KEY",  "")
+MQTT_BROKER = require("MQTT_BROKER")
+MQTT_PORT   = int(require("MQTT_PORT"))
+MQTT_USER   = require("MQTT_USER")
+MQTT_KEY    = require("MQTT_KEY")
 
 _mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 _mqtt.username_pw_set(MQTT_USER, MQTT_KEY)
@@ -119,7 +126,7 @@ _mqtt.loop_start()  # always start network thread; connect/reconnect handled sep
 try:
     _mqtt.connect(MQTT_BROKER, MQTT_PORT, keepalive=60)
 except Exception as e:
-    logging.warning(f"MQTT connect failed at startup: {e} — will retry on publish")
+    log.warning("MQTT connect failed at startup: %s — will retry on publish", e)
 
 
 def _round_readings(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
@@ -153,10 +160,10 @@ def write_mqtt(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
             _mqtt.publish(f"{MQTT_USER}/feeds/{feed}", val)
             time.sleep(0.5)
         _mqtt_status = "ok"
-        logging.info("MQTT published to Adafruit IO")
+        log.info("MQTT published to Adafruit IO")
     except Exception as e:
         _mqtt_status = "fail"
-        logging.warning(f"MQTT publish failed: {e}")
+        log.warning("MQTT publish failed: %s", e)
 
 
 # ── SQLite ─────────────────────────────────────────────────────────────────────
@@ -200,16 +207,16 @@ def write_sqlite(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
         cpu_temp, cpu_load, mem_free_mb, uptime_s = _pi_telemetry()
         _db.execute(
             "INSERT INTO readings VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+            (utc_now(),
              r["temperature"], r["humidity"], r["pressure"], r["light"],
              r["oxidising"],   r["reducing"], r["ammonia"],
              r["pm1"],         r["pm25"],     r["pm10"],
              round(cpu_temp, 1), round(cpu_load, 2), round(mem_free_mb, 1), uptime_s)
         )
         _db.commit()
-        logging.info("SQLite row written")
+        log.info("SQLite row written")
     except Exception as e:
-        logging.warning(f"SQLite write failed: {e}")
+        log.warning("SQLite write failed: %s", e)
 
 
 # ── Display ────────────────────────────────────────────────────────────────────
@@ -278,7 +285,7 @@ def _calibrate(cal_actual_f):
     override = cfg["calibration"].get("cpu_factor_override")
     if override is not None:
         CPU_FACTOR = float(override)
-        logging.info(f"CPU_FACTOR={CPU_FACTOR:.4f} (override from config)")
+        log.info("CPU_FACTOR=%.4f (override from config)", CPU_FACTOR)
         return
     if not cal_actual_f:
         CPU_FACTOR = 0.0
@@ -288,10 +295,8 @@ def _calibrate(cal_actual_f):
     cal_cpu_c    = sum(_cpu_temp()               for _ in range(10)) / 10
     denom        = cal_raw_c - cal_actual_c
     CPU_FACTOR   = (cal_cpu_c - cal_raw_c) / denom if denom else 0.0
-    logging.info(
-        f"CPU_FACTOR={CPU_FACTOR:.2f}  "
-        f"raw={c2f(cal_raw_c):.1f}°F  cpu={cal_cpu_c:.1f}°C  actual={cal_actual_f}°F"
-    )
+    log.info("CPU_FACTOR=%.2f  raw=%.1f°F  cpu=%.1f°C  actual=%s°F",
+             CPU_FACTOR, c2f(cal_raw_c), cal_cpu_c, cal_actual_f)
 
 
 _calibrate(cfg["calibration"]["cal_actual_f"])
@@ -407,6 +412,9 @@ def _plot_bg(color, alpha=0.25):
 
 # ── EPA AQI (PM2.5 + PM10 sub-indices) ─────────────────────────────────────────
 # Breakpoints: (C_lo, C_hi, AQI_lo, AQI_hi)
+# These are federal regulatory constants from 40 CFR Part 58, Appendix G —
+# EPA AQI linear interpolation breakpoints. Do not modify unless the EPA
+# updates the standard (last revised 2024).
 _PM25_BP = [
     (  0.0,  12.0,   0,  50),
     ( 12.1,  35.4,  51, 100),
@@ -557,8 +565,9 @@ def draw_frame(tf, hum, pm1, pm25, pm10, ox, rd, nh3):
 # ── Main loop ─────────────────────────────────────────────────────────────────
 pm1 = pm25 = pm10 = 0.0
 _last_publish = time.time()
+_last_pm_read_time = time.time()  # stale-data tracking for PM readings
 
-logging.info("Enviro+ dash v3 starting")
+log.info("Enviro+ dash v3 starting")
 
 while True:
     try:
@@ -567,7 +576,7 @@ while True:
             old_cal  = cfg["calibration"]["cal_actual_f"]
             old_hist = cfg["calibration"]["cpu_hist_size"]
             cfg = load_config()
-            logging.info("dynamic_config.json reloaded")
+            log.info("dynamic_config.json reloaded")
             if cfg["calibration"]["cpu_hist_size"] != old_hist:
                 new_size = cfg["calibration"]["cpu_hist_size"]
                 _cpu_hist.__init__(list(_cpu_hist)[-new_size:], maxlen=new_size)
@@ -590,11 +599,18 @@ while True:
             pm1  = float(p.pm_ug_per_m3(1.0))
             pm25 = float(p.pm_ug_per_m3(2.5))
             pm10 = float(p.pm_ug_per_m3(10))
-        except (ReadTimeoutError, SerialTimeoutError, ChecksumMismatchError):
+            _last_pm_read_time = time.time()
+        except (ReadTimeoutError, SerialTimeoutError, ChecksumMismatchError) as e:
+            log.warning("PMS5003 read failed: %s — reinitializing", e)
             try:
                 pms5003_sensor.setup()  # reinit serial without re-claiming GPIO
-            except Exception as e:
-                logging.warning(f"PMS5003 reinit failed: {e}")
+            except Exception as reinit_err:
+                log.warning("PMS5003 reinit failed: %s", reinit_err)
+
+        # Warn if PM data is stale (sensor not read successfully for > 60s)
+        if time.time() - _last_pm_read_time > 60:
+            log.warning("PM readings stale — last successful read %.0fs ago",
+                        time.time() - _last_pm_read_time)
 
         tf = c2f(temp_c)
         pm1_hist.append(pm1)
@@ -615,8 +631,8 @@ while True:
         time.sleep(cfg["intervals"]["display_refresh_s"])
 
     except KeyboardInterrupt:
-        logging.info("Stopped by user")
+        log.info("Stopped by user")
         break
     except Exception as e:
-        logging.error(f"Unexpected error: {e}")
+        log.error("Unexpected error: %s", e, exc_info=True)
         time.sleep(5)

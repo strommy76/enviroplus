@@ -7,32 +7,40 @@ Description: Polls AirNow (EPA) API every 30 min and writes air quality
 
 Changelog:
   2026-04-08 20:00:00 EDT  Initial implementation.
+  2026-04-09 00:00:00 UTC  Phase 3 refactor: use shared services library for
+                           config, logging, DB writes, and signal handling.
+                           Moved hardcoded LAT/LON/DISTANCE to .env via require().
 """
 
 import json
-import logging
 import os
 import sqlite3
+import sys
 import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
-from logging.handlers import RotatingFileHandler
 
-from dotenv import load_dotenv
+sys.path.insert(0, "/home/pistrommy/projects")
 
-load_dotenv()
+from shared.config_service import load_env, require
+from shared.db_service import connect, write_row
+from shared.logging_service import setup_logger
+from shared.signal_handler import install_shutdown_handler
 
 # ── Paths / config ─────────────────────────────────────────────────────────────
-_BASE       = os.environ.get("BASE_PATH",   "/home/pistrommy/projects/enviroplus")
-LOG_PATH    = os.environ.get("LOG_PATH",    os.path.join(_BASE, "enviro.log"))
-SQLITE_PATH = os.environ.get("SQLITE_PATH", os.path.join(_BASE, "enviro.db"))
+_BASE       = os.path.dirname(os.path.abspath(__file__))
+_ENV_PATH   = os.path.join(_BASE, ".env")
+LOG_PATH    = os.path.join(_BASE, "enviro.log")
+SQLITE_PATH = os.path.join(_BASE, "enviro.db")
 
-AIRNOW_KEY  = os.environ["AIRNOW_API_KEY"]
-POLL_S      = 1800  # 30 minutes
-LAT         = 28.1761
-LON         = -80.5901
-DISTANCE    = 50
+load_env(_ENV_PATH, expect_key="AIRNOW_API_KEY")
+
+AIRNOW_KEY  = require("AIRNOW_API_KEY")
+LAT         = require("AIRNOW_LAT")
+LON         = require("AIRNOW_LON")
+DISTANCE    = require("AIRNOW_DISTANCE")
+POLL_S      = int(require("AIRNOW_POLL_S"))
 
 AIRNOW_URL = (
     f"https://www.airnowapi.org/aq/observation/latLong/current/"
@@ -41,17 +49,13 @@ AIRNOW_URL = (
 )
 
 # ── Logging ────────────────────────────────────────────────────────────────────
-_fmt     = logging.Formatter("%(asctime)s %(levelname)-5s %(message)s",
-                             datefmt="%Y-%m-%d %H:%M:%S")
-_fh      = RotatingFileHandler(LOG_PATH, maxBytes=1_000_000, backupCount=5)
-_fh.setFormatter(_fmt)
-_ch      = logging.StreamHandler()
-_ch.setFormatter(_fmt)
-logging.basicConfig(level=logging.INFO, handlers=[_fh, _ch])
+log = setup_logger("airnow_wx", LOG_PATH)
+
+# ── Signal handler ─────────────────────────────────────────────────────────────
+is_shutting_down = install_shutdown_handler(logger=log)
 
 # ── SQLite ─────────────────────────────────────────────────────────────────────
-_db = sqlite3.connect(SQLITE_PATH, check_same_thread=False)
-_db.execute("PRAGMA journal_mode=WAL")
+_db = connect(SQLITE_PATH)
 _db.execute("""
     CREATE TABLE IF NOT EXISTS epa_air_quality (
         ts              TEXT PRIMARY KEY,
@@ -111,42 +115,28 @@ def _parse(observations):
 
 def _write(d):
     if d is None:
-        logging.warning("AirNow returned no observations, skipping")
+        log.warning("AirNow returned no observations, skipping")
         return
     ts = d["ts"]
-    try:
-        _db.execute(
-            """
-            INSERT OR IGNORE INTO epa_air_quality VALUES
-            (?,?,?,?,?,?,?,?)
-            """,
-            (
-                ts,
-                d["pm25_aqi"],     d["pm25_category"],
-                d["pm10_aqi"],     d["pm10_category"],
-                d["ozone_aqi"],    d["ozone_category"],
-                d["reporting_area"],
-            ),
-        )
-        _db.commit()
+    if write_row(_db, "epa_air_quality", d, or_ignore=True):
         pm25_s = str(d["pm25_aqi"]) if d["pm25_aqi"] is not None else "n/a"
         o3_s = str(d["ozone_aqi"]) if d["ozone_aqi"] is not None else "n/a"
-        logging.info(f"epa_air_quality row written  ts={ts}  PM2.5={pm25_s}  "
-                     f"O3={o3_s}  area={d['reporting_area']}")
-    except Exception as e:
-        logging.warning(f"SQLite write failed: {e}")
+        log.info("epa_air_quality row written  ts=%s  PM2.5=%s  O3=%s  area=%s",
+                 ts, pm25_s, o3_s, d["reporting_area"])
 
 
 # ── Main loop ──────────────────────────────────────────────────────────────────
-logging.info("airnow_wx starting — Melbourne, FL reporting area")
+log.info("airnow_wx starting — Melbourne, FL reporting area")
 
-while True:
+while not is_shutting_down():
     try:
         _write(_parse(_fetch()))
     except urllib.error.URLError as e:
-        logging.warning(f"AirNow API fetch failed: {e}")
+        log.warning("AirNow API fetch failed: %s", e)
     except (KeyError, IndexError, ValueError) as e:
-        logging.warning(f"Unexpected AirNow API response: {e}")
+        log.warning("Unexpected AirNow API response: %s", e)
     except Exception as e:
-        logging.error(f"Unexpected error: {e}")
+        log.error("Unexpected error: %s", e, exc_info=True)
     time.sleep(POLL_S)
+
+log.info("airnow_wx stopped")

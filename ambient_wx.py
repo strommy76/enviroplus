@@ -7,31 +7,38 @@ Description: Polls Ambient Weather API (BSWeather WS-2902) every 60 s and
 
 Changelog:
   2026-04-04 16:56:00 EDT  Initial implementation.
+  2026-04-09 00:00:00 UTC  Phase 3 refactor: use shared services library for
+                           config, logging, DB writes, and signal handling.
 """
 
 import json
-import logging
 import os
 import sqlite3
+import sys
 import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
-from logging.handlers import RotatingFileHandler
 
-from dotenv import load_dotenv
+sys.path.insert(0, "/home/pistrommy/projects")
 
-load_dotenv()
+from shared.config_service import load_env, require
+from shared.db_service import connect, write_row
+from shared.logging_service import setup_logger
+from shared.signal_handler import install_shutdown_handler
 
 # ── Paths / config ─────────────────────────────────────────────────────────────
-_BASE       = os.environ.get("BASE_PATH",   "/home/pistrommy/projects/enviroplus")
-LOG_PATH    = os.environ.get("LOG_PATH",    os.path.join(_BASE, "enviro.log"))
-SQLITE_PATH = os.environ.get("SQLITE_PATH", os.path.join(_BASE, "enviro.db"))
+_BASE       = os.path.dirname(os.path.abspath(__file__))
+_ENV_PATH   = os.path.join(_BASE, ".env")
+LOG_PATH    = os.path.join(_BASE, "enviro.log")
+SQLITE_PATH = os.path.join(_BASE, "enviro.db")
 
-AW_API_KEY  = os.environ["AW_API_KEY"]
-AW_APP_KEY  = os.environ["AW_APP_KEY"]
-AW_MAC      = os.environ["AW_MAC"]
-POLL_S      = 60
+load_env(_ENV_PATH, expect_key="AW_API_KEY")
+
+AW_API_KEY  = require("AW_API_KEY")
+AW_APP_KEY  = require("AW_APP_KEY")
+AW_MAC      = require("AW_MAC")
+POLL_S      = int(require("AW_POLL_S"))
 
 AW_URL = (
     f"https://api.ambientweather.net/v1/devices"
@@ -39,17 +46,13 @@ AW_URL = (
 )
 
 # ── Logging ────────────────────────────────────────────────────────────────────
-_fmt     = logging.Formatter("%(asctime)s %(levelname)-5s %(message)s",
-                             datefmt="%Y-%m-%d %H:%M:%S")
-_fh      = RotatingFileHandler(LOG_PATH, maxBytes=1_000_000, backupCount=5)
-_fh.setFormatter(_fmt)
-_ch      = logging.StreamHandler()
-_ch.setFormatter(_fmt)
-logging.basicConfig(level=logging.INFO, handlers=[_fh, _ch])
+log = setup_logger("ambient_wx", LOG_PATH)
+
+# ── Signal handler ─────────────────────────────────────────────────────────────
+is_shutting_down = install_shutdown_handler(logger=log)
 
 # ── SQLite ─────────────────────────────────────────────────────────────────────
-_db = sqlite3.connect(SQLITE_PATH, check_same_thread=False)
-_db.execute("PRAGMA journal_mode=WAL")
+_db = connect(SQLITE_PATH)
 _db.execute("""
     CREATE TABLE IF NOT EXISTS outdoor (
         ts             TEXT PRIMARY KEY,
@@ -81,45 +84,46 @@ def _write(d):
     ts = datetime.fromtimestamp(d["dateutc"] / 1000, tz=timezone.utc).strftime(
         "%Y-%m-%d %H:%M:%S"
     )
-    try:
-        _db.execute(
-            """
-            INSERT OR IGNORE INTO outdoor VALUES
-            (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-            """,
-            (
-                ts,
-                d.get("tempf"),        d.get("tempinf"),
-                d.get("humidity"),     d.get("humidityin"),
-                d.get("baromrelin"),   d.get("baromabsin"),
-                d.get("windspeedmph"), d.get("windgustmph"),
-                d.get("winddir"),
-                d.get("maxdailygust"),
-                d.get("solarradiation"), d.get("uv"),
-                d.get("dewPoint"),     d.get("feelsLike"),
-                d.get("hourlyrainin"), d.get("dailyrainin"),
-                d.get("weeklyrainin"), d.get("monthlyrainin"),
-                d.get("totalrainin"),
-                d.get("lastRain"),
-            ),
-        )
-        _db.commit()
-        logging.info(f"outdoor row written  ts={ts}  temp={d.get('tempf')}°F  "
-                     f"hum={d.get('humidity')}%  wind={d.get('windspeedmph')}mph")
-    except Exception as e:
-        logging.warning(f"SQLite write failed: {e}")
+    row = {
+        "ts":             ts,
+        "tempf":          d.get("tempf"),
+        "tempinf":        d.get("tempinf"),
+        "humidity":       d.get("humidity"),
+        "humidityin":     d.get("humidityin"),
+        "baromrelin":     d.get("baromrelin"),
+        "baromabsin":     d.get("baromabsin"),
+        "windspeedmph":   d.get("windspeedmph"),
+        "windgustmph":    d.get("windgustmph"),
+        "winddir":        d.get("winddir"),
+        "maxdailygust":   d.get("maxdailygust"),
+        "solarradiation": d.get("solarradiation"),
+        "uv":             d.get("uv"),
+        "dewpoint":       d.get("dewPoint"),
+        "feelslike":      d.get("feelsLike"),
+        "hourlyrainin":   d.get("hourlyrainin"),
+        "dailyrainin":    d.get("dailyrainin"),
+        "weeklyrainin":   d.get("weeklyrainin"),
+        "monthlyrainin":  d.get("monthlyrainin"),
+        "totalrainin":    d.get("totalrainin"),
+        "lastrain":       d.get("lastRain"),
+    }
+    if write_row(_db, "outdoor", row, or_ignore=True):
+        log.info("outdoor row written  ts=%s  temp=%s°F  hum=%s%%  wind=%smph",
+                 ts, d.get("tempf"), d.get("humidity"), d.get("windspeedmph"))
 
 
 # ── Main loop ──────────────────────────────────────────────────────────────────
-logging.info("ambient_wx starting")
+log.info("ambient_wx starting")
 
-while True:
+while not is_shutting_down():
     try:
         _write(_fetch())
     except urllib.error.URLError as e:
-        logging.warning(f"API fetch failed: {e}")
+        log.warning("API fetch failed: %s", e)
     except (KeyError, IndexError, ValueError) as e:
-        logging.warning(f"Unexpected API response: {e}")
+        log.warning("Unexpected API response: %s", e)
     except Exception as e:
-        logging.error(f"Unexpected error: {e}")
+        log.error("Unexpected error: %s", e, exc_info=True)
     time.sleep(POLL_S)
+
+log.info("ambient_wx stopped")
