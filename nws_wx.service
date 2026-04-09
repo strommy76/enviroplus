@@ -1,5 +1,5 @@
 [Unit]
-Description=AirNow (EPA) Air Quality Poller
+Description=NWS Weather Poller (KCOF / Patrick SFB)
 After=network-online.target
 Wants=network-online.target
 
@@ -8,7 +8,7 @@ Type=simple
 User=pistrommy
 WorkingDirectory=/home/pistrommy/projects/enviroplus
 Environment=PYTHONPATH=/home/pistrommy/projects
-ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python airnow_wx.py
+ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python nws_wx.py
 Restart=always
 RestartSec=10
 
