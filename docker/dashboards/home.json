@@ -1,0 +1,3251 @@
+{
+  "_meta": {
+    "path": "~/projects/enviroplus/docker/dashboards/home.json",
+    "description": "Combined Home dashboard \u2014 indoor AQM, outdoor weather, stocks, system health",
+    "changelog": [
+      "2026-04-05 \u2014 Initial creation with 6 rows: at-a-glance, stocks, temp overlay, AQ+wind, SPY chart, system health",
+      "2026-04-05 \u2014 Add intraday prices, market sentiment, and sentiment heatmap rows",
+      "2026-04-07 \u2014 Add cross-asset correlation and regime z-score panels",
+      "2026-04-08 \u2014 Add paper trading row: portfolio stats, value chart, recent trades",
+      "2026-04-08 \u2014 Add Strategy C (no SIGNAL_A) and Strategy E (trailing stops) to A/B comparison panels",
+      "2026-04-08 \u2014 Add NWS Wind stat panel to At a Glance row",
+      "2026-04-08 \u2014 Add EPA PM2.5 stat panel to At a Glance row, reorganize widths to fit 8 panels"
+    ]
+  },
+  "uid": "home-combined-dash",
+  "title": "Home",
+  "tags": [
+    "home",
+    "overview"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5m",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "fiscalYearStartMonth": 0,
+  "liveNow": false,
+  "panels": [
+    {
+      "type": "row",
+      "title": "At a Glance",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "Indoor Temp",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 0,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "fahrenheit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 65
+              },
+              {
+                "color": "yellow",
+                "value": 75
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, temp_f AS value FROM readings ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Indoor Humidity",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 3,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "humidity",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 30
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 70
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, humidity AS value FROM readings ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Outdoor Temp",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 6,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "fahrenheit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 50
+              },
+              {
+                "color": "yellow",
+                "value": 80
+              },
+              {
+                "color": "orange",
+                "value": 90
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, tempf AS value FROM outdoor ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Outdoor Humidity",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 9,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "humidity",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 30
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, humidity AS value FROM outdoor ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "PM2.5",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 12,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "con\u03bcgm3",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 12
+              },
+              {
+                "color": "orange",
+                "value": 35.5
+              },
+              {
+                "color": "red",
+                "value": 55.5
+              },
+              {
+                "color": "purple",
+                "value": 150.5
+              },
+              {
+                "color": "dark-red",
+                "value": 250.5
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, pm25 AS value FROM readings ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Wind Speed",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 15,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "velocitymph",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 15
+              },
+              {
+                "color": "orange",
+                "value": 25
+              },
+              {
+                "color": "red",
+                "value": 40
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, windspeedmph AS value FROM outdoor ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "NWS Wind",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 18,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "velocitymph",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 15
+              },
+              {
+                "color": "orange",
+                "value": 25
+              },
+              {
+                "color": "red",
+                "value": 40
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, wind_speed_mph AS value FROM nws_weather ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "EPA PM2.5",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 21,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "orange",
+                "value": 100
+              },
+              {
+                "color": "red",
+                "value": 150
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, pm25_aqi AS value FROM epa_air_quality ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Stock Market Tickers",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "SPY",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', date) AS INTEGER) AS time, close AS value FROM ohlcv WHERE ticker = 'SPY' ORDER BY date DESC LIMIT 90",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "time",
+                "desc": false
+              }
+            ]
+          }
+        }
+      ],
+      "timeFrom": "90d"
+    },
+    {
+      "type": "stat",
+      "title": "QQQ",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', date) AS INTEGER) AS time, close AS value FROM ohlcv WHERE ticker = 'QQQ' ORDER BY date DESC LIMIT 90",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "time",
+                "desc": false
+              }
+            ]
+          }
+        }
+      ],
+      "timeFrom": "90d"
+    },
+    {
+      "type": "stat",
+      "title": "NVDA",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', date) AS INTEGER) AS time, close AS value FROM ohlcv WHERE ticker = 'NVDA' ORDER BY date DESC LIMIT 90",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "time",
+                "desc": false
+              }
+            ]
+          }
+        }
+      ],
+      "timeFrom": "90d"
+    },
+    {
+      "type": "stat",
+      "title": "AAPL",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', date) AS INTEGER) AS time, close AS value FROM ohlcv WHERE ticker = 'AAPL' ORDER BY date DESC LIMIT 90",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "time",
+                "desc": false
+              }
+            ]
+          }
+        }
+      ],
+      "timeFrom": "90d"
+    },
+    {
+      "type": "stat",
+      "title": "MSFT",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', date) AS INTEGER) AS time, close AS value FROM ohlcv WHERE ticker = 'MSFT' ORDER BY date DESC LIMIT 90",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "time",
+                "desc": false
+              }
+            ]
+          }
+        }
+      ],
+      "timeFrom": "90d"
+    },
+    {
+      "type": "stat",
+      "title": "BTC-USD",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', date) AS INTEGER) AS time, close AS value FROM ohlcv WHERE ticker = 'BTC-USD' ORDER BY date DESC LIMIT 90",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "time",
+                "desc": false
+              }
+            ]
+          }
+        }
+      ],
+      "timeFrom": "90d"
+    },
+    {
+      "type": "row",
+      "title": "Intraday Prices",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Intraday Prices",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SPY"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "white"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "QQQ"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NVDA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, price AS \"SPY\" FROM intraday WHERE ticker = 'SPY' AND ts >= date('now') ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ],
+          "refId": "A"
+        },
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, price AS \"QQQ\" FROM intraday WHERE ticker = 'QQQ' AND ts >= date('now') ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ],
+          "refId": "B"
+        },
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, price AS \"NVDA\" FROM intraday WHERE ticker = 'NVDA' AND ts >= date('now') ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ],
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Market Sentiment",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Market Sentiment (1hr avg)",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 21
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 3,
+          "min": -1,
+          "max": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": -0.05
+              },
+              {
+                "color": "green",
+                "value": 0.05
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SPY"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "white"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "QQQ"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NVDA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, avg_1h AS \"SPY\" FROM sentiment_agg WHERE ticker = 'SPY' ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ],
+          "refId": "A"
+        },
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, avg_1h AS \"QQQ\" FROM sentiment_agg WHERE ticker = 'QQQ' ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ],
+          "refId": "B"
+        },
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, avg_1h AS \"NVDA\" FROM sentiment_agg WHERE ticker = 'NVDA' ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ],
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Sentiment Heatmap",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 21
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "center"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": -0.05
+              },
+              {
+                "color": "green",
+                "value": 0.05
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ticker"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "1hr Avg"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "4hr Avg"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "24hr Avg"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Articles (24h)"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Ticker",
+            "desc": false
+          }
+        ]
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT ticker AS \"Ticker\", avg_1h AS \"1hr Avg\", avg_4h AS \"4hr Avg\", avg_24h AS \"24hr Avg\", article_count_24h AS \"Articles (24h)\" FROM sentiment_agg WHERE ts = (SELECT MAX(ts) FROM sentiment_agg) ORDER BY ticker",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "transformations": []
+    },
+    {
+      "type": "row",
+      "title": "Indoor vs Outdoor Temperature",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Indoor vs Outdoor Temperature",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "fahrenheit",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Indoor Temp"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Outdoor Temp"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, temp_f AS \"Indoor Temp\" FROM readings ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ],
+          "refId": "A"
+        },
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, tempf AS \"Outdoor Temp\" FROM outdoor ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ],
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Air Quality & Weather",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Air Quality (PM1 / PM2.5 / PM10)",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 39
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "con\u03bcgm3",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PM1"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PM2.5"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PM10"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, pm1 AS \"PM1\", pm25 AS \"PM2.5\", pm10 AS \"PM10\" FROM readings ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Wind & Rain",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 39
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Wind (mph)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "velocitymph"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Daily Rain (in)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "cyan"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "lengthin"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 30
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "bars"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, windspeedmph AS \"Wind (mph)\", dailyrainin AS \"Daily Rain (in)\" FROM outdoor ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "SPY Technical Chart",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 46
+      },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "SPY \u2014 Close + SMA20 + SMA50 + SMA200",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 47
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Close"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "white"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SMA 20"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SMA 50"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SMA 200"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', date) AS INTEGER) AS time, close AS \"Close\", sma_20 AS \"SMA 20\", sma_50 AS \"SMA 50\", sma_200 AS \"SMA 200\" FROM ohlcv WHERE ticker = 'SPY' ORDER BY date",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "timeFrom": "365d"
+    },
+    {
+      "type": "row",
+      "title": "Cross-Asset Correlations",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 55
+      },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Cross-Asset Correlations (20-day rolling)",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 56
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 3,
+          "min": -1,
+          "max": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SPY/TLT"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SPY/GLD"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SPY/BTC-USD"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', date) AS INTEGER) AS time, corr_20 AS \"SPY/TLT\" FROM correlations WHERE pair = 'SPY/TLT' ORDER BY date",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ],
+          "refId": "A"
+        },
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', date) AS INTEGER) AS time, corr_20 AS \"SPY/GLD\" FROM correlations WHERE pair = 'SPY/GLD' ORDER BY date",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ],
+          "refId": "B"
+        },
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', date) AS INTEGER) AS time, corr_20 AS \"SPY/BTC-USD\" FROM correlations WHERE pair = 'SPY/BTC-USD' ORDER BY date",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ],
+          "refId": "C"
+        }
+      ],
+      "timeFrom": "365d"
+    },
+    {
+      "type": "timeseries",
+      "title": "Regime Z-Scores (divergence > 1.5)",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 56
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 2,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 1.5
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SPY/TLT"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SPY/GLD"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NVDA/QQQ"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', date) AS INTEGER) AS time, z_score AS \"SPY/TLT\" FROM regime_signals WHERE pair = 'SPY/TLT' ORDER BY date",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ],
+          "refId": "A"
+        },
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', date) AS INTEGER) AS time, z_score AS \"SPY/GLD\" FROM regime_signals WHERE pair = 'SPY/GLD' ORDER BY date",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ],
+          "refId": "B"
+        },
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', date) AS INTEGER) AS time, z_score AS \"NVDA/QQQ\" FROM regime_signals WHERE pair = 'NVDA/QQQ' ORDER BY date",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ],
+          "refId": "C"
+        }
+      ],
+      "timeFrom": "365d"
+    },
+    {
+      "type": "row",
+      "title": "Paper Trading",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 65
+      },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "Portfolio Value",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 66
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS value FROM portfolio_state ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Cash",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 6,
+        "y": 66
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "none",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, cash AS value FROM portfolio_state ORDER BY ts DESC LIMIT 1",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "P&L",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 9,
+        "y": 66
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "none",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_pnl AS value FROM portfolio_state ORDER BY ts DESC LIMIT 1",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Win Rate",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 12,
+        "y": 66
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 40
+              },
+              {
+                "color": "green",
+                "value": 55
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "none",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, CASE WHEN (win_count + loss_count) > 0 THEN CAST(win_count AS REAL) / (win_count + loss_count) * 100 ELSE 0 END AS value FROM portfolio_state ORDER BY ts DESC LIMIT 1",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Open Positions",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 15,
+        "y": 66
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "none",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, open_positions AS value FROM portfolio_state ORDER BY ts DESC LIMIT 1",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Total Trades",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 18,
+        "y": 66
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "none",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_trades AS value FROM portfolio_state ORDER BY ts DESC LIMIT 1",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Best Trade",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 21,
+        "y": 66
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "none",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT MAX(pnl) AS value FROM trades WHERE action = 'SELL'",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Portfolio Value Over Time",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 71
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "scheme",
+            "showPoints": "auto",
+            "pointSize": 5,
+            "axisCenteredZero": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS value FROM portfolio_state WHERE ts >= datetime('now', '-7 days') ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Recent Trades",
+      "datasource": {
+        "uid": "stocks-sqlite-ds",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 78
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "pnl"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 0
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "pnl_pct"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "price"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "ts",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT ticker, action, price, signal, pnl, pnl_pct, ts FROM trades ORDER BY ts DESC LIMIT 20",
+          "queryType": "table",
+          "timeColumns": [
+            "ts"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "System Health",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 86
+      },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "CPU Temp",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 87
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, cpu_temp_c AS value FROM readings ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "CPU Load",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 87
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "orange",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, cpu_load AS value FROM readings ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Free RAM",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 87
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 256
+              },
+              {
+                "color": "yellow",
+                "value": 512
+              },
+              {
+                "color": "green",
+                "value": 1024
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, mem_free_mb AS value FROM readings ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Uptime",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 87
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "yellow",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 86400
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, uptime_s AS value FROM readings ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "title": "A/B: Portfolio Value",
+      "type": "timeseries",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 92
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "custom": {
+            "lineWidth": 2
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Strategy A (3\u00d720%)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Strategy B (6\u00d710%)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Strategy C (no SIGNAL_A)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Strategy E (trailing)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"Strategy A (3\u00d720%)\" FROM portfolio_state ORDER BY ts",
+          "queryType": "table",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"Strategy A (3\u00d720%)\" FROM portfolio_state ORDER BY ts",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"Strategy B (6\u00d710%)\" FROM portfolio_state_b ORDER BY ts",
+          "queryType": "table",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"Strategy B (6\u00d710%)\" FROM portfolio_state_b ORDER BY ts",
+          "refId": "B",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"Strategy C (no SIGNAL_A)\" FROM portfolio_state_c ORDER BY ts",
+          "queryType": "table",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"Strategy C (no SIGNAL_A)\" FROM portfolio_state_c ORDER BY ts",
+          "refId": "C",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"Strategy E (trailing)\" FROM portfolio_state_e ORDER BY ts",
+          "queryType": "table",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"Strategy E (trailing)\" FROM portfolio_state_e ORDER BY ts",
+          "refId": "E",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "A: Value",
+      "type": "stat",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": { "h": 4, "w": 3, "x": 0, "y": 100 },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 10000}] } } },
+      "targets": [{ "queryText": "SELECT total_value AS value FROM portfolio_state ORDER BY ts DESC LIMIT 1", "queryType": "table", "rawQueryText": "SELECT total_value AS value FROM portfolio_state ORDER BY ts DESC LIMIT 1", "refId": "A" }]
+    },
+    {
+      "id": 3,
+      "title": "B: Value",
+      "type": "stat",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": { "h": 4, "w": 3, "x": 3, "y": 100 },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 10000}] } } },
+      "targets": [{ "queryText": "SELECT total_value AS value FROM portfolio_state_b ORDER BY ts DESC LIMIT 1", "queryType": "table", "rawQueryText": "SELECT total_value AS value FROM portfolio_state_b ORDER BY ts DESC LIMIT 1", "refId": "A" }]
+    },
+    {
+      "id": 30,
+      "title": "C: Value",
+      "type": "stat",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": { "h": 4, "w": 3, "x": 6, "y": 100 },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 10000}] } } },
+      "targets": [{ "queryText": "SELECT total_value AS value FROM portfolio_state_c ORDER BY ts DESC LIMIT 1", "queryType": "table", "rawQueryText": "SELECT total_value AS value FROM portfolio_state_c ORDER BY ts DESC LIMIT 1", "refId": "A" }]
+    },
+    {
+      "id": 31,
+      "title": "E: Value",
+      "type": "stat",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": { "h": 4, "w": 3, "x": 9, "y": 100 },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 10000}] } } },
+      "targets": [{ "queryText": "SELECT total_value AS value FROM portfolio_state_e ORDER BY ts DESC LIMIT 1", "queryType": "table", "rawQueryText": "SELECT total_value AS value FROM portfolio_state_e ORDER BY ts DESC LIMIT 1", "refId": "A" }]
+    },
+    {
+      "id": 4,
+      "title": "A: W/L",
+      "type": "stat",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": { "h": 4, "w": 3, "x": 12, "y": 100 },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{"color": "blue", "value": null}] } } },
+      "targets": [{ "queryText": "SELECT win_count || '/' || loss_count AS value FROM portfolio_state ORDER BY ts DESC LIMIT 1", "queryType": "table", "rawQueryText": "SELECT win_count || '/' || loss_count AS value FROM portfolio_state ORDER BY ts DESC LIMIT 1", "refId": "A" }]
+    },
+    {
+      "id": 5,
+      "title": "B: W/L",
+      "type": "stat",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": { "h": 4, "w": 3, "x": 15, "y": 100 },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{"color": "blue", "value": null}] } } },
+      "targets": [{ "queryText": "SELECT win_count || '/' || loss_count AS value FROM portfolio_state_b ORDER BY ts DESC LIMIT 1", "queryType": "table", "rawQueryText": "SELECT win_count || '/' || loss_count AS value FROM portfolio_state_b ORDER BY ts DESC LIMIT 1", "refId": "A" }]
+    },
+    {
+      "id": 32,
+      "title": "C: W/L",
+      "type": "stat",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": { "h": 4, "w": 3, "x": 18, "y": 100 },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{"color": "blue", "value": null}] } } },
+      "targets": [{ "queryText": "SELECT win_count || '/' || loss_count AS value FROM portfolio_state_c ORDER BY ts DESC LIMIT 1", "queryType": "table", "rawQueryText": "SELECT win_count || '/' || loss_count AS value FROM portfolio_state_c ORDER BY ts DESC LIMIT 1", "refId": "A" }]
+    },
+    {
+      "id": 33,
+      "title": "E: W/L",
+      "type": "stat",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": { "h": 4, "w": 3, "x": 21, "y": 100 },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{"color": "blue", "value": null}] } } },
+      "targets": [{ "queryText": "SELECT win_count || '/' || loss_count AS value FROM portfolio_state_e ORDER BY ts DESC LIMIT 1", "queryType": "table", "rawQueryText": "SELECT win_count || '/' || loss_count AS value FROM portfolio_state_e ORDER BY ts DESC LIMIT 1", "refId": "A" }]
+    },
+    {
+      "id": 6,
+      "title": "A: P&L",
+      "type": "stat",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": { "h": 4, "w": 3, "x": 0, "y": 104 },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 0}] } } },
+      "targets": [{ "queryText": "SELECT total_pnl AS value FROM portfolio_state ORDER BY ts DESC LIMIT 1", "queryType": "table", "rawQueryText": "SELECT total_pnl AS value FROM portfolio_state ORDER BY ts DESC LIMIT 1", "refId": "A" }]
+    },
+    {
+      "id": 7,
+      "title": "B: P&L",
+      "type": "stat",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": { "h": 4, "w": 3, "x": 3, "y": 104 },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 0}] } } },
+      "targets": [{ "queryText": "SELECT total_pnl AS value FROM portfolio_state_b ORDER BY ts DESC LIMIT 1", "queryType": "table", "rawQueryText": "SELECT total_pnl AS value FROM portfolio_state_b ORDER BY ts DESC LIMIT 1", "refId": "A" }]
+    },
+    {
+      "id": 34,
+      "title": "C: P&L",
+      "type": "stat",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": { "h": 4, "w": 3, "x": 6, "y": 104 },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 0}] } } },
+      "targets": [{ "queryText": "SELECT total_pnl AS value FROM portfolio_state_c ORDER BY ts DESC LIMIT 1", "queryType": "table", "rawQueryText": "SELECT total_pnl AS value FROM portfolio_state_c ORDER BY ts DESC LIMIT 1", "refId": "A" }]
+    },
+    {
+      "id": 35,
+      "title": "E: P&L",
+      "type": "stat",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": { "h": 4, "w": 3, "x": 9, "y": 104 },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 0}] } } },
+      "targets": [{ "queryText": "SELECT total_pnl AS value FROM portfolio_state_e ORDER BY ts DESC LIMIT 1", "queryType": "table", "rawQueryText": "SELECT total_pnl AS value FROM portfolio_state_e ORDER BY ts DESC LIMIT 1", "refId": "A" }]
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  }
+}

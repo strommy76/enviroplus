@@ -9,3 +9,12 @@ datasources:
       path: /data/enviroplus/enviro.db
     version: 1
     editable: true
+
+  - name: Stocks SQLite
+    type: frser-sqlite-datasource
+    uid: stocks-sqlite-ds
+    access: proxy
+    jsonData:
+      path: /data/stocks/stocks.db
+    version: 1
+    editable: true

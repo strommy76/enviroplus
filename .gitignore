@@ -3,5 +3,8 @@
 __pycache__/
 *.pyc
 enviro.db
+enviro.db-wal
+enviro.db-shm
 *.log
+*.log.*
 docker/tls/

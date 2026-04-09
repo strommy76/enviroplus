@@ -1,0 +1,15 @@
+[Unit]
+Description=Ambient Weather Poller
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pistrommy
+WorkingDirectory=/home/pistrommy/projects/enviroplus
+ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python ambient_wx.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
