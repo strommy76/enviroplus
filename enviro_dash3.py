@@ -1,62 +1,70 @@
 #!/usr/bin/env python3
 """
-Path:        ~/projects/enviroplus/enviro_dash3.py
-Description: AQM-inspired Enviro+ display layout (160×80 ST7735).
-             Left strip  — vertical EPA AQI bar (0-500, 6-band color scale)
-                           computed from PM2.5 and PM10 sub-indices.
-             Center      — CO₂ ppm as dominant large value (placeholder until
-                           SCD-41 arrives), temperature, RH, pressure below.
-             Right       — PM2.5 large with bar, PM1/PM10 side by side,
-                           PM sparkline at bottom.
-             MQTT status — 4px dot, top-right corner.
+--------------------------------------------------------------------------------
+FILE:        enviro_dash3.py
+PATH:        ~/projects/enviroplus/enviro_dash3.py
+DESCRIPTION: AQM-inspired Enviro+ display layout (160x80 ST7735).
+             Left strip  -- vertical EPA AQI bar (0-500, 6-band color scale)
+                            computed from PM2.5 and PM10 sub-indices.
+             Center      -- CO2 ppm as dominant large value (placeholder until
+                            SCD-41 arrives), temperature, RH, pressure below.
+             Right       -- PM2.5 large with bar, PM1/PM10 side by side,
+                            PM sparkline at bottom.
+             MQTT status -- 4px dot, top-right corner.
              To activate: change ExecStart in enviro_dash.service to this file.
 
-Changelog:
-  2026-03-16 01:15:00 EDT  Initial implementation, AQM-345 inspired layout.
-                           CO₂ is placeholder (---) until SCD-41 connected.
-  2026-03-16 02:30:00 EDT  Replace raw PM2.5 bar with proper EPA AQI (0-500).
-                           AQI = max(PM2.5 sub-index, PM10 sub-index) per EPA
-                           linear interpolation breakpoints. Added PURPLE and
-                           MAROON for Very Unhealthy / Hazardous bands.
-  2026-03-16 03:00:00 EDT  Remove DB/RH labels; enlarge temp+RH to FONT_L,
-                           side-by-side. Remove pressure display. Replace right
-                           column PM bar/values with PM+VOC dual line plots
-                           (same overlapping draw_lines style as dash2).
-  2026-03-16 04:00:00 EDT  Humidity correction for BME280 self-heating: apply
-                           Magnus formula RH_actual = RH_sensor × Psat(T_chip)
-                           / Psat(T_room). T_chip is raw BME280 reading; T_room
-                           is CPU-compensated value. Also update cal_actual_f
-                           to 75.1°F per overnight hygrometer reference.
-  2026-03-16 03:30:00 EDT  Plot backgrounds tinted by worst-case severity:
-                           PM panel uses EPA AQI band color; VOC panel uses
-                           config thresholds (ox/rd/nh3). Dark 25% blend keeps
-                           lines readable at all severity levels.
-  2026-03-16 00:00:00 EDT  Pi 5 port: move all hardware-specific values to
-                           config/env. Display SPI/GPIO, I2C bus, BME280 addr,
-                           PMS5003 serial device, and CPU temp path are now
-                           read from dynamic_config.json ["hardware"] and .env.
-                           Switch bme280 to Pimoroni BME280 class API
-                           (pimoroni-bme280 shadows RPi.bme280 in venv);
-                           _bme_sample() return interface unchanged.
-                           Add cpu_factor_override to _calibrate(): if set in
-                           config, skips startup sampling and uses the value
-                           directly. Pi 5 BME280 is at ~35°C cold-start vs
-                           ~35°C steady-state but CPU is hotter at startup,
-                           making computed factor wrong. Set null to revert.
-  2026-03-18 09:30:00 EDT  Fix MQTT silent failure on DNS-delayed startup: move
-                           loop_start() before connect() so network thread always
-                           runs. Add is_connected() check + reconnect in
-                           write_mqtt() so messages aren't silently queued when
-                           connection was never established.
-  2026-04-02 14:56:00 UTC  Store timestamps as UTC via datetime.utcnow() so
-                           SQLite epoch conversions are correct for Grafana.
-                           Existing EDT rows migrated via datetime(ts, '+4 hours').
-  2026-04-09 00:00:00 UTC  Phase 3 refactor: use shared services library for
-                           config and logging. Replace datetime.utcnow() with
-                           shared.utils.utc_now(). Fail-loud on MQTT creds via
-                           require(). Add PMS5003 read-failure warning logging
-                           and stale-data tracking. Add EPA AQI breakpoint
-                           comment explaining regulatory constants.
+CHANGELOG:
+2026-04-09 14:00      Claude      [Docs] Update file header to Lexx standard
+                                      format
+2026-04-09 00:00      Claude      [Refactor] Phase 3 refactor: use shared
+                                      services library for config and logging.
+                                      Replace datetime.utcnow() with
+                                      shared.utils.utc_now(). Fail-loud on MQTT
+                                      creds via require(). Add PMS5003
+                                      read-failure warning logging and
+                                      stale-data tracking. Add EPA AQI
+                                      breakpoint comment explaining regulatory
+                                      constants.
+2026-04-02 14:56      Claude      [Refactor] Store timestamps as UTC via
+                                      datetime.utcnow() so SQLite epoch
+                                      conversions are correct for Grafana.
+                                      Existing EDT rows migrated via
+                                      datetime(ts, '+4 hours').
+2026-03-18 09:30      Claude      [Fix] Fix MQTT silent failure on DNS-delayed
+                                      startup: move loop_start() before
+                                      connect() so network thread always runs.
+                                      Add is_connected() check + reconnect in
+                                      write_mqtt() so messages aren't silently
+                                      queued when connection was never
+                                      established.
+2026-03-16 04:00      Bryan       [Feature] Humidity correction for BME280
+                                      self-heating: apply Magnus formula.
+                                      Also update cal_actual_f to 75.1F per
+                                      overnight hygrometer reference.
+2026-03-16 03:30      Bryan       [Feature] Plot backgrounds tinted by
+                                      worst-case severity: PM panel uses EPA AQI
+                                      band color; VOC panel uses config
+                                      thresholds (ox/rd/nh3). Dark 25% blend
+                                      keeps lines readable at all severity
+                                      levels.
+2026-03-16 03:00      Bryan       [Refactor] Remove DB/RH labels; enlarge
+                                      temp+RH to FONT_L, side-by-side. Remove
+                                      pressure display. Replace right column PM
+                                      bar/values with PM+VOC dual line plots.
+2026-03-16 02:30      Bryan       [Feature] Replace raw PM2.5 bar with proper
+                                      EPA AQI (0-500). AQI = max(PM2.5
+                                      sub-index, PM10 sub-index) per EPA linear
+                                      interpolation breakpoints.
+2026-03-16 01:15      Bryan       [Feature] Initial implementation, AQM-345
+                                      inspired layout. CO2 is placeholder (---)
+                                      until SCD-41 connected.
+2026-03-16 00:00      Bryan       [Feature] Pi 5 port: move all
+                                      hardware-specific values to config/env.
+                                      Display SPI/GPIO, I2C bus, BME280 addr,
+                                      PMS5003 serial device, and CPU temp path
+                                      are now read from dynamic_config.json
+                                      ["hardware"] and .env.
+--------------------------------------------------------------------------------
 """
 
 import json

@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
 """
-Path:        ~/projects/enviroplus/nws_wx.py
-Description: Polls NWS API (Patrick SFB / KCOF) every 10 min and writes
+--------------------------------------------------------------------------------
+FILE:        nws_wx.py
+PATH:        ~/projects/enviroplus/nws_wx.py
+DESCRIPTION: Polls NWS API (Patrick SFB / KCOF) every 10 min and writes
              observations to the 'nws_weather' table in enviro.db.
              Runs as a standalone service alongside ambient_wx.py.
 
-Changelog:
-  2026-04-08 16:00:00 EDT  Initial implementation.
-  2026-04-09 00:00:00 UTC  Phase 3 refactor: use shared services library for
-                           config, logging, DB writes, and signal handling.
-                           Added load_env (was missing), moved hardcoded
-                           NWS_URL and USER_AGENT to .env via require().
+CHANGELOG:
+2026-04-09 14:00      Claude      [Docs] Update file header to Lexx standard
+                                      format
+2026-04-09 00:00      Claude      [Refactor] Phase 3 refactor: use shared
+                                      services library for config, logging, DB
+                                      writes, and signal handling. Added
+                                      load_env (was missing), moved hardcoded
+                                      NWS_URL and USER_AGENT to .env via
+                                      require().
+2026-04-08 16:00      Bryan       [Feature] Initial implementation.
+--------------------------------------------------------------------------------
 """
 
 import json

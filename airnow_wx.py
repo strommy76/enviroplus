@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
 """
-Path:        ~/projects/enviroplus/airnow_wx.py
-Description: Polls AirNow (EPA) API every 30 min and writes air quality
+--------------------------------------------------------------------------------
+FILE:        airnow_wx.py
+PATH:        ~/projects/enviroplus/airnow_wx.py
+DESCRIPTION: Polls AirNow (EPA) API every 30 min and writes air quality
              observations to the 'epa_air_quality' table in enviro.db.
              Runs as a standalone service alongside ambient_wx.py.
 
-Changelog:
-  2026-04-08 20:00:00 EDT  Initial implementation.
-  2026-04-09 00:00:00 UTC  Phase 3 refactor: use shared services library for
-                           config, logging, DB writes, and signal handling.
-                           Moved hardcoded LAT/LON/DISTANCE to .env via require().
+CHANGELOG:
+2026-04-09 14:00      Claude      [Docs] Update file header to Lexx standard
+                                      format
+2026-04-09 00:00      Claude      [Refactor] Phase 3 refactor: use shared
+                                      services library for config, logging, DB
+                                      writes, and signal handling. Moved
+                                      hardcoded LAT/LON/DISTANCE to .env via
+                                      require().
+2026-04-08 20:00      Bryan       [Feature] Initial implementation.
+--------------------------------------------------------------------------------
 """
 
 import json

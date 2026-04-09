@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
 """
-Path:        ~/projects/enviroplus/ambient_wx.py
-Description: Polls Ambient Weather API (BSWeather WS-2902) every 60 s and
+--------------------------------------------------------------------------------
+FILE:        ambient_wx.py
+PATH:        ~/projects/enviroplus/ambient_wx.py
+DESCRIPTION: Polls Ambient Weather API (BSWeather WS-2902) every 60 s and
              writes outdoor readings to the 'outdoor' table in enviro.db.
              Runs as a standalone service alongside enviro_dash3.py.
 
-Changelog:
-  2026-04-04 16:56:00 EDT  Initial implementation.
-  2026-04-09 00:00:00 UTC  Phase 3 refactor: use shared services library for
-                           config, logging, DB writes, and signal handling.
+CHANGELOG:
+2026-04-09 14:00      Claude      [Docs] Update file header to Lexx standard
+                                      format
+2026-04-09 00:00      Claude      [Refactor] Phase 3 refactor: use shared
+                                      services library for config, logging, DB
+                                      writes, and signal handling.
+2026-04-04 16:56      Bryan       [Feature] Initial implementation.
+--------------------------------------------------------------------------------
 """
 
 import json
