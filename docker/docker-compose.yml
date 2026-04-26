@@ -10,6 +10,7 @@ services:
       - grafana-data:/var/lib/grafana
       - /home/pistrommy/projects/enviroplus:/data/enviroplus
       - /home/pistrommy/projects/stocks:/data/stocks:ro
+      - /home/pistrommy/projects/pihole-watch:/data/pihole-watch
       - ./provisioning:/etc/grafana/provisioning
       - ./dashboards:/var/lib/grafana/dashboards
       - ./tls:/etc/grafana/tls:ro
