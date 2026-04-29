@@ -1,0 +1,353 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Recommended-strategies dashboard — focuses attention on the 10 strategies worth following moving forward (R, S, U, N, A, B, C, E, I, O). Adds a 16-vote indicator heatmap so the regime landscape is visible at a glance. Built 2026-04-29.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "type": "row",
+      "id": 1,
+      "title": "🚀 Tier 1 — Live Deploy (R / S)",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "id": 2,
+      "title": "R / S — Portfolio Value",
+      "gridPos": {"h": 8, "w": 16, "x": 0, "y": 1},
+      "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+      "targets": [
+        {
+          "refId": "R",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R\" FROM portfolio_state_r WHERE CAST(strftime('%s', ts) AS INTEGER) >= $__from / 1000 AND CAST(strftime('%s', ts) AS INTEGER) <= $__to / 1000 ORDER BY ts",
+          "timeColumns": ["time"]
+        },
+        {
+          "refId": "S",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S\" FROM portfolio_state_s WHERE CAST(strftime('%s', ts) AS INTEGER) >= $__from / 1000 AND CAST(strftime('%s', ts) AS INTEGER) <= $__to / 1000 ORDER BY ts",
+          "timeColumns": ["time"]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 8, "spanNulls": true},
+          "unit": "currencyUSD",
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": []
+      },
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["last", "max", "min"]}}
+    },
+    {
+      "type": "stat",
+      "id": 3,
+      "title": "R — Latest Status",
+      "gridPos": {"h": 4, "w": 4, "x": 16, "y": 1},
+      "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT note FROM paper_r_runlog ORDER BY ts_utc DESC LIMIT 1"
+        }
+      ],
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}}, "overrides": []},
+      "options": {"colorMode": "background", "graphMode": "none", "textMode": "value"}
+    },
+    {
+      "type": "stat",
+      "id": 4,
+      "title": "S — Latest Status",
+      "gridPos": {"h": 4, "w": 4, "x": 20, "y": 1},
+      "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT note FROM paper_s_runlog ORDER BY ts_utc DESC LIMIT 1"
+        }
+      ],
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}}, "overrides": []},
+      "options": {"colorMode": "background", "graphMode": "none", "textMode": "value"}
+    },
+    {
+      "type": "stat",
+      "id": 5,
+      "title": "R — Trades / Cash / Invested",
+      "gridPos": {"h": 4, "w": 8, "x": 16, "y": 5},
+      "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+      "targets": [
+        {
+          "refId": "T",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT total_trades AS \"trades\", cash AS \"cash\", invested AS \"invested\" FROM portfolio_state_r ORDER BY ts DESC LIMIT 1"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "currencyUSD", "color": {"mode": "thresholds"}}, "overrides": [{"matcher": {"id": "byName", "options": "trades"}, "properties": [{"id": "unit", "value": "short"}]}]},
+      "options": {"colorMode": "value", "graphMode": "none", "textMode": "value_and_name"}
+    },
+    {
+      "type": "row",
+      "id": 6,
+      "title": "🔬 Tier 2 — Active Comparison (U / N)",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 9},
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "id": 7,
+      "title": "U / N — Portfolio Value",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 10},
+      "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+      "targets": [
+        {
+          "refId": "U",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U\" FROM portfolio_state_u WHERE CAST(strftime('%s', ts) AS INTEGER) >= $__from / 1000 AND CAST(strftime('%s', ts) AS INTEGER) <= $__to / 1000 ORDER BY ts",
+          "timeColumns": ["time"]
+        },
+        {
+          "refId": "N",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N\" FROM portfolio_state_n WHERE CAST(strftime('%s', ts) AS INTEGER) >= $__from / 1000 AND CAST(strftime('%s', ts) AS INTEGER) <= $__to / 1000 ORDER BY ts",
+          "timeColumns": ["time"]
+        }
+      ],
+      "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 8, "spanNulls": true}, "unit": "currencyUSD", "color": {"mode": "palette-classic"}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["last", "max", "min"]}}
+    },
+    {
+      "type": "row",
+      "id": 8,
+      "title": "📊 Tier 3 — Research Baseline (A / B / C)",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 18},
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "id": 9,
+      "title": "A / B / C — Portfolio Value",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 19},
+      "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A\" FROM portfolio_state WHERE CAST(strftime('%s', ts) AS INTEGER) >= $__from / 1000 AND CAST(strftime('%s', ts) AS INTEGER) <= $__to / 1000 ORDER BY ts",
+          "timeColumns": ["time"]
+        },
+        {
+          "refId": "B",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B\" FROM portfolio_state_b WHERE CAST(strftime('%s', ts) AS INTEGER) >= $__from / 1000 AND CAST(strftime('%s', ts) AS INTEGER) <= $__to / 1000 ORDER BY ts",
+          "timeColumns": ["time"]
+        },
+        {
+          "refId": "C",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C\" FROM portfolio_state_c WHERE CAST(strftime('%s', ts) AS INTEGER) >= $__from / 1000 AND CAST(strftime('%s', ts) AS INTEGER) <= $__to / 1000 ORDER BY ts",
+          "timeColumns": ["time"]
+        }
+      ],
+      "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 8, "spanNulls": true}, "unit": "currencyUSD", "color": {"mode": "palette-classic"}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["last", "max", "min"]}}
+    },
+    {
+      "type": "row",
+      "id": 10,
+      "title": "👁️ Tier 4 — Observe (E / I / O)",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 27},
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "id": 11,
+      "title": "E / I / O — Portfolio Value",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 28},
+      "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+      "targets": [
+        {
+          "refId": "E",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E\" FROM portfolio_state_e WHERE CAST(strftime('%s', ts) AS INTEGER) >= $__from / 1000 AND CAST(strftime('%s', ts) AS INTEGER) <= $__to / 1000 ORDER BY ts",
+          "timeColumns": ["time"]
+        },
+        {
+          "refId": "I",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I\" FROM portfolio_state_i WHERE CAST(strftime('%s', ts) AS INTEGER) >= $__from / 1000 AND CAST(strftime('%s', ts) AS INTEGER) <= $__to / 1000 ORDER BY ts",
+          "timeColumns": ["time"]
+        },
+        {
+          "refId": "O",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O\" FROM portfolio_state_o WHERE CAST(strftime('%s', ts) AS INTEGER) >= $__from / 1000 AND CAST(strftime('%s', ts) AS INTEGER) <= $__to / 1000 ORDER BY ts",
+          "timeColumns": ["time"]
+        }
+      ],
+      "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 8, "spanNulls": true}, "unit": "currencyUSD", "color": {"mode": "palette-classic"}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["last", "max", "min"]}}
+    },
+    {
+      "type": "row",
+      "id": 12,
+      "title": "🌡️ 16-Vote Indicator Heatmap (R + S extras)",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 36},
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "table",
+      "id": 13,
+      "title": "Latest Vote Snapshot — every indicator, every day (last 14 trading days)",
+      "description": "Rows = indicators (11 R votes + 5 S extras = 16). Columns = recent dates. Cell value: -1 (bear) / 0 (neutral) / +1 (bull). Cell-coloring thresholds: red ≤ -1, gray = 0, green ≥ +1. Apply 'Cell display mode = color background' on each numeric date column to render as a heatmap.",
+      "gridPos": {"h": 14, "w": 24, "x": 0, "y": 37},
+      "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+      "targets": [
+        {
+          "refId": "votes",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "WITH recent AS (SELECT DISTINCT date FROM vote_history ORDER BY date DESC LIMIT 14), pivoted AS (SELECT vh.vote_name AS indicator, vh.strategy_set AS scope, MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 0)  THEN vh.value END) AS \"d-0\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 1)  THEN vh.value END) AS \"d-1\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 2)  THEN vh.value END) AS \"d-2\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 3)  THEN vh.value END) AS \"d-3\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 4)  THEN vh.value END) AS \"d-4\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 5)  THEN vh.value END) AS \"d-5\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 6)  THEN vh.value END) AS \"d-6\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 7)  THEN vh.value END) AS \"d-7\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 8)  THEN vh.value END) AS \"d-8\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 9)  THEN vh.value END) AS \"d-9\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 10) THEN vh.value END) AS \"d-10\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 11) THEN vh.value END) AS \"d-11\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 12) THEN vh.value END) AS \"d-12\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 13) THEN vh.value END) AS \"d-13\" FROM vote_history vh WHERE vh.date IN (SELECT date FROM recent) GROUP BY vh.vote_name, vh.strategy_set) SELECT scope, indicator, \"d-0\", \"d-1\", \"d-2\", \"d-3\", \"d-4\", \"d-5\", \"d-6\", \"d-7\", \"d-8\", \"d-9\", \"d-10\", \"d-11\", \"d-12\", \"d-13\" FROM pivoted ORDER BY scope, indicator"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"align": "center", "cellOptions": {"type": "color-background", "mode": "gradient"}},
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "rgb(220, 53, 69)", "value": null},
+              {"color": "rgba(220, 53, 69, 0.5)", "value": -0.5},
+              {"color": "rgb(60, 60, 60)", "value": -0.0001},
+              {"color": "rgba(40, 167, 69, 0.5)", "value": 0.5},
+              {"color": "rgb(40, 167, 69)", "value": 1}
+            ]
+          }
+        },
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "scope"}, "properties": [{"id": "custom.cellOptions", "value": {"type": "auto"}}, {"id": "custom.width", "value": 80}]},
+          {"matcher": {"id": "byName", "options": "indicator"}, "properties": [{"id": "custom.cellOptions", "value": {"type": "auto"}}, {"id": "custom.width", "value": 140}]}
+        ]
+      },
+      "options": {"showHeader": true, "cellHeight": "sm"},
+      "transformations": []
+    },
+    {
+      "type": "timeseries",
+      "id": 14,
+      "title": "Net Vote Score (sum of bull − bear) — R 11-vote vs S 16-vote",
+      "description": "At-a-glance regime tilt. Positive = bullish indicator landscape; negative = bearish.",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 51},
+      "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+      "targets": [
+        {
+          "refId": "R_score",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', date || ' 16:00:00') AS INTEGER) AS time, SUM(value) AS \"R net (11)\" FROM vote_history WHERE strategy_set = 'R' AND CAST(strftime('%s', date || ' 16:00:00') AS INTEGER) >= $__from / 1000 AND CAST(strftime('%s', date || ' 16:00:00') AS INTEGER) <= $__to / 1000 GROUP BY date ORDER BY date",
+          "timeColumns": ["time"]
+        },
+        {
+          "refId": "S_score",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', date || ' 16:00:00') AS INTEGER) AS time, SUM(value) AS \"S net (16)\" FROM vote_history WHERE CAST(strftime('%s', date || ' 16:00:00') AS INTEGER) >= $__from / 1000 AND CAST(strftime('%s', date || ' 16:00:00') AS INTEGER) <= $__to / 1000 GROUP BY date ORDER BY date",
+          "timeColumns": ["time"]
+        }
+      ],
+      "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 12, "spanNulls": true}, "color": {"mode": "palette-classic"}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["last", "max", "min", "mean"]}}
+    },
+    {
+      "type": "row",
+      "id": 15,
+      "title": "📋 Recent Rebalances + Trade Activity",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 59},
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "table",
+      "id": 16,
+      "title": "Last 10 R/S rebalance log entries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 60},
+      "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+      "targets": [
+        {
+          "refId": "rebalances",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT 'R' AS strategy, run_date, ts_utc, note FROM paper_r_runlog UNION ALL SELECT 'S', run_date, ts_utc, note FROM paper_s_runlog ORDER BY ts_utc DESC LIMIT 10"
+        }
+      ],
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "options": {"showHeader": true}
+    },
+    {
+      "type": "table",
+      "id": 17,
+      "title": "Last 10 trades — any active strategy",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 60},
+      "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+      "targets": [
+        {
+          "refId": "trades",
+          "datasource": {"type": "frser-sqlite-datasource", "uid": "stocks-sqlite-ds"},
+          "queryType": "table",
+          "rawSql": "SELECT 'R' AS strategy, ts, action, ticker, shares, price FROM trades_r UNION ALL SELECT 'S', ts, action, ticker, shares, price FROM trades_s UNION ALL SELECT 'U', ts, action, ticker, shares, price FROM trades_u UNION ALL SELECT 'N', ts, action, ticker, shares, price FROM trades_n ORDER BY ts DESC LIMIT 10"
+        }
+      ],
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "options": {"showHeader": true}
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "tags": ["stocks", "strategies", "v2", "recommended"],
+  "templating": {"list": []},
+  "time": {"from": "now-30d", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Strategies v2 — Recommended Set + Indicator Heatmap",
+  "uid": "strategies_v2",
+  "version": 1,
+  "weekStart": ""
+}
