@@ -25,13 +25,243 @@
   "panels": [
     {
       "type": "row",
+      "id": 100,
+      "title": "\ud83c\udfaf v2 \u2014 Common Baseline Comparison ($10K seed @ 2026-04-29)",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "id": 101,
+      "title": "All 10 strategies \u2014 rebased to $10K at 04-29 open (v2 views)",
+      "description": "Common-baseline comparison view. Each strategy's legacy equity curve rebased to $10K at the last 2026-04-28 mark-to-market. Backed by SQL views portfolio_state_<X>_v2 \u2014 pure derivation, no second writer, always in sync with the live v1 books.",
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "targets": [
+        {
+          "refId": "R",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R\" FROM portfolio_state_r_v2 ORDER BY ts",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "refId": "S",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S\" FROM portfolio_state_s_v2 ORDER BY ts",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "refId": "U",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U\" FROM portfolio_state_u_v2 ORDER BY ts",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "refId": "N",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N\" FROM portfolio_state_n_v2 ORDER BY ts",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A\" FROM portfolio_state_v2 ORDER BY ts",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B\" FROM portfolio_state_b_v2 ORDER BY ts",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C\" FROM portfolio_state_c_v2 ORDER BY ts",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E\" FROM portfolio_state_e_v2 ORDER BY ts",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "refId": "I",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I\" FROM portfolio_state_i_v2 ORDER BY ts",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "refId": "O",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O\" FROM portfolio_state_o_v2 ORDER BY ts",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 4,
+            "spanNulls": true
+          },
+          "unit": "currencyUSD",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "rgba(255, 165, 0, 0.3)",
+                "value": null
+              },
+              {
+                "color": "transparent",
+                "value": 10000
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "R"
+            },
+            "properties": [
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#73BF69"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "S"
+            },
+            "properties": [
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#37872D"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "last",
+            "max",
+            "min",
+            "diff"
+          ]
+        }
+      }
+    },
+    {
+      "type": "row",
       "id": 1,
       "title": "\ud83d\ude80 Tier 1 \u2014 Live Deploy (R / S)",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 13
       },
       "collapsed": false,
       "panels": []
@@ -44,7 +274,7 @@
         "h": 8,
         "w": 16,
         "x": 0,
-        "y": 1
+        "y": 14
       },
       "datasource": {
         "type": "frser-sqlite-datasource",
@@ -111,7 +341,7 @@
         "h": 4,
         "w": 4,
         "x": 16,
-        "y": 1
+        "y": 14
       },
       "datasource": {
         "type": "frser-sqlite-datasource",
@@ -150,7 +380,7 @@
         "h": 4,
         "w": 4,
         "x": 20,
-        "y": 1
+        "y": 14
       },
       "datasource": {
         "type": "frser-sqlite-datasource",
@@ -189,7 +419,7 @@
         "h": 4,
         "w": 8,
         "x": 16,
-        "y": 5
+        "y": 18
       },
       "datasource": {
         "type": "frser-sqlite-datasource",
@@ -242,7 +472,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 22
       },
       "collapsed": false,
       "panels": []
@@ -255,7 +485,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 10
+        "y": 23
       },
       "datasource": {
         "type": "frser-sqlite-datasource",
@@ -322,7 +552,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 31
       },
       "collapsed": false,
       "panels": []
@@ -335,7 +565,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 19
+        "y": 32
       },
       "datasource": {
         "type": "frser-sqlite-datasource",
@@ -414,7 +644,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 40
       },
       "collapsed": false,
       "panels": []
@@ -427,7 +657,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 28
+        "y": 41
       },
       "datasource": {
         "type": "frser-sqlite-datasource",
@@ -506,7 +736,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 36
+        "y": 49
       },
       "collapsed": false,
       "panels": []
@@ -520,7 +750,7 @@
         "h": 14,
         "w": 24,
         "x": 0,
-        "y": 37
+        "y": 50
       },
       "datasource": {
         "type": "frser-sqlite-datasource",
@@ -629,7 +859,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 51
+        "y": 64
       },
       "datasource": {
         "type": "frser-sqlite-datasource",
@@ -696,7 +926,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 59
+        "y": 72
       },
       "collapsed": false,
       "panels": []
@@ -709,7 +939,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 60
+        "y": 73
       },
       "datasource": {
         "type": "frser-sqlite-datasource",
@@ -742,7 +972,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 60
+        "y": 73
       },
       "datasource": {
         "type": "frser-sqlite-datasource",
@@ -780,12 +1010,12 @@
     "list": []
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-2d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Strategies v2 \u2014 Recommended Set + Indicator Heatmap",
+  "title": "Strategies v2 \u2014 Recommended Set + Common Baseline + Heatmap",
   "uid": "strategies_v2",
   "version": 1,
   "weekStart": ""
