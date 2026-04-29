@@ -1052,6 +1052,173 @@
       "options": {
         "showHeader": true
       }
+    },
+    {
+      "type": "row",
+      "id": 200,
+      "title": "\ud83d\udcc8 Factor Attribution (\u03b1 / \u03b2 to QQQ / SPY / TQQQ / VIX / TNX / HYG)",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 81
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "table",
+      "id": 201,
+      "title": "Factor decomposition \u2014 refreshed daily by stocks.service",
+      "description": "OLS factor attribution from src.analysis.factor_attribution. \u03b1 %/yr is the annualized intercept (positive = strategy adds value beyond what the factors explain). \u03b2 columns are per-factor regression coefficients. R\u00b2 close to 1 = factors fully explain the strategy's returns; close to 0 = the strategy does something the factors don't capture. Caveat: at n<60 daily obs, OLS betas are unstable \u2014 interpret directionally, not literally.",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 82
+      },
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "targets": [
+        {
+          "refId": "factors",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "rawSql": "SELECT strategy_id AS \"Strat\", ROUND(alpha_pct, 2) AS \"\u03b1 %/yr\", ROUND(beta_qqq, 3)  AS \"\u03b2 QQQ\", ROUND(beta_spy, 3)  AS \"\u03b2 SPY\", ROUND(beta_tqqq, 3) AS \"\u03b2 TQQQ\", ROUND(beta_vix, 4)  AS \"\u03b2 VIX\", ROUND(beta_tnx, 4)  AS \"\u03b2 TNX\", ROUND(beta_hyg, 3)  AS \"\u03b2 HYG\", ROUND(r_squared, 3) AS \"R\u00b2\", ROUND(residual_vol_pct, 2) AS \"Resid \u03c3 %/yr\", n_observations AS \"n\", note AS \"note\" FROM factor_attribution_cache WHERE strategy_id IN ('R','S','U','N','A','B','C','E','I','O') ORDER BY CASE strategy_id   WHEN 'R' THEN 1 WHEN 'S' THEN 2 WHEN 'U' THEN 3 WHEN 'N' THEN 4   WHEN 'A' THEN 5 WHEN 'B' THEN 6 WHEN 'C' THEN 7   WHEN 'E' THEN 8 WHEN 'I' THEN 9 WHEN 'O' THEN 10 END",
+          "rawQueryText": "SELECT strategy_id AS \"Strat\", ROUND(alpha_pct, 2) AS \"\u03b1 %/yr\", ROUND(beta_qqq, 3)  AS \"\u03b2 QQQ\", ROUND(beta_spy, 3)  AS \"\u03b2 SPY\", ROUND(beta_tqqq, 3) AS \"\u03b2 TQQQ\", ROUND(beta_vix, 4)  AS \"\u03b2 VIX\", ROUND(beta_tnx, 4)  AS \"\u03b2 TNX\", ROUND(beta_hyg, 3)  AS \"\u03b2 HYG\", ROUND(r_squared, 3) AS \"R\u00b2\", ROUND(residual_vol_pct, 2) AS \"Resid \u03c3 %/yr\", n_observations AS \"n\", note AS \"note\" FROM factor_attribution_cache WHERE strategy_id IN ('R','S','U','N','A','B','C','E','I','O') ORDER BY CASE strategy_id   WHEN 'R' THEN 1 WHEN 'S' THEN 2 WHEN 'U' THEN 3 WHEN 'N' THEN 4   WHEN 'A' THEN 5 WHEN 'B' THEN 6 WHEN 'C' THEN 7   WHEN 'E' THEN 8 WHEN 'I' THEN 9 WHEN 'O' THEN 10 END",
+          "queryText": "SELECT strategy_id AS \"Strat\", ROUND(alpha_pct, 2) AS \"\u03b1 %/yr\", ROUND(beta_qqq, 3)  AS \"\u03b2 QQQ\", ROUND(beta_spy, 3)  AS \"\u03b2 SPY\", ROUND(beta_tqqq, 3) AS \"\u03b2 TQQQ\", ROUND(beta_vix, 4)  AS \"\u03b2 VIX\", ROUND(beta_tnx, 4)  AS \"\u03b2 TNX\", ROUND(beta_hyg, 3)  AS \"\u03b2 HYG\", ROUND(r_squared, 3) AS \"R\u00b2\", ROUND(residual_vol_pct, 2) AS \"Resid \u03c3 %/yr\", n_observations AS \"n\", note AS \"note\" FROM factor_attribution_cache WHERE strategy_id IN ('R','S','U','N','A','B','C','E','I','O') ORDER BY CASE strategy_id   WHEN 'R' THEN 1 WHEN 'S' THEN 2 WHEN 'U' THEN 3 WHEN 'N' THEN 4   WHEN 'A' THEN 5 WHEN 'B' THEN 6 WHEN 'C' THEN 7   WHEN 'E' THEN 8 WHEN 'I' THEN 9 WHEN 'O' THEN 10 END"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "\u03b1 %/yr"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "rgba(220, 53, 69, 0.7)",
+                      "value": null
+                    },
+                    {
+                      "color": "rgba(220, 53, 69, 0.3)",
+                      "value": -50
+                    },
+                    {
+                      "color": "rgb(60, 60, 60)",
+                      "value": -5
+                    },
+                    {
+                      "color": "rgba(40, 167, 69, 0.3)",
+                      "value": 5
+                    },
+                    {
+                      "color": "rgba(40, 167, 69, 0.7)",
+                      "value": 50
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "R\u00b2"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "rgb(60, 60, 60)",
+                      "value": null
+                    },
+                    {
+                      "color": "rgba(40, 167, 69, 0.3)",
+                      "value": 0.5
+                    },
+                    {
+                      "color": "rgba(40, 167, 69, 0.6)",
+                      "value": 0.85
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Strat"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 60
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "transformations": []
     }
   ],
   "refresh": "1m",
