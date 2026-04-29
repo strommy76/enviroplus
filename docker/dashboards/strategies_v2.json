@@ -62,7 +62,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R\" FROM portfolio_state_r_v2 ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R\" FROM portfolio_state_r_v2 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R\" FROM portfolio_state_r_v2 ORDER BY ts"
         },
         {
           "refId": "S",
@@ -74,7 +76,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S\" FROM portfolio_state_s_v2 ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S\" FROM portfolio_state_s_v2 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S\" FROM portfolio_state_s_v2 ORDER BY ts"
         },
         {
           "refId": "U",
@@ -86,7 +90,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U\" FROM portfolio_state_u_v2 ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U\" FROM portfolio_state_u_v2 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U\" FROM portfolio_state_u_v2 ORDER BY ts"
         },
         {
           "refId": "N",
@@ -98,7 +104,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N\" FROM portfolio_state_n_v2 ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N\" FROM portfolio_state_n_v2 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N\" FROM portfolio_state_n_v2 ORDER BY ts"
         },
         {
           "refId": "A",
@@ -110,7 +118,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A\" FROM portfolio_state_v2 ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A\" FROM portfolio_state_v2 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A\" FROM portfolio_state_v2 ORDER BY ts"
         },
         {
           "refId": "B",
@@ -122,7 +132,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B\" FROM portfolio_state_b_v2 ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B\" FROM portfolio_state_b_v2 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B\" FROM portfolio_state_b_v2 ORDER BY ts"
         },
         {
           "refId": "C",
@@ -134,7 +146,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C\" FROM portfolio_state_c_v2 ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C\" FROM portfolio_state_c_v2 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C\" FROM portfolio_state_c_v2 ORDER BY ts"
         },
         {
           "refId": "E",
@@ -146,7 +160,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E\" FROM portfolio_state_e_v2 ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E\" FROM portfolio_state_e_v2 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E\" FROM portfolio_state_e_v2 ORDER BY ts"
         },
         {
           "refId": "I",
@@ -158,7 +174,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I\" FROM portfolio_state_i_v2 ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I\" FROM portfolio_state_i_v2 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I\" FROM portfolio_state_i_v2 ORDER BY ts"
         },
         {
           "refId": "O",
@@ -170,7 +188,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O\" FROM portfolio_state_o_v2 ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O\" FROM portfolio_state_o_v2 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O\" FROM portfolio_state_o_v2 ORDER BY ts"
         }
       ],
       "fieldConfig": {
@@ -291,7 +311,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R\" FROM portfolio_state_r ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R\" FROM portfolio_state_r ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R\" FROM portfolio_state_r ORDER BY ts"
         },
         {
           "refId": "S",
@@ -303,7 +325,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S\" FROM portfolio_state_s ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S\" FROM portfolio_state_s ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S\" FROM portfolio_state_s ORDER BY ts"
         }
       ],
       "fieldConfig": {
@@ -355,7 +379,9 @@
             "uid": "stocks-sqlite-ds"
           },
           "queryType": "table",
-          "rawSql": "SELECT note FROM paper_r_runlog ORDER BY ts_utc DESC LIMIT 1"
+          "rawSql": "SELECT note FROM paper_r_runlog ORDER BY ts_utc DESC LIMIT 1",
+          "rawQueryText": "SELECT note FROM paper_r_runlog ORDER BY ts_utc DESC LIMIT 1",
+          "queryText": "SELECT note FROM paper_r_runlog ORDER BY ts_utc DESC LIMIT 1"
         }
       ],
       "fieldConfig": {
@@ -394,7 +420,9 @@
             "uid": "stocks-sqlite-ds"
           },
           "queryType": "table",
-          "rawSql": "SELECT note FROM paper_s_runlog ORDER BY ts_utc DESC LIMIT 1"
+          "rawSql": "SELECT note FROM paper_s_runlog ORDER BY ts_utc DESC LIMIT 1",
+          "rawQueryText": "SELECT note FROM paper_s_runlog ORDER BY ts_utc DESC LIMIT 1",
+          "queryText": "SELECT note FROM paper_s_runlog ORDER BY ts_utc DESC LIMIT 1"
         }
       ],
       "fieldConfig": {
@@ -433,7 +461,9 @@
             "uid": "stocks-sqlite-ds"
           },
           "queryType": "table",
-          "rawSql": "SELECT total_trades AS \"trades\", cash AS \"cash\", invested AS \"invested\" FROM portfolio_state_r ORDER BY ts DESC LIMIT 1"
+          "rawSql": "SELECT total_trades AS \"trades\", cash AS \"cash\", invested AS \"invested\" FROM portfolio_state_r ORDER BY ts DESC LIMIT 1",
+          "rawQueryText": "SELECT total_trades AS \"trades\", cash AS \"cash\", invested AS \"invested\" FROM portfolio_state_r ORDER BY ts DESC LIMIT 1",
+          "queryText": "SELECT total_trades AS \"trades\", cash AS \"cash\", invested AS \"invested\" FROM portfolio_state_r ORDER BY ts DESC LIMIT 1"
         }
       ],
       "fieldConfig": {
@@ -502,7 +532,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U\" FROM portfolio_state_u ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U\" FROM portfolio_state_u ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U\" FROM portfolio_state_u ORDER BY ts"
         },
         {
           "refId": "N",
@@ -514,7 +546,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N\" FROM portfolio_state_n ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N\" FROM portfolio_state_n ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N\" FROM portfolio_state_n ORDER BY ts"
         }
       ],
       "fieldConfig": {
@@ -582,7 +616,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A\" FROM portfolio_state ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A\" FROM portfolio_state ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A\" FROM portfolio_state ORDER BY ts"
         },
         {
           "refId": "B",
@@ -594,7 +630,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B\" FROM portfolio_state_b ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B\" FROM portfolio_state_b ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B\" FROM portfolio_state_b ORDER BY ts"
         },
         {
           "refId": "C",
@@ -606,7 +644,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C\" FROM portfolio_state_c ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C\" FROM portfolio_state_c ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C\" FROM portfolio_state_c ORDER BY ts"
         }
       ],
       "fieldConfig": {
@@ -674,7 +714,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E\" FROM portfolio_state_e ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E\" FROM portfolio_state_e ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E\" FROM portfolio_state_e ORDER BY ts"
         },
         {
           "refId": "I",
@@ -686,7 +728,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I\" FROM portfolio_state_i ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I\" FROM portfolio_state_i ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I\" FROM portfolio_state_i ORDER BY ts"
         },
         {
           "refId": "O",
@@ -698,7 +742,9 @@
           "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O\" FROM portfolio_state_o ORDER BY ts",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O\" FROM portfolio_state_o ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O\" FROM portfolio_state_o ORDER BY ts"
         }
       ],
       "fieldConfig": {
@@ -764,7 +810,9 @@
             "uid": "stocks-sqlite-ds"
           },
           "queryType": "table",
-          "rawSql": "WITH recent AS (SELECT DISTINCT date FROM vote_history ORDER BY date DESC LIMIT 14), pivoted AS (SELECT vh.vote_name AS indicator, vh.strategy_set AS scope, MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 0)  THEN vh.value END) AS \"d-0\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 1)  THEN vh.value END) AS \"d-1\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 2)  THEN vh.value END) AS \"d-2\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 3)  THEN vh.value END) AS \"d-3\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 4)  THEN vh.value END) AS \"d-4\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 5)  THEN vh.value END) AS \"d-5\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 6)  THEN vh.value END) AS \"d-6\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 7)  THEN vh.value END) AS \"d-7\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 8)  THEN vh.value END) AS \"d-8\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 9)  THEN vh.value END) AS \"d-9\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 10) THEN vh.value END) AS \"d-10\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 11) THEN vh.value END) AS \"d-11\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 12) THEN vh.value END) AS \"d-12\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 13) THEN vh.value END) AS \"d-13\" FROM vote_history vh WHERE vh.date IN (SELECT date FROM recent) GROUP BY vh.vote_name, vh.strategy_set) SELECT scope, indicator, \"d-0\", \"d-1\", \"d-2\", \"d-3\", \"d-4\", \"d-5\", \"d-6\", \"d-7\", \"d-8\", \"d-9\", \"d-10\", \"d-11\", \"d-12\", \"d-13\" FROM pivoted ORDER BY scope, indicator"
+          "rawSql": "WITH recent AS (SELECT DISTINCT date FROM vote_history ORDER BY date DESC LIMIT 14), pivoted AS (SELECT vh.vote_name AS indicator, vh.strategy_set AS scope, MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 0)  THEN vh.value END) AS \"d-0\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 1)  THEN vh.value END) AS \"d-1\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 2)  THEN vh.value END) AS \"d-2\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 3)  THEN vh.value END) AS \"d-3\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 4)  THEN vh.value END) AS \"d-4\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 5)  THEN vh.value END) AS \"d-5\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 6)  THEN vh.value END) AS \"d-6\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 7)  THEN vh.value END) AS \"d-7\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 8)  THEN vh.value END) AS \"d-8\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 9)  THEN vh.value END) AS \"d-9\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 10) THEN vh.value END) AS \"d-10\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 11) THEN vh.value END) AS \"d-11\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 12) THEN vh.value END) AS \"d-12\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 13) THEN vh.value END) AS \"d-13\" FROM vote_history vh WHERE vh.date IN (SELECT date FROM recent) GROUP BY vh.vote_name, vh.strategy_set) SELECT scope, indicator, \"d-0\", \"d-1\", \"d-2\", \"d-3\", \"d-4\", \"d-5\", \"d-6\", \"d-7\", \"d-8\", \"d-9\", \"d-10\", \"d-11\", \"d-12\", \"d-13\" FROM pivoted ORDER BY scope, indicator",
+          "rawQueryText": "WITH recent AS (SELECT DISTINCT date FROM vote_history ORDER BY date DESC LIMIT 14), pivoted AS (SELECT vh.vote_name AS indicator, vh.strategy_set AS scope, MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 0)  THEN vh.value END) AS \"d-0\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 1)  THEN vh.value END) AS \"d-1\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 2)  THEN vh.value END) AS \"d-2\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 3)  THEN vh.value END) AS \"d-3\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 4)  THEN vh.value END) AS \"d-4\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 5)  THEN vh.value END) AS \"d-5\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 6)  THEN vh.value END) AS \"d-6\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 7)  THEN vh.value END) AS \"d-7\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 8)  THEN vh.value END) AS \"d-8\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 9)  THEN vh.value END) AS \"d-9\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 10) THEN vh.value END) AS \"d-10\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 11) THEN vh.value END) AS \"d-11\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 12) THEN vh.value END) AS \"d-12\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 13) THEN vh.value END) AS \"d-13\" FROM vote_history vh WHERE vh.date IN (SELECT date FROM recent) GROUP BY vh.vote_name, vh.strategy_set) SELECT scope, indicator, \"d-0\", \"d-1\", \"d-2\", \"d-3\", \"d-4\", \"d-5\", \"d-6\", \"d-7\", \"d-8\", \"d-9\", \"d-10\", \"d-11\", \"d-12\", \"d-13\" FROM pivoted ORDER BY scope, indicator",
+          "queryText": "WITH recent AS (SELECT DISTINCT date FROM vote_history ORDER BY date DESC LIMIT 14), pivoted AS (SELECT vh.vote_name AS indicator, vh.strategy_set AS scope, MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 0)  THEN vh.value END) AS \"d-0\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 1)  THEN vh.value END) AS \"d-1\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 2)  THEN vh.value END) AS \"d-2\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 3)  THEN vh.value END) AS \"d-3\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 4)  THEN vh.value END) AS \"d-4\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 5)  THEN vh.value END) AS \"d-5\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 6)  THEN vh.value END) AS \"d-6\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 7)  THEN vh.value END) AS \"d-7\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 8)  THEN vh.value END) AS \"d-8\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 9)  THEN vh.value END) AS \"d-9\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 10) THEN vh.value END) AS \"d-10\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 11) THEN vh.value END) AS \"d-11\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 12) THEN vh.value END) AS \"d-12\", MAX(CASE WHEN vh.date = (SELECT date FROM recent ORDER BY date DESC LIMIT 1 OFFSET 13) THEN vh.value END) AS \"d-13\" FROM vote_history vh WHERE vh.date IN (SELECT date FROM recent) GROUP BY vh.vote_name, vh.strategy_set) SELECT scope, indicator, \"d-0\", \"d-1\", \"d-2\", \"d-3\", \"d-4\", \"d-5\", \"d-6\", \"d-7\", \"d-8\", \"d-9\", \"d-10\", \"d-11\", \"d-12\", \"d-13\" FROM pivoted ORDER BY scope, indicator"
         }
       ],
       "fieldConfig": {
@@ -876,7 +924,9 @@
           "rawSql": "SELECT CAST(strftime('%s', date || ' 16:00:00') AS INTEGER) AS time, SUM(value) AS \"R net (11)\" FROM vote_history WHERE strategy_set = 'R' GROUP BY date ORDER BY date",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', date || ' 16:00:00') AS INTEGER) AS time, SUM(value) AS \"R net (11)\" FROM vote_history WHERE strategy_set = 'R' GROUP BY date ORDER BY date",
+          "queryText": "SELECT CAST(strftime('%s', date || ' 16:00:00') AS INTEGER) AS time, SUM(value) AS \"R net (11)\" FROM vote_history WHERE strategy_set = 'R' GROUP BY date ORDER BY date"
         },
         {
           "refId": "S_score",
@@ -888,7 +938,9 @@
           "rawSql": "SELECT CAST(strftime('%s', date || ' 16:00:00') AS INTEGER) AS time, SUM(value) AS \"S net (16)\" FROM vote_history GROUP BY date ORDER BY date",
           "timeColumns": [
             "time"
-          ]
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', date || ' 16:00:00') AS INTEGER) AS time, SUM(value) AS \"S net (16)\" FROM vote_history GROUP BY date ORDER BY date",
+          "queryText": "SELECT CAST(strftime('%s', date || ' 16:00:00') AS INTEGER) AS time, SUM(value) AS \"S net (16)\" FROM vote_history GROUP BY date ORDER BY date"
         }
       ],
       "fieldConfig": {
@@ -953,7 +1005,9 @@
             "uid": "stocks-sqlite-ds"
           },
           "queryType": "table",
-          "rawSql": "SELECT 'R' AS strategy, run_date, ts_utc, note FROM paper_r_runlog UNION ALL SELECT 'S', run_date, ts_utc, note FROM paper_s_runlog ORDER BY ts_utc DESC LIMIT 10"
+          "rawSql": "SELECT 'R' AS strategy, run_date, ts_utc, note FROM paper_r_runlog UNION ALL SELECT 'S', run_date, ts_utc, note FROM paper_s_runlog ORDER BY ts_utc DESC LIMIT 10",
+          "rawQueryText": "SELECT 'R' AS strategy, run_date, ts_utc, note FROM paper_r_runlog UNION ALL SELECT 'S', run_date, ts_utc, note FROM paper_s_runlog ORDER BY ts_utc DESC LIMIT 10",
+          "queryText": "SELECT 'R' AS strategy, run_date, ts_utc, note FROM paper_r_runlog UNION ALL SELECT 'S', run_date, ts_utc, note FROM paper_s_runlog ORDER BY ts_utc DESC LIMIT 10"
         }
       ],
       "fieldConfig": {
@@ -986,7 +1040,9 @@
             "uid": "stocks-sqlite-ds"
           },
           "queryType": "table",
-          "rawSql": "SELECT 'R' AS strategy, ts, action, ticker, shares, price FROM trades_r UNION ALL SELECT 'S', ts, action, ticker, shares, price FROM trades_s UNION ALL SELECT 'U', ts, action, ticker, shares, price FROM trades_u UNION ALL SELECT 'N', ts, action, ticker, shares, price FROM trades_n ORDER BY ts DESC LIMIT 10"
+          "rawSql": "SELECT 'R' AS strategy, ts, action, ticker, shares, price FROM trades_r UNION ALL SELECT 'S', ts, action, ticker, shares, price FROM trades_s UNION ALL SELECT 'U', ts, action, ticker, shares, price FROM trades_u UNION ALL SELECT 'N', ts, action, ticker, shares, price FROM trades_n ORDER BY ts DESC LIMIT 10",
+          "rawQueryText": "SELECT 'R' AS strategy, ts, action, ticker, shares, price FROM trades_r UNION ALL SELECT 'S', ts, action, ticker, shares, price FROM trades_s UNION ALL SELECT 'U', ts, action, ticker, shares, price FROM trades_u UNION ALL SELECT 'N', ts, action, ticker, shares, price FROM trades_n ORDER BY ts DESC LIMIT 10",
+          "queryText": "SELECT 'R' AS strategy, ts, action, ticker, shares, price FROM trades_r UNION ALL SELECT 'S', ts, action, ticker, shares, price FROM trades_s UNION ALL SELECT 'U', ts, action, ticker, shares, price FROM trades_u UNION ALL SELECT 'N', ts, action, ticker, shares, price FROM trades_n ORDER BY ts DESC LIMIT 10"
         }
       ],
       "fieldConfig": {
