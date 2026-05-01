@@ -199,7 +199,7 @@
             "drawStyle": "line",
             "lineWidth": 2,
             "fillOpacity": 4,
-            "spanNulls": true
+            "spanNulls": 1800000
           },
           "unit": "currencyUSD",
           "color": {
@@ -336,7 +336,7 @@
             "drawStyle": "line",
             "lineWidth": 2,
             "fillOpacity": 8,
-            "spanNulls": true
+            "spanNulls": 1800000
           },
           "unit": "currencyUSD",
           "color": {
@@ -557,7 +557,7 @@
             "drawStyle": "line",
             "lineWidth": 2,
             "fillOpacity": 8,
-            "spanNulls": true
+            "spanNulls": 1800000
           },
           "unit": "currencyUSD",
           "color": {
@@ -655,7 +655,7 @@
             "drawStyle": "line",
             "lineWidth": 2,
             "fillOpacity": 8,
-            "spanNulls": true
+            "spanNulls": 1800000
           },
           "unit": "currencyUSD",
           "color": {
@@ -753,7 +753,7 @@
             "drawStyle": "line",
             "lineWidth": 2,
             "fillOpacity": 8,
-            "spanNulls": true
+            "spanNulls": 1800000
           },
           "unit": "currencyUSD",
           "color": {
@@ -949,7 +949,7 @@
             "drawStyle": "line",
             "lineWidth": 2,
             "fillOpacity": 12,
-            "spanNulls": true
+            "spanNulls": 1800000
           },
           "color": {
             "mode": "palette-classic"
