@@ -233,7 +233,7 @@
           "refId": "A"
         }
       ],
-      "title": "CO\u2082",
+      "title": "CO₂",
       "type": "stat"
     },
     {
@@ -261,7 +261,7 @@
               }
             ]
           },
-          "unit": "\u00b5g/m\u00b3"
+          "unit": "µg/m³"
         }
       },
       "gridPos": {
@@ -316,7 +316,7 @@
               }
             ]
           },
-          "unit": "\u00b5g/m\u00b3"
+          "unit": "µg/m³"
         }
       },
       "gridPos": {
@@ -371,7 +371,7 @@
               }
             ]
           },
-          "unit": "\u00b5g/m\u00b3"
+          "unit": "µg/m³"
         }
       },
       "gridPos": {
@@ -444,7 +444,7 @@
           "custom": {
             "lineWidth": 2
           },
-          "unit": "\u00b5g/m\u00b3"
+          "unit": "µg/m³"
         }
       },
       "gridPos": {
@@ -625,6 +625,197 @@
       ],
       "title": "Light Intensity",
       "type": "timeseries"
+    },
+    {
+      "type": "timeseries",
+      "title": "Indoor vs Outdoor PM2.5 (µg/m³)",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "cfhpdda09qq68e"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "axisCenteredZero": false,
+            "spanNulls": true
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 12
+              },
+              {
+                "color": "orange",
+                "value": 35.4
+              },
+              {
+                "color": "red",
+                "value": 55.4
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Indoor PM2.5"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3ECF8E"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Outdoor PM2.5 (EPA)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#F2495C"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    8,
+                    4
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Indoor PM10"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#5794F2"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Outdoor PM10 AQI"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#FF9830"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    8,
+                    4
+                  ]
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, pm25 AS \"Indoor PM2.5\", pm10 AS \"Indoor PM10\" FROM readings ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, pm25 AS \"Indoor PM2.5\", pm10 AS \"Indoor PM10\" FROM readings ORDER BY ts",
+          "queryType": "table",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts, CASE WHEN strftime('%m', ts) BETWEEN '03' AND '10' THEN '+4 hours' ELSE '+5 hours' END) AS INTEGER) AS time, CASE   WHEN pm25_aqi <= 50 THEN pm25_aqi * 12.0 / 50.0   WHEN pm25_aqi <= 100 THEN 12.1 + (pm25_aqi - 51) * (35.4 - 12.1) / 49.0   WHEN pm25_aqi <= 150 THEN 35.5 + (pm25_aqi - 101) * (55.4 - 35.5) / 49.0   ELSE pm25_aqi * 0.24 END AS \"Outdoor PM2.5 (EPA)\", pm10_aqi AS \"Outdoor PM10 AQI\" FROM epa_air_quality ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts, CASE WHEN strftime('%m', ts) BETWEEN '03' AND '10' THEN '+4 hours' ELSE '+5 hours' END) AS INTEGER) AS time, CASE   WHEN pm25_aqi <= 50 THEN pm25_aqi * 12.0 / 50.0   WHEN pm25_aqi <= 100 THEN 12.1 + (pm25_aqi - 51) * (35.4 - 12.1) / 49.0   WHEN pm25_aqi <= 150 THEN 35.5 + (pm25_aqi - 101) * (55.4 - 35.5) / 49.0   ELSE pm25_aqi * 0.24 END AS \"Outdoor PM2.5 (EPA)\", pm10_aqi AS \"Outdoor PM10 AQI\" FROM epa_air_quality ORDER BY ts",
+          "queryType": "table",
+          "refId": "B",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
     }
   ],
   "refresh": "1m",
@@ -634,5 +825,16 @@
   },
   "timezone": "browser",
   "title": "Enviro+ Air Quality",
-  "uid": "1ccfb92c-35e1-4d82-94ae-0a1e1d9336d7"
+  "uid": "1ccfb92c-35e1-4d82-94ae-0a1e1d9336d7",
+  "_meta": {
+    "path": "~/projects/enviroplus/docker/dashboards/enviroplus.json",
+    "description": "Enviro+ air quality dashboard",
+    "changelog": [
+      "2026-04-21 — Add Indoor vs Outdoor PM2.5 overlay panel with EPA AQI → µg/m³ conversion for distinguishing indoor events from outdoor infiltration",
+      "2026-04-21 — Fix Indoor vs Outdoor PM panel: EPA table stores timestamps in local ET; add DST-aware +4/+5 hour offset to align with UTC indoor timestamps",
+      "2026-04-21 — Outdoor PM series uses stepAfter interpolation + visible points to reflect hourly-sampled AirNow data (not continuous)",
+      "2026-04-21 — Revert stepped lines; restore default smooth interpolation on outdoor PM series"
+    ],
+    "timezone_note": "AirNow (EPA) data is stored in ET; Enviro+ readings are UTC. Dashboard query shifts EPA timestamps by +4h (DST) / +5h (standard time) for alignment."
+  }
 }

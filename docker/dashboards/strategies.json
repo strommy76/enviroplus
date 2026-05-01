@@ -1,0 +1,2208 @@
+{
+  "_meta": {
+    "path": "~/projects/enviroplus/docker/dashboards/strategies.json",
+    "description": "Trading strategy comparison dashboard — all 18 A-S paper trading performance",
+    "changelog": [
+      "2026-04-09 — Initial creation with 9 rows",
+      "2026-04-09 — Add Strategies F/G/H/I/J panels",
+      "2026-04-13 — Full redesign: market-hours-only queries, auto-scaling axes, consolidated leaderboard table, all 16 strategies (A-Q)",
+      "2026-04-13 — Add strategy performance heatmap (bar gauge sorted by return %, gradient color thresholds)",
+      "2026-04-16 — Add SPY/QQQ buy-and-hold benchmark lines (dashed) to portfolio value, return %, and scorecard",
+      "2026-04-16 — Add Strategy R (Core Plus) — daily-rebalance TSC upgrade alpha model (magenta #FF00FF)",
+      "2026-04-16 — Fix Scorecard SQL (ORDER BY inside UNION ALL invalid); wrap sub-selects in subqueries; add COALESCE for strategies with no state rows yet",
+      "2026-04-16 — Prune G/J/K strategies from dashboard",
+      "2026-04-16 — Add Strategy S (Core Plus v2 — R + 5 new signals: VIX term, VIX9D, VRP, MOVE, HY OAS) — cyan #00FFFF",
+      "2026-04-24 — Prune F (tight SIG_C) and P (best-of combo). Remove 'Return % vs Baseline' timeseries.",
+      "2026-04-25 — Add Strategy U (Swing Trader, PDT-compliant) — bright pink #FF1493",
+      "2026-04-30 — Add Strategy V (Regime Lookup) — non-parametric LUT/kNN regime-conditional allocator. lime green #32CD32",
+      "2026-04-25 — Archive H + Q (tables preserved). Add U Swing Trader (deployed). Move to archive-not-delete policy."
+    ]
+  },
+  "uid": "strategies_01",
+  "title": "Trading Strategies — All 17 Comparison",
+  "tags": [
+    "stocks",
+    "strategies",
+    "paper-trading"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 12,
+  "refresh": "1m",
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "fiscalYearStartMonth": 0,
+  "liveNow": false,
+  "panels": [
+    {
+      "type": "row",
+      "title": "Portfolio Value Comparison",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Portfolio Value — All Strategies",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A (3×20%)\" FROM portfolio_state WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 570 AND 960 ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A (3×20%)\" FROM portfolio_state WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A (3×20%)\" FROM portfolio_state WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B (6×10%)\" FROM portfolio_state_b WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 570 AND 960 ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B (6×10%)\" FROM portfolio_state_b WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B (6×10%)\" FROM portfolio_state_b WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "refId": "B",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C (no SIG_A)\" FROM portfolio_state_c WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 570 AND 960 ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C (no SIG_A)\" FROM portfolio_state_c WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C (no SIG_A)\" FROM portfolio_state_c WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "refId": "C",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E (trailing)\" FROM portfolio_state_e WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 570 AND 960 ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E (trailing)\" FROM portfolio_state_e WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E (trailing)\" FROM portfolio_state_e WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "refId": "D",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I (leveraged)\" FROM portfolio_state_i WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 570 AND 960 ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I (leveraged)\" FROM portfolio_state_i WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I (leveraged)\" FROM portfolio_state_i WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "refId": "H",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"L (velocity)\" FROM portfolio_state_l WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 570 AND 960 ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"L (velocity)\" FROM portfolio_state_l WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"L (velocity)\" FROM portfolio_state_l WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "refId": "K",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"M (inv SPY)\" FROM portfolio_state_m WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 570 AND 960 ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"M (inv SPY)\" FROM portfolio_state_m WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"M (inv SPY)\" FROM portfolio_state_m WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "refId": "L",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N (ticker win)\" FROM portfolio_state_n WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 570 AND 960 ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N (ticker win)\" FROM portfolio_state_n WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N (ticker win)\" FROM portfolio_state_n WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "refId": "M",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O (regime)\" FROM portfolio_state_o WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 570 AND 960 ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O (regime)\" FROM portfolio_state_o WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O (regime)\" FROM portfolio_state_o WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 810 AND 1200 ORDER BY ts",
+          "refId": "N",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R (Core Plus)\" FROM portfolio_state_r WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 570 AND 960 ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R (Core Plus)\" FROM portfolio_state_r ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R (Core Plus)\" FROM portfolio_state_r ORDER BY ts",
+          "refId": "Q",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S (Core Plus v2)\" FROM portfolio_state_s WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 570 AND 960 ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S (Core Plus v2)\" FROM portfolio_state_s ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S (Core Plus v2)\" FROM portfolio_state_s ORDER BY ts",
+          "refId": "S",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U (Swing/PDT)\" FROM portfolio_state_u WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 570 AND 960 ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U (Swing/PDT)\" FROM portfolio_state_u ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U (Swing/PDT)\" FROM portfolio_state_u ORDER BY ts",
+          "refId": "U",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"V (Regime Lookup)\" FROM portfolio_state_v WHERE CAST(strftime('%H', ts) AS INTEGER) * 60 + CAST(strftime('%M', ts) AS INTEGER) BETWEEN 570 AND 960 ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"V (Regime Lookup)\" FROM portfolio_state_v ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"V (Regime Lookup)\" FROM portfolio_state_v ORDER BY ts",
+          "refId": "V",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', date || ' 20:00:00') AS INTEGER) AS time, ROUND(10000.0 * close / (SELECT close FROM ohlcv WHERE ticker = 'SPY' AND date >= '2026-04-13' ORDER BY date ASC LIMIT 1), 2) AS \"SPY Buy & Hold\" FROM ohlcv WHERE ticker = 'SPY' AND date >= '2026-04-13' ORDER BY date",
+          "queryText": "SELECT CAST(strftime('%s', date || ' 20:00:00') AS INTEGER) AS time, ROUND(10000.0 * close / (SELECT close FROM ohlcv WHERE ticker = 'SPY' AND date >= '2026-04-13' ORDER BY date ASC LIMIT 1), 2) AS \"SPY Buy & Hold\" FROM ohlcv WHERE ticker = 'SPY' AND date >= '2026-04-13' ORDER BY date",
+          "queryType": "table",
+          "refId": "SPY_BH",
+          "timeColumns": [
+            "time"
+          ]
+        },
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', date || ' 20:00:00') AS INTEGER) AS time, ROUND(10000.0 * close / (SELECT close FROM ohlcv WHERE ticker = 'QQQ' AND date >= '2026-04-13' ORDER BY date ASC LIMIT 1), 2) AS \"QQQ Buy & Hold\" FROM ohlcv WHERE ticker = 'QQQ' AND date >= '2026-04-13' ORDER BY date",
+          "queryText": "SELECT CAST(strftime('%s', date || ' 20:00:00') AS INTEGER) AS time, ROUND(10000.0 * close / (SELECT close FROM ohlcv WHERE ticker = 'QQQ' AND date >= '2026-04-13' ORDER BY date ASC LIMIT 1), 2) AS \"QQQ Buy & Hold\" FROM ohlcv WHERE ticker = 'QQQ' AND date >= '2026-04-13' ORDER BY date",
+          "queryType": "table",
+          "refId": "QQQ_BH",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "gradientMode": "none",
+            "showPoints": "auto",
+            "pointSize": 5,
+            "axisCenteredZero": false,
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 10000
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "A (3×20%)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "B (6×10%)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "C (no SIG_A)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "E (trailing)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "I (leveraged)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "super-light-green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "L (velocity)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "super-light-blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "M (inv SPY)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "super-light-orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "N (ticker win)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "super-light-purple"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "O (regime)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "super-light-yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "R (Core Plus)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#FF00FF"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SPY Buy & Hold"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#FFFFFF"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    10,
+                    5
+                  ]
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "QQQ Buy & Hold"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#00BFFF"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    10,
+                    5
+                  ]
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "S (Core Plus v2)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#00FFFF"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "U (Swing/PDT)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#FF1493"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V (Regime Lookup)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#32CD32"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Strategy Heatmap — Return %",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "A (3×20%)",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 21
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#FF0000",
+                "value": null
+              },
+              {
+                "color": "#FF4444",
+                "value": -1.0
+              },
+              {
+                "color": "#FF8800",
+                "value": -0.5
+              },
+              {
+                "color": "#FFCC00",
+                "value": -0.1
+              },
+              {
+                "color": "#666666",
+                "value": -0.01
+              },
+              {
+                "color": "#88CC00",
+                "value": 0.01
+              },
+              {
+                "color": "#44DD00",
+                "value": 0.1
+              },
+              {
+                "color": "#00CC44",
+                "value": 0.5
+              },
+              {
+                "color": "#00AA66",
+                "value": 1.0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "wideLayout": false
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryType": "table",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "B (6×10%)",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 3,
+        "y": 21
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#FF0000",
+                "value": null
+              },
+              {
+                "color": "#FF4444",
+                "value": -1.0
+              },
+              {
+                "color": "#FF8800",
+                "value": -0.5
+              },
+              {
+                "color": "#FFCC00",
+                "value": -0.1
+              },
+              {
+                "color": "#666666",
+                "value": -0.01
+              },
+              {
+                "color": "#88CC00",
+                "value": 0.01
+              },
+              {
+                "color": "#44DD00",
+                "value": 0.1
+              },
+              {
+                "color": "#00CC44",
+                "value": 0.5
+              },
+              {
+                "color": "#00AA66",
+                "value": 1.0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "wideLayout": false
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_b ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_b ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryType": "table",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "C (no SIG_A)",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 6,
+        "y": 21
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#FF0000",
+                "value": null
+              },
+              {
+                "color": "#FF4444",
+                "value": -1.0
+              },
+              {
+                "color": "#FF8800",
+                "value": -0.5
+              },
+              {
+                "color": "#FFCC00",
+                "value": -0.1
+              },
+              {
+                "color": "#666666",
+                "value": -0.01
+              },
+              {
+                "color": "#88CC00",
+                "value": 0.01
+              },
+              {
+                "color": "#44DD00",
+                "value": 0.1
+              },
+              {
+                "color": "#00CC44",
+                "value": 0.5
+              },
+              {
+                "color": "#00AA66",
+                "value": 1.0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "wideLayout": false
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_c ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_c ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryType": "table",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "E (trailing)",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 9,
+        "y": 21
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#FF0000",
+                "value": null
+              },
+              {
+                "color": "#FF4444",
+                "value": -1.0
+              },
+              {
+                "color": "#FF8800",
+                "value": -0.5
+              },
+              {
+                "color": "#FFCC00",
+                "value": -0.1
+              },
+              {
+                "color": "#666666",
+                "value": -0.01
+              },
+              {
+                "color": "#88CC00",
+                "value": 0.01
+              },
+              {
+                "color": "#44DD00",
+                "value": 0.1
+              },
+              {
+                "color": "#00CC44",
+                "value": 0.5
+              },
+              {
+                "color": "#00AA66",
+                "value": 1.0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "wideLayout": false
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_e ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_e ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryType": "table",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "I (leveraged)",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 21,
+        "y": 21
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#FF0000",
+                "value": null
+              },
+              {
+                "color": "#FF4444",
+                "value": -1.0
+              },
+              {
+                "color": "#FF8800",
+                "value": -0.5
+              },
+              {
+                "color": "#FFCC00",
+                "value": -0.1
+              },
+              {
+                "color": "#666666",
+                "value": -0.01
+              },
+              {
+                "color": "#88CC00",
+                "value": 0.01
+              },
+              {
+                "color": "#44DD00",
+                "value": 0.1
+              },
+              {
+                "color": "#00CC44",
+                "value": 0.5
+              },
+              {
+                "color": "#00AA66",
+                "value": 1.0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "wideLayout": false
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_i ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_i ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryType": "table",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "L (velocity)",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 6,
+        "y": 25
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#FF0000",
+                "value": null
+              },
+              {
+                "color": "#FF4444",
+                "value": -1.0
+              },
+              {
+                "color": "#FF8800",
+                "value": -0.5
+              },
+              {
+                "color": "#FFCC00",
+                "value": -0.1
+              },
+              {
+                "color": "#666666",
+                "value": -0.01
+              },
+              {
+                "color": "#88CC00",
+                "value": 0.01
+              },
+              {
+                "color": "#44DD00",
+                "value": 0.1
+              },
+              {
+                "color": "#00CC44",
+                "value": 0.5
+              },
+              {
+                "color": "#00AA66",
+                "value": 1.0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "wideLayout": false
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_l ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_l ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryType": "table",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "M (inv SPY)",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 9,
+        "y": 25
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#FF0000",
+                "value": null
+              },
+              {
+                "color": "#FF4444",
+                "value": -1.0
+              },
+              {
+                "color": "#FF8800",
+                "value": -0.5
+              },
+              {
+                "color": "#FFCC00",
+                "value": -0.1
+              },
+              {
+                "color": "#666666",
+                "value": -0.01
+              },
+              {
+                "color": "#88CC00",
+                "value": 0.01
+              },
+              {
+                "color": "#44DD00",
+                "value": 0.1
+              },
+              {
+                "color": "#00CC44",
+                "value": 0.5
+              },
+              {
+                "color": "#00AA66",
+                "value": 1.0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "wideLayout": false
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_m ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_m ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryType": "table",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "N (ticker win)",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 12,
+        "y": 25
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#FF0000",
+                "value": null
+              },
+              {
+                "color": "#FF4444",
+                "value": -1.0
+              },
+              {
+                "color": "#FF8800",
+                "value": -0.5
+              },
+              {
+                "color": "#FFCC00",
+                "value": -0.1
+              },
+              {
+                "color": "#666666",
+                "value": -0.01
+              },
+              {
+                "color": "#88CC00",
+                "value": 0.01
+              },
+              {
+                "color": "#44DD00",
+                "value": 0.1
+              },
+              {
+                "color": "#00CC44",
+                "value": 0.5
+              },
+              {
+                "color": "#00AA66",
+                "value": 1.0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "wideLayout": false
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_n ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_n ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryType": "table",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "O (regime)",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 15,
+        "y": 25
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#FF0000",
+                "value": null
+              },
+              {
+                "color": "#FF4444",
+                "value": -1.0
+              },
+              {
+                "color": "#FF8800",
+                "value": -0.5
+              },
+              {
+                "color": "#FFCC00",
+                "value": -0.1
+              },
+              {
+                "color": "#666666",
+                "value": -0.01
+              },
+              {
+                "color": "#88CC00",
+                "value": 0.01
+              },
+              {
+                "color": "#44DD00",
+                "value": 0.1
+              },
+              {
+                "color": "#00CC44",
+                "value": 0.5
+              },
+              {
+                "color": "#00AA66",
+                "value": 1.0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "wideLayout": false
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_o ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_o ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryType": "table",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "R (Core Plus)",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 29
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#FF0000",
+                "value": null
+              },
+              {
+                "color": "#FF4444",
+                "value": -1.0
+              },
+              {
+                "color": "#FF8800",
+                "value": -0.5
+              },
+              {
+                "color": "#FFCC00",
+                "value": -0.1
+              },
+              {
+                "color": "#666666",
+                "value": -0.01
+              },
+              {
+                "color": "#88CC00",
+                "value": 0.01
+              },
+              {
+                "color": "#44DD00",
+                "value": 0.1
+              },
+              {
+                "color": "#00CC44",
+                "value": 0.5
+              },
+              {
+                "color": "#00AA66",
+                "value": 1.0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "wideLayout": false
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_r ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_r ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryType": "table",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Strategy Leaderboard",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 33
+      },
+      "collapsed": false
+    },
+    {
+      "type": "table",
+      "title": "Strategy Scorecard",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 34
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT 'A (3×20%)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'B (6×10%)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_b ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'C (no SIG_A)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_c ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'E (trailing)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_e ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'F (tight SIG_C)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_f ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'G (no time blk)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_g ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'H (aggr trail)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_h ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'I (leveraged)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_i ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'J (SIG_D only)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_j ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'K (6×10% trail)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_k ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'L (velocity)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_l ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'M (inv SPY)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_m ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'N (ticker win)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_n ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'O (regime)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_o ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'P (best-of)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_p ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'Q (C+E synth)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_q ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'R (Core Plus)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_r ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'S (Core Plus v2)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_s ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'U (Swing/PDT)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_u ORDER BY ts DESC LIMIT 1 UNION ALL SELECT 'V (Regime Lookup)' AS Strategy, total_value AS Value, total_pnl AS \"P&L\", ROUND(((total_value - 10000) / 10000.0) * 100, 2) AS \"Return %\", total_trades AS Trades, win_count AS Wins, loss_count AS Losses, CASE WHEN (win_count + loss_count) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_v ORDER BY ts DESC LIMIT 1",
+          "rawQueryText": "SELECT * FROM (SELECT 'A (3×20%)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'B (6×10%)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_b ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'C (no SIG_A)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_c ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'E (trailing)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_e ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'I (leveraged)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_i ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'L (velocity)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_l ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'M (inv SPY)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_m ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'N (ticker win)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_n ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'O (regime)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_o ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'R (Core Plus)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_r ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'S (Core Plus v2)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_s ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'U (Swing/PDT)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_u ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'V (Regime Lookup)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_v ORDER BY ts DESC LIMIT 1) UNION ALL SELECT 'SPY (buy&hold)' AS Strategy, ROUND(10000.0 * (SELECT close FROM ohlcv WHERE ticker='SPY' ORDER BY date DESC LIMIT 1) / (SELECT close FROM ohlcv WHERE ticker='SPY' AND date >= '2026-04-13' ORDER BY date ASC LIMIT 1), 2) AS Value, ROUND(10000.0 * (SELECT close FROM ohlcv WHERE ticker='SPY' ORDER BY date DESC LIMIT 1) / (SELECT close FROM ohlcv WHERE ticker='SPY' AND date >= '2026-04-13' ORDER BY date ASC LIMIT 1) - 10000, 2) AS \"P&L\", ROUND(((SELECT close FROM ohlcv WHERE ticker='SPY' ORDER BY date DESC LIMIT 1) / (SELECT close FROM ohlcv WHERE ticker='SPY' AND date >= '2026-04-13' ORDER BY date ASC LIMIT 1) - 1.0) * 100, 2) AS \"Return %\", 0 AS Trades, 0 AS Wins, 0 AS Losses, 0.0 AS \"Win %\" UNION ALL SELECT 'QQQ (buy&hold)' AS Strategy, ROUND(10000.0 * (SELECT close FROM ohlcv WHERE ticker='QQQ' ORDER BY date DESC LIMIT 1) / (SELECT close FROM ohlcv WHERE ticker='QQQ' AND date >= '2026-04-13' ORDER BY date ASC LIMIT 1), 2) AS Value, ROUND(10000.0 * (SELECT close FROM ohlcv WHERE ticker='QQQ' ORDER BY date DESC LIMIT 1) / (SELECT close FROM ohlcv WHERE ticker='QQQ' AND date >= '2026-04-13' ORDER BY date ASC LIMIT 1) - 10000, 2) AS \"P&L\", ROUND(((SELECT close FROM ohlcv WHERE ticker='QQQ' ORDER BY date DESC LIMIT 1) / (SELECT close FROM ohlcv WHERE ticker='QQQ' AND date >= '2026-04-13' ORDER BY date ASC LIMIT 1) - 1.0) * 100, 2) AS \"Return %\", 0 AS Trades, 0 AS Wins, 0 AS Losses, 0.0 AS \"Win %\"",
+          "queryText": "SELECT * FROM (SELECT 'A (3×20%)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'B (6×10%)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_b ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'C (no SIG_A)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_c ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'E (trailing)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_e ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'I (leveraged)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_i ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'L (velocity)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_l ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'M (inv SPY)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_m ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'N (ticker win)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_n ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'O (regime)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_o ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'R (Core Plus)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_r ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'S (Core Plus v2)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_s ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'U (Swing/PDT)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_u ORDER BY ts DESC LIMIT 1) UNION ALL SELECT * FROM (SELECT 'V (Regime Lookup)' AS Strategy, COALESCE(total_value, 10000) AS Value, COALESCE(total_pnl, 0) AS \"P&L\", ROUND(((COALESCE(total_value, 10000) - 10000) / 10000.0) * 100, 2) AS \"Return %\", COALESCE(total_trades, 0) AS Trades, COALESCE(win_count, 0) AS Wins, COALESCE(loss_count, 0) AS Losses, CASE WHEN (COALESCE(win_count, 0) + COALESCE(loss_count, 0)) = 0 THEN 0 ELSE ROUND(CAST(win_count AS REAL) / (win_count + loss_count) * 100, 1) END AS \"Win %\" FROM portfolio_state_v ORDER BY ts DESC LIMIT 1) UNION ALL SELECT 'SPY (buy&hold)' AS Strategy, ROUND(10000.0 * (SELECT close FROM ohlcv WHERE ticker='SPY' ORDER BY date DESC LIMIT 1) / (SELECT close FROM ohlcv WHERE ticker='SPY' AND date >= '2026-04-13' ORDER BY date ASC LIMIT 1), 2) AS Value, ROUND(10000.0 * (SELECT close FROM ohlcv WHERE ticker='SPY' ORDER BY date DESC LIMIT 1) / (SELECT close FROM ohlcv WHERE ticker='SPY' AND date >= '2026-04-13' ORDER BY date ASC LIMIT 1) - 10000, 2) AS \"P&L\", ROUND(((SELECT close FROM ohlcv WHERE ticker='SPY' ORDER BY date DESC LIMIT 1) / (SELECT close FROM ohlcv WHERE ticker='SPY' AND date >= '2026-04-13' ORDER BY date ASC LIMIT 1) - 1.0) * 100, 2) AS \"Return %\", 0 AS Trades, 0 AS Wins, 0 AS Losses, 0.0 AS \"Win %\" UNION ALL SELECT 'QQQ (buy&hold)' AS Strategy, ROUND(10000.0 * (SELECT close FROM ohlcv WHERE ticker='QQQ' ORDER BY date DESC LIMIT 1) / (SELECT close FROM ohlcv WHERE ticker='QQQ' AND date >= '2026-04-13' ORDER BY date ASC LIMIT 1), 2) AS Value, ROUND(10000.0 * (SELECT close FROM ohlcv WHERE ticker='QQQ' ORDER BY date DESC LIMIT 1) / (SELECT close FROM ohlcv WHERE ticker='QQQ' AND date >= '2026-04-13' ORDER BY date ASC LIMIT 1) - 10000, 2) AS \"P&L\", ROUND(((SELECT close FROM ohlcv WHERE ticker='QQQ' ORDER BY date DESC LIMIT 1) / (SELECT close FROM ohlcv WHERE ticker='QQQ' AND date >= '2026-04-13' ORDER BY date ASC LIMIT 1) - 1.0) * 100, 2) AS \"Return %\", 0 AS Trades, 0 AS Wins, 0 AS Losses, 0.0 AS \"Win %\"",
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "P&L"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 0
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Return %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 0
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Win %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 40
+                    },
+                    {
+                      "color": "green",
+                      "value": 55
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "S (Core Plus v2)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#00FFFF"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Return %",
+            "desc": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "row",
+      "title": "Signal Performance",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 44
+      },
+      "collapsed": false
+    },
+    {
+      "type": "table",
+      "title": "Signal Stats — Strategy A",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 45
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT signal_name AS Signal, trade_count AS Trades, win_count AS Wins, ROUND(avg_pnl_pct, 2) AS \"Avg P&L %\", ROUND(best_pnl_pct, 2) AS \"Best %\", ROUND(worst_pnl_pct, 2) AS \"Worst %\", ROUND(avg_hold_seconds/60, 0) AS \"Avg Hold (min)\" FROM signal_stats ORDER BY trade_count DESC",
+          "rawQueryText": "SELECT signal_name AS Signal, trade_count AS Trades, win_count AS Wins, ROUND(avg_pnl_pct, 2) AS \"Avg P&L %\", ROUND(best_pnl_pct, 2) AS \"Best %\", ROUND(worst_pnl_pct, 2) AS \"Worst %\", ROUND(avg_hold_seconds/60, 0) AS \"Avg Hold (min)\" FROM signal_stats ORDER BY trade_count DESC",
+          "queryText": "SELECT signal_name AS Signal, trade_count AS Trades, win_count AS Wins, ROUND(avg_pnl_pct, 2) AS \"Avg P&L %\", ROUND(best_pnl_pct, 2) AS \"Best %\", ROUND(worst_pnl_pct, 2) AS \"Worst %\", ROUND(avg_hold_seconds/60, 0) AS \"Avg Hold (min)\" FROM signal_stats ORDER BY trade_count DESC",
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "type": "row",
+      "title": "Trade Activity",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      },
+      "collapsed": false
+    },
+    {
+      "type": "table",
+      "title": "Recent Sells (All Strategies)",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 52
+      },
+      "targets": [],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "P&L"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 0
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "type": "row",
+      "title": "Shadow Blocked Signals",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 60
+      },
+      "collapsed": false
+    },
+    {
+      "type": "table",
+      "title": "Shadow Blocked — Time-of-Day Filter Evaluation",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 61
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT ts AS Time, ticker AS Ticker, signal AS Signal, block_reason AS Reason, ROUND(price, 2) AS Price, ROUND(change_pct, 2) AS \"Change %\", ROUND(sentiment_1h, 3) AS \"Sent 1h\", ROUND(velocity_1h, 1) AS \"Vel 1h\" FROM shadow_blocked ORDER BY ts DESC LIMIT 30",
+          "rawQueryText": "SELECT ts AS Time, ticker AS Ticker, signal AS Signal, block_reason AS Reason, ROUND(price, 2) AS Price, ROUND(change_pct, 2) AS \"Change %\", ROUND(sentiment_1h, 3) AS \"Sent 1h\", ROUND(velocity_1h, 1) AS \"Vel 1h\" FROM shadow_blocked ORDER BY ts DESC LIMIT 30",
+          "queryText": "SELECT ts AS Time, ticker AS Ticker, signal AS Signal, block_reason AS Reason, ROUND(price, 2) AS Price, ROUND(change_pct, 2) AS \"Change %\", ROUND(sentiment_1h, 3) AS \"Sent 1h\", ROUND(velocity_1h, 1) AS \"Vel 1h\" FROM shadow_blocked ORDER BY ts DESC LIMIT 30",
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "type": "row",
+      "title": "Open Positions",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 67
+      },
+      "collapsed": false
+    },
+    {
+      "type": "table",
+      "title": "Open Positions — All Strategies",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 68
+      },
+      "targets": [],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "type": "stat",
+      "title": "S (Core Plus v2)",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 3,
+        "y": 29
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#FF0000",
+                "value": null
+              },
+              {
+                "color": "#FF4444",
+                "value": -1.0
+              },
+              {
+                "color": "#FF8800",
+                "value": -0.5
+              },
+              {
+                "color": "#FFCC00",
+                "value": -0.1
+              },
+              {
+                "color": "#666666",
+                "value": -0.01
+              },
+              {
+                "color": "#88CC00",
+                "value": 0.01
+              },
+              {
+                "color": "#44DD00",
+                "value": 0.1
+              },
+              {
+                "color": "#00CC44",
+                "value": 0.5
+              },
+              {
+                "color": "#00AA66",
+                "value": 1.0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "wideLayout": false
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_s ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_s ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryType": "table",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "U (Swing/PDT)",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 6,
+        "y": 29
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#FF0000",
+                "value": null
+              },
+              {
+                "color": "#FF4444",
+                "value": -1.0
+              },
+              {
+                "color": "#FF8800",
+                "value": -0.5
+              },
+              {
+                "color": "#FFCC00",
+                "value": -0.1
+              },
+              {
+                "color": "#666666",
+                "value": -0.01
+              },
+              {
+                "color": "#88CC00",
+                "value": 0.01
+              },
+              {
+                "color": "#44DD00",
+                "value": 0.1
+              },
+              {
+                "color": "#00CC44",
+                "value": 0.5
+              },
+              {
+                "color": "#00AA66",
+                "value": 1.0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "wideLayout": false
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_u ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_u ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryType": "table",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "V (Regime Lookup)",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "stocks-sqlite-ds"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 9,
+        "y": 29
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#FF0000",
+                "value": null
+              },
+              {
+                "color": "#FF4444",
+                "value": -1.0
+              },
+              {
+                "color": "#FF8800",
+                "value": -0.5
+              },
+              {
+                "color": "#FFCC00",
+                "value": -0.1
+              },
+              {
+                "color": "#666666",
+                "value": -0.01
+              },
+              {
+                "color": "#88CC00",
+                "value": 0.01
+              },
+              {
+                "color": "#44DD00",
+                "value": 0.1
+              },
+              {
+                "color": "#00CC44",
+                "value": 0.5
+              },
+              {
+                "color": "#00AA66",
+                "value": 1.0
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "wideLayout": false
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_v ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryText": "SELECT ROUND(((COALESCE((SELECT total_value FROM portfolio_state_v ORDER BY ts DESC LIMIT 1), 10000) - 10000) / 10000.0) * 100, 3) AS value",
+          "queryType": "table",
+          "refId": "A",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    }
+  ]
+}

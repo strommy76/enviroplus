@@ -18,3 +18,12 @@ datasources:
       path: /data/stocks/stocks.db
     version: 1
     editable: true
+
+  - name: PiHoleWatch SQLite
+    type: frser-sqlite-datasource
+    uid: pihole-watch-sqlite-ds
+    access: proxy
+    jsonData:
+      path: /data/pihole-watch/findings.db
+    version: 1
+    editable: true
