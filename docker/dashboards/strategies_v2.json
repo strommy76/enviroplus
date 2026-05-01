@@ -215,7 +215,7 @@
             "fillOpacity": 4,
             "spanNulls": 1800000
           },
-          "unit": "currencyUSD",
+          "unit": "currency:financial:$",
           "color": {
             "mode": "palette-classic"
           },
@@ -231,7 +231,8 @@
                 "value": 10000
               }
             ]
-          }
+          },
+          "decimals": 0
         },
         "overrides": [
           {
@@ -385,10 +386,11 @@
             "fillOpacity": 8,
             "spanNulls": 1800000
           },
-          "unit": "currencyUSD",
+          "unit": "currency:financial:$",
           "color": {
             "mode": "palette-classic"
-          }
+          },
+          "decimals": 0
         },
         "overrides": []
       },
@@ -529,10 +531,11 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "currencyUSD",
+          "unit": "currency:financial:$",
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "decimals": 0
         },
         "overrides": [
           {
@@ -620,10 +623,11 @@
             "fillOpacity": 8,
             "spanNulls": 1800000
           },
-          "unit": "currencyUSD",
+          "unit": "currency:financial:$",
           "color": {
             "mode": "palette-classic"
-          }
+          },
+          "decimals": 0
         },
         "overrides": []
       },
@@ -718,10 +722,11 @@
             "fillOpacity": 8,
             "spanNulls": 1800000
           },
-          "unit": "currencyUSD",
+          "unit": "currency:financial:$",
           "color": {
             "mode": "palette-classic"
-          }
+          },
+          "decimals": 0
         },
         "overrides": []
       },
@@ -816,10 +821,11 @@
             "fillOpacity": 8,
             "spanNulls": 1800000
           },
-          "unit": "currencyUSD",
+          "unit": "currency:financial:$",
           "color": {
             "mode": "palette-classic"
-          }
+          },
+          "decimals": 0
         },
         "overrides": []
       },
