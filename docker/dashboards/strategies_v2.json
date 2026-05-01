@@ -39,8 +39,8 @@
     {
       "type": "timeseries",
       "id": 101,
-      "title": "All 10 strategies \u2014 rebased to $10K at 04-29 open (v2 views)",
-      "description": "Common-baseline comparison view. Each strategy's legacy equity curve rebased to $10K at the last 2026-04-28 mark-to-market. Backed by SQL views portfolio_state_<X>_v2 \u2014 pure derivation, no second writer, always in sync with the live v1 books.",
+      "title": "All 11 strategies \u2014 rebased to $10K at 04-29 open (v2 views) \u2014 session-compressed time",
+      "description": "Common-baseline comparison view. Each strategy's legacy equity curve rebased to $10K at the last 2026-04-28 mark-to-market. Backed by SQL views portfolio_state_<X>_v2 \u2014 pure derivation, no second writer, always in sync with the live v1 books. X-axis is SYNTHETIC trading time: each market session occupies a fixed 6.5h slot and abuts the next session \u2014 overnight gaps are zero-width. Real wall-clock dates not preserved on the axis; use the per-strategy panels below for real-time.",
       "gridPos": {
         "h": 12,
         "w": 24,
@@ -59,12 +59,12 @@
             "uid": "stocks-sqlite-ds"
           },
           "queryType": "table",
-          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R\" FROM portfolio_state_r_v2 ORDER BY ts",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R\" FROM portfolio_state_r_v2_session ORDER BY ts",
           "timeColumns": [
             "time"
           ],
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R\" FROM portfolio_state_r_v2 ORDER BY ts",
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R\" FROM portfolio_state_r_v2 ORDER BY ts"
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R\" FROM portfolio_state_r_v2_session ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"R\" FROM portfolio_state_r_v2_session ORDER BY ts"
         },
         {
           "refId": "S",
@@ -73,12 +73,12 @@
             "uid": "stocks-sqlite-ds"
           },
           "queryType": "table",
-          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S\" FROM portfolio_state_s_v2 ORDER BY ts",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S\" FROM portfolio_state_s_v2_session ORDER BY ts",
           "timeColumns": [
             "time"
           ],
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S\" FROM portfolio_state_s_v2 ORDER BY ts",
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S\" FROM portfolio_state_s_v2 ORDER BY ts"
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S\" FROM portfolio_state_s_v2_session ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S\" FROM portfolio_state_s_v2_session ORDER BY ts"
         },
         {
           "refId": "U",
@@ -87,12 +87,26 @@
             "uid": "stocks-sqlite-ds"
           },
           "queryType": "table",
-          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U\" FROM portfolio_state_u_v2 ORDER BY ts",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U\" FROM portfolio_state_u_v2_session ORDER BY ts",
           "timeColumns": [
             "time"
           ],
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U\" FROM portfolio_state_u_v2 ORDER BY ts",
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U\" FROM portfolio_state_u_v2 ORDER BY ts"
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U\" FROM portfolio_state_u_v2_session ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"U\" FROM portfolio_state_u_v2_session ORDER BY ts"
+        },
+        {
+          "refId": "V",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"V\" FROM portfolio_state_v_v2_session ORDER BY ts",
+          "timeColumns": [
+            "time"
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"V\" FROM portfolio_state_v_v2_session ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"V\" FROM portfolio_state_v_v2_session ORDER BY ts"
         },
         {
           "refId": "N",
@@ -101,12 +115,12 @@
             "uid": "stocks-sqlite-ds"
           },
           "queryType": "table",
-          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N\" FROM portfolio_state_n_v2 ORDER BY ts",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N\" FROM portfolio_state_n_v2_session ORDER BY ts",
           "timeColumns": [
             "time"
           ],
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N\" FROM portfolio_state_n_v2 ORDER BY ts",
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N\" FROM portfolio_state_n_v2 ORDER BY ts"
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N\" FROM portfolio_state_n_v2_session ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"N\" FROM portfolio_state_n_v2_session ORDER BY ts"
         },
         {
           "refId": "A",
@@ -115,12 +129,12 @@
             "uid": "stocks-sqlite-ds"
           },
           "queryType": "table",
-          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A\" FROM portfolio_state_v2 ORDER BY ts",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A\" FROM portfolio_state_v2_session ORDER BY ts",
           "timeColumns": [
             "time"
           ],
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A\" FROM portfolio_state_v2 ORDER BY ts",
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A\" FROM portfolio_state_v2 ORDER BY ts"
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A\" FROM portfolio_state_v2_session ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"A\" FROM portfolio_state_v2_session ORDER BY ts"
         },
         {
           "refId": "B",
@@ -129,12 +143,12 @@
             "uid": "stocks-sqlite-ds"
           },
           "queryType": "table",
-          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B\" FROM portfolio_state_b_v2 ORDER BY ts",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B\" FROM portfolio_state_b_v2_session ORDER BY ts",
           "timeColumns": [
             "time"
           ],
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B\" FROM portfolio_state_b_v2 ORDER BY ts",
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B\" FROM portfolio_state_b_v2 ORDER BY ts"
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B\" FROM portfolio_state_b_v2_session ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"B\" FROM portfolio_state_b_v2_session ORDER BY ts"
         },
         {
           "refId": "C",
@@ -143,12 +157,12 @@
             "uid": "stocks-sqlite-ds"
           },
           "queryType": "table",
-          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C\" FROM portfolio_state_c_v2 ORDER BY ts",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C\" FROM portfolio_state_c_v2_session ORDER BY ts",
           "timeColumns": [
             "time"
           ],
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C\" FROM portfolio_state_c_v2 ORDER BY ts",
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C\" FROM portfolio_state_c_v2 ORDER BY ts"
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C\" FROM portfolio_state_c_v2_session ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"C\" FROM portfolio_state_c_v2_session ORDER BY ts"
         },
         {
           "refId": "E",
@@ -157,12 +171,12 @@
             "uid": "stocks-sqlite-ds"
           },
           "queryType": "table",
-          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E\" FROM portfolio_state_e_v2 ORDER BY ts",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E\" FROM portfolio_state_e_v2_session ORDER BY ts",
           "timeColumns": [
             "time"
           ],
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E\" FROM portfolio_state_e_v2 ORDER BY ts",
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E\" FROM portfolio_state_e_v2 ORDER BY ts"
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E\" FROM portfolio_state_e_v2_session ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"E\" FROM portfolio_state_e_v2_session ORDER BY ts"
         },
         {
           "refId": "I",
@@ -171,12 +185,12 @@
             "uid": "stocks-sqlite-ds"
           },
           "queryType": "table",
-          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I\" FROM portfolio_state_i_v2 ORDER BY ts",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I\" FROM portfolio_state_i_v2_session ORDER BY ts",
           "timeColumns": [
             "time"
           ],
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I\" FROM portfolio_state_i_v2 ORDER BY ts",
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I\" FROM portfolio_state_i_v2 ORDER BY ts"
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I\" FROM portfolio_state_i_v2_session ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"I\" FROM portfolio_state_i_v2_session ORDER BY ts"
         },
         {
           "refId": "O",
@@ -185,12 +199,12 @@
             "uid": "stocks-sqlite-ds"
           },
           "queryType": "table",
-          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O\" FROM portfolio_state_o_v2 ORDER BY ts",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O\" FROM portfolio_state_o_v2_session ORDER BY ts",
           "timeColumns": [
             "time"
           ],
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O\" FROM portfolio_state_o_v2 ORDER BY ts",
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O\" FROM portfolio_state_o_v2 ORDER BY ts"
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O\" FROM portfolio_state_o_v2_session ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"O\" FROM portfolio_state_o_v2_session ORDER BY ts"
         }
       ],
       "fieldConfig": {
@@ -257,6 +271,25 @@
                 }
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V"
+            },
+            "properties": [
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#32CD32"
+                }
+              }
+            ]
           }
         ]
       },
@@ -276,7 +309,7 @@
     {
       "type": "row",
       "id": 1,
-      "title": "\ud83d\ude80 Tier 1 \u2014 Live Deploy (R / S)",
+      "title": "\ud83d\ude80 Tier 1 \u2014 Live Deploy (R / S / V)",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -289,7 +322,7 @@
     {
       "type": "timeseries",
       "id": 2,
-      "title": "R / S \u2014 Portfolio Value",
+      "title": "R / S / V \u2014 Portfolio Value",
       "gridPos": {
         "h": 8,
         "w": 16,
@@ -328,6 +361,20 @@
           ],
           "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S\" FROM portfolio_state_s ORDER BY ts",
           "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"S\" FROM portfolio_state_s ORDER BY ts"
+        },
+        {
+          "refId": "V",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "stocks-sqlite-ds"
+          },
+          "queryType": "table",
+          "rawSql": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"V\" FROM portfolio_state_v ORDER BY ts",
+          "timeColumns": [
+            "time"
+          ],
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"V\" FROM portfolio_state_v ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, total_value AS \"V\" FROM portfolio_state_v ORDER BY ts"
         }
       ],
       "fieldConfig": {
