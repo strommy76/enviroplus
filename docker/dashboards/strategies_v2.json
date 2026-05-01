@@ -442,7 +442,14 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "textMode": "value"
+        "textMode": "value",
+        "reduceOptions": {
+          "fields": "/.*/",
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
       }
     },
     {
@@ -483,7 +490,14 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "textMode": "value"
+        "textMode": "value",
+        "reduceOptions": {
+          "fields": "/.*/",
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
       }
     },
     {
