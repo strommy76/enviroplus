@@ -1,0 +1,612 @@
+{
+  "title": "Outdoor Weather — BSWeather",
+  "uid": "outdoor_wx_01",
+  "tags": ["weather", "outdoor"],
+  "schemaVersion": 36,
+  "version": 3,
+  "refresh": "1m",
+  "time": { "from": "now-24h", "to": "now" },
+  "timepicker": {},
+  "panels": [
+
+    {
+      "id": 1,
+      "title": "Outdoor Temp",
+      "type": "stat",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "fahrenheit",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue",   "value": null },
+              { "color": "green",  "value": 60 },
+              { "color": "yellow", "value": 80 },
+              { "color": "orange", "value": 90 },
+              { "color": "red",    "value": 100 }
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as value FROM outdoor ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as value FROM outdoor ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    },
+
+    {
+      "id": 2,
+      "title": "Feels Like",
+      "type": "stat",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "fahrenheit",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue",   "value": null },
+              { "color": "green",  "value": 60 },
+              { "color": "yellow", "value": 80 },
+              { "color": "orange", "value": 90 },
+              { "color": "red",    "value": 100 }
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, feelslike as value FROM outdoor ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, feelslike as value FROM outdoor ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    },
+
+    {
+      "id": 3,
+      "title": "Outdoor Humidity",
+      "type": "stat",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",    "value": null },
+              { "color": "green",  "value": 30 },
+              { "color": "yellow", "value": 70 },
+              { "color": "red",    "value": 90 }
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, humidity as value FROM outdoor ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, humidity as value FROM outdoor ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    },
+
+    {
+      "id": 4,
+      "title": "Dew Point",
+      "type": "stat",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "fahrenheit",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue",   "value": null },
+              { "color": "green",  "value": 50 },
+              { "color": "yellow", "value": 65 },
+              { "color": "red",    "value": 75 }
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, dewpoint as value FROM outdoor ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, dewpoint as value FROM outdoor ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    },
+
+    {
+      "id": 5,
+      "title": "Wind Speed",
+      "type": "stat",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 5 },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "velocitymph",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green",  "value": null },
+              { "color": "yellow", "value": 15 },
+              { "color": "orange", "value": 25 },
+              { "color": "red",    "value": 40 }
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windspeedmph as value FROM outdoor ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windspeedmph as value FROM outdoor ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    },
+
+    {
+      "id": 6,
+      "title": "Wind Gust",
+      "type": "stat",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 5 },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "velocitymph",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green",  "value": null },
+              { "color": "yellow", "value": 20 },
+              { "color": "orange", "value": 35 },
+              { "color": "red",    "value": 50 }
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windgustmph as value FROM outdoor ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windgustmph as value FROM outdoor ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    },
+
+    {
+      "id": 7,
+      "title": "Wind Direction",
+      "type": "stat",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 5 },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "degree",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          }
+        }
+      },
+      "targets": [{
+        "queryText": "SELECT winddir as value FROM outdoor ORDER BY ts DESC LIMIT 1",
+        "queryType": "table",
+        "rawQueryText": "SELECT winddir as value FROM outdoor ORDER BY ts DESC LIMIT 1",
+        "refId": "A"
+      }]
+    },
+
+    {
+      "id": 8,
+      "title": "Barometric Pressure",
+      "type": "stat",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 5 },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "pressurehg",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          }
+        }
+      },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, baromrelin as value FROM outdoor ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, baromrelin as value FROM outdoor ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    },
+
+    {
+      "id": 9,
+      "title": "UV Index",
+      "type": "stat",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 5 },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green",  "value": null },
+              { "color": "yellow", "value": 3 },
+              { "color": "orange", "value": 6 },
+              { "color": "red",    "value": 8 },
+              { "color": "purple", "value": 11 }
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, uv as value FROM outdoor ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, uv as value FROM outdoor ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    },
+
+    {
+      "id": 10,
+      "title": "Solar Radiation",
+      "type": "stat",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 5 },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue",   "value": null },
+              { "color": "yellow", "value": 200 },
+              { "color": "orange", "value": 600 },
+              { "color": "red",    "value": 900 }
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, solarradiation as value FROM outdoor ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, solarradiation as value FROM outdoor ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    },
+
+    {
+      "id": 11,
+      "title": "Temperature",
+      "type": "timeseries",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 9 },
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 2 } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Outdoor" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }] },
+          { "matcher": { "id": "byName", "options": "Feels Like" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }, { "id": "custom.lineStyle", "value": { "fill": "dash" } }] },
+          { "matcher": { "id": "byName", "options": "Dew Point" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "cyan" } }] },
+          { "matcher": { "id": "byName", "options": "Indoor" },    "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }, { "id": "custom.lineStyle", "value": { "fill": "dash" } }] }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as \"Outdoor\", feelslike as \"Feels Like\", dewpoint as \"Dew Point\", tempinf as \"Indoor\" FROM outdoor ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as \"Outdoor\", feelslike as \"Feels Like\", dewpoint as \"Dew Point\", tempinf as \"Indoor\" FROM outdoor ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    },
+
+    {
+      "id": 12,
+      "title": "Humidity",
+      "type": "timeseries",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 17 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": { "lineWidth": 2 },
+          "min": 0, "max": 100
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Outdoor" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }] },
+          { "matcher": { "id": "byName", "options": "Indoor" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }, { "id": "custom.lineStyle", "value": { "fill": "dash" } }] }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, humidity as \"Outdoor\", humidityin as \"Indoor\" FROM outdoor ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, humidity as \"Outdoor\", humidityin as \"Indoor\" FROM outdoor ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    },
+
+    {
+      "id": 13,
+      "title": "Barometric Pressure",
+      "type": "timeseries",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 17 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "pressurehg",
+          "decimals": 3,
+          "custom": { "lineWidth": 2 },
+          "color": { "mode": "fixed", "fixedColor": "purple" }
+        }
+      },
+      "options": { "tooltip": { "mode": "single" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, baromrelin as \"Pressure\" FROM outdoor ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, baromrelin as \"Pressure\" FROM outdoor ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    },
+
+    {
+      "id": 14,
+      "title": "Wind",
+      "type": "timeseries",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 24 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "velocitymph",
+          "decimals": 1,
+          "custom": { "lineWidth": 2 },
+          "min": 0
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Speed" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] },
+          { "matcher": { "id": "byName", "options": "Gust" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }] }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windspeedmph as \"Speed\", windgustmph as \"Gust\" FROM outdoor ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windspeedmph as \"Speed\", windgustmph as \"Gust\" FROM outdoor ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    },
+
+    {
+      "id": 15,
+      "title": "Solar Radiation & UV",
+      "type": "timeseries",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 24 },
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 2 }, "min": 0 },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Solar (W/m²)" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }, { "id": "unit", "value": "watt" }] },
+          { "matcher": { "id": "byName", "options": "UV Index" },     "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }, { "id": "unit", "value": "none" }, { "id": "custom.axisPlacement", "value": "right" }] }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, solarradiation as \"Solar (W/m²)\", uv as \"UV Index\" FROM outdoor ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, solarradiation as \"Solar (W/m²)\", uv as \"UV Index\" FROM outdoor ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    },
+
+    {
+      "id": 16,
+      "title": "Rain",
+      "type": "timeseries",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 31 },
+      "fieldConfig": {
+        "defaults": { "unit": "lengthmi", "custom": { "lineWidth": 2 }, "min": 0 },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Hourly" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "light-blue" } }, { "id": "unit", "value": "lengthin" }] },
+          { "matcher": { "id": "byName", "options": "Daily" },   "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }, { "id": "unit", "value": "lengthin" }] },
+          { "matcher": { "id": "byName", "options": "Weekly" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "dark-blue" } }, { "id": "unit", "value": "lengthin" }, { "id": "custom.lineStyle", "value": { "fill": "dash" } }] }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, hourlyrainin as \"Hourly\", dailyrainin as \"Daily\", weeklyrainin as \"Weekly\" FROM outdoor ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, hourlyrainin as \"Hourly\", dailyrainin as \"Daily\", weeklyrainin as \"Weekly\" FROM outdoor ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    },
+
+    {
+      "id": 17,
+      "title": "NWS Wind (Patrick SFB)",
+      "type": "timeseries",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 38 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "velocitymph",
+          "decimals": 1,
+          "custom": { "lineWidth": 2 },
+          "min": 0
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Speed" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] },
+          { "matcher": { "id": "byName", "options": "Gust" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }] }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, wind_speed_mph as \"Speed\", wind_gust_mph as \"Gust\" FROM nws_weather ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, wind_speed_mph as \"Speed\", wind_gust_mph as \"Gust\" FROM nws_weather ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    },
+
+    {
+      "id": 18,
+      "title": "Station vs NWS Temperature",
+      "type": "timeseries",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 38 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "fahrenheit",
+          "decimals": 1,
+          "custom": { "lineWidth": 2 }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Ambient Weather" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }] },
+          { "matcher": { "id": "byName", "options": "NWS (Patrick SFB)" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "cyan" } }, { "id": "custom.lineStyle", "value": { "fill": "dash" } }] }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as \"Ambient Weather\" FROM outdoor ORDER BY ts",
+          "queryType": "table",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as \"Ambient Weather\" FROM outdoor ORDER BY ts",
+          "refId": "A",
+          "timeColumns": ["time"]
+        },
+        {
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as \"NWS (Patrick SFB)\" FROM nws_weather ORDER BY ts",
+          "queryType": "table",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as \"NWS (Patrick SFB)\" FROM nws_weather ORDER BY ts",
+          "refId": "B",
+          "timeColumns": ["time"]
+        }
+      ]
+    },
+
+    {
+      "id": 19,
+      "title": "EPA Air Quality (Melbourne)",
+      "type": "timeseries",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 45 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "custom": { "lineWidth": 2 },
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green",  "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "orange", "value": 100 }
+            ]
+          },
+          "custom.thresholdsStyle": { "mode": "line" }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "PM2.5" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }] },
+          { "matcher": { "id": "byName", "options": "PM10" },   "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "purple" } }] },
+          { "matcher": { "id": "byName", "options": "Ozone" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "cyan" } }] }
+        ]
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "targets": [{
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, pm25_aqi as \"PM2.5\", pm10_aqi as \"PM10\", ozone_aqi as \"Ozone\" FROM epa_air_quality ORDER BY ts",
+        "queryType": "table",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, pm25_aqi as \"PM2.5\", pm10_aqi as \"PM10\", ozone_aqi as \"Ozone\" FROM epa_air_quality ORDER BY ts",
+        "refId": "A",
+        "timeColumns": ["time"]
+      }]
+    }
+
+  ]
+}
