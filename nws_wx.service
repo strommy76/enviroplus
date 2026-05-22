@@ -1,5 +1,5 @@
 [Unit]
-Description=NWS Weather Poller (KCOF / Patrick SFB)
+Description=NWS Weather Poller (configured station set)
 After=network-online.target
 Wants=network-online.target
 

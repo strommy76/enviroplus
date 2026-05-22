@@ -505,7 +505,7 @@
 
     {
       "id": 17,
-      "title": "NWS Wind (Patrick SFB)",
+      "title": "Selected NWS Wind",
       "type": "timeseries",
       "datasource": { "type": "frser-sqlite-datasource", "uid": "cfhpdda09qq68e" },
       "gridPos": { "h": 7, "w": 12, "x": 0, "y": 38 },
@@ -545,7 +545,7 @@
         },
         "overrides": [
           { "matcher": { "id": "byName", "options": "Ambient Weather" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }] },
-          { "matcher": { "id": "byName", "options": "NWS (Patrick SFB)" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "cyan" } }, { "id": "custom.lineStyle", "value": { "fill": "dash" } }] }
+          { "matcher": { "id": "byName", "options": "Selected NWS" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "cyan" } }, { "id": "custom.lineStyle", "value": { "fill": "dash" } }] }
         ]
       },
       "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
@@ -558,9 +558,9 @@
           "timeColumns": ["time"]
         },
         {
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as \"NWS (Patrick SFB)\" FROM nws_weather ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as \"Selected NWS\" FROM nws_weather ORDER BY ts",
           "queryType": "table",
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as \"NWS (Patrick SFB)\" FROM nws_weather ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as \"Selected NWS\" FROM nws_weather ORDER BY ts",
           "refId": "B",
           "timeColumns": ["time"]
         }

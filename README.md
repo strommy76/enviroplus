@@ -135,6 +135,13 @@ cp .env.example .env   # add credentials — secrets only, no tuning values here
 | `SQLITE_PATH` | Path to SQLite database |
 | `LOG_PATH` | Rotating log file path |
 | `CONFIG_PATH` | Path to `dynamic_config.json` |
+| `NWS_API_BASE_URL` | NWS API base URL |
+| `NWS_STATIONS` | Ordered NWS station identifiers; first fresh observation wins |
+| `NWS_USER_AGENT` | NWS-required caller identification |
+| `NWS_POLL_S` | NWS poll interval in seconds |
+| `NWS_SHUTDOWN_CHECK_S` | NWS service shutdown check cadence in seconds |
+| `NWS_MAX_OBSERVATION_AGE_S` | Maximum accepted NWS latest-observation age in seconds |
+| `NWS_COLLECTION_LOOKBACK_S` | Bounded NWS observations query window in seconds |
 
 All tuning values (calibration, thresholds, intervals) live in `dynamic_config.json` — see below.
 

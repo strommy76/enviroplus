@@ -1,7 +1,21 @@
-"""Verify each script's config values load from .env via require().
+"""
+--------------------------------------------------------------------------------
+FILE:        test_config_loading.py
+PATH:        ~/projects/enviroplus/tests/test_config_loading.py
+DESCRIPTION: Verify each script's config values load from .env via require().
 
 These tests load the real .env file and confirm every key used by the
 four enviroplus scripts is present and non-empty.
+
+CHANGELOG:
+2026-05-22 03:30      Codex      [Fix] Validate the NWS multi-station
+                                      freshness configuration required by the
+                                      stale-observation repair.
+2026-05-22 03:30      Codex      [Fix] Validate explicit NWS shutdown check
+                                      cadence config.
+2026-05-22 03:30      Codex      [Fix] Validate bounded NWS observation
+                                      collection lookback config.
+--------------------------------------------------------------------------------
 """
 
 import os
@@ -35,9 +49,14 @@ class TestAmbientWxConfig:
 
 
 class TestNwsWxConfig:
-    def test_nws_station(self):
-        val = require("NWS_STATION")
-        assert val == "KCOF"
+    def test_nws_api_base_url(self):
+        val = require("NWS_API_BASE_URL")
+        assert val.startswith("https://")
+
+    def test_nws_stations(self):
+        stations = [station.strip() for station in require("NWS_STATIONS").split(",")]
+        assert all(stations)
+        assert len(stations) >= 1
 
     def test_nws_user_agent(self):
         val = require("NWS_USER_AGENT")
@@ -46,6 +65,18 @@ class TestNwsWxConfig:
     def test_nws_poll_s(self):
         val = int(require("NWS_POLL_S"))
         assert val > 0
+
+    def test_nws_shutdown_check_s(self):
+        val = int(require("NWS_SHUTDOWN_CHECK_S"))
+        assert val > 0
+
+    def test_nws_max_observation_age_s(self):
+        val = int(require("NWS_MAX_OBSERVATION_AGE_S"))
+        assert val > 0
+
+    def test_nws_collection_lookback_s(self):
+        val = int(require("NWS_COLLECTION_LOOKBACK_S"))
+        assert val >= int(require("NWS_MAX_OBSERVATION_AGE_S"))
 
 
 class TestAirnowWxConfig:

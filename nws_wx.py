@@ -3,11 +3,22 @@
 --------------------------------------------------------------------------------
 FILE:        nws_wx.py
 PATH:        ~/projects/enviroplus/nws_wx.py
-DESCRIPTION: Polls NWS API (Patrick SFB / KCOF) every 10 min and writes
+DESCRIPTION: Polls configured NWS observation stations every 10 min and writes
              observations to the 'nws_weather' table in enviro.db.
              Runs as a standalone service alongside ambient_wx.py.
 
 CHANGELOG:
+2026-05-22 03:30      Codex      [Fix] Add configured multi-station freshness
+                                      selection, station provenance, import-safe
+                                      service entrypoint, and duplicate-aware
+                                      logging for stale NWS latest observations.
+2026-05-22 03:30      Codex      [Fix] Add configured shutdown check cadence so
+                                      systemd stops do not wait for the full NWS
+                                      poll interval.
+2026-05-22 03:30      Codex      [Fix] Poll the bounded NWS observations
+                                      collection and select the newest record
+                                      instead of trusting the lagging /latest
+                                      shortcut.
 2026-04-09 14:00      Claude      [Docs] Update file header to Lexx standard
                                       format
 2026-04-09 00:00      Claude      [Refactor] Phase 3 refactor: use shared
@@ -27,6 +38,9 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from typing import Any, Callable
 
 sys.path.insert(0, "/home/pistrommy/projects")
 
@@ -38,44 +52,95 @@ from shared.signal_handler import install_shutdown_handler
 # ── Paths / config ─────────────────────────────────────────────────────────────
 _BASE       = os.path.dirname(os.path.abspath(__file__))
 _ENV_PATH   = os.path.join(_BASE, ".env")
-LOG_PATH    = os.path.join(_BASE, "enviro.log")
-SQLITE_PATH = os.path.join(_BASE, "enviro.db")
 
-load_env(_ENV_PATH, expect_key="NWS_STATION")
 
-NWS_STATION = require("NWS_STATION")
-USER_AGENT  = require("NWS_USER_AGENT")
-POLL_S      = int(require("NWS_POLL_S"))
+@dataclass(frozen=True)
+class NwsSettings:
+    """Runtime configuration loaded from the enviroplus .env SSOT."""
 
-NWS_URL = f"https://api.weather.gov/stations/{NWS_STATION}/observations/latest"
+    api_base_url: str
+    stations: tuple[str, ...]
+    user_agent: str
+    poll_s: int
+    shutdown_check_s: int
+    max_observation_age_s: int
+    collection_lookback_s: int
+    log_path: str
+    sqlite_path: str
 
-# ── Logging ────────────────────────────────────────────────────────────────────
-log = setup_logger("nws_wx", LOG_PATH)
 
-# ── Signal handler ─────────────────────────────────────────────────────────────
-is_shutting_down = install_shutdown_handler(logger=log)
+class NoFreshObservationError(RuntimeError):
+    """Raised when configured NWS stations do not provide a fresh observation."""
 
-# ── SQLite ─────────────────────────────────────────────────────────────────────
-_db = connect(SQLITE_PATH)
-_db.execute("""
-    CREATE TABLE IF NOT EXISTS nws_weather (
-        ts              TEXT PRIMARY KEY,
-        temp_f          REAL,
-        humidity        REAL,
-        wind_speed_mph  REAL,
-        wind_gust_mph   REAL,
-        wind_direction  INTEGER,
-        barometer_inhg  REAL,
-        visibility_miles REAL,
-        dewpoint_f      REAL,
-        heat_index_f    REAL,
-        wind_chill_f    REAL,
-        precip_1h_in    REAL,
-        cloud_cover     TEXT,
-        conditions      TEXT
+
+def _parse_positive_int(raw: str, key: str) -> int:
+    value = int(raw)
+    if value <= 0:
+        raise ValueError(f"{key} must be positive")
+    return value
+
+
+def _parse_stations(raw: str) -> tuple[str, ...]:
+    stations = tuple(station.strip().upper() for station in raw.split(",") if station.strip())
+    if not stations:
+        raise ValueError("NWS_STATIONS must contain at least one station identifier")
+    return stations
+
+
+def load_settings(env_path: str = _ENV_PATH) -> NwsSettings:
+    """Load NWS runtime settings from .env with no ambient defaults."""
+    load_env(env_path, expect_key="NWS_STATIONS")
+    max_observation_age_s = _parse_positive_int(
+        require("NWS_MAX_OBSERVATION_AGE_S"),
+        "NWS_MAX_OBSERVATION_AGE_S",
     )
-""")
-_db.commit()
+    collection_lookback_s = _parse_positive_int(
+        require("NWS_COLLECTION_LOOKBACK_S"),
+        "NWS_COLLECTION_LOOKBACK_S",
+    )
+    if collection_lookback_s < max_observation_age_s:
+        raise ValueError("NWS_COLLECTION_LOOKBACK_S must cover NWS_MAX_OBSERVATION_AGE_S")
+
+    return NwsSettings(
+        api_base_url=require("NWS_API_BASE_URL").rstrip("/"),
+        stations=_parse_stations(require("NWS_STATIONS")),
+        user_agent=require("NWS_USER_AGENT"),
+        poll_s=_parse_positive_int(require("NWS_POLL_S"), "NWS_POLL_S"),
+        shutdown_check_s=_parse_positive_int(
+            require("NWS_SHUTDOWN_CHECK_S"),
+            "NWS_SHUTDOWN_CHECK_S",
+        ),
+        max_observation_age_s=max_observation_age_s,
+        collection_lookback_s=collection_lookback_s,
+        log_path=require("LOG_PATH"),
+        sqlite_path=require("SQLITE_PATH"),
+    )
+
+
+def _ensure_schema(conn: sqlite3.Connection) -> None:
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS nws_weather (
+            ts              TEXT PRIMARY KEY,
+            station_id      TEXT,
+            temp_f          REAL,
+            humidity        REAL,
+            wind_speed_mph  REAL,
+            wind_gust_mph   REAL,
+            wind_direction  INTEGER,
+            barometer_inhg  REAL,
+            visibility_miles REAL,
+            dewpoint_f      REAL,
+            heat_index_f    REAL,
+            wind_chill_f    REAL,
+            precip_1h_in    REAL,
+            cloud_cover     TEXT,
+            conditions      TEXT
+        )
+    """)
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(nws_weather)").fetchall()}
+    if "station_id" not in columns:
+        conn.execute("ALTER TABLE nws_weather ADD COLUMN station_id TEXT")
+    conn.commit()
 
 
 # ── Unit conversions ───────────────────────────────────────────────────────────
@@ -102,14 +167,26 @@ def _val(obj):
     return obj.get("value")
 
 
-def _fetch():
-    req = urllib.request.Request(NWS_URL, headers={"User-Agent": USER_AGENT})
+def _fetch(settings: NwsSettings, station: str, now_utc: datetime) -> dict[str, Any]:
+    start = (now_utc - timedelta(seconds=settings.collection_lookback_s)).isoformat()
+    end = now_utc.isoformat()
+    url = (
+        f"{settings.api_base_url}/stations/{station}/observations"
+        f"?start={start.replace('+00:00', 'Z')}&end={end.replace('+00:00', 'Z')}"
+    )
+    req = urllib.request.Request(url, headers={"User-Agent": settings.user_agent})
     resp = urllib.request.urlopen(req, timeout=15)
     data = json.loads(resp.read())
-    return data["properties"]
+    observations = data["features"]
+    if not observations:
+        raise ValueError("NWS observations collection returned no features")
+    return max(
+        (feature["properties"] for feature in observations),
+        key=lambda properties: _parse_observation_ts(properties["timestamp"]),
+    )
 
 
-def _parse(p):
+def _parse(p: dict[str, Any], station: str) -> dict[str, Any]:
     """Parse NWS observation properties into a dict of imperial values."""
     ts = p.get("timestamp")  # ISO 8601 UTC string
 
@@ -128,6 +205,7 @@ def _parse(p):
 
     return {
         "ts":               ts,
+        "station_id":       station,
         "temp_f":           _c_to_f(_val(p.get("temperature"))),
         "humidity":         _val(p.get("relativeHumidity")),
         "wind_speed_mph":   _kmh_to_mph(_val(p.get("windSpeed"))),
@@ -144,30 +222,101 @@ def _parse(p):
     }
 
 
-def _write(d):
+def _parse_observation_ts(ts: str) -> datetime:
+    parsed = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        raise ValueError("NWS observation timestamp must include timezone")
+    return parsed.astimezone(UTC)
+
+
+def _observation_age_s(ts: str, now_utc: datetime) -> float:
+    return (now_utc - _parse_observation_ts(ts)).total_seconds()
+
+
+def _select_observation(
+    settings: NwsSettings,
+    *,
+    now_utc: datetime,
+    logger,
+    fetcher: Callable[[NwsSettings, str, datetime], dict[str, Any]] = _fetch,
+) -> dict[str, Any]:
+    failures: list[str] = []
+    for station in settings.stations:
+        try:
+            observation = _parse(fetcher(settings, station, now_utc), station)
+            ts = observation["ts"]
+            if ts is None:
+                failures.append(f"{station}: missing timestamp")
+                continue
+            age_s = _observation_age_s(ts, now_utc)
+            if age_s < 0:
+                failures.append(f"{station}: future timestamp {ts}")
+                continue
+            if age_s > settings.max_observation_age_s:
+                failures.append(f"{station}: stale timestamp {ts} age_s={age_s:.0f}")
+                continue
+            if failures:
+                logger.warning(
+                    "NWS using station %s after earlier station failures: %s",
+                    station,
+                    "; ".join(failures),
+                )
+            return observation
+        except (urllib.error.URLError, KeyError, IndexError, ValueError) as exc:
+            failures.append(f"{station}: {exc}")
+    raise NoFreshObservationError("; ".join(failures))
+
+
+def _write(conn: sqlite3.Connection, logger, d: dict[str, Any]) -> bool:
     ts = d["ts"]
     if ts is None:
-        log.warning("NWS observation has no timestamp, skipping")
-        return
-    if write_row(_db, "nws_weather", d, or_ignore=True):
+        logger.warning("NWS observation has no timestamp, skipping")
+        return False
+    if write_row(conn, "nws_weather", d, or_ignore=True):
         temp_s = f"{d['temp_f']:.1f}°F" if d["temp_f"] is not None else "n/a"
         wind_s = f"{d['wind_speed_mph']:.1f}mph" if d["wind_speed_mph"] is not None else "calm"
-        log.info("nws_weather row written  ts=%s  temp=%s  wind=%s  cond=%s",
-                 ts, temp_s, wind_s, d["conditions"])
+        logger.info(
+            "nws_weather row written  station=%s  ts=%s  temp=%s  wind=%s  cond=%s",
+            d["station_id"],
+            ts,
+            temp_s,
+            wind_s,
+            d["conditions"],
+        )
+        return True
+    logger.debug("nws_weather row already present  station=%s  ts=%s", d["station_id"], ts)
+    return False
+
+
+def _sleep_until_next_poll(settings: NwsSettings, is_shutting_down: Callable[[], bool]) -> None:
+    remaining_s = settings.poll_s
+    while remaining_s > 0 and not is_shutting_down():
+        sleep_s = min(settings.shutdown_check_s, remaining_s)
+        time.sleep(sleep_s)
+        remaining_s -= sleep_s
 
 
 # ── Main loop ──────────────────────────────────────────────────────────────────
-log.info("nws_wx starting — station %s", NWS_STATION)
+def run() -> None:
+    settings = load_settings()
+    log = setup_logger("nws_wx", settings.log_path)
+    is_shutting_down = install_shutdown_handler(logger=log)
+    db = connect(settings.sqlite_path)
+    _ensure_schema(db)
 
-while not is_shutting_down():
-    try:
-        _write(_parse(_fetch()))
-    except urllib.error.URLError as e:
-        log.warning("NWS API fetch failed: %s", e)
-    except (KeyError, IndexError, ValueError) as e:
-        log.warning("Unexpected NWS API response: %s", e)
-    except Exception as e:
-        log.error("Unexpected error: %s", e, exc_info=True)
-    time.sleep(POLL_S)
+    log.info("nws_wx starting — stations %s", ",".join(settings.stations))
+    while not is_shutting_down():
+        try:
+            observation = _select_observation(settings, now_utc=datetime.now(UTC), logger=log)
+            _write(db, log, observation)
+        except NoFreshObservationError as exc:
+            log.warning("No fresh NWS observation from configured stations: %s", exc)
+        except Exception as exc:
+            log.error("Unexpected error: %s", exc, exc_info=True)
+        _sleep_until_next_poll(settings, is_shutting_down)
 
-log.info("nws_wx stopped")
+    log.info("nws_wx stopped")
+
+
+if __name__ == "__main__":
+    run()
