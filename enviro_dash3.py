@@ -137,14 +137,19 @@ except Exception as e:
     log.warning("MQTT connect failed at startup: %s — will retry on publish", e)
 
 
+def _r(x, n):
+    """Round only real values; None (absent/failed lane) passes through as NULL."""
+    return None if x is None else round(x, n)
+
+
 def _round_readings(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     """Single source of truth for sensor rounding — used by MQTT and SQLite."""
     return {
-        "temperature": round(temp_f, 1), "humidity":  round(hum,    1),
-        "pressure":    round(pres,   2), "light":     round(lux,    1),
-        "oxidising":   round(ox,     1), "reducing":  round(rd,     1),
-        "ammonia":     round(nh3,    1), "pm1":       round(pm1,    1),
-        "pm25":        round(pm25,   1), "pm10":      round(pm10,   1),
+        "temperature": _r(temp_f, 1), "humidity":  _r(hum,    1),
+        "pressure":    _r(pres,   2), "light":     _r(lux,    1),
+        "oxidising":   _r(ox,     1), "reducing":  _r(rd,     1),
+        "ammonia":     _r(nh3,    1), "pm1":       _r(pm1,    1),
+        "pm25":        _r(pm25,   1), "pm10":      _r(pm10,   1),
     }
 
 
@@ -289,8 +294,27 @@ def _bme_sample():
 
 
 def _calibrate(cal_actual_f):
+    """Resolve the compensation model. Explicit precedence, one model only.
+
+    The offset model (self_heat_offset_c) SUPERSEDES the proportional model. When it
+    is declared, CPU_FACTOR is forced inert so a leftover `cal_actual_f` cannot
+    silently derive a competing factor -- which is exactly what happened on the
+    2026-07-30 changeover and was caught by the read_temp_c conflict guard.
+    """
     global CPU_FACTOR
+    offset_c = cfg["calibration"].get("self_heat_offset_c")
     override = cfg["calibration"].get("cpu_factor_override")
+    if offset_c is not None:
+        if override is not None:
+            raise RuntimeError(
+                "calibration declares BOTH self_heat_offset_c and"
+                " cpu_factor_override; these are different compensation models."
+                " Set exactly one."
+            )
+        CPU_FACTOR = 0.0
+        log.info("compensation: constant offset %.3f C (proportional model inert)",
+                 float(offset_c))
+        return
     if override is not None:
         CPU_FACTOR = float(override)
         log.info("CPU_FACTOR=%.4f (override from config)", CPU_FACTOR)
@@ -311,13 +335,32 @@ _calibrate(cfg["calibration"]["cal_actual_f"])
 
 
 def read_temp_c():
-    """Returns (compensated_c, raw_chip_c). raw_chip_c is used for RH correction."""
+    """Returns (compensated_c, raw_chip_c). raw_chip_c is used for RH correction.
+
+    Self-heating on this Pi 5 + M.2-spaced mounting is a near-CONSTANT pedestal,
+    not a CPU-load-proportional term: measured alpha = 0.015 contributes 0.57 F
+    across the full natural CPU-gap range (7-28 C), which is below the chip's own
+    1.87 F short-timescale wander. The proportional `CPU_FACTOR` form is therefore
+    structurally wrong here -- tuning it to be right at one gap makes it wrong by
+    up to +18.8 F at another (measured). Constant offset is the correct shape.
+
+    `cpu_factor_override` is retained ONLY as an escape hatch for hardware whose
+    sensor sits directly above the SoC (the pre-M.2 geometry); when set it wins
+    and the offset is ignored, fail-loud on both being set.
+    """
     n = cfg["calibration"]["bme_samples"]
     raw = sum(_bme_sample().temperature for _ in range(n)) / n
     cpu = _cpu_temp()
     _cpu_hist.append(cpu)
     avg_cpu = sum(_cpu_hist) / len(_cpu_hist)
-    comp = raw - ((avg_cpu - raw) / CPU_FACTOR) if CPU_FACTOR else raw
+
+    offset_c = cfg["calibration"].get("self_heat_offset_c")
+    if CPU_FACTOR:
+        comp = raw - ((avg_cpu - raw) / CPU_FACTOR)
+    elif offset_c is not None:
+        comp = raw - float(offset_c)
+    else:
+        comp = raw
     return comp, raw
 
 
@@ -339,6 +382,8 @@ co2_ppm = None
 
 # ── Color helpers ───────────────────────────────────────────────────────────────
 def temp_color(f):
+    if f is None:
+        return DIM
     t = cfg["thresholds"]["temp_f"]
     if t["green_min"] <= f <= t["green_max"]:
         return GREEN
@@ -348,6 +393,8 @@ def temp_color(f):
 
 
 def hum_color(h):
+    if h is None:
+        return DIM
     t = cfg["thresholds"]["humidity"]
     if t["green_min"] <= h <= t["green_max"]:
         return GREEN
@@ -378,7 +425,9 @@ def mqtt_color():
 
 
 def _aqi_color(aqi):
-    """EPA AQI band color for the given AQI value."""
+    """EPA AQI band color for the given AQI value. None (absent lane) -> DIM."""
+    if aqi is None:
+        return DIM
     if aqi <= 50:
         return GREEN
     if aqi <= 100:
@@ -393,6 +442,8 @@ def _aqi_color(aqi):
 
 
 def _voc_severity(ox, rd, nh3):
+    if ox is None or rd is None or nh3 is None:
+        return None
     """Worst-case severity across all three gas channels using config thresholds.
     Oxidising: lower kΩ = more NO2 = worse.
     Reducing/NH3: lower kΩ = more gas = worse."""
@@ -444,6 +495,8 @@ _PM10_BP = [
 
 
 def _aqi_sub(c, breakpoints):
+    if c is None:
+        return None
     for c_lo, c_hi, aqi_lo, aqi_hi in breakpoints:
         if c <= c_hi:
             return round((aqi_hi - aqi_lo) / (c_hi - c_lo) * (c - c_lo) + aqi_lo)
@@ -451,6 +504,8 @@ def _aqi_sub(c, breakpoints):
 
 
 def pm_aqi(pm25, pm10):
+    if pm25 is None and pm10 is None:
+        return None
     """EPA AQI: max of PM2.5 and PM10 sub-indices."""
     return max(_aqi_sub(pm25, _PM25_BP), _aqi_sub(pm10, _PM10_BP))
 
@@ -481,9 +536,13 @@ nh3_hist  = deque([0.0] * RIGHT_W, maxlen=RIGHT_W)
 def draw_aq_bar(draw, aqi):
     """EPA AQI gauge: 6-band color scale 0-500, filled from bottom up to current
     AQI level, outline only above. Always shows at least a sliver of green."""
+    draw.rectangle((0, 0, BAR_W - 1, H - 1), outline=DIM)
+    if aqi is None:
+        # Absent/failed PM lane: outline only. Do NOT draw the "always at least a
+        # sliver of green" fill -- that would assert clean air we never measured.
+        return
     val = max(aqi, 1)
     val = min(val, AQ_BAR_MAX)
-    draw.rectangle((0, 0, BAR_W - 1, H - 1), outline=DIM)
     bands = [
         (  0,  50,  GREEN),
         ( 50, 100,  YELLOW),
@@ -508,6 +567,9 @@ def draw_lines(draw, histories, colors, vmaxes, x0, y0, w, h):
         vals = list(hist)
         prev = None
         for i, v in enumerate(vals):
+            if v is None:
+                prev = None          # break the trace: a gap, not a flat line
+                continue
             norm = min(v / vmax, 1.0)
             py   = y0 + h - 1 - int(norm * (h - 2))
             px   = x0 + i
@@ -571,7 +633,7 @@ def draw_frame(tf, hum, pm1, pm25, pm10, ox, rd, nh3):
 
 
 # ── Main loop ─────────────────────────────────────────────────────────────────
-pm1 = pm25 = pm10 = 0.0
+pm1 = pm25 = pm10 = None   # absent/failed lane => NULL, never a fabricated zero
 _last_publish = time.time()
 _last_pm_read_time = time.time()  # stale-data tracking for PM readings
 

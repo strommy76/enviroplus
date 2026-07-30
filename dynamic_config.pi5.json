@@ -15,7 +15,9 @@
     "cal_actual_f": 72.25,
     "bme_samples": 3,
     "cpu_hist_size": 30,
-    "cpu_factor_override": 1.2154
+    "cpu_factor_override": null,
+    "self_heat_offset_c":  6.35,
+    "self_heat_offset_provenance": "Measured 2026-07-30 00:05-01:23 EDT against an offset-corrected reference (AcuRite 01083M anchor + fine-resolution hygrometer; cheap-unit offset +1.23°F validated by two bidirectional boundary crossings). Fitted on 5-minute MEANS, not point samples — the BME280 chip wanders 1.87°F on a ~1-2 min timescale, so single samples cannot resolve it. Gap term measured at alpha=0.015, contributing 0.57°F across the full natural CPU-gap range (7-28°C) — below the wander floor, so DELIBERATELY OMITTED: the proportional cpu_factor form swings -3.7°F to +18.8°F across that same range and is structurally wrong for the M.2-spaced mounting. Accuracy is wander-limited at about ±1°F. Re-measure if the enclosure or sensor mounting changes."
   },
   "intervals": {
     "publish_s": 60,
@@ -48,6 +50,14 @@
     "display_backlight": "GPIO12",
     "display_rotation":  270,
     "spi_speed_hz":      40000000,
-    "bme280_addr":       118
+    "bme280_addr":       118,
+    "lanes": {
+      "_comment": "Per-device lanes. `installed` is a non-derivable operator fact — physical presence is NOT discoverable (a serial port opens with no sensor attached and read() then times out identically to installed-but-dead). Hot-reloaded: flip the bit when hardware is fitted, no restart.",
+      "bme280":  { "installed": true,  "bus": "i2c",  "emits": ["temp_f", "humidity", "pressure"] },
+      "ltr559":  { "installed": true,  "bus": "i2c",  "emits": ["lux"] },
+      "gas":     { "installed": true,  "bus": "i2c",  "emits": ["oxidising", "reducing", "ammonia"] },
+      "pms5003": { "installed": false, "bus": "uart", "emits": ["pm1", "pm25", "pm10"], "note": "not fitted — housing in design 2026-07-29" },
+      "scd41":   { "installed": false, "bus": "i2c",  "emits": ["co2"], "note": "never fitted; would replace the hardcoded CO2 placeholder. 0x62 verified free on i2c-1." }
+    }
   }
 }
