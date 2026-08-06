@@ -50,7 +50,7 @@ PROVIDER = "airnow"
 _BASE       = os.path.dirname(os.path.abspath(__file__))
 _ENV_PATH   = os.path.join(_BASE, ".env")
 LOG_PATH    = os.path.join(_BASE, "enviro.log")
-SQLITE_PATH = os.path.join(_BASE, "enviro.db")
+SQLITE_PATH = os.environ.get("SQLITE_PATH", os.path.join(_BASE, "enviro.db"))
 
 load_env(_ENV_PATH, expect_key="AIRNOW_API_KEY")
 
@@ -89,6 +89,33 @@ _db.execute("""
 _db.commit()
 
 
+def classify_response(raw: bytes):
+    """Decide what arrived, without doing any I/O.
+
+    Returns (observations_or_None, outcome, detail). Pure so the labelling of
+    each attempt is testable -- that wiring was previously unreachable by any
+    test, and it is where the outcome-misattribution defect lived.
+    """
+    try:
+        data = json.loads(raw)
+    except ValueError as exc:
+        return None, OUTCOME_MALFORMED, str(exc)
+    if not data:
+        return data, OUTCOME_EMPTY, "AirNow returned no observations"
+    return data, OUTCOME_OK, None
+
+
+def outcome_for_exception(exc: BaseException) -> str:
+    """Map a raised failure to the cause it actually represents.
+
+    A failed derived write is not a failed fetch; recording it as one would
+    make the canonical store lie about which subsystem broke.
+    """
+    if isinstance(exc, sqlite3.Error):
+        return OUTCOME_WRITE_ERROR
+    return OUTCOME_FETCH_ERROR
+
+
 def _fetch():
     """Fetch, retain the bytes as received, then parse.
 
@@ -100,21 +127,13 @@ def _fetch():
     resp = urllib.request.urlopen(req, timeout=15)
     raw = resp.read()
 
-    # Classify what arrived, then retain it once under that label. Unparseable
-    # bytes are retained too -- a malformed response is itself a fact.
-    try:
-        data = json.loads(raw)
-        outcome = OUTCOME_EMPTY if not data else OUTCOME_OK
-        detail = "AirNow returned no observations" if not data else None
-    except ValueError as exc:
-        data, outcome, detail = None, OUTCOME_MALFORMED, str(exc)
-
+    data, outcome, detail = classify_response(raw)
     try:
         retain(PROVIDER, raw, url=AIRNOW_URL, outcome=outcome, detail=detail)
     except Exception as exc:
         log.error("raw retention failed for %s: %s", PROVIDER, exc, exc_info=True)
 
-    if data is None:
+    if outcome == OUTCOME_MALFORMED:
         raise ValueError(f"unparseable AirNow response: {detail}")
     return data
 
@@ -167,26 +186,37 @@ def _write(d):
 
 
 # ── Main loop ──────────────────────────────────────────────────────────────────
-log.info("airnow_wx starting — Melbourne, FL reporting area")
+def run() -> None:
+    """Collector loop.
 
-while not is_shutting_down():
-    try:
-        _write(_parse(_fetch()))
-    except urllib.error.URLError as e:
-        record_outcome(PROVIDER, OUTCOME_FETCH_ERROR, detail=str(e),
-                       url=AIRNOW_URL)
-        log.warning("AirNow API fetch failed: %s", e)
-    except (KeyError, IndexError, ValueError) as e:
-        record_outcome(PROVIDER, OUTCOME_FETCH_ERROR,
-                       detail=f"unexpected response shape: {e}", url=AIRNOW_URL)
-        log.warning("Unexpected AirNow API response: %s", e)
-    except sqlite3.Error as e:
-        record_outcome(PROVIDER, OUTCOME_WRITE_ERROR, detail=repr(e))
-        log.error("Derived write failed: %s", e, exc_info=True)
-    except Exception as e:
-        record_outcome(PROVIDER, OUTCOME_FETCH_ERROR, detail=repr(e),
-                       url=AIRNOW_URL)
-        log.error("Unexpected error: %s", e, exc_info=True)
-    time.sleep(POLL_S)
+    Behind a function so importing this module has no side effect, which is
+    what makes the failure-to-outcome wiring below reachable by a test.
+    """
+    log.info("airnow_wx starting — Melbourne, FL reporting area")
 
-log.info("airnow_wx stopped")
+    while not is_shutting_down():
+        try:
+            _write(_parse(_fetch()))
+        except urllib.error.URLError as e:
+            record_outcome(PROVIDER, outcome_for_exception(e), detail=str(e),
+                           url=AIRNOW_URL)
+            log.warning("AirNow API fetch failed: %s", e)
+        except (KeyError, IndexError, ValueError) as e:
+            record_outcome(PROVIDER, outcome_for_exception(e),
+                           detail=f"unexpected response shape: {e}",
+                           url=AIRNOW_URL)
+            log.warning("Unexpected AirNow API response: %s", e)
+        except sqlite3.Error as e:
+            record_outcome(PROVIDER, outcome_for_exception(e), detail=repr(e))
+            log.error("Derived write failed: %s", e, exc_info=True)
+        except Exception as e:
+            record_outcome(PROVIDER, outcome_for_exception(e), detail=repr(e),
+                           url=AIRNOW_URL)
+            log.error("Unexpected error: %s", e, exc_info=True)
+        time.sleep(POLL_S)
+
+    log.info("airnow_wx stopped")
+
+
+if __name__ == "__main__":
+    run()

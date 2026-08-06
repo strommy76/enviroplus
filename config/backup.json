@@ -1,0 +1,48 @@
+{
+  "_meta": {
+    "path": "~/projects/enviroplus/config/backup.json",
+    "description": "Config SSOT for the enviroplus backup lane. Two sources with different shapes: enviro.db is a single live SQLite file needing a consistent snapshot, raw-capture is an append-only tree of immutable per-day files. They replicate by different verbs for that reason, not by preference.",
+    "consumed_by": [
+      "scripts/backup_enviro.py"
+    ],
+    "principles": [
+      "Verification is by remote hash, never by exit code. rclone exiting 0 is not evidence the bytes arrived.",
+      "No enumerated backup target list: sources are declared here as a set, and a new source is a new entry rather than an edit to code.",
+      "Timeouts are off-nominal guards sized so a nominal run never reaches them.",
+      "A run that cannot prove what landed fails loud and leaves no manifest."
+    ],
+    "changelog": [
+      "2026-08-06 16:33  Claude  [Feature] Initial implementation."
+    ]
+  },
+  "remote": {
+    "rclone_remote_name": "stocks_gdrive",
+    "rclone_remote_path": "backups/enviropi",
+    "rclone_config_path": "/home/pistrommy/.config/rclone/rclone.conf"
+  },
+  "sources": {
+    "database": {
+      "kind": "sqlite_snapshot",
+      "source_path": "/home/pistrommy/projects/enviroplus/enviro.db",
+      "remote_subpath": "database",
+      "comment": "VACUUM INTO, never a file copy. The database is journal_mode=WAL with four concurrent writers; a naive copy is torn and its hash would certify the torn artifact."
+    },
+    "raw_capture": {
+      "kind": "tree",
+      "source_path": "/home/pistrommy/projects/enviroplus/raw-capture",
+      "remote_subpath": "raw-capture",
+      "comment": "Canonical tier. Immutable per-day files, so sync transfers only new days; a tarball would re-upload the whole corpus every run."
+    }
+  },
+  "local_staging": {
+    "staging_dir": "/home/pistrommy/projects/enviroplus/.backup-staging",
+    "retention_count": 7,
+    "dir_mode": "0700",
+    "file_mode": "0600",
+    "comment": "Snapshots are staged locally so the uploaded artifact is the one whose hash was computed. Retention is a working-set bound, not the backup horizon -- the remote holds history."
+  },
+  "manifest": {
+    "manifest_dir": "/home/pistrommy/projects/enviroplus/.backup-staging/manifests",
+    "retention_count": 30
+  }
+}

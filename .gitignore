@@ -11,3 +11,4 @@ docker/tls/
 raw-capture/
 raw-capture-quarantine/
 raw-capture-tools/
+.backup-staging/

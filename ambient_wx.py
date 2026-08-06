@@ -61,7 +61,7 @@ _OUTDOOR_KEYS = ("tempf", "humidity", "windspeedmph", "winddir", "solarradiation
 _BASE       = os.path.dirname(os.path.abspath(__file__))
 _ENV_PATH   = os.path.join(_BASE, ".env")
 LOG_PATH    = os.path.join(_BASE, "enviro.log")
-SQLITE_PATH = os.path.join(_BASE, "enviro.db")
+SQLITE_PATH = os.environ.get("SQLITE_PATH", os.path.join(_BASE, "enviro.db"))
 
 load_env(_ENV_PATH, expect_key="AW_API_KEY")
 
@@ -103,6 +103,39 @@ _db.execute("""
 _db.commit()
 
 
+def classify_response(raw: bytes):
+    """Decide what arrived, without doing any I/O.
+
+    Returns (observation_or_None, outcome, detail). Pure so the wiring that
+    labels each attempt can be tested -- the defects this replaced all lived
+    here and were unreachable by any test while it was inline in the loop.
+    """
+    try:
+        data = json.loads(raw)
+    except ValueError as exc:
+        return None, OUTCOME_MALFORMED, str(exc)
+    if not data or "lastData" not in data[0]:
+        return None, OUTCOME_EMPTY, "response carried no lastData"
+    return data[0]["lastData"], OUTCOME_OK, None
+
+
+def outcome_for_exception(exc: BaseException) -> str:
+    """Map a raised failure to the cause it actually represents.
+
+    Outcomes are causes, not severities: a failed derived write is not a failed
+    fetch, and recording it as one would make the canonical store lie about
+    which subsystem broke.
+    """
+    if isinstance(exc, sqlite3.Error):
+        return OUTCOME_WRITE_ERROR
+    return OUTCOME_FETCH_ERROR
+
+
+def has_outdoor_reading(d: dict) -> bool:
+    """Whether the outdoor sensor array reported at all."""
+    return any(k in d for k in _OUTDOOR_KEYS)
+
+
 def _fetch():
     """Fetch, retain the bytes as received, then parse.
 
@@ -114,27 +147,15 @@ def _fetch():
     req = urllib.request.urlopen(AW_URL, timeout=15)
     raw = req.read()
 
-    # Classify what arrived, then retain it once under that label. Bytes are
-    # retained even when unparseable -- a malformed response is itself a fact,
-    # and discarding it would lose the only evidence of what the provider sent.
-    try:
-        data = json.loads(raw)
-        empty = not data or "lastData" not in data[0]
-        outcome = OUTCOME_EMPTY if empty else OUTCOME_OK
-    except ValueError as exc:
-        data, empty, outcome = None, True, OUTCOME_MALFORMED
-        detail = str(exc)
-    else:
-        detail = "response carried no lastData" if empty else None
-
+    observation, outcome, detail = classify_response(raw)
     try:
         retain(PROVIDER, raw, url=AW_URL, outcome=outcome, detail=detail)
     except Exception as exc:
         log.error("raw retention failed for %s: %s", PROVIDER, exc, exc_info=True)
 
-    if data is None:
+    if outcome == OUTCOME_MALFORMED:
         raise ValueError(f"unparseable Ambient response: {detail}")
-    return None if empty else data[0]["lastData"]
+    return observation
 
 
 def _write(d):
@@ -144,7 +165,7 @@ def _write(d):
     # An outdoor-array dropout still carries valid indoor readings, so the row
     # is written with what arrived and the absence is recorded as its own fact
     # rather than left to be inferred from a column full of nulls.
-    if not any(k in d for k in _OUTDOOR_KEYS):
+    if not has_outdoor_reading(d):
         record_outcome(PROVIDER, OUTCOME_PARTIAL,
                        detail="outdoor array absent; console/indoor fields only")
         log.warning("outdoor array absent from response — indoor fields only")
@@ -182,26 +203,41 @@ def _write(d):
 
 
 # ── Main loop ──────────────────────────────────────────────────────────────────
-log.info("ambient_wx starting")
+def run() -> None:
+    """Collector loop.
 
-while not is_shutting_down():
-    try:
-        _write(_fetch())
-    except urllib.error.URLError as e:
-        record_outcome(PROVIDER, OUTCOME_FETCH_ERROR, detail=str(e), url=AW_URL)
-        log.warning("API fetch failed: %s", e)
-    except (KeyError, IndexError, ValueError) as e:
-        record_outcome(PROVIDER, OUTCOME_FETCH_ERROR,
-                       detail=f"unexpected response shape: {e}", url=AW_URL)
-        log.warning("Unexpected API response: %s", e)
-    except sqlite3.Error as e:
-        # The payload arrived and is already retained; only the derived write
-        # failed. Recording this as a fetch error would misattribute the fault.
-        record_outcome(PROVIDER, OUTCOME_WRITE_ERROR, detail=repr(e))
-        log.error("Derived write failed: %s", e, exc_info=True)
-    except Exception as e:
-        record_outcome(PROVIDER, OUTCOME_FETCH_ERROR, detail=repr(e), url=AW_URL)
-        log.error("Unexpected error: %s", e, exc_info=True)
-    time.sleep(POLL_S)
+    Behind a function so importing this module has no side effect. The wiring
+    below -- which failure maps to which recorded outcome -- could not be
+    reached by any test while it sat at module scope, and that is exactly where
+    the defects this replaced were found.
+    """
+    log.info("ambient_wx starting")
 
-log.info("ambient_wx stopped")
+    while not is_shutting_down():
+        try:
+            _write(_fetch())
+        except urllib.error.URLError as e:
+            record_outcome(PROVIDER, outcome_for_exception(e), detail=str(e),
+                           url=AW_URL)
+            log.warning("API fetch failed: %s", e)
+        except (KeyError, IndexError, ValueError) as e:
+            record_outcome(PROVIDER, outcome_for_exception(e),
+                           detail=f"unexpected response shape: {e}", url=AW_URL)
+            log.warning("Unexpected API response: %s", e)
+        except sqlite3.Error as e:
+            # The payload arrived and is already retained; only the derived
+            # write failed. Recording it as a fetch error would misattribute
+            # the fault to the wrong subsystem.
+            record_outcome(PROVIDER, outcome_for_exception(e), detail=repr(e))
+            log.error("Derived write failed: %s", e, exc_info=True)
+        except Exception as e:
+            record_outcome(PROVIDER, outcome_for_exception(e), detail=repr(e),
+                           url=AW_URL)
+            log.error("Unexpected error: %s", e, exc_info=True)
+        time.sleep(POLL_S)
+
+    log.info("ambient_wx stopped")
+
+
+if __name__ == "__main__":
+    run()

@@ -1,0 +1,29 @@
+[Unit]
+Description=Enviro+ offsite backup (database snapshot + canonical raw tier)
+Documentation=file:///home/pistrommy/projects/enviroplus/config/backup.json
+# Network-online, not just network: rclone needs a routable path to the remote,
+# and starting before that produces a failure that looks like a bad remote.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pistrommy
+Group=pistrommy
+WorkingDirectory=/home/pistrommy/projects/enviroplus
+Environment=PYTHONPATH=/home/pistrommy/projects
+ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python scripts/backup_enviro.py
+
+# Off-nominal guard only. A nominal run transfers deltas over an already-synced
+# tree and completes in well under a minute; the first full run moved 115.6 MB
+# in ~2.5 minutes. This trips on a hung transfer, never on a normal one.
+TimeoutStartSec=3600
+
+# The script exits non-zero and writes no manifest when it cannot prove what
+# landed. Do not retry into a failing remote -- the timer's next firing is the
+# retry, and a failed unit stays visible in systemctl --failed rather than being
+# churned away.
+Restart=no
+
+[Install]
+WantedBy=multi-user.target

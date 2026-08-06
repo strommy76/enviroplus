@@ -100,7 +100,7 @@ UserFont = str(files("font_roboto.files").joinpath("Roboto-Medium.ttf"))
 _BASE       = os.path.dirname(os.path.abspath(__file__))
 _ENV_PATH   = os.path.join(_BASE, ".env")
 LOG_PATH    = os.path.join(_BASE, "enviro.log")
-SQLITE_PATH = os.path.join(_BASE, "enviro.db")
+SQLITE_PATH = os.environ.get("SQLITE_PATH", os.path.join(_BASE, "enviro.db"))
 
 load_env(_ENV_PATH, expect_key="MQTT_BROKER")
 
