@@ -171,6 +171,9 @@ def _ensure_schema(conn: sqlite3.Connection) -> None:
     columns = {row[1] for row in conn.execute("PRAGMA table_info(nws_weather)").fetchall()}
     if "station_id" not in columns:
         conn.execute("ALTER TABLE nws_weather ADD COLUMN station_id TEXT")
+    if "capture_mode" not in columns:
+        conn.execute("ALTER TABLE nws_weather ADD COLUMN capture_mode TEXT")
+        conn.execute("UPDATE nws_weather SET capture_mode='live' WHERE capture_mode IS NULL")
     conn.commit()
 
 
@@ -328,6 +331,7 @@ def _select_observation(
 
 def _write(conn: sqlite3.Connection, logger, d: dict[str, Any]) -> bool:
     ts = d["ts"]
+    d = {**d, "capture_mode": "live"}
     if ts is None:
         logger.warning("NWS observation has no timestamp, skipping")
         return False

@@ -105,6 +105,14 @@ _db.execute("""
         lastrain       TEXT
     )
 """)
+# capture_mode carries write-time lineage: 'live' from this collector,
+# 'backfill' from a replay import. Added by ALTER rather than a table rebuild,
+# following the station_id precedent in nws_wx. No column DEFAULT -- a default
+# would let a future writer self-certify as live by omission, and NULL honestly
+# means unknown provenance.
+if "capture_mode" not in {r[1] for r in _db.execute("PRAGMA table_info(outdoor)")}:
+    _db.execute("ALTER TABLE outdoor ADD COLUMN capture_mode TEXT")
+    _db.execute("UPDATE outdoor SET capture_mode='live' WHERE capture_mode IS NULL")
 _db.commit()
 
 
@@ -166,23 +174,18 @@ def _fetch():
     return observation
 
 
-def _write(d):
-    if d is None:
-        return
+def row_from_observation(d: dict) -> dict:
+    """Map a provider observation to an `outdoor` row.
 
-    # An outdoor-array dropout still carries valid indoor readings, so the row
-    # is written with what arrived and the absence is recorded as its own fact
-    # rather than left to be inferred from a column full of nulls.
-    if not has_outdoor_reading(d):
-        record_outcome(PROVIDER, OUTCOME_PARTIAL,
-                       detail="outdoor array absent; console/indoor fields only")
-        log.warning("outdoor array absent from response — indoor fields only")
-
+    Extracted so the replay importer uses this exact mapping rather than a
+    second copy of it -- a divergent duplicate would make replayed rows differ
+    from live ones in ways no test compares.
+    """
     # dateutc is milliseconds since epoch — convert to UTC timestamp string
     ts = datetime.fromtimestamp(d["dateutc"] / 1000, tz=timezone.utc).strftime(
         "%Y-%m-%d %H:%M:%S"
     )
-    row = {
+    return {
         "ts":             ts,
         "tempf":          d.get("tempf"),
         "tempinf":        d.get("tempinf"),
@@ -205,9 +208,26 @@ def _write(d):
         "totalrainin":    d.get("totalrainin"),
         "lastrain":       d.get("lastRain"),
     }
+
+
+def _write(d):
+    if d is None:
+        return
+
+    # An outdoor-array dropout still carries valid indoor readings, so the row
+    # is written with what arrived and the absence is recorded as its own fact
+    # rather than left to be inferred from a column full of nulls.
+    if not has_outdoor_reading(d):
+        record_outcome(PROVIDER, OUTCOME_PARTIAL,
+                       detail="outdoor array absent; console/indoor fields only")
+        log.warning("outdoor array absent from response — indoor fields only")
+
+    row = row_from_observation(d)
+    row["capture_mode"] = "live"
     if write_row(_db, "outdoor", row, or_ignore=True):
         log.info("outdoor row written  ts=%s  temp=%s°F  hum=%s%%  wind=%smph",
-                 ts, d.get("tempf"), d.get("humidity"), d.get("windspeedmph"))
+                 row["ts"], d.get("tempf"), d.get("humidity"),
+                 d.get("windspeedmph"))
 
 
 # ── Main loop ──────────────────────────────────────────────────────────────────
