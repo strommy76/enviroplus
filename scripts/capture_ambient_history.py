@@ -4,6 +4,8 @@ never orphans bytes. Skips days already captured. Writes NO database."""
 import json,time,hashlib,urllib.request,urllib.error,sys
 from datetime import datetime,timedelta,timezone
 from pathlib import Path
+sys.path.insert(0,"/home/pistrommy/projects")
+from shared.raw_retention import scrub_body
 OUT=Path.home()/"projects/enviroplus/raw-capture/ambient"; MAN=OUT/"manifest.jsonl"
 env={}
 for l in (Path.home()/"projects/enviroplus/.env").read_text().splitlines():
@@ -26,11 +28,18 @@ while empties<3 and back<CAP:
         with urllib.request.urlopen(url,timeout=30) as r: raw=r.read()
         d=json.loads(raw)
         if d:
-            (OUT/f"{day}.json").write_bytes(raw); empties=0; new+=1
+            # Same scrub the live collectors apply. Without it this one-off
+            # writes a device credential straight into the canonical tier and
+            # from there to the offsite copy.
+            stored, scrubbed = scrub_body(raw)
+            (OUT/f"{day}.json").write_bytes(stored); empties=0; new+=1
             rec.update({"status":"ok","file":f"{day}.json","records":len(d),
-                        "fields":len(d[0].keys()),"bytes":len(raw),
-                        "sha256":hashlib.sha256(raw).hexdigest(),
+                        "fields":len(d[0].keys()),"bytes":len(stored),
+                        "sha256":hashlib.sha256(stored).hexdigest(),
                         "newest":d[0].get("date"),"oldest":d[-1].get("date")})
+            if scrubbed:
+                rec["scrubbed_keys"]=sorted(set(scrubbed))
+                rec["sha256_as_received"]=hashlib.sha256(raw).hexdigest()
             print(f"  {day}  rec={len(d)} fields={len(d[0].keys())}",flush=True)
         else:
             empties+=1; rec.update({"status":"empty","records":0})
