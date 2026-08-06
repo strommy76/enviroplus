@@ -33,7 +33,18 @@ sys.path.insert(0, "/home/pistrommy/projects")
 from shared.config_service import load_env, require
 from shared.db_service import connect, write_row
 from shared.logging_service import setup_logger
+from shared.raw_retention import (
+    OUTCOME_EMPTY,
+    OUTCOME_FETCH_ERROR,
+    OUTCOME_MALFORMED,
+    OUTCOME_OK,
+    OUTCOME_WRITE_ERROR,
+    record_outcome,
+    retain,
+)
 from shared.signal_handler import install_shutdown_handler
+
+PROVIDER = "airnow"
 
 # ── Paths / config ─────────────────────────────────────────────────────────────
 _BASE       = os.path.dirname(os.path.abspath(__file__))
@@ -79,9 +90,32 @@ _db.commit()
 
 
 def _fetch():
+    """Fetch, retain the bytes as received, then parse.
+
+    Retention precedes parsing so the canonical record is the provider's
+    response rather than this collector's reading of it. A retention failure is
+    logged loudly but does not suppress the derived write.
+    """
     req = urllib.request.Request(AIRNOW_URL)
     resp = urllib.request.urlopen(req, timeout=15)
-    data = json.loads(resp.read())
+    raw = resp.read()
+
+    # Classify what arrived, then retain it once under that label. Unparseable
+    # bytes are retained too -- a malformed response is itself a fact.
+    try:
+        data = json.loads(raw)
+        outcome = OUTCOME_EMPTY if not data else OUTCOME_OK
+        detail = "AirNow returned no observations" if not data else None
+    except ValueError as exc:
+        data, outcome, detail = None, OUTCOME_MALFORMED, str(exc)
+
+    try:
+        retain(PROVIDER, raw, url=AIRNOW_URL, outcome=outcome, detail=detail)
+    except Exception as exc:
+        log.error("raw retention failed for %s: %s", PROVIDER, exc, exc_info=True)
+
+    if data is None:
+        raise ValueError(f"unparseable AirNow response: {detail}")
     return data
 
 
@@ -139,10 +173,19 @@ while not is_shutting_down():
     try:
         _write(_parse(_fetch()))
     except urllib.error.URLError as e:
+        record_outcome(PROVIDER, OUTCOME_FETCH_ERROR, detail=str(e),
+                       url=AIRNOW_URL)
         log.warning("AirNow API fetch failed: %s", e)
     except (KeyError, IndexError, ValueError) as e:
+        record_outcome(PROVIDER, OUTCOME_FETCH_ERROR,
+                       detail=f"unexpected response shape: {e}", url=AIRNOW_URL)
         log.warning("Unexpected AirNow API response: %s", e)
+    except sqlite3.Error as e:
+        record_outcome(PROVIDER, OUTCOME_WRITE_ERROR, detail=repr(e))
+        log.error("Derived write failed: %s", e, exc_info=True)
     except Exception as e:
+        record_outcome(PROVIDER, OUTCOME_FETCH_ERROR, detail=repr(e),
+                       url=AIRNOW_URL)
         log.error("Unexpected error: %s", e, exc_info=True)
     time.sleep(POLL_S)
 

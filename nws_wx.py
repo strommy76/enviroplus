@@ -32,6 +32,7 @@ CHANGELOG:
 """
 
 import json
+import logging
 import os
 import sqlite3
 import sys
@@ -47,7 +48,14 @@ sys.path.insert(0, "/home/pistrommy/projects")
 from shared.config_service import load_env, require
 from shared.db_service import connect, write_row
 from shared.logging_service import setup_logger
+from shared.raw_retention import OUTCOME_EMPTY, OUTCOME_FETCH_ERROR, record_outcome, retain
 from shared.signal_handler import install_shutdown_handler
+
+PROVIDER = "nws"
+
+# run() attaches handlers to this same named logger via setup_logger; module
+# level functions resolve to the identical object once the service is running.
+log = logging.getLogger("nws_wx")
 
 # ── Paths / config ─────────────────────────────────────────────────────────────
 _BASE       = os.path.dirname(os.path.abspath(__file__))
@@ -176,9 +184,22 @@ def _fetch(settings: NwsSettings, station: str, now_utc: datetime) -> dict[str, 
     )
     req = urllib.request.Request(url, headers={"User-Agent": settings.user_agent})
     resp = urllib.request.urlopen(req, timeout=15)
-    data = json.loads(resp.read())
+    raw = resp.read()
+    # Retain before parsing: the canonical record is the provider's response,
+    # not the single observation this collector selects from it. The station is
+    # part of the provider key so per-station history stays separable.
+    try:
+        retain(f"{PROVIDER}/{station}", raw, url=url)
+    except Exception as exc:
+        log.error("raw retention failed for %s/%s: %s", PROVIDER, station, exc,
+                  exc_info=True)
+
+    data = json.loads(raw)
     observations = data["features"]
     if not observations:
+        record_outcome(f"{PROVIDER}/{station}", OUTCOME_EMPTY,
+                       detail="observations collection returned no features",
+                       url=url)
         raise ValueError("NWS observations collection returned no features")
     return max(
         (feature["properties"] for feature in observations),
@@ -263,6 +284,13 @@ def _select_observation(
                 )
             return observation
         except (urllib.error.URLError, KeyError, IndexError, ValueError) as exc:
+            # The attempt is a fact even when nothing came back. A network
+            # failure raises before retain() is ever reached, so without this
+            # the store would show no evidence the poll happened at all -- and
+            # NWS has the shortest provider retention of the three lanes, so a
+            # gap here is the one least likely to be recoverable later.
+            record_outcome(f"{PROVIDER}/{station}", OUTCOME_FETCH_ERROR,
+                           detail=str(exc))
             failures.append(f"{station}: {exc}")
     raise NoFreshObservationError("; ".join(failures))
 
@@ -310,8 +338,15 @@ def run() -> None:
             observation = _select_observation(settings, now_utc=datetime.now(UTC), logger=log)
             _write(db, log, observation)
         except NoFreshObservationError as exc:
+            # Every configured station failed or went stale. Per-station causes
+            # are already recorded; this records the cycle-level outcome, so a
+            # whole-lane outage is visible as its own fact rather than only as
+            # an absence of rows.
+            record_outcome(PROVIDER, OUTCOME_FETCH_ERROR,
+                           detail=f"no fresh observation from any station: {exc}")
             log.warning("No fresh NWS observation from configured stations: %s", exc)
         except Exception as exc:
+            record_outcome(PROVIDER, OUTCOME_FETCH_ERROR, detail=repr(exc))
             log.error("Unexpected error: %s", exc, exc_info=True)
         _sleep_until_next_poll(settings, is_shutting_down)
 

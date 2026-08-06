@@ -90,6 +90,7 @@ from PIL import Image, ImageDraw, ImageFont
 from pms5003 import PMS5003, ChecksumMismatchError, ReadTimeoutError, SerialTimeoutError
 
 from shared.config_service import load_env, require
+from shared.db_service import connect
 from shared.logging_service import setup_logger
 from shared.utils import utc_now
 
@@ -180,8 +181,11 @@ def write_mqtt(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
 
 
 # ── SQLite ─────────────────────────────────────────────────────────────────────
-_db = sqlite3.connect(SQLITE_PATH, check_same_thread=False)
-_db.execute("PRAGMA journal_mode=WAL")
+# Uses the shared connector rather than a private sqlite3.connect: this was a
+# second implementation of the same thing, and it silently missed the busy
+# timeout the other three writers get. Four processes share this database, so
+# the writer without a timeout is the one that drops rows under contention.
+_db = connect(SQLITE_PATH)
 _db.execute("""
     CREATE TABLE IF NOT EXISTS readings (
         ts          TEXT PRIMARY KEY,
