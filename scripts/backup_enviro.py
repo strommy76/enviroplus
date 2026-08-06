@@ -131,12 +131,18 @@ def run(config_path: Path, *, dry_run: bool = False) -> int:
             if dry_run:
                 log.info("[dry-run] would replicate %s -> %s/%s", snap, remote_dir, snap.name)
                 continue
-            results.append(replicate_file(snap, f"{remote_dir}/{snap.name}",
-                                          config_path=rclone_config))
-            dropped = prune(staging, f"{source_path.stem}_*.db",
-                            cfg["local_staging"]["retention_count"])
-            if dropped:
-                log.info("pruned %d stale local snapshot(s): %s", len(dropped), dropped)
+            try:
+                results.append(replicate_file(snap, f"{remote_dir}/{snap.name}",
+                                              config_path=rclone_config))
+            finally:
+                # Prune regardless of outcome. Running only on success let a
+                # persistently failing remote accumulate ~52 MB/day of snapshots
+                # on the SD card until it filled.
+                dropped = prune(staging, f"{source_path.stem}_*.db",
+                                cfg["local_staging"]["retention_count"])
+                if dropped:
+                    log.info("pruned %d stale local snapshot(s): %s",
+                             len(dropped), dropped)
 
         elif kind == "tree":
             if dry_run:
@@ -211,18 +217,42 @@ def verify_restore(config_path: Path) -> int:
         finally:
             conn.close()
 
+        # Schema alone is not a restore. A snapshot of an empty database passes
+        # integrity_check and carries every table name, so comparing names only
+        # certifies an empty restore as verified. Row counts were already being
+        # computed here and then discarded -- assert them.
+        empty = [t for t, c in counts.items() if c == 0]
+        if empty:
+            raise BackupError(
+                f"restored snapshot has empty tables: {sorted(empty)} -- "
+                "a schema-only restore is not a restore"
+            )
+
         live = Path(src["source_path"])
         if live.is_file():
             lc = sqlite3.connect(f"file:{live}?mode=ro", uri=True)
             try:
                 live_tables = {r[0] for r in lc.execute(
                     "SELECT name FROM sqlite_master WHERE type='table'")}
+                live_counts = {t: lc.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
+                               for t in sorted(live_tables)}
             finally:
                 lc.close()
             missing = live_tables - tables
             if missing:
                 raise BackupError(
                     f"restored snapshot is missing live tables: {sorted(missing)}")
+
+            # The snapshot is older than the live database, so it must have
+            # FEWER OR EQUAL rows -- never more. More rows means the restore is
+            # not of this database, or the live store lost data.
+            for table, live_count in live_counts.items():
+                restored = counts.get(table, 0)
+                if restored > live_count:
+                    raise BackupError(
+                        f"restored {table} has {restored} rows but live has "
+                        f"{live_count} -- snapshot does not match this database"
+                    )
 
         log.info("RESTORE VERIFIED: %s (%d bytes)", newest, local.stat().st_size)
         for table, count in counts.items():

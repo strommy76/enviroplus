@@ -48,7 +48,16 @@ sys.path.insert(0, "/home/pistrommy/projects")
 from shared.config_service import load_env, require
 from shared.db_service import connect, write_row
 from shared.logging_service import setup_logger
-from shared.raw_retention import OUTCOME_EMPTY, OUTCOME_FETCH_ERROR, record_outcome, retain
+from shared.raw_retention import (
+    OutcomeAlreadyRecorded,
+    configure as configure_retention,
+    OUTCOME_EMPTY,
+    OUTCOME_FETCH_ERROR,
+    OUTCOME_OK,
+    OUTCOME_WRITE_ERROR,
+    record_outcome,
+    retain,
+)
 from shared.signal_handler import install_shutdown_handler
 
 PROVIDER = "nws"
@@ -56,6 +65,18 @@ PROVIDER = "nws"
 # run() attaches handlers to this same named logger via setup_logger; module
 # level functions resolve to the identical object once the service is running.
 log = logging.getLogger("nws_wx")
+
+
+def outcome_for_exception(exc: BaseException) -> str:
+    """Map a raised failure to the cause it actually represents.
+
+    Outcomes are causes, not severities: a failed derived write is not a failed
+    fetch, and recording it as one would make the canonical store show a
+    provider outage that never happened.
+    """
+    if isinstance(exc, sqlite3.Error):
+        return OUTCOME_WRITE_ERROR
+    return OUTCOME_FETCH_ERROR
 
 # ── Paths / config ─────────────────────────────────────────────────────────────
 _BASE       = os.path.dirname(os.path.abspath(__file__))
@@ -98,6 +119,8 @@ def _parse_stations(raw: str) -> tuple[str, ...]:
 def load_settings(env_path: str = _ENV_PATH) -> NwsSettings:
     """Load NWS runtime settings from .env with no ambient defaults."""
     load_env(env_path, expect_key="NWS_STATIONS")
+    configure_retention(os.environ.get(
+        "ENVIRO_RAW_ROOT", os.path.join(_BASE, "raw-capture")))
     max_observation_age_s = _parse_positive_int(
         require("NWS_MAX_OBSERVATION_AGE_S"),
         "NWS_MAX_OBSERVATION_AGE_S",
@@ -189,18 +212,24 @@ def _fetch(settings: NwsSettings, station: str, now_utc: datetime) -> dict[str, 
     # not the single observation this collector selects from it. The station is
     # part of the provider key so per-station history stays separable.
     try:
-        retain(f"{PROVIDER}/{station}", raw, url=url)
+        empty = not (json.loads(raw).get("features") or [])
+        retain(f"{PROVIDER}/{station}", raw, url=url,
+               outcome=OUTCOME_EMPTY if empty else OUTCOME_OK,
+               detail="observations collection returned no features" if empty else None)
+    except OutcomeAlreadyRecorded:
+        raise
     except Exception as exc:
         log.error("raw retention failed for %s/%s: %s", PROVIDER, station, exc,
                   exc_info=True)
 
-    data = json.loads(raw)
-    observations = data["features"]
+    observations = json.loads(raw)["features"]
     if not observations:
-        record_outcome(f"{PROVIDER}/{station}", OUTCOME_EMPTY,
-                       detail="observations collection returned no features",
-                       url=url)
-        raise ValueError("NWS observations collection returned no features")
+        # The retain() above already recorded this attempt. Raising a plain
+        # ValueError would have _select_observation record a second one, and
+        # the loop a third -- three records for one attempt, two of them
+        # calling an arrived-but-empty response a fetch failure.
+        raise OutcomeAlreadyRecorded(
+            f"{station}: observations collection returned no features")
     return max(
         (feature["properties"] for feature in observations),
         key=lambda properties: _parse_observation_ts(properties["timestamp"]),
@@ -283,6 +312,8 @@ def _select_observation(
                     "; ".join(failures),
                 )
             return observation
+        except OutcomeAlreadyRecorded as exc:
+            failures.append(str(exc))
         except (urllib.error.URLError, KeyError, IndexError, ValueError) as exc:
             # The attempt is a fact even when nothing came back. A network
             # failure raises before retain() is ever reached, so without this
@@ -346,7 +377,7 @@ def run() -> None:
                            detail=f"no fresh observation from any station: {exc}")
             log.warning("No fresh NWS observation from configured stations: %s", exc)
         except Exception as exc:
-            record_outcome(PROVIDER, OUTCOME_FETCH_ERROR, detail=repr(exc))
+            record_outcome(PROVIDER, outcome_for_exception(exc), detail=repr(exc))
             log.error("Unexpected error: %s", exc, exc_info=True)
         _sleep_until_next_poll(settings, is_shutting_down)
 

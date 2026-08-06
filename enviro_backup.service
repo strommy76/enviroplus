@@ -25,5 +25,6 @@ TimeoutStartSec=3600
 # churned away.
 Restart=no
 
-[Install]
-WantedBy=multi-user.target
+# No [Install]: this unit is driven by enviro_backup.timer. Carrying
+# WantedBy=multi-user.target would let `systemctl enable enviro_backup.service`
+# run a backup at every boot, which is not what a daily timer means.

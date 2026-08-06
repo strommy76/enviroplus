@@ -34,6 +34,8 @@ from shared.config_service import load_env, require
 from shared.db_service import connect, write_row
 from shared.logging_service import setup_logger
 from shared.raw_retention import (
+    OutcomeAlreadyRecorded,
+    configure as configure_retention,
     OUTCOME_EMPTY,
     OUTCOME_FETCH_ERROR,
     OUTCOME_MALFORMED,
@@ -51,6 +53,9 @@ _BASE       = os.path.dirname(os.path.abspath(__file__))
 _ENV_PATH   = os.path.join(_BASE, ".env")
 LOG_PATH    = os.path.join(_BASE, "enviro.log")
 SQLITE_PATH = os.environ.get("SQLITE_PATH", os.path.join(_BASE, "enviro.db"))
+RAW_ROOT    = os.environ.get("ENVIRO_RAW_ROOT", os.path.join(_BASE, "raw-capture"))
+
+configure_retention(RAW_ROOT)
 
 load_env(_ENV_PATH, expect_key="AIRNOW_API_KEY")
 
@@ -134,7 +139,10 @@ def _fetch():
         log.error("raw retention failed for %s: %s", PROVIDER, exc, exc_info=True)
 
     if outcome == OUTCOME_MALFORMED:
-        raise ValueError(f"unparseable AirNow response: {detail}")
+        # Already recorded as MALFORMED above. Raising a plain ValueError
+        # would have the loop's handler record a SECOND record for this one
+        # attempt, labelled "never arrived" for a payload that did arrive.
+        raise OutcomeAlreadyRecorded(f"unparseable AirNow response: {detail}")
     return data
 
 
@@ -197,6 +205,9 @@ def run() -> None:
     while not is_shutting_down():
         try:
             _write(_parse(_fetch()))
+        except OutcomeAlreadyRecorded as e:
+            # The outcome for this attempt is already in the canonical store.
+            log.warning("%s", e)
         except urllib.error.URLError as e:
             record_outcome(PROVIDER, outcome_for_exception(e), detail=str(e),
                            url=AIRNOW_URL)

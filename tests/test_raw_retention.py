@@ -203,11 +203,15 @@ def test_dedup_does_not_rescan_the_day_file(raw_root, monkeypatch):
     assert len(calls) <= 1, f"day file re-read {len(calls)} times"
 
 
-def test_dedup_carries_across_the_day_boundary(raw_root):
-    """A byte-identical payload at 00:00 is still a duplicate, not a new store."""
+def test_repeat_within_the_same_day_is_a_duplicate(raw_root):
+    """Within one day, a byte-identical payload is recorded but not re-stored.
+
+    Renamed: this previously claimed to test cross-midnight behaviour while
+    both writes landed in the same day file, and asserted the opposite of the
+    design (day files are self-contained -- see the boundary test below).
+    """
     payload = b'{"v":1}'
     assert rr.retain("acme", payload) == rr.OUTCOME_OK
-    # Simulate rollover: a fresh day file exists, but the digest is remembered.
     assert rr.retain("acme", payload) == rr.OUTCOME_DUPLICATE
 
 
@@ -317,3 +321,29 @@ def test_tail_window_exceeds_largest_measured_record(raw_root):
     rr.retain("acme", big)
     rr._LAST_SHA.clear()                      # force the file path, not the cache
     assert rr.retain("acme", big) == rr.OUTCOME_DUPLICATE
+
+
+# ── The canonical root is never guessed ───────────────────────────────────────
+
+def test_unconfigured_write_is_refused(monkeypatch):
+    """Writing to canonical must not be the default for any importer.
+
+    An earlier version fell back to the production path when unset, so review
+    tooling and ad-hoc scripts silently appended non-authoritative records to
+    the live store -- twice, the second time after the first was cleaned up.
+    """
+    monkeypatch.delenv("ENVIRO_RAW_ROOT", raising=False)
+    monkeypatch.setattr(rr, "_ROOT", None)
+    with pytest.raises(rr.RetentionNotConfiguredError):
+        rr.retain("acme", b"{}")
+    with pytest.raises(rr.RetentionNotConfiguredError):
+        rr.record_outcome("acme", rr.OUTCOME_FETCH_ERROR)
+
+
+def test_configure_declares_the_root(tmp_path, monkeypatch):
+    monkeypatch.delenv("ENVIRO_RAW_ROOT", raising=False)
+    monkeypatch.setattr(rr, "_ROOT", None)
+    monkeypatch.setattr(rr, "_LAST_SHA", {})
+    rr.configure(tmp_path)
+    rr.retain("acme", b'{"v":1}')
+    assert list((tmp_path / "acme").glob("*.ndjson"))
