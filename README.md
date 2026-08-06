@@ -65,24 +65,35 @@ flowchart LR
     end
 
     subgraph PI["Raspberry Pi"]
-        enviro_dash.py
+        enviro_dash3.py
+        ambient_wx.py
+        nws_wx.py
+        airnow_wx.py
         dynamic_config.json
+    end
+
+    subgraph Canonical["Canonical tier"]
+        RAW[("📥 raw-capture/\nprovider responses as received")]
+    end
+
+    subgraph Derived["Derived tier"]
+        SQLITE[("🗄️ SQLite\nenviro.db")]
     end
 
     subgraph Outputs
         DISPLAY["🖥️ ST7735\n160×80 Display"]
-        SQLITE[("🗄️ SQLite\nenviro.db")]
-        MQTT["📡 Adafruit IO\n(MQTT)"]
-        INFLUX[("📊 InfluxDB\n(planned)")]
-        GRAFANA["📈 Grafana\n(planned)"]
+        GRAFANA["📈 Grafana\n(container, reads enviro.db)"]
+        OFFSITE[("☁️ Offsite backup\nverified by remote hash")]
     end
 
-    dynamic_config.json -->|hot-reload| enviro_dash.py
-    enviro_dash.py --> DISPLAY
-    enviro_dash.py -->|every 60s| SQLITE
-    enviro_dash.py -->|every 60s| MQTT
-    INFLUX --> GRAFANA
-    enviro_dash.py -.->|via Tailscale| INFLUX
+    dynamic_config.json -->|hot-reload| enviro_dash3.py
+    enviro_dash3.py --> DISPLAY
+    enviro_dash3.py -->|every 60s| SQLITE
+    ambient_wx.py & nws_wx.py & airnow_wx.py -->|response bytes| RAW
+    ambient_wx.py & nws_wx.py & airnow_wx.py -->|parsed rows| SQLITE
+    RAW -->|replay| SQLITE
+    SQLITE --> GRAFANA
+    RAW & SQLITE -->|daily| OFFSITE
 ```
 
 ---
@@ -129,9 +140,6 @@ cp .env.example .env   # add credentials — secrets only, no tuning values here
 
 | Variable | Description |
 |----------|-------------|
-| `MQTT_BROKER` | MQTT broker hostname (default: `io.adafruit.com`) |
-| `MQTT_USER` | Adafruit IO username |
-| `MQTT_KEY` | Adafruit IO key |
 | `SQLITE_PATH` | Path to SQLite database |
 | `LOG_PATH` | Rotating log file path |
 | `CONFIG_PATH` | Path to `dynamic_config.json` |
@@ -173,7 +181,7 @@ All tunable runtime values live here. The running script watches this file and *
     "cpu_hist_size": 30      ← CPU temp history depth (~1 min of smoothing)
   },
   "intervals": {
-    "publish_s":        60,  ← seconds between MQTT + SQLite writes
+    "publish_s":        60,  ← seconds between SQLite writes
     "display_refresh_s": 2   ← display update rate
   },
   "thresholds": { ... },     ← color breakpoints for all sensors
@@ -236,10 +244,6 @@ ORDER BY ts;
 
 ---
 
-## 📡 Live Dashboard
-
-**Adafruit IO:** https://io.adafruit.com/strommy/dashboards/bsenviropi
-
 ---
 
 ## 🔗 Upstream Sources
@@ -261,14 +265,12 @@ ORDER BY ts;
 
 - [x] 10-sensor dashboard on ST7735 display
 - [x] CPU temperature compensation with auto-derived factor
-- [x] MQTT publish to Adafruit IO
 - [x] SQLite logging with local timestamps + Pi telemetry
 - [x] Rotating log file
 - [x] systemd service with auto-restart
 - [x] `dynamic_config.json` — hot-reloadable config, single source of truth
 - [x] BME280 averaging + CPU history smoothing for noise reduction
-- [x] Ruff linting with pre-commit hook
+- [ ] Ruff linting with pre-commit hook (referee not installed)
 - [ ] Adafruit SCD-41 CO₂ sensor integration
-- [ ] InfluxDB writer (stub in code, pending Docker setup)
 - [ ] Grafana dashboard on AI host via Tailscale
 - [ ] Migrate to Raspberry Pi 5

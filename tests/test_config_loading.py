@@ -27,7 +27,7 @@ from shared.config_service import load_env, require
 
 # Load enviroplus .env once for all tests
 _ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
-load_env(_ENV_PATH, expect_key="MQTT_BROKER")
+load_env(_ENV_PATH, expect_key="SQLITE_PATH")
 
 
 class TestAmbientWxConfig:
@@ -102,18 +102,22 @@ class TestAirnowWxConfig:
 
 
 class TestEnviroDashConfig:
-    def test_mqtt_broker(self):
-        val = require("MQTT_BROKER")
+    """Assert the keys enviro_dash3 actually depends on.
+
+    These previously asserted the MQTT credentials. That made the suite a
+    monument to a removed integration rather than a referee for the live one:
+    it went green while pinning secrets nothing read, and deleting those secrets
+    would have errored the whole module at collection.
+    """
+
+    def test_sqlite_path(self):
+        val = require("SQLITE_PATH")
+        assert val and val.endswith(".db")
+
+    def test_log_path(self):
+        val = require("LOG_PATH")
         assert val and len(val) > 0
 
-    def test_mqtt_port(self):
-        val = int(require("MQTT_PORT"))
-        assert 1 <= val <= 65535
-
-    def test_mqtt_user(self):
-        val = require("MQTT_USER")
-        assert val and len(val) > 0
-
-    def test_mqtt_key(self):
-        val = require("MQTT_KEY")
-        assert val and len(val) > 0
+    def test_config_path(self):
+        val = require("CONFIG_PATH")
+        assert val and val.endswith(".json")

@@ -2,7 +2,7 @@
 
 ## What this is
 Raspberry Pi Enviro+ air quality dashboard. Reads 10 sensors, displays on 160×80 ST7735,
-publishes to Adafruit IO via MQTT, logs to SQLite. Repo: https://github.com/strommy76/enviroplus
+logs to SQLite, displayed via Grafana. Repo: https://github.com/strommy76/enviroplus
 
 ## File header format
 Python files use docstring block after shebang:
@@ -16,15 +16,14 @@ JSON files use `_meta` key with `path`, `description`, `changelog` array.
 Always append a new changelog entry when modifying a file.
 
 ## Config split
-- `.env` — secrets and paths only (MQTT credentials, file paths). Never edit programmatically.
+- `.env` — secrets and paths only (provider API credentials, file paths). Never edit programmatically.
 - `dynamic_config.json` — all tuning values. Hot-reloaded by running script within 2 seconds.
 - Code — logic only, no magic numbers
 
 ## Key files
 | File | Purpose |
 |------|---------|
-| `enviro_dash3.py` | **Active script** — AQM-345 layout, sensors, display, MQTT, SQLite |
-| `enviro_dash.py` | Older layout — not currently in service |
+| `enviro_dash3.py` | **Active script** — AQM-345 layout, sensors, display, SQLite |
 | `dynamic_config.json` | Runtime config — thresholds, calibration, intervals |
 | `enviro_dash.service` | systemd service definition |
 | `enviro.db` | SQLite database (gitignored) |
@@ -38,14 +37,17 @@ tail -f ~/projects/enviroplus/enviro.log
 
 ## Linting
 ```bash
-/home/pistrommy/.virtualenvs/pimoroni/bin/ruff check enviro_dash3.py
+# Ruff is not currently installed in the pimoroni venv; the pre-commit
+# referee named below does not exist. Reinstall before relying on it.
 ```
-Pre-commit hook runs automatically on staged `.py` files.
+There is no pre-commit hook installed; `.git/hooks/` is empty.
 
 ## Hardware
-- Pi 3 B+ (home) — current host, BME280 reads high due to CPU heat
-- `cal_actual_f` in `dynamic_config.json` corrects temperature; update when room temp changes
-- Pi 5 (work) — planned migration target; will need recalibration
+- Pi 5 — current host. The Pi 3 migration completed 2026-07-30; the stack was
+  reinstalled here rather than moved, which is why the derived tables predate
+  this host's own collection history.
+- BME280 reads high due to CPU heat; compensation is resolved in code from
+  `dynamic_config.json` calibration values.
 
 ## Planned next
 1. Review overnight SQLite data (cpu_temp_c vs temp_f correlation)

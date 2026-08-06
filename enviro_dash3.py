@@ -10,10 +10,18 @@ DESCRIPTION: AQM-inspired Enviro+ display layout (160x80 ST7735).
                             SCD-41 arrives), temperature, RH, pressure below.
              Right       -- PM2.5 large with bar, PM1/PM10 side by side,
                             PM sparkline at bottom.
-             MQTT status -- 4px dot, top-right corner.
              To activate: change ExecStart in enviro_dash.service to this file.
 
 CHANGELOG:
+2026-08-06 19:29      Claude      [Refactor] Remove the Adafruit IO MQTT
+                                      publisher. Grafana replaced it as the
+                                      display, so the publish path was making an
+                                      authenticated external call every poll to
+                                      feed a surface nobody reads, and the
+                                      status dot it drove reported the health of
+                                      a channel that no longer mattered. Also
+                                      removes the broker, port, user and
+                                      key it made mandatory at startup.
 2026-04-09 14:00      Claude      [Docs] Update file header to Lexx standard
                                       format
 2026-04-09 00:00      Claude      [Refactor] Phase 3 refactor: use shared
@@ -81,7 +89,6 @@ from types import SimpleNamespace
 sys.path.insert(0, "/home/pistrommy/projects")
 
 import bme280
-import paho.mqtt.client as mqtt
 import smbus2
 import st7735
 from enviroplus import gas
@@ -89,7 +96,7 @@ from ltr559 import LTR559
 from PIL import Image, ImageDraw, ImageFont
 from pms5003 import PMS5003, ChecksumMismatchError, ReadTimeoutError, SerialTimeoutError
 
-from shared.config_service import load_env, require
+from shared.config_service import load_env
 from shared.db_service import connect
 from shared.logging_service import setup_logger
 from shared.utils import utc_now
@@ -100,9 +107,13 @@ UserFont = str(files("font_roboto.files").joinpath("Roboto-Medium.ttf"))
 _BASE       = os.path.dirname(os.path.abspath(__file__))
 _ENV_PATH   = os.path.join(_BASE, ".env")
 LOG_PATH    = os.path.join(_BASE, "enviro.log")
-SQLITE_PATH = os.environ.get("SQLITE_PATH", os.path.join(_BASE, "enviro.db"))
 
-load_env(_ENV_PATH, expect_key="MQTT_BROKER")
+load_env(_ENV_PATH, expect_key="SQLITE_PATH")
+
+# Read after load_env, not before: consuming a key before the file that supplies
+# it is loaded silently pins the default, so a change in .env would move the
+# collectors to a new database while this service kept writing the old one.
+SQLITE_PATH = os.environ.get("SQLITE_PATH", os.path.join(_BASE, "enviro.db"))
 
 CONFIG_PATH = os.environ.get("CONFIG_PATH", os.path.join(_BASE, "dynamic_config.json"))
 
@@ -123,28 +134,13 @@ def load_config():
 
 cfg = load_config()
 
-# ── MQTT (Adafruit IO) ────────────────────────────────────────────────────────
-MQTT_BROKER = require("MQTT_BROKER")
-MQTT_PORT   = int(require("MQTT_PORT"))
-MQTT_USER   = require("MQTT_USER")
-MQTT_KEY    = require("MQTT_KEY")
-
-_mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-_mqtt.username_pw_set(MQTT_USER, MQTT_KEY)
-_mqtt.loop_start()  # always start network thread; connect/reconnect handled separately
-try:
-    _mqtt.connect(MQTT_BROKER, MQTT_PORT, keepalive=60)
-except Exception as e:
-    log.warning("MQTT connect failed at startup: %s — will retry on publish", e)
-
-
 def _r(x, n):
     """Round only real values; None (absent/failed lane) passes through as NULL."""
     return None if x is None else round(x, n)
 
 
 def _round_readings(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
-    """Single source of truth for sensor rounding — used by MQTT and SQLite."""
+    """Single source of truth for sensor rounding, used by the SQLite write path."""
     return {
         "temperature": _r(temp_f, 1), "humidity":  _r(hum,    1),
         "pressure":    _r(pres,   2), "light":     _r(lux,    1),
@@ -152,32 +148,6 @@ def _round_readings(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
         "ammonia":     _r(nh3,    1), "pm1":       _r(pm1,    1),
         "pm25":        _r(pm25,   1), "pm10":      _r(pm10,   1),
     }
-
-
-_mqtt_status = "init"  # "init" | "ok" | "fail"
-
-
-def write_mqtt(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
-    global _mqtt_status
-    try:
-        if not _mqtt.is_connected():
-            _mqtt.connect(MQTT_BROKER, MQTT_PORT, keepalive=60)
-        r = _round_readings(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
-        feeds = {
-            "temperature": r["temperature"], "humidity": r["humidity"],
-            "pressure":    r["pressure"],    "light":    r["light"],
-            "oxidising":   r["oxidising"],   "reducing": r["reducing"],
-            "ammonia":     r["ammonia"],     "pm01":     r["pm1"],
-            "pm025":       r["pm25"],        "pm10":     r["pm10"],
-        }
-        for feed, val in feeds.items():
-            _mqtt.publish(f"{MQTT_USER}/feeds/{feed}", val)
-            time.sleep(0.5)
-        _mqtt_status = "ok"
-        log.info("MQTT published to Adafruit IO")
-    except Exception as e:
-        _mqtt_status = "fail"
-        log.warning("MQTT publish failed: %s", e)
 
 
 # ── SQLite ─────────────────────────────────────────────────────────────────────
@@ -420,14 +390,6 @@ def co2_color(ppm):
     return RED
 
 
-def mqtt_color():
-    if _mqtt_status == "ok":
-        return GREEN
-    if _mqtt_status == "fail":
-        return RED
-    return YELLOW
-
-
 def _aqi_color(aqi):
     """EPA AQI band color for the given AQI value. None (absent lane) -> DIM."""
     if aqi is None:
@@ -596,9 +558,6 @@ def draw_frame(tf, hum, pm1, pm25, pm10, ox, rd, nh3):
     aqi = pm_aqi(pm25, pm10)
     draw_aq_bar(draw, aqi)
 
-    # ── MQTT status dot (top-right corner, 4×4px) ──────────────────────────────
-    draw.ellipse((W - 6, 1, W - 1, 6), fill=mqtt_color())
-
     # ── Center: CO₂ dominant ───────────────────────────────────────────────────
     co2_str = f"{co2_ppm:.0f}" if co2_ppm is not None else "---"
     draw.text((MID_X0 + 2, 2),  "CO\u2082",  font=FONT_S,  fill=DIM)
@@ -698,7 +657,6 @@ while True:
 
         now = time.time()
         if now - _last_publish >= cfg["intervals"]["publish_s"]:
-            write_mqtt(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
             write_sqlite(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
             _last_publish = now
 
