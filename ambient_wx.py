@@ -105,11 +105,10 @@ _db.execute("""
         lastrain       TEXT
     )
 """)
-# capture_mode carries write-time lineage: 'live' from this collector,
-# 'backfill' from a replay import. Added by ALTER rather than a table rebuild,
-# following the station_id precedent in nws_wx. No column DEFAULT -- a default
-# would let a future writer self-certify as live by omission, and NULL honestly
-# means unknown provenance.
+# capture_mode carries write-time lineage. Added by ALTER rather than a table
+# rebuild, which SQLite cannot perform under concurrent writers. No column
+# DEFAULT: a default lets a writer self-certify its own provenance by omission,
+# where NULL states that the provenance is unknown.
 if "capture_mode" not in {r[1] for r in _db.execute("PRAGMA table_info(outdoor)")}:
     _db.execute("ALTER TABLE outdoor ADD COLUMN capture_mode TEXT")
     _db.execute("UPDATE outdoor SET capture_mode='live' WHERE capture_mode IS NULL")
@@ -177,9 +176,9 @@ def _fetch():
 def row_from_observation(d: dict) -> dict:
     """Map a provider observation to an `outdoor` row.
 
-    Extracted so the replay importer uses this exact mapping rather than a
-    second copy of it -- a divergent duplicate would make replayed rows differ
-    from live ones in ways no test compares.
+    Extracted so replay invokes this mapping rather than duplicating it. A
+    second copy would diverge, making replayed rows differ from live rows along
+    an axis nothing compares.
     """
     # dateutc is milliseconds since epoch — convert to UTC timestamp string
     ts = datetime.fromtimestamp(d["dateutc"] / 1000, tz=timezone.utc).strftime(

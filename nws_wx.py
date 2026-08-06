@@ -119,8 +119,6 @@ def _parse_stations(raw: str) -> tuple[str, ...]:
 def load_settings(env_path: str = _ENV_PATH) -> NwsSettings:
     """Load NWS runtime settings from .env with no ambient defaults."""
     load_env(env_path, expect_key="NWS_STATIONS")
-    configure_retention(os.environ.get(
-        "ENVIRO_RAW_ROOT", os.path.join(_BASE, "raw-capture")))
     max_observation_age_s = _parse_positive_int(
         require("NWS_MAX_OBSERVATION_AGE_S"),
         "NWS_MAX_OBSERVATION_AGE_S",
@@ -319,10 +317,8 @@ def _select_observation(
             failures.append(str(exc))
         except (urllib.error.URLError, KeyError, IndexError, ValueError) as exc:
             # The attempt is a fact even when nothing came back. A network
-            # failure raises before retain() is ever reached, so without this
-            # the store would show no evidence the poll happened at all -- and
-            # NWS has the shortest provider retention of the three lanes, so a
-            # gap here is the one least likely to be recoverable later.
+            # failure raises before retain() is reached, so without this the
+            # store holds no evidence the poll occurred.
             record_outcome(f"{PROVIDER}/{station}", OUTCOME_FETCH_ERROR,
                            detail=str(exc))
             failures.append(f"{station}: {exc}")
@@ -362,6 +358,12 @@ def _sleep_until_next_poll(settings: NwsSettings, is_shutting_down: Callable[[],
 # ── Main loop ──────────────────────────────────────────────────────────────────
 def run() -> None:
     settings = load_settings()
+    # Retention is configured at service start, not during config loading.
+    # Loading config is something non-runtime callers legitimately do, and
+    # pointing the canonical root at production from there gives any of them
+    # write access to the live tier.
+    configure_retention(os.environ.get(
+        "ENVIRO_RAW_ROOT", os.path.join(_BASE, "raw-capture")))
     log = setup_logger("nws_wx", settings.log_path)
     is_shutting_down = install_shutdown_handler(logger=log)
     db = connect(settings.sqlite_path)
