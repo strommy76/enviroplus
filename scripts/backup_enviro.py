@@ -72,10 +72,21 @@ def load_config(path: Path) -> dict:
     # the failure path, so a config predating it passes every successful run and
     # then raises a bare KeyError the first time a backup fails -- the one moment
     # the operator needs a message that says what is wrong.
-    if "failed_run_retention" not in cfg["local_staging"]:
+    retention = cfg["local_staging"].get("failed_run_retention")
+    if retention is None:
         raise BackupError(
             "config local_staging is missing failed_run_retention; it bounds how "
             "many failed-run snapshots are kept and is read only when a run fails"
+        )
+    # Type and range, not just presence. Checking presence alone left the same
+    # trap one step along: "2" passes load and every successful run, then raises
+    # a bare TypeError inside the failure handler -- the exact latent shape this
+    # check exists to remove, moved rather than removed. bool is excluded
+    # because it is an int subclass and True would silently mean 1.
+    if isinstance(retention, bool) or not isinstance(retention, int) or retention < 0:
+        raise BackupError(
+            f"config local_staging.failed_run_retention must be a non-negative "
+            f"integer, got {retention!r}"
         )
     return cfg
 
@@ -142,9 +153,13 @@ def clear_snapshots_through(staging: Path, stem: str, ceiling: str, *,
                             include_ceiling: bool, keep_older: int = 0) -> list[str]:
     """Remove this source's snapshots at or below `ceiling`.
 
-    Never above it: a concurrently-running backup's snapshot carries a later
-    stamp, and removing it underneath that run would delete the artifact whose
-    hash it is about to compare.
+    Never above it, which protects a backup started after this one. It does not
+    protect one started BEFORE this one and still uploading: that run's snapshot
+    carries an earlier stamp and is cleared underneath it. The overlap fails
+    loud rather than silently -- the vanished staged file surfaces as a transport
+    error or a missing-source error, both non-zero exits that reach the alert --
+    and the timer cannot overlap itself, so this needs a manual run racing a
+    slower scheduled one.
 
     `include_ceiling` is stated rather than inferred. A verified upload discards
     the current snapshot along with everything older; a failed upload keeps it,

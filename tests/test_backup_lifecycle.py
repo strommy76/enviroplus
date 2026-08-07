@@ -195,14 +195,39 @@ def test_dry_run_does_not_create_the_staging_directory(lane, monkeypatch):
     assert not staging.exists(), "a dry run created the staging directory"
 
 
+@pytest.mark.parametrize("bad", ["2", 2.5, -1, True, None])
+def test_a_non_integer_failed_run_retention_fails_at_load(lane, bad):
+    """Presence alone left the trap one step along.
+
+    A string value passes load and every successful run, then raises a bare
+    TypeError inside the failure handler -- the same latent shape the presence
+    check exists to remove, moved rather than removed. True is rejected
+    explicitly because bool subclasses int and would silently mean 1.
+    """
+    config, _, _ = lane
+    cfg = json.loads(config.read_text())
+    cfg["local_staging"]["failed_run_retention"] = bad
+    config.write_text(json.dumps(cfg))
+
+    with pytest.raises(backup_enviro.BackupError, match="failed_run_retention"):
+        backup_enviro.load_config(config)
+
+
 def test_a_config_without_failed_run_retention_fails_at_load(lane):
-    """Not on the first failure, which is when the message matters most."""
+    """Not on the first failure, which is when the message matters most.
+
+    Matched on the WORDING, deliberately. The type check below backstops a
+    missing key too (None is not an int), so a test that only asserted "some
+    BackupError" stayed green with the presence check deleted -- it was grading
+    the backstop. The presence branch earns its place by naming the likeliest
+    misconfiguration, an older config, so that is what the gate holds it to.
+    """
     config, _, _ = lane
     cfg = json.loads(config.read_text())
     del cfg["local_staging"]["failed_run_retention"]
     config.write_text(json.dumps(cfg))
 
-    with pytest.raises(backup_enviro.BackupError, match="failed_run_retention"):
+    with pytest.raises(backup_enviro.BackupError, match="missing failed_run_retention"):
         backup_enviro.load_config(config)
 
 
