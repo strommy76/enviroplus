@@ -25,6 +25,10 @@ TimeoutStartSec=3600
 # churned away.
 Restart=no
 
+# The lane this replaced failed silently because nothing surfaced it. Delivery
+# uses the host's existing push transport rather than a second alerting stack.
+OnFailure=enviro_backup_failure.service
+
 # No [Install]: this unit is driven by enviro_backup.timer. Carrying
 # WantedBy=multi-user.target would let `systemctl enable enviro_backup.service`
 # run a backup at every boot, which is not what a daily timer means.
