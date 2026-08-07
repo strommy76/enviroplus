@@ -6,6 +6,12 @@ Documentation=file:///home/pistrommy/projects/enviroplus/config/backup.json
 After=network-online.target
 Wants=network-online.target
 
+# The lane this replaced failed silently because nothing surfaced it. Delivery
+# uses the host's existing push transport rather than a second alerting stack.
+# OnFailure is a [Unit] directive: placed under [Service], systemd parses it,
+# logs "Unknown key", discards it, and the unit runs with no alerting at all.
+OnFailure=enviro_backup_failure.service
+
 [Service]
 Type=oneshot
 User=pistrommy
@@ -24,10 +30,6 @@ TimeoutStartSec=3600
 # retry, and a failed unit stays visible in systemctl --failed rather than being
 # churned away.
 Restart=no
-
-# The lane this replaced failed silently because nothing surfaced it. Delivery
-# uses the host's existing push transport rather than a second alerting stack.
-OnFailure=enviro_backup_failure.service
 
 # No [Install]: this unit is driven by enviro_backup.timer. Carrying
 # WantedBy=multi-user.target would let `systemctl enable enviro_backup.service`

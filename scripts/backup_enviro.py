@@ -5,11 +5,15 @@ FILE:        backup_enviro.py
 PATH:        ~/projects/enviroplus/scripts/backup_enviro.py
 DESCRIPTION: Backs up the enviroplus data tiers offsite and proves the copy.
 
-             Two sources, two shapes, two verbs -- because they are genuinely
-             different, not as a preference. enviro.db is a live WAL database
-             with four concurrent writers, so it is snapshotted with VACUUM INTO
-             and copied as one object. raw-capture is an append-only tree of
-             immutable per-day files, so it syncs and only new days transfer.
+             Two sources, two shapes -- because they are genuinely different,
+             not as a preference. enviro.db is a live WAL database with four
+             concurrent writers, so it is snapshotted with VACUUM INTO and
+             copied as one object. raw-capture is an append-only tree whose
+             current day is still being written; it is copied, never synced,
+             and each file is verified by prefix and progress rather than by
+             equality. Its files are NOT immutable -- today's partition grows
+             all day, and treating it as immutable is what broke this lane in
+             production.
 
              Nothing is reported as backed up until the hash of the object that
              actually landed has been compared. The lane this replaces never
@@ -20,6 +24,12 @@ USAGE:       python3 scripts/backup_enviro.py [--config PATH] [--dry-run]
 
 CHANGELOG:
 2026-08-06 16:34      Claude     [Feature] Initial implementation.
+2026-08-07 07:06      Claude     [Fix] Dry-run branches before the snapshot is
+                                      created. Success clears this source's
+                                      staged snapshots up to this run's stamp,
+                                      by name shape rather than by glob prefix.
+                                      Header no longer describes the raw tier as
+                                      immutable or as syncing.
 --------------------------------------------------------------------------------
 """
 
@@ -27,6 +37,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import sqlite3
 import sys
 from datetime import datetime, timezone
@@ -57,6 +68,15 @@ def load_config(path: Path) -> dict:
     for key in ("remote", "sources", "local_staging", "manifest"):
         if key not in cfg:
             raise BackupError(f"config missing required section: {key}")
+    # Checked at load, not at first use. failed_run_retention is read only on
+    # the failure path, so a config predating it passes every successful run and
+    # then raises a bare KeyError the first time a backup fails -- the one moment
+    # the operator needs a message that says what is wrong.
+    if "failed_run_retention" not in cfg["local_staging"]:
+        raise BackupError(
+            "config local_staging is missing failed_run_retention; it bounds how "
+            "many failed-run snapshots are kept and is read only when a run fails"
+        )
     return cfg
 
 
@@ -98,6 +118,57 @@ def snapshot_sqlite(source: Path, target: Path) -> Path:
     return target
 
 
+_SNAPSHOT_NAME = re.compile(r"^(?P<stem>.+)_(?P<stamp>\d{8}T\d{6}Z)\.db$")
+
+
+def staged_snapshots(staging: Path, stem: str) -> list[Path]:
+    """This source's staged snapshots, oldest first, by name shape not by glob.
+
+    A glob on `<stem>_*.db` also matches a different source whose stem merely
+    begins with this one, so a second sqlite source would have its snapshots
+    cleared by this one's success path. That is name-derived selection -- the
+    failure the replication guard exists to remove -- reappearing in the
+    cleanup, so the selection is by exact shape instead.
+    """
+    out = []
+    for path in staging.glob("*.db"):
+        match = _SNAPSHOT_NAME.match(path.name)
+        if match and match.group("stem") == stem:
+            out.append(path)
+    return sorted(out, key=lambda p: p.name)
+
+
+def clear_snapshots_through(staging: Path, stem: str, ceiling: str, *,
+                            include_ceiling: bool, keep_older: int = 0) -> list[str]:
+    """Remove this source's snapshots at or below `ceiling`.
+
+    Never above it: a concurrently-running backup's snapshot carries a later
+    stamp, and removing it underneath that run would delete the artifact whose
+    hash it is about to compare.
+
+    `include_ceiling` is stated rather than inferred. A verified upload discards
+    the current snapshot along with everything older; a failed upload keeps it,
+    because it is the artifact you inspect to find out why. Deriving that from
+    `keep_older == 0` collapsed both callers onto the same branch and deleted the
+    snapshot a failed run had just been told to preserve.
+    """
+    snapshots = staged_snapshots(staging, stem)
+    older = [p for p in snapshots if p.name < ceiling]
+    # max(0, ...) or the index goes negative and the slice WRAPS: with two older
+    # snapshots and keep_older=3, `older[:-1]` deletes the oldest instead of
+    # keeping both. The wrap zone is len(older) < keep_older < 2*len(older);
+    # past 2x Python clamps to empty and the defect hides, which is why a
+    # deliberately extreme mutation could not see it.
+    doomed = older[:max(0, len(older) - keep_older)]
+    if include_ceiling:
+        doomed += [p for p in snapshots if p.name == ceiling]
+    removed = []
+    for path in doomed:
+        path.unlink()
+        removed.append(path.name)
+    return removed
+
+
 def prune(directory: Path, pattern: str, keep: int) -> list[str]:
     files = sorted(directory.glob(pattern), key=lambda p: p.name, reverse=True)
     removed = []
@@ -115,8 +186,10 @@ def run(config_path: Path, *, dry_run: bool = False) -> int:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     base = f"{remote['rclone_remote_name']}:{remote['rclone_remote_path'].strip('/')}"
 
-    staging.mkdir(parents=True, exist_ok=True)
-    os.chmod(staging, int(cfg["local_staging"]["dir_mode"], 8))
+    if not dry_run:
+        # A dry run must leave staging as it found it, including not creating it.
+        staging.mkdir(parents=True, exist_ok=True)
+        os.chmod(staging, int(cfg["local_staging"]["dir_mode"], 8))
 
     results = []
     for name, src in cfg["sources"].items():
@@ -125,28 +198,48 @@ def run(config_path: Path, *, dry_run: bool = False) -> int:
         remote_dir = f"{base}/{src['remote_subpath'].strip('/')}"
 
         if kind == "sqlite_snapshot":
+            if dry_run:
+                # Branch before the snapshot, not after. Creating a ~24 MB file
+                # and leaving it behind is not a dry run, and nothing later in
+                # this function removes it on the dry-run path.
+                log.info("[dry-run] would snapshot %s and replicate -> %s",
+                         source_path, remote_dir)
+                continue
             snap = staging / f"{source_path.stem}_{stamp}.db"
             snapshot_sqlite(source_path, snap)
             os.chmod(snap, int(cfg["local_staging"]["file_mode"], 8))
-            if dry_run:
-                log.info("[dry-run] would replicate %s -> %s/%s", snap, remote_dir, snap.name)
-                continue
             try:
                 results.append(replicate_file(snap, f"{remote_dir}/{snap.name}",
                                               config_path=rclone_config))
-            finally:
-                # Prune regardless of outcome. Running only on success let a
-                # persistently failing remote accumulate ~52 MB/day of snapshots
-                # on the SD card until it filled.
-                dropped = prune(staging, f"{source_path.stem}_*.db",
-                                cfg["local_staging"]["retention_count"])
+            except Exception:
+                # Keep the snapshot of a failed run: it is the artifact you
+                # inspect to find out why the upload failed. Bound how many
+                # accumulate so a persistently failing remote cannot fill the
+                # disk.
+                dropped = clear_snapshots_through(
+                    staging, source_path.stem, snap.name, include_ceiling=False,
+                    keep_older=max(0, cfg["local_staging"]["failed_run_retention"] - 1))
                 if dropped:
-                    log.info("pruned %d stale local snapshot(s): %s",
-                             len(dropped), dropped)
+                    log.info("pruned %d older failed-run snapshot(s)", len(dropped))
+                raise
+            else:
+                # Verified landed. The staged copy exists only so the uploaded
+                # artifact is the one whose hash was computed, and that is now
+                # done -- nothing reads it again, including the restore check,
+                # which deliberately pulls from the remote.
+                #
+                # Clear the whole pattern rather than this run's file alone. A
+                # snapshot kept to explain a failed run has no purpose once a
+                # later run succeeds, and removing only the current file left
+                # those to accumulate for good.
+                dropped = clear_snapshots_through(staging, source_path.stem,
+                                                  snap.name, include_ceiling=True)
+                log.info("cleared %d staged snapshot(s) after verified upload: %s",
+                         len(dropped), ", ".join(dropped))
 
         elif kind == "tree":
             if dry_run:
-                log.info("[dry-run] would sync %s -> %s", source_path, remote_dir)
+                log.info("[dry-run] would copy %s -> %s", source_path, remote_dir)
                 continue
             results.append(replicate_tree(source_path, remote_dir,
                                           config_path=rclone_config))

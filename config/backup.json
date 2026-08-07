@@ -1,7 +1,7 @@
 {
   "_meta": {
     "path": "~/projects/enviroplus/config/backup.json",
-    "description": "Config SSOT for the enviroplus backup lane. Two sources with different shapes: enviro.db is a single live SQLite file needing a consistent snapshot, raw-capture is an append-only tree of immutable per-day files. They replicate by different verbs for that reason, not by preference.",
+    "description": "Config SSOT for the enviroplus backup lane. Two sources with different shapes: enviro.db is a single live SQLite file needing a consistent snapshot, raw-capture is an append-only tree whose current day is still being written. They replicate by different verbs for that reason, not by preference. The tree's files are NOT immutable -- today's partition grows all day, and treating it as immutable is what broke this lane in production.",
     "consumed_by": [
       "scripts/backup_enviro.py"
     ],
@@ -12,7 +12,9 @@
       "A run that cannot prove what landed fails loud and leaves no manifest."
     ],
     "changelog": [
-      "2026-08-06 16:33  Claude  [Feature] Initial implementation."
+      "2026-08-06 16:33  Claude  [Feature] Initial implementation.",
+      "2026-08-06 20:33  Claude  [Fix] Delete staged snapshots on verified upload. retention_count=7 guarded a working set with no readers.",
+      "2026-08-07 06:55  Claude  [Fix] Config described the tree lane as syncing immutable files; it copies, and today's partition is appended to all day. Success path now clears the whole staging pattern, and dry-run branches before the snapshot is created."
     ]
   },
   "remote": {
@@ -31,15 +33,15 @@
       "kind": "tree",
       "source_path": "/home/pistrommy/projects/enviroplus/raw-capture",
       "remote_subpath": "raw-capture",
-      "comment": "Canonical tier. Immutable per-day files, so sync transfers only new days; a tarball would re-upload the whole corpus every run."
+      "comment": "Canonical tier, append-only. Replicated by copy, never sync: sync deletes remote objects absent locally, so a truncated source would destroy the offsite copy and the following check would pass because both sides now agree. Each file is verified by prefix AND progress -- the remote must be a prefix of the local file and no shorter than that file was when the run began. A tarball would re-upload the whole corpus every run."
     }
   },
   "local_staging": {
     "staging_dir": "/home/pistrommy/projects/enviroplus/.backup-staging",
-    "retention_count": 7,
     "dir_mode": "0700",
     "file_mode": "0600",
-    "comment": "Snapshots are staged locally so the uploaded artifact is the one whose hash was computed. Retention is a working-set bound, not the backup horizon -- the remote holds history."
+    "comment": "Snapshots are staged locally so the uploaded artifact is the one whose hash was computed. A verified upload clears every staged snapshot for that source, not just the current run's: a snapshot kept to explain a failure has no purpose once a later run succeeds, and removing only the current file left those to accumulate for good. A failed run keeps its snapshot for diagnosis, bounded by failed_run_retention so a persistently failing remote cannot fill the disk.",
+    "failed_run_retention": 1
   },
   "manifest": {
     "manifest_dir": "/home/pistrommy/projects/enviroplus/.backup-staging/manifests",
