@@ -20,7 +20,6 @@ ltr559==1.0.0
 multitasking==0.0.12
 numpy==2.4.3
 packaging==26.0
-paho-mqtt==2.1.0
 pandas==3.0.2
 peewee==4.0.4
 pillow==12.1.1

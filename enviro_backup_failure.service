@@ -1,0 +1,11 @@
+[Unit]
+Description=Push notification when the Enviro+ backup fails
+# Invoked only by OnFailure= from enviro_backup.service.
+
+[Service]
+Type=oneshot
+User=pistrommy
+Group=pistrommy
+ExecStart=/home/pistrommy/projects/stocks/scripts/stocks_alert_push.sh \
+  "enviro backup FAILED" \
+  "enviro_backup.service exited non-zero. No manifest was written, so nothing was verified as landed. journalctl -u enviro_backup"
