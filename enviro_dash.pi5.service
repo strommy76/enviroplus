@@ -1,14 +1,24 @@
 [Unit]
 Description=Enviro+ Dashboard
-After=network-online.target dev-ttyAMA0.device dev-spidev0.1.device
+After=network-online.target
+# Device units are NOT listed: dev-i2c-1.device and dev-spidev0.1.device do not
+# exist as units on this host (only dev-ttyAMA10.device does), so ordering on
+# them is a silent no-op. ExecStartPre below does the real readiness check.
 Wants=network-online.target
-BindsTo=dev-ttyAMA0.device
+# NO BindsTo on a serial device. The unit previously bound dev-ttyAMA0.device,
+# which DOES NOT EXIST on Pi 5 (the primary UART enumerates as ttyAMA10, with
+# /dev/serial0 symlinked to it) -- a BindsTo on a device unit that can never
+# activate prevents the service from ever starting. The PMS5003 is also not
+# fitted, and per ADR-013's lane model an absent sensor must not gate the
+# service: it yields NULL, it does not block startup.
 
 [Service]
 Type=simple
 User=pistrommy
 WorkingDirectory=/home/pistrommy/projects/enviroplus
-ExecStartPre=/bin/sleep 5
+# Readiness, not a guessed sleep. i2c-dev is what creates /dev/i2c-* and its
+# absence is exactly why no sensor was reachable before 2026-07-29.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do [ -e /dev/i2c-1 ] && [ -e /dev/spidev0.1 ] && exit 0; sleep 1; done; echo "i2c-1 or spidev0.1 never appeared" >&2; exit 1'
 ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python enviro_dash3.py
 Restart=on-failure
 RestartSec=30
