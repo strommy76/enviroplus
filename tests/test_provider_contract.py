@@ -37,15 +37,15 @@ CONTRACT = {
                   "vocabulary": {"PM2.5": "pm25", "PM10": "pm10", "OZONE": "ozone", "O3": "ozone"},
                   "columns": {"{key}_aqi": "nowcastAQI", "{key}_category": "aqiCategoryName"}},
         "row": {"ts": {"time": {"date": "dateObserved", "date_format": "%Y-%m-%d",
-                                "clock": "hourObserved", "clock_format": "%H:%M",
-                                "zone": {"env": "ACME_TZ", "label_field": "localTimeZone"}}},
+                                "clock": "hourObserved", "clock_format": "%H:%M"}},
+                "local_time_zone": {"field": "localTimeZone"},
                 "reporting_area": {"field": "reportingAreaName"}},
     },
     "store": {"table": "aq", "primary_key": "ts",
               "columns": {"ts": "TEXT", "pm25_aqi": "INTEGER", "pm25_category": "TEXT",
                           "pm10_aqi": "INTEGER", "pm10_category": "TEXT",
                           "ozone_aqi": "INTEGER", "ozone_category": "TEXT",
-                          "reporting_area": "TEXT"}},
+                          "reporting_area": "TEXT", "local_time_zone": "TEXT"}},
 }
 
 
@@ -63,7 +63,6 @@ def env(monkeypatch):
     monkeypatch.setenv("ACME_LAT", "1.5")
     monkeypatch.setenv("ACME_KEY", "not-a-real-key")
     monkeypatch.setenv("ACME_POLL_S", "1800")
-    monkeypatch.setenv("ACME_TZ", "America/New_York")
 
 
 def _write(tmp_path, doc):
@@ -120,10 +119,11 @@ def test_loader_refuses_declared_columns_never_produced(tmp_path, env):
         load_contract(_write(tmp_path, doc))
 
 
-def test_loader_refuses_unknown_zone(tmp_path, env, monkeypatch):
-    monkeypatch.setenv("ACME_TZ", "Mars/Olympus")
-    with pytest.raises(ContractError, match="IANA"):
-        load_contract(_write(tmp_path, CONTRACT))
+def test_loader_refuses_time_op_with_undeclared_keys(tmp_path, env):
+    doc = copy.deepcopy(CONTRACT)
+    doc["response"]["row"]["ts"]["time"]["zone"] = "UTC"
+    with pytest.raises(ContractError, match="exactly date, date_format, clock, clock_format"):
+        load_contract(_write(tmp_path, doc))
 
 
 def test_create_table_sql_declares_the_primary_key(contract):
@@ -136,12 +136,13 @@ def test_create_table_sql_declares_the_primary_key(contract):
 
 # ── Projection: the nominal row ────────────────────────────────────────────────
 
-def test_nominal_payload_projects_to_one_utc_row(contract):
+def test_nominal_payload_projects_the_provider_statement_verbatim(contract):
     row, absent = project(contract, PAYLOAD)
-    assert row == {"ts": "2026-09-05 18:00:00",  # 14:00 EDT
+    assert row == {"ts": "2026-09-05 14:00:00",  # stated wall-clock, not converted
                    "pm25_aqi": 11, "pm25_category": "Good",
                    "pm10_aqi": 3, "pm10_category": "Good",
                    "ozone_aqi": 22, "ozone_category": "Good",
+                   "local_time_zone": "EDT",
                    "reporting_area": "Somewhere"}
     assert absent == ()
 
@@ -151,9 +152,9 @@ def test_both_ozone_spellings_map_to_the_ozone_columns(contract):
     assert row["ozone_aqi"] == 9
 
 
-def test_standard_time_label_in_winter_is_accepted(contract):
+def test_single_digit_hour_is_accepted_and_normalized_to_the_pk_shape(contract):
     row, _ = project(contract, [_item("PM2.5", 1, date="2026-01-05", hour="9:00", tz="EST")])
-    assert row["ts"] == "2026-01-05 14:00:00"   # 09:00 EST; single-digit hour normalized
+    assert row["ts"] == "2026-01-05 09:00:00" and row["local_time_zone"] == "EST"
 
 
 # ── Projection: true provider states -> NULL + partial ─────────────────────────
@@ -201,7 +202,6 @@ def test_absent_non_key_field_is_null_and_named(contract):
     (lambda p: [dict(i, hourObserved=None) for i in p], "must both be strings"),
     (lambda p: [dict(i, dateObserved="2026-09-05 ") for i in p], "do not match declared formats"),
     (lambda p: [dict(i, hourObserved=14) for i in p], "must both be strings"),
-    (lambda p: [dict(i, localTimeZone="EST") for i in p], "zone label 'EST' disagrees"),
     (lambda p: [{"WebServiceError": [{"Message": "Invalid API key"}]}], "lacks pivot key"),
     (lambda p: [], "not a non-empty list"),
     (lambda p: {"observations": p}, "not a non-empty list"),

@@ -20,8 +20,8 @@
     },
     "row": {
       "ts": {"time": {"date": "dateObserved", "date_format": "%Y-%m-%d",
-                      "clock": "hourObserved", "clock_format": "%H:%M",
-                      "zone": {"env": "AIRNOW_TIMEZONE", "label_field": "localTimeZone"}}},
+                      "clock": "hourObserved", "clock_format": "%H:%M"}},
+      "local_time_zone": {"field": "localTimeZone"},
       "reporting_area": {"field": "reportingAreaName"}
     }
   },
@@ -32,7 +32,7 @@
       "ts": "TEXT", "pm25_aqi": "INTEGER", "pm25_category": "TEXT",
       "pm10_aqi": "INTEGER", "pm10_category": "TEXT",
       "ozone_aqi": "INTEGER", "ozone_category": "TEXT",
-      "reporting_area": "TEXT"
+      "reporting_area": "TEXT", "local_time_zone": "TEXT"
     }
   }
 }

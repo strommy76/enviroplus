@@ -11,6 +11,10 @@ DESCRIPTION: Per-provider capture contract: a committed JSON document declares a
              derived table's declared columns). The collector executes any
              contract; a provider API change is a contract edit.
 
+             Provider data is captured as stated: values, wall-clock and zone
+             label are projected verbatim. Zone translation belongs to the
+             client reading the store, never to capture.
+
              Boundary rule: a payload that arrives and parses but does not
              satisfy the declared shape is a ProjectionError -- the collector
              records it as `malformed`, writes no row, and the raw bytes stay in
@@ -26,11 +30,10 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Mapping
 from urllib.parse import urlencode
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from shared.config_service import ConfigError, require
 
@@ -51,20 +54,15 @@ class ProjectionError(ValueError):
 
 @dataclass(frozen=True)
 class TimeOp:
-    """Date string + clock string -> canonical timestamp text.
-
-    With a zone, the wall-clock is localized in that IANA zone, the provider's
-    own zone label must agree with it (this is the check that catches a
-    provider labelling hours in standard time all year), and the result is UTC.
-    Without a zone the wall-clock is emitted as stated.
-    """
+    """Date string + clock string -> the provider's stated wall-clock as
+    canonical text. Both fields must parse against their declared formats;
+    nothing is converted -- the provider's statement is captured as-is and
+    any zone translation is the client's."""
 
     date: str
     date_format: str
     clock: str
     clock_format: str
-    zone: ZoneInfo | None
-    label_field: str | None
 
 
 @dataclass(frozen=True)
@@ -154,26 +152,9 @@ def _resolve_int(spec: Any, ctx: str) -> int:
 
 
 def _time_op(spec: Mapping[str, Any], ctx: str) -> TimeOp:
-    zone_spec = _key(spec, "zone", ctx)
-    zone: ZoneInfo | None = None
-    label_field: str | None = None
-    if zone_spec is not None:
-        if not isinstance(zone_spec, Mapping) or set(zone_spec) != {"env", "label_field"}:
-            raise ContractError(f"{ctx}.zone: must be null or {{\"env\": KEY, \"label_field\": FIELD}}")
-        zone_name = require(_text(zone_spec["env"], f"{ctx}.zone.env"))
-        try:
-            zone = ZoneInfo(zone_name)
-        except (ZoneInfoNotFoundError, ValueError):
-            raise ContractError(f"{ctx}.zone: {zone_name!r} is not an IANA zone") from None
-        label_field = _text(zone_spec["label_field"], f"{ctx}.zone.label_field")
-    return TimeOp(
-        date=_text(_key(spec, "date", ctx), f"{ctx}.date"),
-        date_format=_text(_key(spec, "date_format", ctx), f"{ctx}.date_format"),
-        clock=_text(_key(spec, "clock", ctx), f"{ctx}.clock"),
-        clock_format=_text(_key(spec, "clock_format", ctx), f"{ctx}.clock_format"),
-        zone=zone,
-        label_field=label_field,
-    )
+    if not isinstance(spec, Mapping) or set(spec) != {"date", "date_format", "clock", "clock_format"}:
+        raise ContractError(f"{ctx}: must declare exactly date, date_format, clock, clock_format")
+    return TimeOp(**{k: _text(v, f"{ctx}.{k}") for k, v in spec.items()})
 
 
 def _row_op(spec: Any, ctx: str) -> TimeOp | FieldOp:
@@ -267,17 +248,10 @@ def _time(op: TimeOp, item: Mapping[str, Any]) -> str:
     if not isinstance(date, str) or not isinstance(clock, str):
         raise ProjectionError(f"{op.date!r}/{op.clock!r} must both be strings, got {date!r}/{clock!r}")
     try:
-        naive = datetime.strptime(f"{date}{_JOIN}{clock}", f"{op.date_format}{_JOIN}{op.clock_format}")
+        stated = datetime.strptime(f"{date}{_JOIN}{clock}", f"{op.date_format}{_JOIN}{op.clock_format}")
     except ValueError as exc:
         raise ProjectionError(f"time fields {date!r} {clock!r} do not match declared formats: {exc}") from None
-    if op.zone is None:
-        return naive.strftime(_TS_FORMAT)
-    local = naive.replace(tzinfo=op.zone)
-    label = item.get(op.label_field)
-    if label != local.tzname():
-        raise ProjectionError(
-            f"provider zone label {label!r} disagrees with {op.zone.key} ({local.tzname()!r}) at {date} {clock}")
-    return local.astimezone(timezone.utc).strftime(_TS_FORMAT)
+    return stated.strftime(_TS_FORMAT)
 
 
 def project(contract: Contract, data: Any) -> tuple[dict[str, Any], tuple[str, ...]]:

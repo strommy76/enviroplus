@@ -32,13 +32,12 @@ def collector(tmp_path, monkeypatch):
     monkeypatch.setenv("ACME_LAT", "1.5")
     monkeypatch.setenv("ACME_KEY", "not-a-real-key")
     monkeypatch.setenv("ACME_POLL_S", "1800")
-    monkeypatch.setenv("ACME_TZ", "America/New_York")
     path = tmp_path / "acme.json"
     path.write_text(json.dumps(CONTRACT))
     contract = load_contract(path)
     rr.configure(tmp_path / "raw")
     db = sqlite3.connect(tmp_path / "scratch.db")
-    db.execute(contract.create_table_sql())
+    pc.ensure_table(db, contract)
     return pc.Collector(contract=contract, db=db, log=logging.getLogger("test_acme"))
 
 
@@ -69,7 +68,7 @@ def test_ok_response_is_retained_and_written_once(collector, monkeypatch):
     monkeypatch.setattr(collector, "fetch", lambda: json.dumps(PAYLOAD).encode())
     assert collector.attempt() is True
     assert collector.attempt() is False            # same PK: or_ignore, not a second row
-    assert _rows(collector) == [("2026-09-05 18:00:00", 11)]
+    assert _rows(collector) == [("2026-09-05 14:00:00", 11)]
     assert _outcomes() == [rr.OUTCOME_OK, rr.OUTCOME_DUPLICATE]
 
 
@@ -126,3 +125,19 @@ def test_run_stops_promptly_when_shutdown_is_requested(collector, monkeypatch):
         return state["n"] > 3
     collector.run(is_shutting_down, sleep=calls.append)
     assert len(calls) < collector.contract.poll_s      # did not sleep the whole poll interval
+
+
+def test_ensure_table_adds_declared_columns_to_an_existing_table(collector):
+    db = sqlite3.connect(":memory:")
+    db.execute("CREATE TABLE aq (ts TEXT PRIMARY KEY, pm25_aqi INTEGER, pm25_category TEXT, pm10_aqi INTEGER,"
+               " pm10_category TEXT, ozone_aqi INTEGER, ozone_category TEXT, reporting_area TEXT)")
+    db.execute("INSERT INTO aq (ts, pm25_aqi) VALUES ('2026-01-01 00:00:00', 5)")
+    pc.ensure_table(db, collector.contract)
+    assert db.execute("SELECT local_time_zone FROM aq").fetchone() == (None,)   # not captured, stated as such
+
+
+def test_ensure_table_refuses_a_table_with_undeclared_columns(collector):
+    db = sqlite3.connect(":memory:")
+    db.execute("CREATE TABLE aq (ts TEXT PRIMARY KEY, legacy_flag INTEGER)")
+    with pytest.raises(Exception, match="legacy_flag"):
+        pc.ensure_table(db, collector.contract)

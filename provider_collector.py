@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from provider_contract import Contract, ProjectionError, load_contract, project
-from shared.config_service import load_env, require
+from shared.config_service import ConfigError, load_env, require
 from shared.db_service import connect, write_row
 from shared.logging_service import setup_logger
 from shared.raw_retention import (
@@ -139,14 +139,32 @@ class Collector:
         self.log.info("%s collector stopped", provider)
 
 
+def ensure_table(db: sqlite3.Connection, contract: Contract) -> None:
+    """Make the derived table match the contract's declared columns.
+
+    A declared column the table lacks is added by ALTER with no DEFAULT: NULL
+    on existing rows states that the value was not captured for them. A table
+    column the contract does not declare is a contract/table disagreement and
+    fails loud rather than being written as NULL forever.
+    """
+    db.execute(contract.create_table_sql())
+    existing = [r[1] for r in db.execute(f"PRAGMA table_info({contract.table})")]
+    undeclared = sorted(set(existing) - set(contract.columns))
+    if undeclared:
+        raise ConfigError(f"table {contract.table!r} has columns the contract does not declare: {undeclared}")
+    for column, typ in contract.columns.items():
+        if column not in existing:
+            db.execute(f"ALTER TABLE {contract.table} ADD COLUMN {column} {typ}")
+    db.commit()
+
+
 def build(contract_path: str, *, env_path: str = _ENV_PATH) -> Collector:
     """Resolve configuration and open the seams; no polling happens here."""
     load_env(env_path)
     contract = load_contract(contract_path)
     configure_retention(os.environ.get("ENVIRO_RAW_ROOT", os.path.join(_BASE, "raw-capture")))
     db = connect(require("SQLITE_PATH"))
-    db.execute(contract.create_table_sql())
-    db.commit()
+    ensure_table(db, contract)
     log = setup_logger(f"{contract.provider}_collector", require("LOG_PATH"))
     return Collector(contract=contract, db=db, log=log)
 
