@@ -202,6 +202,20 @@ def test_absent_non_key_field_is_null_and_named(contract):
     (lambda p: [dict(i, hourObserved=None) for i in p], "must both be strings"),
     (lambda p: [dict(i, dateObserved="2026-09-05 ") for i in p], "do not match declared formats"),
     (lambda p: [dict(i, hourObserved=14) for i in p], "must both be strings"),
+    (lambda p: [dict(i, parameterName=["PM2.5"]) if i["parameterName"] == "PM2.5" else i for i in p],
+     "undeclared parameterName value \\['PM2.5'\\]"),
+    (lambda p: [dict(i, nowcastAQI="11") if i["parameterName"] == "PM2.5" else i for i in p],
+     "pm25_aqi: value '11' is not INTEGER"),
+    (lambda p: [dict(i, nowcastAQI=True) if i["parameterName"] == "PM2.5" else i for i in p],
+     "pm25_aqi: value True is not INTEGER"),
+    (lambda p: [dict(i, nowcastAQI=11.5) if i["parameterName"] == "PM2.5" else i for i in p],
+     "pm25_aqi: value 11.5 is not INTEGER"),
+    (lambda p: [dict(i, reportingAreaName=["Somewhere"]) for i in p],
+     "reporting_area: value \\['Somewhere'\\] is not TEXT"),
+    (lambda p: [dict(i, hourObserved="13:00", localTimeZone="EST") if i["parameterName"] == "OZONE" else i for i in p],
+     "items disagree on 'hourObserved'"),
+    (lambda p: [dict(i, reportingAreaName="Elsewhere") if i["parameterName"] == "PM10" else i for i in p],
+     "items disagree on 'reportingAreaName'"),
     (lambda p: [{"WebServiceError": [{"Message": "Invalid API key"}]}], "lacks pivot key"),
     (lambda p: [], "not a non-empty list"),
     (lambda p: {"observations": p}, "not a non-empty list"),
@@ -214,3 +228,52 @@ def test_payload_outside_the_declared_shape_is_refused(contract, mutate, match):
 def test_unrelated_fields_are_ignored_not_projected(contract):
     row, _ = project(contract, PAYLOAD)
     assert "siteName" not in row and "lookupBoundary" not in row
+
+
+def test_row_fields_do_not_depend_on_item_order(contract):
+    forward, _ = project(contract, PAYLOAD)
+    backward, _ = project(contract, list(reversed(PAYLOAD)))
+    assert forward == backward
+
+
+# ── Loader checks that mutation testing found untested ─────────────────────────
+
+def test_loader_refuses_primary_key_that_is_not_a_row_projection(tmp_path, env):
+    doc = copy.deepcopy(CONTRACT)
+    doc["store"]["primary_key"] = "pm25_aqi"
+    with pytest.raises(ContractError, match="primary_key.*must be a row projection"):
+        load_contract(_write(tmp_path, doc))
+
+
+def test_loader_refuses_row_column_that_a_pivot_template_also_produces(tmp_path, env):
+    doc = copy.deepcopy(CONTRACT)
+    doc["response"]["row"]["pm25_aqi"] = {"field": "nowcastAQI"}
+    with pytest.raises(ContractError, match="overlap"):
+        load_contract(_write(tmp_path, doc))
+
+
+def test_loader_refuses_pivot_template_without_key_placeholder(tmp_path, env):
+    doc = copy.deepcopy(CONTRACT)
+    doc["response"]["pivot"]["columns"] = {"aqi": "nowcastAQI", "{key}_category": "aqiCategoryName"}
+    with pytest.raises(ContractError, match="does not reference {key}"):
+        load_contract(_write(tmp_path, doc))
+
+
+def test_loader_refuses_param_spec_with_extra_keys(tmp_path, env):
+    doc = copy.deepcopy(CONTRACT)
+    doc["request"]["params"]["latitude"] = {"env": "ACME_LAT", "default": "0"}
+    with pytest.raises(ContractError, match="must be"):
+        load_contract(_write(tmp_path, doc))
+
+
+def test_loader_refuses_empty_env_value(tmp_path, env, monkeypatch):
+    monkeypatch.setenv("ACME_LAT", "   ")
+    with pytest.raises(ContractError, match="environment key ACME_LAT"):
+        load_contract(_write(tmp_path, CONTRACT))
+
+
+def test_loader_refuses_unknown_storage_class(tmp_path, env):
+    doc = copy.deepcopy(CONTRACT)
+    doc["store"]["columns"]["pm25_aqi"] = "NUMERIC"
+    with pytest.raises(ContractError, match="storage class"):
+        load_contract(_write(tmp_path, doc))

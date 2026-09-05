@@ -38,6 +38,9 @@ from urllib.parse import urlencode
 from shared.config_service import ConfigError, require
 
 _TS_FORMAT = "%Y-%m-%d %H:%M:%S"
+# SQLite storage classes a declared column may carry, with the Python types a
+# projected value must have to be stored without affinity conversion.
+_STORAGE_CLASSES: dict[str, tuple[type, ...]] = {"INTEGER": (int,), "REAL": (int, float), "TEXT": (str,)}
 # Joins the date and clock fields so one strptime call validates both against
 # their formats. Must not be whitespace: strptime relaxes whitespace in the
 # format to \s+, which would let a padded provider value through.
@@ -136,7 +139,8 @@ def _str_mapping(value: Any, ctx: str) -> dict[str, str]:
 def _resolve(spec: Any, ctx: str) -> str:
     """{"env": KEY} -> value of KEY from the environment; {"literal": v} -> v."""
     if isinstance(spec, Mapping) and set(spec) == {"env"}:
-        return require(_text(spec["env"], f"{ctx}.env"))
+        key = _text(spec["env"], f"{ctx}.env")
+        return _text(require(key), f"{ctx} (environment key {key})")
     if isinstance(spec, Mapping) and set(spec) == {"literal"}:
         return _text(spec["literal"], f"{ctx}.literal")
     raise ContractError(f"{ctx}: must be {{\"env\": KEY}} or {{\"literal\": value}}, got {spec!r}")
@@ -213,6 +217,10 @@ def load_contract(path: str | Path) -> Contract:
 
     store = _key(doc, "store", ctx)
     columns = _str_mapping(_key(store, "columns", f"{ctx}.store"), f"{ctx}.store.columns")
+    for column, typ in columns.items():
+        if typ not in _STORAGE_CLASSES:
+            raise ContractError(f"{ctx}.store.columns[{column!r}]: storage class must be one of "
+                                f"{sorted(_STORAGE_CLASSES)}, got {typ!r}")
     primary_key = _text(_key(store, "primary_key", f"{ctx}.store"), f"{ctx}.store.primary_key")
 
     contract = Contract(
@@ -254,6 +262,25 @@ def _time(op: TimeOp, item: Mapping[str, Any]) -> str:
     return stated.strftime(_TS_FORMAT)
 
 
+def _typed(contract: Contract, column: str, value: Any) -> Any:
+    """A projected value is stored only if it already has the declared storage class.
+
+    SQLite affinity would otherwise convert it silently ("11" -> 11, True -> 1),
+    which is a change to captured provider data.
+    """
+    if value is None:
+        return None
+    allowed = _STORAGE_CLASSES[contract.columns[column]]
+    if isinstance(value, bool) or not isinstance(value, allowed):
+        raise ProjectionError(
+            f"{column}: value {value!r} is not {contract.columns[column]} as declared")
+    return value
+
+
+def _source_fields(op: TimeOp | FieldOp) -> tuple[str, ...]:
+    return (op.date, op.clock) if isinstance(op, TimeOp) else (op.field,)
+
+
 def project(contract: Contract, data: Any) -> tuple[dict[str, Any], tuple[str, ...]]:
     """Project a parsed payload to one derived row.
 
@@ -263,7 +290,8 @@ def project(contract: Contract, data: Any) -> tuple[dict[str, Any], tuple[str, .
     Anything outside the declared shape raises ProjectionError: an item
     without the pivot key, a parameter name outside the vocabulary, two items
     resolving to one store key, an item lacking a declared field, no declared
-    parameter at all, or time fields that do not parse.
+    parameter at all, items disagreeing on a row-level field, a value whose
+    type is not the declared storage class, or time fields that do not parse.
     """
     pivot = contract.pivot
     if not isinstance(data, list) or not data:
@@ -275,7 +303,7 @@ def project(contract: Contract, data: Any) -> tuple[dict[str, Any], tuple[str, .
         if pivot.by not in item:
             raise ProjectionError(f"item {index} lacks pivot key {pivot.by!r}")
         value = item[pivot.by]
-        if value not in pivot.vocabulary:
+        if not isinstance(value, str) or value not in pivot.vocabulary:
             raise ProjectionError(f"undeclared {pivot.by} value {value!r}")
         key = pivot.vocabulary[value]
         if key in items:
@@ -290,19 +318,27 @@ def project(contract: Contract, data: Any) -> tuple[dict[str, Any], tuple[str, .
             column = template.format(key=key)
             if item is not None and field not in item:
                 raise ProjectionError(f"item {item[pivot.by]!r} lacks declared field {field!r}")
-            value = item.get(field) if item is not None else None
+            value = _typed(contract, column, item.get(field) if item is not None else None)
             row[column] = value
             if value is None:
                 absent.append(column)
     if all(row[c] is None for c in contract.pivot_columns()):
         raise ProjectionError("no declared parameter present in payload")
 
+    # Row-level fields describe the observation set as a whole, so every item
+    # must state them identically; otherwise the row would depend on the order
+    # the provider happened to list its items in.
     first = data[0]
+    for op in contract.row.values():
+        for field in _source_fields(op):
+            stated = {json.dumps(item.get(field), sort_keys=True, default=repr) for item in data}
+            if len(stated) > 1:
+                raise ProjectionError(f"items disagree on {field!r}: {sorted(stated)}")
     for column, op in contract.row.items():
         if isinstance(op, TimeOp):
             row[column] = _time(op, first)
         else:
-            value = first.get(op.field)
+            value = _typed(contract, column, first.get(op.field))
             row[column] = value
             if value is None:
                 absent.append(column)

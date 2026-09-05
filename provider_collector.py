@@ -39,7 +39,6 @@ from shared.raw_retention import (
     OUTCOME_OK,
     OUTCOME_PARTIAL,
     OUTCOME_WRITE_ERROR,
-    OutcomeAlreadyRecorded,
     configure as configure_retention,
     record_outcome,
     retain,
@@ -55,12 +54,16 @@ _SHUTDOWN_CHECK_S = 1
 
 
 def classify_response(raw: bytes):
-    """Label an arrived payload: (parsed_or_None, outcome, detail). Pure."""
+    """Label an arrived payload: (parsed_or_None, outcome, detail). Pure.
+
+    Only an empty list is `empty`; any other parseable body is handed to the
+    contract, which decides whether it satisfies the declared shape.
+    """
     try:
         data = json.loads(raw)
     except ValueError as exc:
         return None, OUTCOME_MALFORMED, str(exc)
-    if not data:
+    if data == []:
         return data, OUTCOME_EMPTY, "provider returned no observations"
     return data, OUTCOME_OK, None
 
@@ -84,39 +87,44 @@ class Collector:
             return response.read()
 
     def attempt(self) -> bool:
-        """One poll. Returns True when a derived row was inserted."""
+        """One poll. Returns True when a derived row was inserted.
+
+        The arrival is retained exactly once, carrying the outcome the payload
+        actually earned: `ok`, `partial` (a declared parameter absent), or
+        `malformed` (unparseable, or outside the declared shape). Projection is
+        pure, so it runs before retention and cannot lose the bytes.
+        """
         provider = self.contract.provider
         url = self.contract.request_url()
         raw = self.fetch()
 
         data, outcome, detail = classify_response(raw)
+        row, absent = None, ()
+        if outcome == OUTCOME_OK:
+            try:
+                row, absent = project(self.contract, data)
+            except ProjectionError as exc:
+                outcome, detail = OUTCOME_MALFORMED, f"declared projection not satisfied: {exc}"
+            else:
+                if absent:
+                    outcome, detail = OUTCOME_PARTIAL, "absent from response: " + ", ".join(absent)
         try:
             retain(provider, raw, url=url, outcome=outcome, detail=detail)
         except Exception as exc:  # retention failure must not lose the derived row too
             self.log.error("raw retention failed for %s: %s", provider, exc, exc_info=True)
 
-        if outcome == OUTCOME_MALFORMED:
-            raise OutcomeAlreadyRecorded(f"unparseable {provider} response: {detail}")
-        if outcome == OUTCOME_EMPTY:
-            self.log.info("%s: %s", provider, detail)
+        if row is None:
+            (self.log.error if outcome == OUTCOME_MALFORMED else self.log.info)("%s: %s", provider, detail)
             return False
-
-        try:
-            row, absent = project(self.contract, data)
-        except ProjectionError as exc:
-            record_outcome(provider, OUTCOME_MALFORMED, url=url,
-                           detail=f"declared projection not satisfied: {exc}")
-            self.log.error("%s: declared projection not satisfied: %s", provider, exc)
-            return False
-
-        inserted = write_row(self.db, self.contract.table, row, or_ignore=True)
         if absent:
-            record_outcome(provider, OUTCOME_PARTIAL, url=url,
-                           detail="absent from response: " + ", ".join(absent))
-            self.log.warning("%s: absent from response: %s", provider, ", ".join(absent))
+            self.log.warning("%s: %s", provider, detail)
+        inserted = write_row(self.db, self.contract.table, row, or_ignore=True)
+        key = f"{self.contract.primary_key}={row[self.contract.primary_key]}"
         if inserted:
-            self.log.info("%s row written  %s=%s", provider, self.contract.primary_key,
-                          row[self.contract.primary_key])
+            self.log.info("%s row written  %s", provider, key)
+        else:
+            self.log.warning("%s: row %s already present; this arrival is kept in retention only",
+                             provider, key)
         return inserted
 
     def run(self, is_shutting_down: Callable[[], bool], sleep: Callable[[float], None] = time.sleep) -> None:
@@ -126,8 +134,6 @@ class Collector:
         while not is_shutting_down():
             try:
                 self.attempt()
-            except OutcomeAlreadyRecorded as exc:
-                self.log.warning("%s", exc)
             except Exception as exc:
                 record_outcome(provider, outcome_for_exception(exc), detail=repr(exc),
                                url=self.contract.request_url())
@@ -140,27 +146,36 @@ class Collector:
 
 
 def ensure_table(db: sqlite3.Connection, contract: Contract) -> None:
-    """Make the derived table match the contract's declared columns.
+    """Make the derived table match the contract's declaration, or refuse.
 
     A declared column the table lacks is added by ALTER with no DEFAULT: NULL
     on existing rows states that the value was not captured for them. A table
-    column the contract does not declare is a contract/table disagreement and
-    fails loud rather than being written as NULL forever.
+    column the contract does not declare, a storage class that differs, or a
+    primary key that differs is a contract/table disagreement and fails loud
+    rather than being written around forever.
     """
     db.execute(contract.create_table_sql())
-    existing = [r[1] for r in db.execute(f"PRAGMA table_info({contract.table})")]
+    existing = {r[1]: (r[2].upper(), r[5] > 0)
+                for r in db.execute(f"PRAGMA table_info({contract.table})")}
     undeclared = sorted(set(existing) - set(contract.columns))
     if undeclared:
         raise ConfigError(f"table {contract.table!r} has columns the contract does not declare: {undeclared}")
     for column, typ in contract.columns.items():
         if column not in existing:
             db.execute(f"ALTER TABLE {contract.table} ADD COLUMN {column} {typ}")
+            continue
+        actual_type, is_pk = existing[column]
+        if actual_type != typ.upper() or is_pk != (column == contract.primary_key):
+            raise ConfigError(
+                f"table {contract.table!r} column {column!r} is {actual_type}"
+                f"{' PRIMARY KEY' if is_pk else ''}; contract declares {typ}"
+                f"{' PRIMARY KEY' if column == contract.primary_key else ''}")
     db.commit()
 
 
 def build(contract_path: str, *, env_path: str = _ENV_PATH) -> Collector:
     """Resolve configuration and open the seams; no polling happens here."""
-    load_env(env_path)
+    load_env(env_path, expect_key="SQLITE_PATH")
     contract = load_contract(contract_path)
     configure_retention(os.environ.get("ENVIRO_RAW_ROOT", os.path.join(_BASE, "raw-capture")))
     db = connect(require("SQLITE_PATH"))
