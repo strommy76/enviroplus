@@ -13,3 +13,6 @@ raw-capture-quarantine/
 raw-capture-tools/
 .backup-staging/
 .backup-pinned/
+
+# Linked worktrees (enumerated by `git worktree list`, never committed)
+.worktrees/

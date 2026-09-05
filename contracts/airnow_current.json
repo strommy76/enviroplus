@@ -1,0 +1,38 @@
+{
+  "provider": "airnow",
+  "request": {
+    "url": "https://www.airnowapi.org/aq/observation/current/ziplatlong/",
+    "params": {
+      "format":    {"literal": "application/json"},
+      "latitude":  {"env": "AIRNOW_LAT"},
+      "longitude": {"env": "AIRNOW_LON"},
+      "distance":  {"env": "AIRNOW_DISTANCE"},
+      "API_KEY":   {"env": "AIRNOW_API_KEY"}
+    },
+    "timeout_s": 15
+  },
+  "poll_s": {"env": "AIRNOW_POLL_S"},
+  "response": {
+    "pivot": {
+      "by": "parameterName",
+      "vocabulary": {"PM2.5": "pm25", "PM10": "pm10", "OZONE": "ozone", "O3": "ozone"},
+      "columns": {"{key}_aqi": "nowcastAQI", "{key}_category": "aqiCategoryName"}
+    },
+    "row": {
+      "ts": {"time": {"date": "dateObserved", "date_format": "%Y-%m-%d",
+                      "clock": "hourObserved", "clock_format": "%H:%M",
+                      "zone": {"env": "AIRNOW_TIMEZONE", "label_field": "localTimeZone"}}},
+      "reporting_area": {"field": "reportingAreaName"}
+    }
+  },
+  "store": {
+    "table": "epa_air_quality",
+    "primary_key": "ts",
+    "columns": {
+      "ts": "TEXT", "pm25_aqi": "INTEGER", "pm25_category": "TEXT",
+      "pm10_aqi": "INTEGER", "pm10_category": "TEXT",
+      "ozone_aqi": "INTEGER", "ozone_category": "TEXT",
+      "reporting_area": "TEXT"
+    }
+  }
+}

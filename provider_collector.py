@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+"""
+--------------------------------------------------------------------------------
+FILE:        provider_collector.py
+PATH:        ~/projects/enviroplus/provider_collector.py
+DESCRIPTION: Generic provider collector. Executes one capture contract
+             (provider_contract.py): fetch -> classify -> retain the bytes as
+             received (canonical) -> project through the contract -> write the
+             derived row. One arrival outcome per attempt; a write failure is
+             recorded as a write failure, not a fetch failure.
+
+             Usage: provider_collector.py --contract contracts/<provider>.json
+
+CHANGELOG:
+2026-09-05 17:40      Claude     [Feature] Initial implementation; replaces the
+                                      hardcoded airnow_wx.py collector.
+--------------------------------------------------------------------------------
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sqlite3
+import time
+import urllib.request
+from dataclasses import dataclass
+from typing import Callable
+
+from provider_contract import Contract, ProjectionError, load_contract, project
+from shared.config_service import load_env, require
+from shared.db_service import connect, write_row
+from shared.logging_service import setup_logger
+from shared.raw_retention import (
+    OUTCOME_EMPTY,
+    OUTCOME_FETCH_ERROR,
+    OUTCOME_MALFORMED,
+    OUTCOME_OK,
+    OUTCOME_PARTIAL,
+    OUTCOME_WRITE_ERROR,
+    OutcomeAlreadyRecorded,
+    configure as configure_retention,
+    record_outcome,
+    retain,
+)
+from shared.signal_handler import install_shutdown_handler
+
+_BASE = os.path.dirname(os.path.abspath(__file__))
+_ENV_PATH = os.path.join(_BASE, ".env")
+
+# Structural constant: bounds shutdown latency to one second. It cannot bind
+# nominal behaviour because every provider's poll interval is minutes to hours.
+_SHUTDOWN_CHECK_S = 1
+
+
+def classify_response(raw: bytes):
+    """Label an arrived payload: (parsed_or_None, outcome, detail). Pure."""
+    try:
+        data = json.loads(raw)
+    except ValueError as exc:
+        return None, OUTCOME_MALFORMED, str(exc)
+    if not data:
+        return data, OUTCOME_EMPTY, "provider returned no observations"
+    return data, OUTCOME_OK, None
+
+
+def outcome_for_exception(exc: BaseException) -> str:
+    """A failed derived write is not a failed fetch."""
+    if isinstance(exc, sqlite3.Error):
+        return OUTCOME_WRITE_ERROR
+    return OUTCOME_FETCH_ERROR
+
+
+@dataclass
+class Collector:
+    contract: Contract
+    db: sqlite3.Connection
+    log: object
+
+    def fetch(self) -> bytes:
+        request = urllib.request.Request(self.contract.request_url())
+        with urllib.request.urlopen(request, timeout=self.contract.timeout_s) as response:
+            return response.read()
+
+    def attempt(self) -> bool:
+        """One poll. Returns True when a derived row was inserted."""
+        provider = self.contract.provider
+        url = self.contract.request_url()
+        raw = self.fetch()
+
+        data, outcome, detail = classify_response(raw)
+        try:
+            retain(provider, raw, url=url, outcome=outcome, detail=detail)
+        except Exception as exc:  # retention failure must not lose the derived row too
+            self.log.error("raw retention failed for %s: %s", provider, exc, exc_info=True)
+
+        if outcome == OUTCOME_MALFORMED:
+            raise OutcomeAlreadyRecorded(f"unparseable {provider} response: {detail}")
+        if outcome == OUTCOME_EMPTY:
+            self.log.info("%s: %s", provider, detail)
+            return False
+
+        try:
+            row, absent = project(self.contract, data)
+        except ProjectionError as exc:
+            record_outcome(provider, OUTCOME_MALFORMED, url=url,
+                           detail=f"declared projection not satisfied: {exc}")
+            self.log.error("%s: declared projection not satisfied: %s", provider, exc)
+            return False
+
+        inserted = write_row(self.db, self.contract.table, row, or_ignore=True)
+        if absent:
+            record_outcome(provider, OUTCOME_PARTIAL, url=url,
+                           detail="absent from response: " + ", ".join(absent))
+            self.log.warning("%s: absent from response: %s", provider, ", ".join(absent))
+        if inserted:
+            self.log.info("%s row written  %s=%s", provider, self.contract.primary_key,
+                          row[self.contract.primary_key])
+        return inserted
+
+    def run(self, is_shutting_down: Callable[[], bool], sleep: Callable[[float], None] = time.sleep) -> None:
+        provider = self.contract.provider
+        self.log.info("%s collector starting  url=%s  poll_s=%d", provider,
+                      self.contract.url, self.contract.poll_s)
+        while not is_shutting_down():
+            try:
+                self.attempt()
+            except OutcomeAlreadyRecorded as exc:
+                self.log.warning("%s", exc)
+            except Exception as exc:
+                record_outcome(provider, outcome_for_exception(exc), detail=repr(exc),
+                               url=self.contract.request_url())
+                self.log.error("%s attempt failed: %s", provider, exc, exc_info=True)
+            waited = 0
+            while waited < self.contract.poll_s and not is_shutting_down():
+                sleep(_SHUTDOWN_CHECK_S)
+                waited += _SHUTDOWN_CHECK_S
+        self.log.info("%s collector stopped", provider)
+
+
+def build(contract_path: str, *, env_path: str = _ENV_PATH) -> Collector:
+    """Resolve configuration and open the seams; no polling happens here."""
+    load_env(env_path)
+    contract = load_contract(contract_path)
+    configure_retention(os.environ.get("ENVIRO_RAW_ROOT", os.path.join(_BASE, "raw-capture")))
+    db = connect(require("SQLITE_PATH"))
+    db.execute(contract.create_table_sql())
+    db.commit()
+    log = setup_logger(f"{contract.provider}_collector", require("LOG_PATH"))
+    return Collector(contract=contract, db=db, log=log)
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description="Execute one provider capture contract.")
+    parser.add_argument("--contract", required=True, help="path to the contract JSON")
+    args = parser.parse_args(argv)
+    collector = build(args.contract)
+    is_shutting_down = install_shutdown_handler(logger=collector.log)
+    collector.run(is_shutting_down)
+
+
+if __name__ == "__main__":
+    main()
