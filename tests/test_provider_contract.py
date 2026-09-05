@@ -277,3 +277,17 @@ def test_loader_refuses_unknown_storage_class(tmp_path, env):
     doc["store"]["columns"]["pm25_aqi"] = "NUMERIC"
     with pytest.raises(ContractError, match="storage class"):
         load_contract(_write(tmp_path, doc))
+
+
+def test_loader_refuses_time_projection_into_a_non_text_column(tmp_path, env):
+    doc = copy.deepcopy(CONTRACT)
+    doc["store"]["columns"]["ts"] = "INTEGER"
+    with pytest.raises(ContractError, match="a time projection is TEXT"):
+        load_contract(_write(tmp_path, doc))
+
+
+def test_loader_refuses_boolean_where_a_positive_integer_is_declared(tmp_path, env):
+    doc = copy.deepcopy(CONTRACT)
+    doc["request"]["timeout_s"] = True
+    with pytest.raises(ContractError, match="timeout_s: must be a positive integer"):
+        load_contract(_write(tmp_path, doc))
