@@ -287,12 +287,11 @@ def test_dedup_does_not_span_the_day_boundary(raw_root):
     payload = b'{"v":1}'
     rr.retain("acme", payload)
     # Same payload, next day: the cache is day-scoped, so it must re-store.
-    key = ("acme", "2026-01-01")
-    assert key not in rr._LAST_SHA
-    assert [k[1] for k in rr._LAST_SHA] == [
-        __import__("datetime").datetime.now(
-            __import__("datetime").timezone.utc).date().isoformat()
-    ]
+    today = __import__("datetime").datetime.now(
+        __import__("datetime").timezone.utc).date().isoformat()
+    root = str(raw_root)
+    assert (root, "acme", "2026-01-01") not in rr._LAST_SHA
+    assert [k[2] for k in rr._LAST_SHA if k[0] == root] == [today]
 
 
 def test_every_day_file_is_independently_replayable(raw_root):
@@ -347,3 +346,14 @@ def test_configure_declares_the_root(tmp_path, monkeypatch):
     rr.configure(tmp_path)
     rr.retain("acme", b'{"v":1}')
     assert list((tmp_path / "acme").glob("*.ndjson"))
+
+
+def test_dedup_state_does_not_leak_across_roots(tmp_path, monkeypatch):
+    """A root change starts with no dedup memory: the first arrival into the new
+    root is stored, never labelled duplicate against the previous root."""
+    monkeypatch.setenv("ENVIRO_RAW_ROOT", str(tmp_path / "root-a"))
+    assert rr.retain("acme", b'[{"v": 1}]') == rr.OUTCOME_OK
+    monkeypatch.setenv("ENVIRO_RAW_ROOT", str(tmp_path / "root-b"))
+    assert rr.retain("acme", b'[{"v": 1}]') == rr.OUTCOME_OK
+    day = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).strftime("%Y-%m-%d")
+    assert [o for _, o, _ in rr.read_day("acme", day)] == [rr.OUTCOME_OK]
