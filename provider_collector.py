@@ -163,10 +163,9 @@ class Collector:
         date, the row key) falls on the named days.
 
         Selection is by the data's inherent date, never by when it was pulled:
-        a statement about observation day D can only have been captured on D or
-        later, so retention is scanned from the earliest named day through
-        today (UTC) in capture order, and every projected row dated inside the
-        named days is written through the same write path live uses. Later
+        retention is scanned from one UTC day before the earliest named day
+        through today, in capture order, and every projected row dated inside
+        the named days is written through the same write path live uses. Later
         statements captured on later days therefore always win. Statements about
         other dates met in the scan are counted, not written. Retention is never
         written. Returns a determinate summary keyed by the outcome each payload
@@ -175,7 +174,12 @@ class Collector:
         provider = self.contract.provider
         wanted = sorted(set(days))
         last = today or datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        scan = _utc_days_between(wanted[0], last)
+        if wanted[-1] > last:
+            raise ConfigError(f"observation day {wanted[-1]} is after today ({last}); no statement about it can exist")
+        # A provider's stated date is local to the provider; the capture day is UTC. The two can differ
+        # by at most one day in either direction, so the scan starts one UTC day before the earliest
+        # named observation day and runs through today.
+        scan = _utc_days_between(_shift_day(wanted[0], -1), last)
         tally: Counter = Counter()
         for day in scan:
             for _captured, recorded_outcome, blob in read_day(provider, day):
@@ -255,6 +259,10 @@ def build(contract_path: str, *, env_path: str = _ENV_PATH) -> Collector:
     ensure_table(db, contract)
     log = setup_logger(f"{contract.provider}_collector", require("LOG_PATH"))
     return Collector(contract=contract, db=db, log=log)
+
+
+def _shift_day(day: str, delta: int) -> str:
+    return (datetime.strptime(day, "%Y-%m-%d") + timedelta(days=delta)).strftime("%Y-%m-%d")
 
 
 def _utc_days_between(first: str, last: str) -> list[str]:

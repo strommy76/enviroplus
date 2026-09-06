@@ -315,7 +315,7 @@ def test_replay_selects_by_observation_date_so_a_later_capture_day_still_wins(co
     pc.ensure_table(rebuilt, collector.contract)
     summary = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("t")).replay(
         ["2026-09-05"], today="2026-09-07")                                  # one observation day requested
-    assert summary["capture_days_scanned"] == 3 and summary["records"] == 2 and summary["written"] == 2
+    assert summary["capture_days_scanned"] == 4 and summary["records"] == 2 and summary["written"] == 2   # 09-04..09-07
     assert rebuilt.execute("SELECT pm25_aqi FROM aq").fetchone() == (13,)       # the later statement wins
 
 
@@ -359,3 +359,36 @@ def test_cli_replay_refuses_a_day_that_is_not_a_utc_day(collector, monkeypatch, 
             pc.main(["--contract", "x.json", "--replay", bad])
         assert "not a UTC day" in capsys.readouterr().err
     assert pc._utc_day("2026-9-6") == "2026-09-06"      # a real day, normalized to the day-file name
+
+
+def test_replay_of_two_observation_days_is_order_independent_when_their_captures_start_on_different_days(collector, monkeypatch, tmp_path):
+    import datetime as dt
+    real = rr.datetime
+    class Clock(dt.datetime):
+        _now = dt.datetime(2026, 9, 6, 15, 0, tzinfo=dt.timezone.utc)
+        @classmethod
+        def now(cls, tz=None): return cls._now
+    monkeypatch.setattr(rr, "datetime", Clock)
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps([_item("PM2.5", 6, date="2026-09-06")]).encode())
+    collector.attempt()                                                       # obs A captured 09-06
+    Clock._now = dt.datetime(2026, 9, 8, 15, 0, tzinfo=dt.timezone.utc)
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps([_item("PM2.5", 8, date="2026-09-08")]).encode())
+    collector.attempt()                                                       # obs B captured 09-08
+    monkeypatch.setattr(rr, "datetime", real)
+    for order in (["2026-09-06", "2026-09-08"], ["2026-09-08", "2026-09-06"]):
+        rebuilt = sqlite3.connect(":memory:")
+        pc.ensure_table(rebuilt, collector.contract)
+        pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("t")).replay(order, today="2026-09-09")
+        assert rebuilt.execute("SELECT ts, pm25_aqi FROM aq ORDER BY ts").fetchall() == [
+            ("2026-09-06 14:00:00", 6), ("2026-09-08 14:00:00", 8)]
+
+
+def test_replay_scans_one_capture_day_before_the_named_day(collector):
+    """A provider east of UTC can state a date that is captured on the previous UTC day."""
+    summary = collector.replay(["2026-09-05"], today="2026-09-05")
+    assert summary["capture_days_scanned"] == 2
+
+
+def test_replay_refuses_an_observation_day_after_today(collector):
+    with pytest.raises(Exception, match="after today"):
+        collector.replay(["2999-01-01"])
