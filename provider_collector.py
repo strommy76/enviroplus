@@ -10,6 +10,9 @@ DESCRIPTION: Generic provider collector. Executes one capture contract
              recorded as a write failure, not a fetch failure.
 
              Usage: provider_collector.py --contract contracts/<provider>.json
+                    provider_collector.py --contract ... --replay DAY [DAY ...]
+             Replay re-derives the derived table from canonical retention
+             through the same projection and write path live uses.
 
 CHANGELOG:
 2026-09-05 17:40      Claude     [Feature] Initial implementation; replaces the
@@ -25,8 +28,9 @@ import os
 import sqlite3
 import time
 import urllib.request
+from collections import Counter
 from dataclasses import dataclass
-from typing import Callable
+from typing import Any, Callable
 
 from provider_contract import Contract, ProjectionError, load_contract, project
 from shared.config_service import ConfigError, load_env, require
@@ -40,6 +44,7 @@ from shared.raw_retention import (
     OUTCOME_PARTIAL,
     OUTCOME_WRITE_ERROR,
     configure as configure_retention,
+    read_day,
     record_outcome,
     retain,
 )
@@ -75,6 +80,31 @@ def outcome_for_exception(exc: BaseException) -> str:
     return OUTCOME_FETCH_ERROR
 
 
+@dataclass(frozen=True)
+class Arrival:
+    """What one arrived payload earned: its outcome, and the row it projects to (if any)."""
+
+    outcome: str
+    detail: str | None
+    row: dict[str, Any] | None
+    absent: tuple[str, ...]
+
+
+def project_arrival(contract: Contract, raw: bytes) -> Arrival:
+    """Classify and project one payload. Pure: live capture and replay both use it,
+    so a row derived from retention is the row live would have written."""
+    data, outcome, detail = classify_response(raw)
+    if outcome != OUTCOME_OK:
+        return Arrival(outcome, detail, None, ())
+    try:
+        row, absent = project(contract, data)
+    except ProjectionError as exc:
+        return Arrival(OUTCOME_MALFORMED, f"declared projection not satisfied: {exc}", None, ())
+    if absent:
+        return Arrival(OUTCOME_PARTIAL, "absent from response: " + ", ".join(absent), row, absent)
+    return Arrival(OUTCOME_OK, None, row, ())
+
+
 @dataclass
 class Collector:
     contract: Contract
@@ -97,27 +127,22 @@ class Collector:
         provider = self.contract.provider
         url = self.contract.request_url()
         raw = self.fetch()
-
-        data, outcome, detail = classify_response(raw)
-        row, absent = None, ()
-        if outcome == OUTCOME_OK:
-            try:
-                row, absent = project(self.contract, data)
-            except ProjectionError as exc:
-                outcome, detail = OUTCOME_MALFORMED, f"declared projection not satisfied: {exc}"
-            else:
-                if absent:
-                    outcome, detail = OUTCOME_PARTIAL, "absent from response: " + ", ".join(absent)
+        arrival = project_arrival(self.contract, raw)
         try:
-            retain(provider, raw, url=url, outcome=outcome, detail=detail)
+            retain(provider, raw, url=url, outcome=arrival.outcome, detail=arrival.detail)
         except Exception as exc:  # retention failure must not lose the derived row too
             self.log.error("raw retention failed for %s: %s", provider, exc, exc_info=True)
+        return self.write(arrival)
 
-        if row is None:
-            (self.log.error if outcome == OUTCOME_MALFORMED else self.log.info)("%s: %s", provider, detail)
+    def write(self, arrival: Arrival) -> bool:
+        """Write the derived row an arrival projects to; shared by live and replay."""
+        provider = self.contract.provider
+        if arrival.row is None:
+            (self.log.error if arrival.outcome == OUTCOME_MALFORMED else self.log.info)(
+                "%s: %s", provider, arrival.detail)
             return False
-        if absent:
-            self.log.warning("%s: %s", provider, detail)
+        if arrival.absent:
+            self.log.warning("%s: %s", provider, arrival.detail)
         # The derived row is keyed by the provider's stated observation time and
         # follows the provider's latest statement: a revision within the hour
         # overwrites the earlier projection, and a restatement rewrites the same
@@ -125,11 +150,40 @@ class Collector:
         # retention tier's dedup answer: the derived store is its own truth.
         # Every statement stays in retention, so the projection can be
         # re-derived under different logic later.
-        written = write_row(self.db, self.contract.table, row, upsert_on=self.contract.primary_key)
+        written = write_row(self.db, self.contract.table, arrival.row, upsert_on=self.contract.primary_key)
         if written:
             self.log.info("%s row written  %s=%s", provider, self.contract.primary_key,
-                          row[self.contract.primary_key])
+                          arrival.row[self.contract.primary_key])
         return written
+
+    def replay(self, days: list[str]) -> dict[str, Any]:
+        """Re-derive the derived table from canonical retention for the named days.
+
+        Reads retention in capture order and pushes every retained payload
+        through the same projection and the same upsert live uses, so the
+        rebuilt rows are the rows live would have written. Never writes to
+        retention. Returns a determinate summary.
+        """
+        provider = self.contract.provider
+        tally: Counter = Counter()
+        for day in days:
+            for _captured, recorded_outcome, blob in read_day(provider, day):
+                tally["records"] += 1
+                if blob is None:
+                    tally["without_payload"] += 1
+                    continue
+                arrival = project_arrival(self.contract, blob)
+                tally["projected"] += 1
+                if arrival.outcome != recorded_outcome:
+                    tally["reclassified"] += 1
+                if arrival.row is None:
+                    tally["malformed"] += 1
+                    self.log.error("%s replay %s: %s", provider, day, arrival.detail)
+                    continue
+                if write_row(self.db, self.contract.table, arrival.row, upsert_on=self.contract.primary_key):
+                    tally["written"] += 1
+        return {"provider": provider, "days": list(days),
+                **{k: tally[k] for k in ("records", "without_payload", "projected", "written", "malformed", "reclassified")}}
 
     def run(self, is_shutting_down: Callable[[], bool], sleep: Callable[[float], None] = time.sleep) -> None:
         provider = self.contract.provider
@@ -191,8 +245,13 @@ def build(contract_path: str, *, env_path: str = _ENV_PATH) -> Collector:
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Execute one provider capture contract.")
     parser.add_argument("--contract", required=True, help="path to the contract JSON")
+    parser.add_argument("--replay", nargs="+", metavar="DAY",
+                        help="re-derive the derived table from retention for these days (YYYY-MM-DD) and exit")
     args = parser.parse_args(argv)
     collector = build(args.contract)
+    if args.replay:
+        print(json.dumps(collector.replay(args.replay)))
+        return
     is_shutting_down = install_shutdown_handler(logger=collector.log)
     collector.run(is_shutting_down)
 

@@ -223,3 +223,72 @@ def test_build_requires_the_env_file_to_carry_sqlite_path(tmp_path, monkeypatch)
     monkeypatch.delenv("SQLITE_PATH", raising=False)
     with pytest.raises(Exception, match="SQLITE_PATH"):
         pc.build(str(tmp_path / "missing.json"), env_path=str(env))
+
+
+# ── Replay: the derived table is rebuildable from retention by the same path ─
+
+def _days_today():
+    return [datetime.now(timezone.utc).strftime("%Y-%m-%d")]
+
+
+def test_replay_reproduces_the_live_table_by_the_same_path(collector, monkeypatch, tmp_path):
+    arrivals = [PAYLOAD,                                                   # ok
+                PAYLOAD,                                                   # identical -> duplicate, no payload retained
+                [dict(_item("PM2.5", 14)), dict(_item("OZONE", 25))],        # partial (PM10 unstated)
+                [dict(i, nowcastAQI=None) if i["parameterName"] == "PM10" else i for i in PAYLOAD],   # null statement
+                [{"WebServiceError": [{"Message": "x"}]}]]                 # malformed
+    for payload in arrivals:
+        monkeypatch.setattr(collector, "fetch", lambda p=payload: json.dumps(p).encode())
+        collector.attempt()
+    live = collector.db.execute("SELECT * FROM aq ORDER BY ts").fetchall()
+    retention_before = _outcomes()
+
+    rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
+    pc.ensure_table(rebuilt, collector.contract)
+    replayer = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("test_replay"))
+    summary = replayer.replay(_days_today())
+
+    assert rebuilt.execute("SELECT * FROM aq ORDER BY ts").fetchall() == live
+    assert summary == {"provider": "acme", "days": _days_today(), "records": 5, "without_payload": 1,
+                       "projected": 4, "written": 3, "malformed": 1, "reclassified": 0}
+    assert _outcomes() == retention_before                                 # replay never writes retention
+
+
+def test_replay_is_idempotent_and_the_latest_statement_wins_in_capture_order(collector, monkeypatch, tmp_path):
+    for aqi in (11, 16):
+        monkeypatch.setattr(collector, "fetch", lambda a=aqi: json.dumps([dict(_item("PM2.5", a))]).encode())
+        collector.attempt()
+    rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
+    pc.ensure_table(rebuilt, collector.contract)
+    replayer = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("test_replay"))
+    first = replayer.replay(_days_today())
+    rows = rebuilt.execute("SELECT ts, pm25_aqi FROM aq").fetchall()
+    second = replayer.replay(_days_today())
+    assert rows == [("2026-09-05 14:00:00", 16)]
+    assert rebuilt.execute("SELECT ts, pm25_aqi FROM aq").fetchall() == rows
+    assert first["written"] == 2 and second["written"] == 2               # idempotent upsert: same rows, same result
+
+
+def test_replay_counts_a_retained_outcome_that_content_no_longer_earns(collector, monkeypatch, tmp_path):
+    """A retained outcome is a proxy; the replay re-derives it from the bytes."""
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps(PAYLOAD).encode())
+    collector.attempt()
+    rr.record_outcome("acme", rr.OUTCOME_FETCH_ERROR, detail="simulated")     # no payload: skipped
+    # a payload retained under 'ok' by an earlier contract that the current contract cannot project
+    rr.retain("acme", json.dumps([{"ParameterName": "PM2.5", "AQI": 5}]).encode(), outcome=rr.OUTCOME_OK)
+    rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
+    pc.ensure_table(rebuilt, collector.contract)
+    summary = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("t")).replay(_days_today())
+    assert summary["records"] == 3 and summary["without_payload"] == 1
+    assert summary["malformed"] == 1 and summary["reclassified"] == 1 and summary["written"] == 1
+
+
+def test_replay_of_a_day_with_no_retention_is_empty_not_an_error(collector):
+    assert collector.replay(["1999-01-01"])["records"] == 0
+
+
+def test_cli_replay_prints_one_summary_line_and_exits(collector, monkeypatch, capsys):
+    monkeypatch.setattr(pc, "build", lambda path: collector)
+    pc.main(["--contract", "x.json", "--replay", "1999-01-01"])
+    out = capsys.readouterr().out.strip().splitlines()
+    assert len(out) == 1 and json.loads(out[0])["days"] == ["1999-01-01"]
