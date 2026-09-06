@@ -33,6 +33,7 @@ from shared.config_service import ConfigError, load_env, require
 from shared.db_service import connect, write_row
 from shared.logging_service import setup_logger
 from shared.raw_retention import (
+    OUTCOME_DUPLICATE,
     OUTCOME_EMPTY,
     OUTCOME_FETCH_ERROR,
     OUTCOME_MALFORMED,
@@ -108,24 +109,31 @@ class Collector:
             else:
                 if absent:
                     outcome, detail = OUTCOME_PARTIAL, "absent from response: " + ", ".join(absent)
+        recorded = outcome
         try:
-            retain(provider, raw, url=url, outcome=outcome, detail=detail)
+            recorded = retain(provider, raw, url=url, outcome=outcome, detail=detail)
         except Exception as exc:  # retention failure must not lose the derived row too
             self.log.error("raw retention failed for %s: %s", provider, exc, exc_info=True)
 
         if row is None:
             (self.log.error if outcome == OUTCOME_MALFORMED else self.log.info)("%s: %s", provider, detail)
             return False
+        if recorded == OUTCOME_DUPLICATE:
+            # Byte-identical to the previous arrival: the provider restated the
+            # same thing, so the derived row already carries it.
+            self.log.info("%s: identical to the previous arrival; derived row unchanged", provider)
+            return False
         if absent:
             self.log.warning("%s: %s", provider, detail)
-        inserted = write_row(self.db, self.contract.table, row, or_ignore=True)
-        key = f"{self.contract.primary_key}={row[self.contract.primary_key]}"
-        if inserted:
-            self.log.info("%s row written  %s", provider, key)
-        else:
-            self.log.warning("%s: row %s already present; this arrival is kept in retention only",
-                             provider, key)
-        return inserted
+        # The derived row is keyed by the provider's stated observation time and
+        # follows the provider's latest statement: a revision within the hour
+        # overwrites the earlier projection. Every statement stays in retention,
+        # so the projection can be re-derived under different logic later.
+        written = write_row(self.db, self.contract.table, row, upsert_on=self.contract.primary_key)
+        if written:
+            self.log.info("%s row written  %s=%s", provider, self.contract.primary_key,
+                          row[self.contract.primary_key])
+        return written
 
     def run(self, is_shutting_down: Callable[[], bool], sleep: Callable[[float], None] = time.sleep) -> None:
         provider = self.contract.provider

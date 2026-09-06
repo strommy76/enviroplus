@@ -15,11 +15,9 @@ CHANGELOG:
 import copy
 import json
 import sqlite3
-import sys
 
 import pytest
 
-sys.path.insert(0, "/home/pistrommy/projects")
 
 from provider_contract import ContractError, ProjectionError, load_contract, project  # noqa: E402
 

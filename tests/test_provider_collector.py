@@ -14,12 +14,10 @@ CHANGELOG:
 import json
 import logging
 import sqlite3
-import sys
 from datetime import datetime, timezone
 
 import pytest
 
-sys.path.insert(0, "/home/pistrommy/projects")
 
 import provider_collector as pc  # noqa: E402
 from provider_contract import load_contract  # noqa: E402
@@ -67,9 +65,19 @@ def test_importing_the_collector_does_not_run_it():
 def test_ok_response_is_retained_and_written_once(collector, monkeypatch):
     monkeypatch.setattr(collector, "fetch", lambda: json.dumps(PAYLOAD).encode())
     assert collector.attempt() is True
-    assert collector.attempt() is False            # same PK: or_ignore, not a second row
+    assert collector.attempt() is False            # byte-identical restatement: nothing to re-derive
     assert _rows(collector) == [("2026-09-05 14:00:00", 11)]
     assert _outcomes() == [rr.OUTCOME_OK, rr.OUTCOME_DUPLICATE]
+
+
+def test_provider_revision_overwrites_the_derived_row(collector, monkeypatch):
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps(PAYLOAD).encode())
+    collector.attempt()
+    revised = [dict(i, nowcastAQI=i["nowcastAQI"] + 5) for i in PAYLOAD]
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps(revised).encode())
+    assert collector.attempt() is True
+    assert _rows(collector) == [("2026-09-05 14:00:00", 16)]        # latest statement, one row
+    assert _outcomes() == [rr.OUTCOME_OK, rr.OUTCOME_OK]            # both statements retained
 
 
 def test_unparseable_body_is_recorded_exactly_once(collector, monkeypatch, caplog):
@@ -93,17 +101,6 @@ def test_out_of_shape_payload_is_logged_at_error(collector, monkeypatch, caplog)
         collector.attempt()
     assert any("declared projection not satisfied" in r.getMessage() and r.levelno == logging.ERROR
                for r in caplog.records)
-
-
-def test_repeat_arrival_for_a_present_key_is_logged_not_silent(collector, monkeypatch, caplog):
-    monkeypatch.setattr(collector, "fetch", lambda: json.dumps(PAYLOAD).encode())
-    collector.attempt()
-    revised = [dict(i, nowcastAQI=i["nowcastAQI"] + 5) for i in PAYLOAD]
-    monkeypatch.setattr(collector, "fetch", lambda: json.dumps(revised).encode())
-    with caplog.at_level(logging.WARNING, logger="test_acme"):
-        assert collector.attempt() is False
-    assert any("already present" in r.getMessage() for r in caplog.records)
-    assert _rows(collector) == [("2026-09-05 14:00:00", 11)]       # first statement kept; revision in retention
 
 
 def test_write_failure_after_a_partial_arrival_keeps_both_facts(collector, monkeypatch):
