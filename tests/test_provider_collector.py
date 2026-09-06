@@ -65,9 +65,20 @@ def test_importing_the_collector_does_not_run_it():
 def test_ok_response_is_retained_and_written_once(collector, monkeypatch):
     monkeypatch.setattr(collector, "fetch", lambda: json.dumps(PAYLOAD).encode())
     assert collector.attempt() is True
-    assert collector.attempt() is False            # byte-identical restatement: nothing to re-derive
+    assert collector.attempt() is True             # restatement: rewritten idempotently, still one row
     assert _rows(collector) == [("2026-09-05 14:00:00", 11)]
     assert _outcomes() == [rr.OUTCOME_OK, rr.OUTCOME_DUPLICATE]
+
+
+def test_derived_row_existence_is_not_inferred_from_retention_dedup(collector, monkeypatch):
+    """A failed write followed by a byte-identical arrival must still land the row."""
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps(PAYLOAD).encode())
+    collector.db.execute("ALTER TABLE aq RENAME TO aq_gone")
+    collector.run(_stop_after_first_attempt(), sleep=lambda s: None)      # write_error
+    collector.db.execute("ALTER TABLE aq_gone RENAME TO aq")
+    assert collector.attempt() is True                                    # retention says duplicate; row still written
+    assert _rows(collector) == [("2026-09-05 14:00:00", 11)]
+    assert _outcomes() == [rr.OUTCOME_OK, rr.OUTCOME_WRITE_ERROR, rr.OUTCOME_DUPLICATE]
 
 
 def test_provider_revision_overwrites_the_derived_row(collector, monkeypatch):

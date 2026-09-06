@@ -33,7 +33,6 @@ from shared.config_service import ConfigError, load_env, require
 from shared.db_service import connect, write_row
 from shared.logging_service import setup_logger
 from shared.raw_retention import (
-    OUTCOME_DUPLICATE,
     OUTCOME_EMPTY,
     OUTCOME_FETCH_ERROR,
     OUTCOME_MALFORMED,
@@ -88,7 +87,7 @@ class Collector:
             return response.read()
 
     def attempt(self) -> bool:
-        """One poll. Returns True when a derived row was inserted.
+        """One poll. Returns True when a derived row was written (inserted or updated).
 
         The arrival is retained exactly once, carrying the outcome the payload
         actually earned: `ok`, `partial` (a declared parameter absent), or
@@ -109,26 +108,23 @@ class Collector:
             else:
                 if absent:
                     outcome, detail = OUTCOME_PARTIAL, "absent from response: " + ", ".join(absent)
-        recorded = outcome
         try:
-            recorded = retain(provider, raw, url=url, outcome=outcome, detail=detail)
+            retain(provider, raw, url=url, outcome=outcome, detail=detail)
         except Exception as exc:  # retention failure must not lose the derived row too
             self.log.error("raw retention failed for %s: %s", provider, exc, exc_info=True)
 
         if row is None:
             (self.log.error if outcome == OUTCOME_MALFORMED else self.log.info)("%s: %s", provider, detail)
             return False
-        if recorded == OUTCOME_DUPLICATE:
-            # Byte-identical to the previous arrival: the provider restated the
-            # same thing, so the derived row already carries it.
-            self.log.info("%s: identical to the previous arrival; derived row unchanged", provider)
-            return False
         if absent:
             self.log.warning("%s: %s", provider, detail)
         # The derived row is keyed by the provider's stated observation time and
         # follows the provider's latest statement: a revision within the hour
-        # overwrites the earlier projection. Every statement stays in retention,
-        # so the projection can be re-derived under different logic later.
+        # overwrites the earlier projection, and a restatement rewrites the same
+        # values (idempotent). Whether the row exists is never inferred from the
+        # retention tier's dedup answer: the derived store is its own truth.
+        # Every statement stays in retention, so the projection can be
+        # re-derived under different logic later.
         written = write_row(self.db, self.contract.table, row, upsert_on=self.contract.primary_key)
         if written:
             self.log.info("%s row written  %s=%s", provider, self.contract.primary_key,
