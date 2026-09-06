@@ -120,33 +120,8 @@ def test_dropout_predicate_uses_measurements_not_field_count(collectors):
     assert ambient.has_outdoor_reading({"tempf": 80.0}) is True
 
 
-# ── The handlers must actually CALL record_outcome ───────────────────────────
 #
 # Written because deleting every record_outcome call from both collector loops
 # passed the entire suite. The pure helpers were tested; whether anything used
 # them was not. A referee that cannot fail for the thing it guards is not a
 # referee.
-
-def _run_one_iteration(module, monkeypatch, *, fetch_raises=None, write_raises=None):
-    """Drive run() through exactly one loop iteration and capture what it records."""
-    recorded = []
-    monkeypatch.setattr(module, "record_outcome",
-                        lambda provider, outcome, **kw: recorded.append((provider, outcome)))
-    monkeypatch.setattr(module.time, "sleep", lambda _s: None)
-
-    ticks = iter([False, True])  # one pass, then shut down
-    monkeypatch.setattr(module, "is_shutting_down", lambda: next(ticks))
-
-    if fetch_raises is not None:
-        monkeypatch.setattr(module, "_fetch", lambda: (_ for _ in ()).throw(fetch_raises))
-    else:
-        monkeypatch.setattr(module, "_fetch", lambda: {"dateutc": 0})
-    if write_raises is not None:
-        monkeypatch.setattr(module, "_write", lambda _d: (_ for _ in ()).throw(write_raises))
-    else:
-        monkeypatch.setattr(module, "_write", lambda _d: None)
-    if hasattr(module, "_parse"):
-        monkeypatch.setattr(module, "_parse", lambda d: d)
-
-    module.run()
-    return recorded
