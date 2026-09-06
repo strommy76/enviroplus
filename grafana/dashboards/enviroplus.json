@@ -807,8 +807,8 @@
           ]
         },
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts, CASE WHEN strftime('%m', ts) BETWEEN '03' AND '10' THEN '+4 hours' ELSE '+5 hours' END) AS INTEGER) AS time, CASE   WHEN pm25_aqi <= 50 THEN pm25_aqi * 12.0 / 50.0   WHEN pm25_aqi <= 100 THEN 12.1 + (pm25_aqi - 51) * (35.4 - 12.1) / 49.0   WHEN pm25_aqi <= 150 THEN 35.5 + (pm25_aqi - 101) * (55.4 - 35.5) / 49.0   ELSE pm25_aqi * 0.24 END AS \"Outdoor PM2.5 (EPA)\", pm10_aqi AS \"Outdoor PM10 AQI\" FROM epa_air_quality ORDER BY ts",
-          "queryText": "SELECT CAST(strftime('%s', ts, CASE WHEN strftime('%m', ts) BETWEEN '03' AND '10' THEN '+4 hours' ELSE '+5 hours' END) AS INTEGER) AS time, CASE   WHEN pm25_aqi <= 50 THEN pm25_aqi * 12.0 / 50.0   WHEN pm25_aqi <= 100 THEN 12.1 + (pm25_aqi - 51) * (35.4 - 12.1) / 49.0   WHEN pm25_aqi <= 150 THEN 35.5 + (pm25_aqi - 101) * (55.4 - 35.5) / 49.0   ELSE pm25_aqi * 0.24 END AS \"Outdoor PM2.5 (EPA)\", pm10_aqi AS \"Outdoor PM10 AQI\" FROM epa_air_quality ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts, CASE WHEN local_time_zone = 'EDT' THEN '+4 hours' WHEN local_time_zone = 'EST' THEN '+5 hours' WHEN local_time_zone IS NULL THEN '+5 hours' END) AS INTEGER) AS time, CASE   WHEN pm25_aqi <= 50 THEN pm25_aqi * 12.0 / 50.0   WHEN pm25_aqi <= 100 THEN 12.1 + (pm25_aqi - 51) * (35.4 - 12.1) / 49.0   WHEN pm25_aqi <= 150 THEN 35.5 + (pm25_aqi - 101) * (55.4 - 35.5) / 49.0   ELSE pm25_aqi * 0.24 END AS \"Outdoor PM2.5 (EPA)\", pm10_aqi AS \"Outdoor PM10 AQI\" FROM epa_air_quality ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts, CASE WHEN local_time_zone = 'EDT' THEN '+4 hours' WHEN local_time_zone = 'EST' THEN '+5 hours' WHEN local_time_zone IS NULL THEN '+5 hours' END) AS INTEGER) AS time, CASE   WHEN pm25_aqi <= 50 THEN pm25_aqi * 12.0 / 50.0   WHEN pm25_aqi <= 100 THEN 12.1 + (pm25_aqi - 51) * (35.4 - 12.1) / 49.0   WHEN pm25_aqi <= 150 THEN 35.5 + (pm25_aqi - 101) * (55.4 - 35.5) / 49.0   ELSE pm25_aqi * 0.24 END AS \"Outdoor PM2.5 (EPA)\", pm10_aqi AS \"Outdoor PM10 AQI\" FROM epa_air_quality ORDER BY ts",
           "queryType": "table",
           "refId": "B",
           "timeColumns": [
@@ -835,6 +835,6 @@
       "2026-04-21 — Outdoor PM series uses stepAfter interpolation + visible points to reflect hourly-sampled AirNow data (not continuous)",
       "2026-04-21 — Revert stepped lines; restore default smooth interpolation on outdoor PM series"
     ],
-    "timezone_note": "AirNow (EPA) data is stored in ET; Enviro+ readings are UTC. Dashboard query shifts EPA timestamps by +4h (DST) / +5h (standard time) for alignment."
+    "timezone_note": "AirNow (EPA) rows carry the provider's stated wall-clock in ts and its zone label in local_time_zone; Enviro+ readings are UTC. The EPA query shifts ts by the captured label (EDT +4h, EST +5h; rows captured before the label was projected are EST, which the retired endpoint reported all year)."
   }
 }

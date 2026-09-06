@@ -31,8 +31,13 @@ SQLite projection, and their backup lane.
 ## Service Boundaries
 
 - `enviro_dash3.py` owns the local sensor display and its derived SQLite writes.
-- `ambient_wx.py`, `nws_wx.py`, and `airnow_wx.py` independently own their
-  provider collection loops and canonical response capture.
+- `ambient_wx.py` and `nws_wx.py` independently own their provider collection
+  loops and canonical response capture.
+- `provider_collector.py` executes one committed capture contract from
+  `contracts/` (`provider_contract.py` defines the contract boundary); the
+  AirNow lane is `contracts/airnow_current.json`. A provider API change is a
+  contract edit. The derived row is keyed by the provider's stated observation
+  time and follows the provider's latest statement; every statement is retained.
 - Repo-managed service files describe the intended service content. Which
   hardware-specific dashboard unit is active is host residue and must be proven
   from the running service manager, not inferred from this repository.

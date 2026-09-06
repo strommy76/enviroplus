@@ -68,7 +68,7 @@ flowchart LR
         enviro_dash3.py
         ambient_wx.py
         nws_wx.py
-        airnow_wx.py
+        provider_collector.py
         dynamic_config.json
     end
 
@@ -89,8 +89,8 @@ flowchart LR
     dynamic_config.json -->|hot-reload| enviro_dash3.py
     enviro_dash3.py --> DISPLAY
     enviro_dash3.py -->|every 60s| SQLITE
-    ambient_wx.py & nws_wx.py & airnow_wx.py -->|response bytes| RAW
-    ambient_wx.py & nws_wx.py & airnow_wx.py -->|parsed rows| SQLITE
+    ambient_wx.py & nws_wx.py & provider_collector.py -->|response bytes| RAW
+    ambient_wx.py & nws_wx.py & provider_collector.py -->|projected rows| SQLITE
     RAW -->|replay| SQLITE
     SQLITE --> GRAFANA
     RAW & SQLITE -->|daily| OFFSITE
