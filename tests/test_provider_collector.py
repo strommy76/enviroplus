@@ -246,11 +246,12 @@ def test_replay_reproduces_the_live_table_by_the_same_path(collector, monkeypatc
     rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
     pc.ensure_table(rebuilt, collector.contract)
     replayer = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("test_replay"))
-    summary = replayer.replay(_days_today())
+    summary = replayer.replay(["2026-09-05"], today=_days_today()[0])   # the observation date PAYLOAD states
 
     assert rebuilt.execute("SELECT * FROM aq ORDER BY ts").fetchall() == live
-    assert summary == {"provider": "acme", "days": _days_today(), "records": 5, "without_payload": 1,
-                       "projected": 4, "written": 3, "ok": 2, "partial": 1, "empty": 0, "malformed": 1, "reclassified": 0}
+    assert summary == {"provider": "acme", "days": ["2026-09-05"], "capture_days_scanned": summary["capture_days_scanned"],
+                       "records": 5, "without_payload": 1, "projected": 4, "other_dates": 0, "written": 3,
+                       "ok": 2, "partial": 1, "empty": 0, "malformed": 1, "reclassified": 0}
     assert _outcomes() == retention_before                                 # replay never writes retention
 
 
@@ -261,9 +262,9 @@ def test_replay_is_idempotent_and_the_latest_statement_wins_in_capture_order(col
     rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
     pc.ensure_table(rebuilt, collector.contract)
     replayer = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("test_replay"))
-    first = replayer.replay(_days_today())
+    first = replayer.replay(["2026-09-05"])
     rows = rebuilt.execute("SELECT ts, pm25_aqi FROM aq").fetchall()
-    second = replayer.replay(_days_today())
+    second = replayer.replay(["2026-09-05"])
     assert rows == [("2026-09-05 14:00:00", 16)]
     assert rebuilt.execute("SELECT ts, pm25_aqi FROM aq").fetchall() == rows
     assert first["written"] == 2 and second["written"] == 2               # idempotent upsert: same rows, same result
@@ -278,13 +279,13 @@ def test_replay_counts_a_retained_outcome_that_content_no_longer_earns(collector
     rr.retain("acme", json.dumps([{"ParameterName": "PM2.5", "AQI": 5}]).encode(), outcome=rr.OUTCOME_OK)
     rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
     pc.ensure_table(rebuilt, collector.contract)
-    summary = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("t")).replay(_days_today())
+    summary = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("t")).replay(["2026-09-05"])
     assert summary["records"] == 3 and summary["without_payload"] == 1
     assert summary["malformed"] == 1 and summary["reclassified"] == 1 and summary["written"] == 1
 
 
-def test_replay_of_a_day_with_no_retention_is_empty_not_an_error(collector):
-    assert collector.replay(["1999-01-01"])["records"] == 0
+def test_replay_of_a_date_with_no_retention_is_empty_not_an_error(collector):
+    assert collector.replay(["1999-01-01"], today="1999-01-03")["records"] == 0
 
 
 def test_cli_replay_prints_one_summary_line_and_exits(collector, monkeypatch, capsys):
@@ -294,27 +295,40 @@ def test_cli_replay_prints_one_summary_line_and_exits(collector, monkeypatch, ca
     assert len(out) == 1 and json.loads(out[0])["days"] == ["1999-01-01"]
 
 
-def test_replay_orders_days_chronologically_whatever_the_operator_typed(collector, monkeypatch, tmp_path):
-    """Latest statement wins in CAPTURE order: a ts restated on the next UTC day must win over the earlier day."""
+def test_replay_selects_by_observation_date_so_a_later_capture_day_still_wins(collector, monkeypatch, tmp_path):
+    """The inherent date controls: a revision of hour 19 captured after the UTC-day boundary belongs to the
+    observation day and is replayed with it, so a single-day replay cannot regress the row."""
     import datetime as dt
     real = rr.datetime
     class Clock(dt.datetime):
-        _now = dt.datetime(2026, 9, 5, 23, 50, tzinfo=dt.timezone.utc)
+        _now = dt.datetime(2026, 9, 5, 23, 39, tzinfo=dt.timezone.utc)
         @classmethod
         def now(cls, tz=None): return cls._now
     monkeypatch.setattr(rr, "datetime", Clock)
     monkeypatch.setattr(collector, "fetch", lambda: json.dumps([_item("PM2.5", 11, hour="19:00")]).encode())
     collector.attempt()                                                       # captured 2026-09-05Z
-    Clock._now = dt.datetime(2026, 9, 6, 0, 20, tzinfo=dt.timezone.utc)
+    Clock._now = dt.datetime(2026, 9, 6, 0, 9, tzinfo=dt.timezone.utc)
     monkeypatch.setattr(collector, "fetch", lambda: json.dumps([_item("PM2.5", 13, hour="19:00")]).encode())
     collector.attempt()                                                       # revision captured 2026-09-06Z
     monkeypatch.setattr(rr, "datetime", real)
     rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
     pc.ensure_table(rebuilt, collector.contract)
     summary = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("t")).replay(
-        ["2026-09-06", "2026-09-05", "2026-09-06"])                          # descending and duplicated on purpose
-    assert summary["days"] == ["2026-09-05", "2026-09-06"] and summary["records"] == 2
-    assert rebuilt.execute("SELECT pm25_aqi FROM aq").fetchone() == (13,)
+        ["2026-09-05"], today="2026-09-07")                                  # one observation day requested
+    assert summary["capture_days_scanned"] == 3 and summary["records"] == 2 and summary["written"] == 2
+    assert rebuilt.execute("SELECT pm25_aqi FROM aq").fetchone() == (13,)       # the later statement wins
+
+
+def test_replay_leaves_statements_about_other_dates_alone(collector, monkeypatch, tmp_path):
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps([_item("PM2.5", 11, date="2026-09-05")]).encode())
+    collector.attempt()
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps([_item("PM2.5", 12, date="2026-09-06")]).encode())
+    collector.attempt()
+    rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
+    pc.ensure_table(rebuilt, collector.contract)
+    summary = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("t")).replay(["2026-09-06"])
+    assert summary["other_dates"] == 1 and summary["written"] == 1
+    assert rebuilt.execute("SELECT ts FROM aq").fetchall() == [("2026-09-06 14:00:00",)]
 
 
 def test_replay_counts_an_empty_arrival_as_empty_not_malformed(collector, monkeypatch, tmp_path, caplog):
@@ -334,7 +348,7 @@ def test_replay_repairs_a_row_the_live_write_lost(collector, monkeypatch, tmp_pa
     collector.run(_stop_after_first_attempt(), sleep=lambda s: None)          # retained ok, derived write_error
     collector.db.execute("ALTER TABLE aq_gone RENAME TO aq")
     assert _rows(collector) == []
-    summary = collector.replay(_days_today())
+    summary = collector.replay(["2026-09-05"])
     assert summary["written"] == 1 and _rows(collector) == [("2026-09-05 14:00:00", 11)]
 
 

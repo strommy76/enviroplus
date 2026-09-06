@@ -11,8 +11,9 @@ DESCRIPTION: Generic provider collector. Executes one capture contract
 
              Usage: provider_collector.py --contract contracts/<provider>.json
                     provider_collector.py --contract ... --replay DAY [DAY ...]
-             Replay re-derives the derived table from canonical retention
-             through the same projection and write path live uses.
+             Replay re-derives the derived rows for named observation dates
+             from canonical retention through the same projection and write
+             path live uses; selection is by the data's inherent date.
 
 CHANGELOG:
 2026-09-05 17:40      Claude     [Feature] Initial implementation; replaces the
@@ -30,7 +31,7 @@ import time
 import urllib.request
 from collections import Counter
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 
 from provider_contract import Contract, ProjectionError, load_contract, project
@@ -157,20 +158,26 @@ class Collector:
                           arrival.row[self.contract.primary_key])
         return written
 
-    def replay(self, days: list[str]) -> dict[str, Any]:
-        """Re-derive the derived table from canonical retention for the named UTC days.
+    def replay(self, days: list[str], *, today: str | None = None) -> dict[str, Any]:
+        """Re-derive the derived rows whose OBSERVATION date (the provider's stated
+        date, the row key) falls on the named days.
 
-        Reads retention in capture order -- days ascending, records in file
-        order -- and pushes every retained payload through the same projection
-        and the same write path live uses, so the rebuilt rows are the rows
-        live would have written. Never writes to retention. Returns a
-        determinate summary; counts are keyed by the outcome each payload
-        earns NOW (a retained outcome is a proxy; content decides).
+        Selection is by the data's inherent date, never by when it was pulled:
+        a statement about observation day D can only have been captured on D or
+        later, so retention is scanned from the earliest named day through
+        today (UTC) in capture order, and every projected row dated inside the
+        named days is written through the same write path live uses. Later
+        statements captured on later days therefore always win. Statements about
+        other dates met in the scan are counted, not written. Retention is never
+        written. Returns a determinate summary keyed by the outcome each payload
+        earns now (a retained outcome is a proxy; content decides).
         """
         provider = self.contract.provider
-        ordered = sorted(set(days))
+        wanted = sorted(set(days))
+        last = today or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        scan = _utc_days_between(wanted[0], last)
         tally: Counter = Counter()
-        for day in ordered:
+        for day in scan:
             for _captured, recorded_outcome, blob in read_day(provider, day):
                 tally["records"] += 1
                 if blob is None:
@@ -181,10 +188,16 @@ class Collector:
                 tally[arrival.outcome] += 1
                 if arrival.outcome != recorded_outcome:
                     tally["reclassified"] += 1
+                if arrival.row is None:
+                    self.write(arrival)          # logs the malformed/empty statement like live does
+                    continue
+                if str(arrival.row[self.contract.primary_key])[:10] not in wanted:
+                    tally["other_dates"] += 1
+                    continue
                 if self.write(arrival):
                     tally["written"] += 1
-        return {"provider": provider, "days": ordered,
-                **{k: tally[k] for k in ("records", "without_payload", "projected", "written",
+        return {"provider": provider, "days": wanted, "capture_days_scanned": len(scan),
+                **{k: tally[k] for k in ("records", "without_payload", "projected", "other_dates", "written",
                                          OUTCOME_OK, OUTCOME_PARTIAL, OUTCOME_EMPTY, OUTCOME_MALFORMED, "reclassified")}}
 
     def run(self, is_shutting_down: Callable[[], bool], sleep: Callable[[float], None] = time.sleep) -> None:
@@ -244,8 +257,13 @@ def build(contract_path: str, *, env_path: str = _ENV_PATH) -> Collector:
     return Collector(contract=contract, db=db, log=log)
 
 
+def _utc_days_between(first: str, last: str) -> list[str]:
+    start, end = datetime.strptime(first, "%Y-%m-%d"), datetime.strptime(last, "%Y-%m-%d")
+    return [(start + timedelta(days=i)).strftime("%Y-%m-%d") for i in range((end - start).days + 1)]
+
+
 def _utc_day(text: str) -> str:
-    """A --replay argument names exactly one retention day file; anything else is a client error."""
+    """A --replay argument names one observation date; anything else is a client error."""
     try:
         return datetime.strptime(text, "%Y-%m-%d").strftime("%Y-%m-%d")
     except ValueError:
@@ -256,9 +274,9 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Execute one provider capture contract.")
     parser.add_argument("--contract", required=True, help="path to the contract JSON")
     parser.add_argument("--replay", nargs="+", metavar="DAY", type=_utc_day,
-                        help="re-derive the derived table from retention for these UTC capture days (YYYY-MM-DD; "
-                             "retention day files are UTC-dated) and exit; writes to the database named by SQLITE_PATH "
-                             "-- point it at a scratch file to rebuild aside")
+                        help="re-derive the derived rows whose observation date (the provider's stated date) is one of "
+                             "these days (YYYY-MM-DD), from every retained statement about them, and exit; writes to "
+                             "the database named by SQLITE_PATH -- point it at a scratch file to rebuild aside")
     args = parser.parse_args(argv)
     collector = build(args.contract)
     if args.replay:
