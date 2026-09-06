@@ -223,3 +223,172 @@ def test_build_requires_the_env_file_to_carry_sqlite_path(tmp_path, monkeypatch)
     monkeypatch.delenv("SQLITE_PATH", raising=False)
     with pytest.raises(Exception, match="SQLITE_PATH"):
         pc.build(str(tmp_path / "missing.json"), env_path=str(env))
+
+
+# ── Replay: the derived table is rebuildable from retention by the same path ─
+
+def _days_today():
+    return [datetime.now(timezone.utc).strftime("%Y-%m-%d")]
+
+
+def test_replay_reproduces_the_live_table_by_the_same_path(collector, monkeypatch, tmp_path):
+    arrivals = [PAYLOAD,                                                   # ok
+                PAYLOAD,                                                   # identical -> duplicate, no payload retained
+                [dict(_item("PM2.5", 14)), dict(_item("OZONE", 25))],        # partial (PM10 unstated)
+                [dict(i, nowcastAQI=None) if i["parameterName"] == "PM10" else i for i in PAYLOAD],   # null statement
+                [{"WebServiceError": [{"Message": "x"}]}]]                 # malformed
+    for payload in arrivals:
+        monkeypatch.setattr(collector, "fetch", lambda p=payload: json.dumps(p).encode())
+        collector.attempt()
+    live = collector.db.execute("SELECT * FROM aq ORDER BY ts").fetchall()
+    retention_before = _outcomes()
+
+    rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
+    pc.ensure_table(rebuilt, collector.contract)
+    replayer = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("test_replay"))
+    summary = replayer.replay(["2026-09-05"], today=_days_today()[0])   # the observation date PAYLOAD states
+
+    assert rebuilt.execute("SELECT * FROM aq ORDER BY ts").fetchall() == live
+    assert summary == {"provider": "acme", "days": ["2026-09-05"], "capture_days_scanned": summary["capture_days_scanned"],
+                       "records": 5, "without_payload": 1, "projected": 4, "other_dates": 0, "written": 3,
+                       "ok": 2, "partial": 1, "empty": 0, "malformed": 1, "reclassified": 0}
+    assert _outcomes() == retention_before                                 # replay never writes retention
+
+
+def test_replay_is_idempotent_and_the_latest_statement_wins_in_capture_order(collector, monkeypatch, tmp_path):
+    for aqi in (11, 16):
+        monkeypatch.setattr(collector, "fetch", lambda a=aqi: json.dumps([dict(_item("PM2.5", a))]).encode())
+        collector.attempt()
+    rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
+    pc.ensure_table(rebuilt, collector.contract)
+    replayer = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("test_replay"))
+    first = replayer.replay(["2026-09-05"])
+    rows = rebuilt.execute("SELECT ts, pm25_aqi FROM aq").fetchall()
+    second = replayer.replay(["2026-09-05"])
+    assert rows == [("2026-09-05 14:00:00", 16)]
+    assert rebuilt.execute("SELECT ts, pm25_aqi FROM aq").fetchall() == rows
+    assert first["written"] == 2 and second["written"] == 2               # idempotent upsert: same rows, same result
+
+
+def test_replay_counts_a_retained_outcome_that_content_no_longer_earns(collector, monkeypatch, tmp_path):
+    """A retained outcome is a proxy; the replay re-derives it from the bytes."""
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps(PAYLOAD).encode())
+    collector.attempt()
+    rr.record_outcome("acme", rr.OUTCOME_FETCH_ERROR, detail="simulated")     # no payload: skipped
+    # a payload retained under 'ok' by an earlier contract that the current contract cannot project
+    rr.retain("acme", json.dumps([{"ParameterName": "PM2.5", "AQI": 5}]).encode(), outcome=rr.OUTCOME_OK)
+    rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
+    pc.ensure_table(rebuilt, collector.contract)
+    summary = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("t")).replay(["2026-09-05"])
+    assert summary["records"] == 3 and summary["without_payload"] == 1
+    assert summary["malformed"] == 1 and summary["reclassified"] == 1 and summary["written"] == 1
+
+
+def test_replay_of_a_date_with_no_retention_is_empty_not_an_error(collector):
+    assert collector.replay(["1999-01-01"], today="1999-01-03")["records"] == 0
+
+
+def test_cli_replay_prints_one_summary_line_and_exits(collector, monkeypatch, capsys):
+    monkeypatch.setattr(pc, "build", lambda path: collector)
+    pc.main(["--contract", "x.json", "--replay", "1999-01-01"])
+    out = capsys.readouterr().out.strip().splitlines()
+    assert len(out) == 1 and json.loads(out[0])["days"] == ["1999-01-01"]
+
+
+def test_replay_selects_by_observation_date_so_a_later_capture_day_still_wins(collector, monkeypatch, tmp_path):
+    """The inherent date controls: a revision of hour 19 captured after the UTC-day boundary belongs to the
+    observation day and is replayed with it, so a single-day replay cannot regress the row."""
+    import datetime as dt
+    real = rr.datetime
+    class Clock(dt.datetime):
+        _now = dt.datetime(2026, 9, 5, 23, 39, tzinfo=dt.timezone.utc)
+        @classmethod
+        def now(cls, tz=None): return cls._now
+    monkeypatch.setattr(rr, "datetime", Clock)
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps([_item("PM2.5", 11, hour="19:00")]).encode())
+    collector.attempt()                                                       # captured 2026-09-05Z
+    Clock._now = dt.datetime(2026, 9, 6, 0, 9, tzinfo=dt.timezone.utc)
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps([_item("PM2.5", 13, hour="19:00")]).encode())
+    collector.attempt()                                                       # revision captured 2026-09-06Z
+    monkeypatch.setattr(rr, "datetime", real)
+    rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
+    pc.ensure_table(rebuilt, collector.contract)
+    summary = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("t")).replay(
+        ["2026-09-05"], today="2026-09-07")                                  # one observation day requested
+    assert summary["capture_days_scanned"] == 4 and summary["records"] == 2 and summary["written"] == 2   # 09-04..09-07
+    assert rebuilt.execute("SELECT pm25_aqi FROM aq").fetchone() == (13,)       # the later statement wins
+
+
+def test_replay_leaves_statements_about_other_dates_alone(collector, monkeypatch, tmp_path):
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps([_item("PM2.5", 11, date="2026-09-05")]).encode())
+    collector.attempt()
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps([_item("PM2.5", 12, date="2026-09-06")]).encode())
+    collector.attempt()
+    rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
+    pc.ensure_table(rebuilt, collector.contract)
+    summary = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("t")).replay(["2026-09-06"])
+    assert summary["other_dates"] == 1 and summary["written"] == 1
+    assert rebuilt.execute("SELECT ts FROM aq").fetchall() == [("2026-09-06 14:00:00",)]
+
+
+def test_replay_counts_an_empty_arrival_as_empty_not_malformed(collector, monkeypatch, tmp_path, caplog):
+    monkeypatch.setattr(collector, "fetch", lambda: b"[]")
+    collector.attempt()
+    rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
+    pc.ensure_table(rebuilt, collector.contract)
+    with caplog.at_level(logging.INFO, logger="t"):
+        summary = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("t")).replay(_days_today())
+    assert summary["empty"] == 1 and summary["malformed"] == 0 and summary["reclassified"] == 0
+    assert not any(r.levelno >= logging.ERROR for r in caplog.records)
+
+
+def test_replay_repairs_a_row_the_live_write_lost(collector, monkeypatch, tmp_path):
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps(PAYLOAD).encode())
+    collector.db.execute("ALTER TABLE aq RENAME TO aq_gone")
+    collector.run(_stop_after_first_attempt(), sleep=lambda s: None)          # retained ok, derived write_error
+    collector.db.execute("ALTER TABLE aq_gone RENAME TO aq")
+    assert _rows(collector) == []
+    summary = collector.replay(["2026-09-05"])
+    assert summary["written"] == 1 and _rows(collector) == [("2026-09-05 14:00:00", 11)]
+
+
+def test_cli_replay_refuses_a_day_that_is_not_a_utc_day(collector, monkeypatch, capsys):
+    monkeypatch.setattr(pc, "build", lambda path: collector)
+    for bad in ("../acme/2026-09-06", "2026-13-01", "nonsense"):
+        with pytest.raises(SystemExit):
+            pc.main(["--contract", "x.json", "--replay", bad])
+        assert "not a UTC day" in capsys.readouterr().err
+    assert pc._utc_day("2026-9-6") == "2026-09-06"      # a real day, normalized to the day-file name
+
+
+def test_replay_of_two_observation_days_is_order_independent_when_their_captures_start_on_different_days(collector, monkeypatch, tmp_path):
+    import datetime as dt
+    real = rr.datetime
+    class Clock(dt.datetime):
+        _now = dt.datetime(2026, 9, 6, 15, 0, tzinfo=dt.timezone.utc)
+        @classmethod
+        def now(cls, tz=None): return cls._now
+    monkeypatch.setattr(rr, "datetime", Clock)
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps([_item("PM2.5", 6, date="2026-09-06")]).encode())
+    collector.attempt()                                                       # obs A captured 09-06
+    Clock._now = dt.datetime(2026, 9, 8, 15, 0, tzinfo=dt.timezone.utc)
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps([_item("PM2.5", 8, date="2026-09-08")]).encode())
+    collector.attempt()                                                       # obs B captured 09-08
+    monkeypatch.setattr(rr, "datetime", real)
+    for order in (["2026-09-06", "2026-09-08"], ["2026-09-08", "2026-09-06"]):
+        rebuilt = sqlite3.connect(":memory:")
+        pc.ensure_table(rebuilt, collector.contract)
+        pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("t")).replay(order, today="2026-09-09")
+        assert rebuilt.execute("SELECT ts, pm25_aqi FROM aq ORDER BY ts").fetchall() == [
+            ("2026-09-06 14:00:00", 6), ("2026-09-08 14:00:00", 8)]
+
+
+def test_replay_scans_one_capture_day_before_the_named_day(collector):
+    """A provider east of UTC can state a date that is captured on the previous UTC day."""
+    summary = collector.replay(["2026-09-05"], today="2026-09-05")
+    assert summary["capture_days_scanned"] == 2
+
+
+def test_replay_refuses_an_observation_day_after_today(collector):
+    with pytest.raises(Exception, match="after today"):
+        collector.replay(["2999-01-01"])

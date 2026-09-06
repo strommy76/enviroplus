@@ -38,6 +38,9 @@ SQLite projection, and their backup lane.
   AirNow lane is `contracts/airnow_current.json`. A provider API change is a
   contract edit. The derived row is keyed by the provider's stated observation
   time and follows the provider's latest statement; every statement is retained.
+  `provider_collector.py --contract <c> --replay DAY...` is the supported path
+  that re-derives a contract's derived table from canonical retention through
+  the same projection and write path live uses.
 - Repo-managed service files describe the intended service content. Which
   hardware-specific dashboard unit is active is host residue and must be proven
   from the running service manager, not inferred from this repository.
