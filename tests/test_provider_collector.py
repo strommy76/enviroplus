@@ -250,7 +250,7 @@ def test_replay_reproduces_the_live_table_by_the_same_path(collector, monkeypatc
 
     assert rebuilt.execute("SELECT * FROM aq ORDER BY ts").fetchall() == live
     assert summary == {"provider": "acme", "days": _days_today(), "records": 5, "without_payload": 1,
-                       "projected": 4, "written": 3, "malformed": 1, "reclassified": 0}
+                       "projected": 4, "written": 3, "ok": 2, "partial": 1, "empty": 0, "malformed": 1, "reclassified": 0}
     assert _outcomes() == retention_before                                 # replay never writes retention
 
 
@@ -292,3 +292,56 @@ def test_cli_replay_prints_one_summary_line_and_exits(collector, monkeypatch, ca
     pc.main(["--contract", "x.json", "--replay", "1999-01-01"])
     out = capsys.readouterr().out.strip().splitlines()
     assert len(out) == 1 and json.loads(out[0])["days"] == ["1999-01-01"]
+
+
+def test_replay_orders_days_chronologically_whatever_the_operator_typed(collector, monkeypatch, tmp_path):
+    """Latest statement wins in CAPTURE order: a ts restated on the next UTC day must win over the earlier day."""
+    import datetime as dt
+    real = rr.datetime
+    class Clock(dt.datetime):
+        _now = dt.datetime(2026, 9, 5, 23, 50, tzinfo=dt.timezone.utc)
+        @classmethod
+        def now(cls, tz=None): return cls._now
+    monkeypatch.setattr(rr, "datetime", Clock)
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps([_item("PM2.5", 11, hour="19:00")]).encode())
+    collector.attempt()                                                       # captured 2026-09-05Z
+    Clock._now = dt.datetime(2026, 9, 6, 0, 20, tzinfo=dt.timezone.utc)
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps([_item("PM2.5", 13, hour="19:00")]).encode())
+    collector.attempt()                                                       # revision captured 2026-09-06Z
+    monkeypatch.setattr(rr, "datetime", real)
+    rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
+    pc.ensure_table(rebuilt, collector.contract)
+    summary = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("t")).replay(
+        ["2026-09-06", "2026-09-05", "2026-09-06"])                          # descending and duplicated on purpose
+    assert summary["days"] == ["2026-09-05", "2026-09-06"] and summary["records"] == 2
+    assert rebuilt.execute("SELECT pm25_aqi FROM aq").fetchone() == (13,)
+
+
+def test_replay_counts_an_empty_arrival_as_empty_not_malformed(collector, monkeypatch, tmp_path, caplog):
+    monkeypatch.setattr(collector, "fetch", lambda: b"[]")
+    collector.attempt()
+    rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
+    pc.ensure_table(rebuilt, collector.contract)
+    with caplog.at_level(logging.INFO, logger="t"):
+        summary = pc.Collector(contract=collector.contract, db=rebuilt, log=logging.getLogger("t")).replay(_days_today())
+    assert summary["empty"] == 1 and summary["malformed"] == 0 and summary["reclassified"] == 0
+    assert not any(r.levelno >= logging.ERROR for r in caplog.records)
+
+
+def test_replay_repairs_a_row_the_live_write_lost(collector, monkeypatch, tmp_path):
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps(PAYLOAD).encode())
+    collector.db.execute("ALTER TABLE aq RENAME TO aq_gone")
+    collector.run(_stop_after_first_attempt(), sleep=lambda s: None)          # retained ok, derived write_error
+    collector.db.execute("ALTER TABLE aq_gone RENAME TO aq")
+    assert _rows(collector) == []
+    summary = collector.replay(_days_today())
+    assert summary["written"] == 1 and _rows(collector) == [("2026-09-05 14:00:00", 11)]
+
+
+def test_cli_replay_refuses_a_day_that_is_not_a_utc_day(collector, monkeypatch, capsys):
+    monkeypatch.setattr(pc, "build", lambda path: collector)
+    for bad in ("../acme/2026-09-06", "2026-13-01", "nonsense"):
+        with pytest.raises(SystemExit):
+            pc.main(["--contract", "x.json", "--replay", bad])
+        assert "not a UTC day" in capsys.readouterr().err
+    assert pc._utc_day("2026-9-6") == "2026-09-06"      # a real day, normalized to the day-file name

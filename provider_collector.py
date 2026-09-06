@@ -30,6 +30,7 @@ import time
 import urllib.request
 from collections import Counter
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Callable
 
 from provider_contract import Contract, ProjectionError, load_contract, project
@@ -157,16 +158,19 @@ class Collector:
         return written
 
     def replay(self, days: list[str]) -> dict[str, Any]:
-        """Re-derive the derived table from canonical retention for the named days.
+        """Re-derive the derived table from canonical retention for the named UTC days.
 
-        Reads retention in capture order and pushes every retained payload
-        through the same projection and the same upsert live uses, so the
-        rebuilt rows are the rows live would have written. Never writes to
-        retention. Returns a determinate summary.
+        Reads retention in capture order -- days ascending, records in file
+        order -- and pushes every retained payload through the same projection
+        and the same write path live uses, so the rebuilt rows are the rows
+        live would have written. Never writes to retention. Returns a
+        determinate summary; counts are keyed by the outcome each payload
+        earns NOW (a retained outcome is a proxy; content decides).
         """
         provider = self.contract.provider
+        ordered = sorted(set(days))
         tally: Counter = Counter()
-        for day in days:
+        for day in ordered:
             for _captured, recorded_outcome, blob in read_day(provider, day):
                 tally["records"] += 1
                 if blob is None:
@@ -174,16 +178,14 @@ class Collector:
                     continue
                 arrival = project_arrival(self.contract, blob)
                 tally["projected"] += 1
+                tally[arrival.outcome] += 1
                 if arrival.outcome != recorded_outcome:
                     tally["reclassified"] += 1
-                if arrival.row is None:
-                    tally["malformed"] += 1
-                    self.log.error("%s replay %s: %s", provider, day, arrival.detail)
-                    continue
-                if write_row(self.db, self.contract.table, arrival.row, upsert_on=self.contract.primary_key):
+                if self.write(arrival):
                     tally["written"] += 1
-        return {"provider": provider, "days": list(days),
-                **{k: tally[k] for k in ("records", "without_payload", "projected", "written", "malformed", "reclassified")}}
+        return {"provider": provider, "days": ordered,
+                **{k: tally[k] for k in ("records", "without_payload", "projected", "written",
+                                         OUTCOME_OK, OUTCOME_PARTIAL, OUTCOME_EMPTY, OUTCOME_MALFORMED, "reclassified")}}
 
     def run(self, is_shutting_down: Callable[[], bool], sleep: Callable[[float], None] = time.sleep) -> None:
         provider = self.contract.provider
@@ -242,11 +244,21 @@ def build(contract_path: str, *, env_path: str = _ENV_PATH) -> Collector:
     return Collector(contract=contract, db=db, log=log)
 
 
+def _utc_day(text: str) -> str:
+    """A --replay argument names exactly one retention day file; anything else is a client error."""
+    try:
+        return datetime.strptime(text, "%Y-%m-%d").strftime("%Y-%m-%d")
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{text!r} is not a UTC day in YYYY-MM-DD form") from None
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Execute one provider capture contract.")
     parser.add_argument("--contract", required=True, help="path to the contract JSON")
-    parser.add_argument("--replay", nargs="+", metavar="DAY",
-                        help="re-derive the derived table from retention for these days (YYYY-MM-DD) and exit")
+    parser.add_argument("--replay", nargs="+", metavar="DAY", type=_utc_day,
+                        help="re-derive the derived table from retention for these UTC capture days (YYYY-MM-DD; "
+                             "retention day files are UTC-dated) and exit; writes to the database named by SQLITE_PATH "
+                             "-- point it at a scratch file to rebuild aside")
     args = parser.parse_args(argv)
     collector = build(args.contract)
     if args.replay:
