@@ -340,7 +340,11 @@ def project(contract: Contract, data: Any) -> tuple[dict[str, Any], tuple[str, .
     first = data[0]
     for op in contract.row.values():
         for field in _source_fields(op):
-            stated = {json.dumps(item.get(field), sort_keys=True, default=repr) for item in data}
+            # An omitted field and a field sent as null are different statements
+            # (one keeps the earlier value, the other overwrites it), so they
+            # must not collapse into one reading of "agreement".
+            stated = {json.dumps(item[field], sort_keys=True, default=repr) if field in item else "<unstated>"
+                      for item in data}
             if len(stated) > 1:
                 raise ProjectionError(f"items disagree on {field!r}: {sorted(stated)}")
     for column, op in contract.row.items():

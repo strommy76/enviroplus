@@ -215,6 +215,9 @@ def test_absent_non_key_field_is_left_unstated_and_named(contract):
      "items disagree on 'hourObserved'"),
     (lambda p: [dict(i, reportingAreaName="Elsewhere") if i["parameterName"] == "PM10" else i for i in p],
      "items disagree on 'reportingAreaName'"),
+    (lambda p: [dict(i, reportingAreaName=None) if i["parameterName"] == "PM10" else
+                {k: v for k, v in i.items() if k != "reportingAreaName"} for i in p],
+     "items disagree on 'reportingAreaName'"),   # omitted vs null are different statements
     (lambda p: [{"WebServiceError": [{"Message": "Invalid API key"}]}], "lacks pivot key"),
     (lambda p: [], "not a non-empty list"),
     (lambda p: {"observations": p}, "not a non-empty list"),
@@ -290,3 +293,8 @@ def test_loader_refuses_boolean_where_a_positive_integer_is_declared(tmp_path, e
     doc["request"]["timeout_s"] = True
     with pytest.raises(ContractError, match="timeout_s: must be a positive integer"):
         load_contract(_write(tmp_path, doc))
+
+
+def test_row_field_sent_as_null_is_a_statement_of_null(contract):
+    row, absent = project(contract, [dict(i, reportingAreaName=None) for i in PAYLOAD])
+    assert "reporting_area" in row and row["reporting_area"] is None and absent == ()
