@@ -568,7 +568,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, pm25_aqi AS value FROM epa_air_quality ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts, CASE WHEN local_time_zone = 'EDT' THEN '+4 hours' WHEN local_time_zone = 'EST' THEN '+5 hours' WHEN local_time_zone IS NULL THEN '+5 hours' END) AS INTEGER) AS time, pm25_aqi AS value FROM epa_air_quality ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"

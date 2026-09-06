@@ -1,5 +1,5 @@
 [Unit]
-Description=AirNow (EPA) Air Quality Poller
+Description=AirNow (EPA) Air Quality Poller (provider capture contract)
 After=network-online.target
 Wants=network-online.target
 
@@ -8,7 +8,7 @@ Type=simple
 User=pistrommy
 WorkingDirectory=/home/pistrommy/projects/enviroplus
 Environment=PYTHONPATH=/home/pistrommy/projects
-ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python airnow_wx.py
+ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python provider_collector.py --contract contracts/airnow_current.json
 Restart=always
 RestartSec=10
 

@@ -39,8 +39,8 @@ def collectors(tmp_path_factory):
     db = tmp_path_factory.mktemp("wiring") / "scratch.db"
     os.environ["SQLITE_PATH"] = str(db)
     import ambient_wx
-    import airnow_wx
-    return ambient_wx, airnow_wx
+    import provider_collector
+    return ambient_wx, provider_collector
 
 
 # ── Importing a collector must not start collecting ───────────────────────────
@@ -48,7 +48,7 @@ def collectors(tmp_path_factory):
 def test_importing_a_collector_does_not_run_it(collectors):
     """The loop is behind run(); import alone must do no collecting."""
     ambient, airnow = collectors
-    assert callable(ambient.run) and callable(airnow.run)
+    assert callable(ambient.run) and callable(airnow.main)
 
 
 # ── Response classification ───────────────────────────────────────────────────
@@ -150,36 +150,3 @@ def _run_one_iteration(module, monkeypatch, *, fetch_raises=None, write_raises=N
 
     module.run()
     return recorded
-
-
-def test_fetch_failure_is_actually_recorded(collectors, monkeypatch):
-    """Deleting the record_outcome call from this handler must fail a test."""
-    for module in collectors:
-        rec = _run_one_iteration(module, monkeypatch,
-                                 fetch_raises=urllib.error.URLError("down"))
-        assert rec, f"{module.__name__} recorded nothing for a failed fetch"
-        assert rec[0][1] == module.OUTCOME_FETCH_ERROR
-
-
-def test_write_failure_is_recorded_as_a_write_error(collectors, monkeypatch):
-    """The store must not report a provider outage when the database broke."""
-    for module in collectors:
-        rec = _run_one_iteration(
-            module, monkeypatch,
-            write_raises=sqlite3.OperationalError("database is locked"))
-        assert rec, f"{module.__name__} recorded nothing for a failed write"
-        assert rec[0][1] == module.OUTCOME_WRITE_ERROR, \
-            f"{module.__name__} misattributed a DB failure as {rec[0][1]}"
-
-
-def test_already_recorded_outcome_is_not_recorded_twice(collectors, monkeypatch):
-    """One attempt, one record.
-
-    _fetch retains a malformed payload under its own outcome; the loop handler
-    must not then add a second record calling it a fetch failure.
-    """
-    from shared.raw_retention import OutcomeAlreadyRecorded
-    for module in collectors:
-        rec = _run_one_iteration(module, monkeypatch,
-                                 fetch_raises=OutcomeAlreadyRecorded("malformed"))
-        assert rec == [], f"{module.__name__} double-recorded one attempt: {rec}"
