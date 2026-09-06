@@ -157,31 +157,32 @@ def test_single_digit_hour_is_accepted_and_normalized_to_the_pk_shape(contract):
 
 # ── Projection: true provider states -> NULL + partial ─────────────────────────
 
-def test_absent_declared_parameter_is_null_and_named(contract):
+def test_absent_declared_parameter_is_left_unstated_and_named(contract):
     row, absent = project(contract, [_item("PM2.5", 11), _item("OZONE", 22)])
-    assert row["pm10_aqi"] is None and row["pm10_category"] is None
+    assert "pm10_aqi" not in row and "pm10_category" not in row     # not stated: not written, not NULLed
     assert absent == ("pm10_aqi", "pm10_category")
 
 
-def test_null_declared_field_is_null_and_named(contract):
+def test_null_declared_field_is_a_statement_of_null(contract):
     row, absent = project(contract, [dict(_item("PM2.5", None), aqiCategoryName=None), _item("OZONE", 2)])
-    assert row["pm25_aqi"] is None and absent == ("pm10_aqi", "pm10_category", "pm25_aqi", "pm25_category")
+    assert row["pm25_aqi"] is None and row["pm25_category"] is None   # stated as null: written as NULL
+    assert absent == ("pm10_aqi", "pm10_category")
 
 
-def test_all_declared_parameters_absent_is_not_an_observation(contract):
+def test_explicit_null_statements_are_an_observation(contract):
     payload = [_item("PM2.5", None), _item("OZONE", None), _item("PM10", None)]
     for item in payload:
         item["aqiCategoryName"] = None
-    with pytest.raises(ProjectionError, match="no declared parameter present"):
-        project(contract, payload)
+    row, absent = project(contract, payload)
+    assert row["pm25_aqi"] is None and row["ozone_category"] is None and "ts" in row and absent == ()
 
 
-def test_absent_non_key_field_is_null_and_named(contract):
+def test_absent_non_key_field_is_left_unstated_and_named(contract):
     payload = copy.deepcopy(PAYLOAD)
     for item in payload:
         del item["reportingAreaName"]
     row, absent = project(contract, payload)
-    assert row["reporting_area"] is None and absent == ("reporting_area",)
+    assert "reporting_area" not in row and absent == ("reporting_area",)
 
 
 # ── Projection: outside the declared shape -> ProjectionError ──────────────────

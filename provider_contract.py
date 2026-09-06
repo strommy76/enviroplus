@@ -287,13 +287,14 @@ def _source_fields(op: TimeOp | FieldOp) -> tuple[str, ...]:
 def project(contract: Contract, data: Any) -> tuple[dict[str, Any], tuple[str, ...]]:
     """Project a parsed payload to one derived row.
 
-    Returns (row, absent_columns). A declared parameter the provider did not
-    send, or a declared field sent as null, is NULL and named in
+    Returns (row, absent_columns). The row holds only the columns this arrival
+    states (a field sent as null is a statement of null). A declared parameter
+    or row field the provider did not send is left out of the row and named in
     absent_columns -- a true provider state the caller records as `partial`.
     Anything outside the declared shape raises ProjectionError: an item
     without the pivot key, a parameter name outside the vocabulary, two items
-    resolving to one store key, an item lacking a declared field, no declared
-    parameter at all, items disagreeing on a row-level field, a value whose
+    resolving to one store key, an item lacking a declared field, items
+    disagreeing on a row-level field, a value whose
     type is not the declared storage class, or time fields that do not parse.
     """
     pivot = contract.pivot
@@ -313,20 +314,25 @@ def project(contract: Contract, data: Any) -> tuple[dict[str, Any], tuple[str, .
             raise ProjectionError(f"two items resolve to store key {key!r}")
         items[key] = item
 
+    # The row carries only what the provider STATED in this arrival. A declared
+    # parameter the provider did not send is absent from the row (named in
+    # `absent`), never written as NULL: on insert the column is NULL because
+    # nothing was ever stated, and on a later statement it keeps the value the
+    # provider stated before -- one arrival cannot withdraw another's
+    # assertion by omission. A field sent as null IS a statement and is
+    # written as NULL.
     row: dict[str, Any] = {}
     absent: list[str] = []
     for key in sorted(set(pivot.vocabulary.values())):
         item = items.get(key)
         for template, field in pivot.columns.items():
             column = template.format(key=key)
-            if item is not None and field not in item:
-                raise ProjectionError(f"item {item[pivot.by]!r} lacks declared field {field!r}")
-            value = _typed(contract, column, item.get(field) if item is not None else None)
-            row[column] = value
-            if value is None:
+            if item is None:
                 absent.append(column)
-    if all(row[c] is None for c in contract.pivot_columns()):
-        raise ProjectionError("no declared parameter present in payload")
+                continue
+            if field not in item:
+                raise ProjectionError(f"item {item[pivot.by]!r} lacks declared field {field!r}")
+            row[column] = _typed(contract, column, item[field])
 
     # Row-level fields describe the observation set as a whole, so every item
     # must state them identically; otherwise the row would depend on the order
@@ -340,9 +346,8 @@ def project(contract: Contract, data: Any) -> tuple[dict[str, Any], tuple[str, .
     for column, op in contract.row.items():
         if isinstance(op, TimeOp):
             row[column] = _time(op, first)
+        elif op.field not in first:
+            absent.append(column)
         else:
-            value = _typed(contract, column, first.get(op.field))
-            row[column] = value
-            if value is None:
-                absent.append(column)
+            row[column] = _typed(contract, column, first[op.field])
     return row, tuple(absent)

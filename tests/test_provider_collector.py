@@ -22,7 +22,7 @@ import pytest
 import provider_collector as pc  # noqa: E402
 from provider_contract import load_contract  # noqa: E402
 from shared import raw_retention as rr  # noqa: E402
-from tests.test_provider_contract import CONTRACT, PAYLOAD  # noqa: E402
+from tests.test_provider_contract import CONTRACT, PAYLOAD, _item  # noqa: E402
 
 
 @pytest.fixture
@@ -139,6 +139,25 @@ def test_absent_parameter_writes_the_row_and_records_partial(collector, monkeypa
     monkeypatch.setattr(collector, "fetch", lambda: json.dumps(PAYLOAD[:2]).encode())
     assert collector.attempt() is True
     assert _outcomes() == [rr.OUTCOME_PARTIAL]         # the arrival itself carries the partial outcome
+    assert collector.db.execute("SELECT pm10_aqi FROM aq").fetchone() == (None,)   # never stated
+
+
+def test_a_later_statement_that_omits_a_parameter_keeps_the_earlier_value(collector, monkeypatch):
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps(PAYLOAD).encode())
+    collector.attempt()                                                          # pm25 11, pm10 3, ozone 22
+    later = [dict(_item("PM2.5", 14)), dict(_item("OZONE", 25))]                 # PM10 not stated this time
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps(later).encode())
+    assert collector.attempt() is True
+    assert collector.db.execute("SELECT pm25_aqi, pm10_aqi, ozone_aqi FROM aq").fetchone() == (14, 3, 25)
+    assert _outcomes() == [rr.OUTCOME_OK, rr.OUTCOME_PARTIAL]
+
+
+def test_a_later_statement_of_null_overwrites_the_earlier_value(collector, monkeypatch):
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps(PAYLOAD).encode())
+    collector.attempt()
+    later = [dict(i, nowcastAQI=None) if i["parameterName"] == "PM10" else i for i in PAYLOAD]
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps(later).encode())
+    collector.attempt()
     assert collector.db.execute("SELECT pm10_aqi FROM aq").fetchone() == (None,)
 
 
