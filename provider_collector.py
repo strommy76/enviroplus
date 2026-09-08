@@ -10,6 +10,10 @@ DESCRIPTION: Generic provider collector. Executes one capture contract
              recorded as a write failure, not a fetch failure.
 
              Usage: provider_collector.py --contract contracts/<provider>.json
+                    provider_collector.py --contract ... --replay DAY [DAY ...]
+             Replay re-derives the derived rows for named observation dates
+             from canonical retention through the same projection and write
+             path live uses; selection is by the data's inherent date.
 
 CHANGELOG:
 2026-09-05 17:40      Claude     [Feature] Initial implementation; replaces the
@@ -25,8 +29,10 @@ import os
 import sqlite3
 import time
 import urllib.request
+from collections import Counter
 from dataclasses import dataclass
-from typing import Callable
+from datetime import datetime, timedelta, timezone
+from typing import Any, Callable
 
 from provider_contract import Contract, ProjectionError, load_contract, project
 from shared.config_service import ConfigError, load_env, require
@@ -40,6 +46,7 @@ from shared.raw_retention import (
     OUTCOME_PARTIAL,
     OUTCOME_WRITE_ERROR,
     configure as configure_retention,
+    read_day,
     record_outcome,
     retain,
 )
@@ -75,6 +82,31 @@ def outcome_for_exception(exc: BaseException) -> str:
     return OUTCOME_FETCH_ERROR
 
 
+@dataclass(frozen=True)
+class Arrival:
+    """What one arrived payload earned: its outcome, and the row it projects to (if any)."""
+
+    outcome: str
+    detail: str | None
+    row: dict[str, Any] | None
+    absent: tuple[str, ...]
+
+
+def project_arrival(contract: Contract, raw: bytes) -> Arrival:
+    """Classify and project one payload. Pure: live capture and replay both use it,
+    so a row derived from retention is the row live would have written."""
+    data, outcome, detail = classify_response(raw)
+    if outcome != OUTCOME_OK:
+        return Arrival(outcome, detail, None, ())
+    try:
+        row, absent = project(contract, data)
+    except ProjectionError as exc:
+        return Arrival(OUTCOME_MALFORMED, f"declared projection not satisfied: {exc}", None, ())
+    if absent:
+        return Arrival(OUTCOME_PARTIAL, "absent from response: " + ", ".join(absent), row, absent)
+    return Arrival(OUTCOME_OK, None, row, ())
+
+
 @dataclass
 class Collector:
     contract: Contract
@@ -97,27 +129,22 @@ class Collector:
         provider = self.contract.provider
         url = self.contract.request_url()
         raw = self.fetch()
-
-        data, outcome, detail = classify_response(raw)
-        row, absent = None, ()
-        if outcome == OUTCOME_OK:
-            try:
-                row, absent = project(self.contract, data)
-            except ProjectionError as exc:
-                outcome, detail = OUTCOME_MALFORMED, f"declared projection not satisfied: {exc}"
-            else:
-                if absent:
-                    outcome, detail = OUTCOME_PARTIAL, "absent from response: " + ", ".join(absent)
+        arrival = project_arrival(self.contract, raw)
         try:
-            retain(provider, raw, url=url, outcome=outcome, detail=detail)
+            retain(provider, raw, url=url, outcome=arrival.outcome, detail=arrival.detail)
         except Exception as exc:  # retention failure must not lose the derived row too
             self.log.error("raw retention failed for %s: %s", provider, exc, exc_info=True)
+        return self.write(arrival)
 
-        if row is None:
-            (self.log.error if outcome == OUTCOME_MALFORMED else self.log.info)("%s: %s", provider, detail)
+    def write(self, arrival: Arrival) -> bool:
+        """Write the derived row an arrival projects to; shared by live and replay."""
+        provider = self.contract.provider
+        if arrival.row is None:
+            (self.log.error if arrival.outcome == OUTCOME_MALFORMED else self.log.info)(
+                "%s: %s", provider, arrival.detail)
             return False
-        if absent:
-            self.log.warning("%s: %s", provider, detail)
+        if arrival.absent:
+            self.log.warning("%s: %s", provider, arrival.detail)
         # The derived row is keyed by the provider's stated observation time and
         # follows the provider's latest statement: a revision within the hour
         # overwrites the earlier projection, and a restatement rewrites the same
@@ -125,11 +152,57 @@ class Collector:
         # retention tier's dedup answer: the derived store is its own truth.
         # Every statement stays in retention, so the projection can be
         # re-derived under different logic later.
-        written = write_row(self.db, self.contract.table, row, upsert_on=self.contract.primary_key)
+        written = write_row(self.db, self.contract.table, arrival.row, upsert_on=self.contract.primary_key)
         if written:
             self.log.info("%s row written  %s=%s", provider, self.contract.primary_key,
-                          row[self.contract.primary_key])
+                          arrival.row[self.contract.primary_key])
         return written
+
+    def replay(self, days: list[str], *, today: str | None = None) -> dict[str, Any]:
+        """Re-derive the derived rows whose OBSERVATION date (the provider's stated
+        date, the row key) falls on the named days.
+
+        Selection is by the data's inherent date, never by when it was pulled:
+        retention is scanned from one UTC day before the earliest named day
+        through today, in capture order, and every projected row dated inside
+        the named days is written through the same write path live uses. Later
+        statements captured on later days therefore always win. Statements about
+        other dates met in the scan are counted, not written. Retention is never
+        written. Returns a determinate summary keyed by the outcome each payload
+        earns now (a retained outcome is a proxy; content decides).
+        """
+        provider = self.contract.provider
+        wanted = sorted(set(days))
+        last = today or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        if wanted[-1] > last:
+            raise ConfigError(f"observation day {wanted[-1]} is after today ({last}); no statement about it can exist")
+        # A provider's stated date is local to the provider; the capture day is UTC. The two can differ
+        # by at most one day in either direction, so the scan starts one UTC day before the earliest
+        # named observation day and runs through today.
+        scan = _utc_days_between(_shift_day(wanted[0], -1), last)
+        tally: Counter = Counter()
+        for day in scan:
+            for _captured, recorded_outcome, blob in read_day(provider, day):
+                tally["records"] += 1
+                if blob is None:
+                    tally["without_payload"] += 1
+                    continue
+                arrival = project_arrival(self.contract, blob)
+                tally["projected"] += 1
+                tally[arrival.outcome] += 1
+                if arrival.outcome != recorded_outcome:
+                    tally["reclassified"] += 1
+                if arrival.row is None:
+                    self.write(arrival)          # logs the malformed/empty statement like live does
+                    continue
+                if str(arrival.row[self.contract.primary_key])[:10] not in wanted:
+                    tally["other_dates"] += 1
+                    continue
+                if self.write(arrival):
+                    tally["written"] += 1
+        return {"provider": provider, "days": wanted, "capture_days_scanned": len(scan),
+                **{k: tally[k] for k in ("records", "without_payload", "projected", "other_dates", "written",
+                                         OUTCOME_OK, OUTCOME_PARTIAL, OUTCOME_EMPTY, OUTCOME_MALFORMED, "reclassified")}}
 
     def run(self, is_shutting_down: Callable[[], bool], sleep: Callable[[float], None] = time.sleep) -> None:
         provider = self.contract.provider
@@ -188,11 +261,35 @@ def build(contract_path: str, *, env_path: str = _ENV_PATH) -> Collector:
     return Collector(contract=contract, db=db, log=log)
 
 
+def _shift_day(day: str, delta: int) -> str:
+    return (datetime.strptime(day, "%Y-%m-%d") + timedelta(days=delta)).strftime("%Y-%m-%d")
+
+
+def _utc_days_between(first: str, last: str) -> list[str]:
+    start, end = datetime.strptime(first, "%Y-%m-%d"), datetime.strptime(last, "%Y-%m-%d")
+    return [(start + timedelta(days=i)).strftime("%Y-%m-%d") for i in range((end - start).days + 1)]
+
+
+def _utc_day(text: str) -> str:
+    """A --replay argument names one observation date; anything else is a client error."""
+    try:
+        return datetime.strptime(text, "%Y-%m-%d").strftime("%Y-%m-%d")
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{text!r} is not a UTC day in YYYY-MM-DD form") from None
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Execute one provider capture contract.")
     parser.add_argument("--contract", required=True, help="path to the contract JSON")
+    parser.add_argument("--replay", nargs="+", metavar="DAY", type=_utc_day,
+                        help="re-derive the derived rows whose observation date (the provider's stated date) is one of "
+                             "these days (YYYY-MM-DD), from every retained statement about them, and exit; writes to "
+                             "the database named by SQLITE_PATH -- point it at a scratch file to rebuild aside")
     args = parser.parse_args(argv)
     collector = build(args.contract)
+    if args.replay:
+        print(json.dumps(collector.replay(args.replay)))
+        return
     is_shutting_down = install_shutdown_handler(logger=collector.log)
     collector.run(is_shutting_down)
 

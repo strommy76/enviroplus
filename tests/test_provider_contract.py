@@ -243,7 +243,7 @@ def test_row_fields_do_not_depend_on_item_order(contract):
 def test_loader_refuses_primary_key_that_is_not_a_row_projection(tmp_path, env):
     doc = copy.deepcopy(CONTRACT)
     doc["store"]["primary_key"] = "pm25_aqi"
-    with pytest.raises(ContractError, match="primary_key.*must be a row projection"):
+    with pytest.raises(ContractError, match="primary_key.*must be a time projection"):
         load_contract(_write(tmp_path, doc))
 
 
@@ -298,3 +298,10 @@ def test_loader_refuses_boolean_where_a_positive_integer_is_declared(tmp_path, e
 def test_row_field_sent_as_null_is_a_statement_of_null(contract):
     row, absent = project(contract, [dict(i, reportingAreaName=None) for i in PAYLOAD])
     assert "reporting_area" in row and row["reporting_area"] is None and absent == ()
+
+
+def test_loader_refuses_a_primary_key_that_is_a_field_projection(tmp_path, env):
+    doc = copy.deepcopy(CONTRACT)
+    doc["store"]["primary_key"] = "reporting_area"
+    with pytest.raises(ContractError, match="must be a time projection"):
+        load_contract(_write(tmp_path, doc))

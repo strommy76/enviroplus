@@ -118,10 +118,3 @@ def test_dropout_predicate_uses_measurements_not_field_count(collectors):
     dropout."""
     ambient, _ = collectors
     assert ambient.has_outdoor_reading({"tempf": 80.0}) is True
-
-
-#
-# Written because deleting every record_outcome call from both collector loops
-# passed the entire suite. The pure helpers were tested; whether anything used
-# them was not. A referee that cannot fail for the thing it guards is not a
-# referee.

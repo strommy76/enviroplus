@@ -244,8 +244,9 @@ def load_contract(path: str | Path) -> Contract:
         raise ContractError(
             f"{ctx}: produced columns must equal store.columns; "
             f"undeclared={sorted(produced - declared)} never_produced={sorted(declared - produced)}")
-    if primary_key not in row:
-        raise ContractError(f"{ctx}.store.primary_key: {primary_key!r} must be a row projection")
+    if primary_key not in row or not isinstance(row[primary_key], TimeOp):
+        raise ContractError(f"{ctx}.store.primary_key: {primary_key!r} must be a time projection "
+                            "(the derived row is keyed by the provider's stated observation time)")
     for column, op in row.items():
         if isinstance(op, TimeOp) and columns[column] != "TEXT":
             raise ContractError(f"{ctx}.store.columns[{column!r}]: a time projection is TEXT, declared {columns[column]!r}")
