@@ -10,7 +10,7 @@ Wants=network-online.target
 # uses the host's existing push transport rather than a second alerting stack.
 # OnFailure is a [Unit] directive: placed under [Service], systemd parses it,
 # logs "Unknown key", discards it, and the unit runs with no alerting at all.
-OnFailure=enviro_backup_failure.service
+OnFailure=stocks_ops_alert@%n.service
 
 [Service]
 Type=oneshot
