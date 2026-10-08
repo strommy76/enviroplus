@@ -66,11 +66,4 @@ Runtime deployment changes additionally require sequential service activation
 and direct verification of service health, canonical capture, and derived-row
 flow through the real deployed interfaces.
 
-## Review-data Egress
-
-Repository-authored source, diffs, tests, and documentation may be dispatched to
-the configured review seats. Live sensor/provider records, database contents,
-credentials, secret-bearing configuration, and artifacts derived from them stay
-inside their trust domain unless the operator explicitly authorizes that dispatch.
-
 <!-- PROJECT-CONFIG-END v1 -->
