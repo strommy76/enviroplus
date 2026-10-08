@@ -19,9 +19,8 @@ SQLite projection, and their backup lane.
   those inputs exist.
 - Uncommitted `CONFIG_PATH` selects exactly one dashboard configuration
   document. That selected document owns runtime-tunable sensor calibration,
-  thresholds, display behavior, and intervals. The current tracked profiles are
-  `dynamic_config.json` and `dynamic_config.pi5.json`; repository content does
-  not declare which profile is active on a host.
+  thresholds, display behavior, and intervals. Repository content does not
+  declare which profile is active on a host.
 - Uncommitted `.env` owns secrets and host-specific infrastructure bindings.
 - `config/backup.json` owns the database/raw-capture replication contract;
   `scripts/backup_enviro.py` is its supported execution path.
