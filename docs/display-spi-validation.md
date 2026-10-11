@@ -63,3 +63,16 @@ commits add only this provenance and exact unit preimage; runtime bytes unchange
 Independent raw GLM report retained beside this record; finder claims do not
 override the source dispositions above. Deployed-effect review is separate and
 pending. No further source round absent a named defect class.
+
+## Activation gate update
+
+Native host_backup rerun started04:28:23 and failed04:30:56, exit1. Journal
+host_backup_sources.py:51 walk_error raised FileNotFoundError while os.walk
+visited /home/pistrommy/projects/.codex. This is observed backup failure, not
+an established root cause for why that path disappeared. Snapshot validation
+and the required successful terminal result are absent; reboot is prohibited
+by the operator's explicit gate. Raised to pi-Claude driving the backup under D;
+no backup workaround/repair or phantom directory created by this change.
+
+No desired unit/firmware has been activated and no reboot performed. Required
+real-failure alert/rate-limit observation and postboot effect remain pending.
