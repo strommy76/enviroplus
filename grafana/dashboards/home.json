@@ -102,7 +102,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, temp_f AS value FROM readings ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, temp_f AS value FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -167,7 +167,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, humidity AS value FROM readings ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, humidity AS value FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -236,7 +236,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, tempf AS value FROM outdoor ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, tempf AS value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -301,7 +301,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, humidity AS value FROM outdoor ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, humidity AS value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -374,7 +374,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, pm25 AS value FROM readings ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, pm25 AS value FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -439,7 +439,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, windspeedmph AS value FROM outdoor ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, windspeedmph AS value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -504,7 +504,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, wind_speed_mph AS value FROM nws_weather ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, wind_speed_mph AS value FROM nws_weather WHERE datetime(ts) >= datetime($__from / 1000, 'unixepoch') AND datetime(ts) <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -1018,7 +1018,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, temp_f AS \"Indoor Temp\" FROM readings ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, temp_f AS \"Indoor Temp\" FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -1026,7 +1026,7 @@
           "refId": "A"
         },
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, tempf AS \"Outdoor Temp\" FROM outdoor ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, tempf AS \"Outdoor Temp\" FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -1130,7 +1130,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, pm1 AS \"PM1\", pm25 AS \"PM2.5\", pm10 AS \"PM10\" FROM readings ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, pm1 AS \"PM1\", pm25 AS \"PM2.5\", pm10 AS \"PM10\" FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -1230,7 +1230,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, windspeedmph AS \"Wind (mph)\", dailyrainin AS \"Daily Rain (in)\" FROM outdoor ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, windspeedmph AS \"Wind (mph)\", dailyrainin AS \"Daily Rain (in)\" FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -1306,7 +1306,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, cpu_temp_c AS value FROM readings ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, cpu_temp_c AS value FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -1371,7 +1371,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, cpu_load AS value FROM readings ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, cpu_load AS value FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -1436,7 +1436,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, mem_free_mb AS value FROM readings ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, mem_free_mb AS value FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -1493,7 +1493,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, uptime_s AS value FROM readings ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, uptime_s AS value FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"

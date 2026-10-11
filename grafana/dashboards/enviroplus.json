@@ -180,69 +180,6 @@
       },
       "fieldConfig": {
         "defaults": {
-          "decimals": 0,
-          "noValue": "SCD-41 pending",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1000
-              },
-              {
-                "color": "orange",
-                "value": 1500
-              },
-              {
-                "color": "red",
-                "value": 2000
-              }
-            ]
-          },
-          "unit": "ppm"
-        }
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 8,
-        "x": 4,
-        "y": 0
-      },
-      "id": 4,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "text": {
-          "valueSize": 72
-        }
-      },
-      "targets": [
-        {
-          "queryText": "SELECT NULL as value FROM readings ORDER BY ts DESC LIMIT 1",
-          "queryType": "table",
-          "rawQueryText": "SELECT NULL as value FROM readings ORDER BY ts DESC LIMIT 1",
-          "refId": "A"
-        }
-      ],
-      "title": "CO₂",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "frser-sqlite-datasource",
-        "uid": "cfhpdda09qq68e"
-      },
-      "fieldConfig": {
-        "defaults": {
           "decimals": 1,
           "thresholds": {
             "mode": "absolute",
@@ -422,9 +359,9 @@
       "id": 8,
       "targets": [
         {
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as Temperature, humidity as Humidity FROM readings ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as Temperature, humidity as Humidity FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "table",
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as Temperature, humidity as Humidity FROM readings ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as Temperature, humidity as Humidity FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "refId": "A",
           "timeColumns": [
             "time"
@@ -456,9 +393,9 @@
       "id": 9,
       "targets": [
         {
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, pm1 as PM1, pm25 as 'PM2.5', pm10 as PM10 FROM readings ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, pm1 as PM1, pm25 as 'PM2.5', pm10 as PM10 FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "table",
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, pm1 as PM1, pm25 as 'PM2.5', pm10 as PM10 FROM readings ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, pm1 as PM1, pm25 as 'PM2.5', pm10 as PM10 FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "refId": "A",
           "timeColumns": [
             "time"
@@ -494,9 +431,9 @@
       "id": 10,
       "targets": [
         {
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, oxidising as Oxidising FROM readings ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, oxidising as Oxidising FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "table",
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, oxidising as Oxidising FROM readings ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, oxidising as Oxidising FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "refId": "A",
           "timeColumns": [
             "time"
@@ -532,9 +469,9 @@
       "id": 11,
       "targets": [
         {
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, reducing as Reducing FROM readings ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, reducing as Reducing FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "table",
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, reducing as Reducing FROM readings ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, reducing as Reducing FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "refId": "A",
           "timeColumns": [
             "time"
@@ -570,9 +507,9 @@
       "id": 12,
       "targets": [
         {
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, ammonia as Ammonia FROM readings ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, ammonia as Ammonia FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "table",
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, ammonia as Ammonia FROM readings ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, ammonia as Ammonia FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "refId": "A",
           "timeColumns": [
             "time"
@@ -614,9 +551,9 @@
             "type": "frser-sqlite-datasource",
             "uid": "cfhpdda09qq68e"
           },
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, lux as Lux FROM readings ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, lux as Lux FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "table",
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, lux as Lux FROM readings ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, lux as Lux FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "refId": "A",
           "timeColumns": [
             "time"
@@ -798,8 +735,8 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, pm25 AS \"Indoor PM2.5\", pm10 AS \"Indoor PM10\" FROM readings ORDER BY ts",
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, pm25 AS \"Indoor PM2.5\", pm10 AS \"Indoor PM10\" FROM readings ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, pm25 AS \"Indoor PM2.5\", pm10 AS \"Indoor PM10\" FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, pm25 AS \"Indoor PM2.5\", pm10 AS \"Indoor PM10\" FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "table",
           "refId": "A",
           "timeColumns": [

@@ -38,9 +38,9 @@
         }
       },
       "targets": [{
-        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as value FROM outdoor ORDER BY ts",
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "queryType": "table",
-        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as value FROM outdoor ORDER BY ts",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "refId": "A",
         "timeColumns": ["time"]
       }]
@@ -74,9 +74,9 @@
         }
       },
       "targets": [{
-        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, feelslike as value FROM outdoor ORDER BY ts",
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, feelslike as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "queryType": "table",
-        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, feelslike as value FROM outdoor ORDER BY ts",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, feelslike as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "refId": "A",
         "timeColumns": ["time"]
       }]
@@ -109,9 +109,9 @@
         }
       },
       "targets": [{
-        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, humidity as value FROM outdoor ORDER BY ts",
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, humidity as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "queryType": "table",
-        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, humidity as value FROM outdoor ORDER BY ts",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, humidity as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "refId": "A",
         "timeColumns": ["time"]
       }]
@@ -144,9 +144,9 @@
         }
       },
       "targets": [{
-        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, dewpoint as value FROM outdoor ORDER BY ts",
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, dewpoint as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "queryType": "table",
-        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, dewpoint as value FROM outdoor ORDER BY ts",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, dewpoint as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "refId": "A",
         "timeColumns": ["time"]
       }]
@@ -179,9 +179,9 @@
         }
       },
       "targets": [{
-        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windspeedmph as value FROM outdoor ORDER BY ts",
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windspeedmph as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "queryType": "table",
-        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windspeedmph as value FROM outdoor ORDER BY ts",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windspeedmph as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "refId": "A",
         "timeColumns": ["time"]
       }]
@@ -214,9 +214,9 @@
         }
       },
       "targets": [{
-        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windgustmph as value FROM outdoor ORDER BY ts",
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windgustmph as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "queryType": "table",
-        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windgustmph as value FROM outdoor ORDER BY ts",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windgustmph as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "refId": "A",
         "timeColumns": ["time"]
       }]
@@ -273,9 +273,9 @@
         }
       },
       "targets": [{
-        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, baromrelin as value FROM outdoor ORDER BY ts",
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, baromrelin as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "queryType": "table",
-        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, baromrelin as value FROM outdoor ORDER BY ts",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, baromrelin as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "refId": "A",
         "timeColumns": ["time"]
       }]
@@ -309,9 +309,9 @@
         }
       },
       "targets": [{
-        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, uv as value FROM outdoor ORDER BY ts",
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, uv as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "queryType": "table",
-        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, uv as value FROM outdoor ORDER BY ts",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, uv as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "refId": "A",
         "timeColumns": ["time"]
       }]
@@ -344,9 +344,9 @@
         }
       },
       "targets": [{
-        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, solarradiation as value FROM outdoor ORDER BY ts",
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, solarradiation as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "queryType": "table",
-        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, solarradiation as value FROM outdoor ORDER BY ts",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, solarradiation as value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "refId": "A",
         "timeColumns": ["time"]
       }]
@@ -369,9 +369,9 @@
       },
       "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
       "targets": [{
-        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as \"Outdoor\", feelslike as \"Feels Like\", dewpoint as \"Dew Point\", tempinf as \"Indoor\" FROM outdoor ORDER BY ts",
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as \"Outdoor\", feelslike as \"Feels Like\", dewpoint as \"Dew Point\", tempinf as \"Indoor\" FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "queryType": "table",
-        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as \"Outdoor\", feelslike as \"Feels Like\", dewpoint as \"Dew Point\", tempinf as \"Indoor\" FROM outdoor ORDER BY ts",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as \"Outdoor\", feelslike as \"Feels Like\", dewpoint as \"Dew Point\", tempinf as \"Indoor\" FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "refId": "A",
         "timeColumns": ["time"]
       }]
@@ -396,9 +396,9 @@
       },
       "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
       "targets": [{
-        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, humidity as \"Outdoor\", humidityin as \"Indoor\" FROM outdoor ORDER BY ts",
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, humidity as \"Outdoor\", humidityin as \"Indoor\" FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "queryType": "table",
-        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, humidity as \"Outdoor\", humidityin as \"Indoor\" FROM outdoor ORDER BY ts",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, humidity as \"Outdoor\", humidityin as \"Indoor\" FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "refId": "A",
         "timeColumns": ["time"]
       }]
@@ -420,9 +420,9 @@
       },
       "options": { "tooltip": { "mode": "single" }, "legend": { "displayMode": "list", "placement": "bottom" } },
       "targets": [{
-        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, baromrelin as \"Pressure\" FROM outdoor ORDER BY ts",
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, baromrelin as \"Pressure\" FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "queryType": "table",
-        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, baromrelin as \"Pressure\" FROM outdoor ORDER BY ts",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, baromrelin as \"Pressure\" FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "refId": "A",
         "timeColumns": ["time"]
       }]
@@ -448,9 +448,9 @@
       },
       "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
       "targets": [{
-        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windspeedmph as \"Speed\", windgustmph as \"Gust\" FROM outdoor ORDER BY ts",
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windspeedmph as \"Speed\", windgustmph as \"Gust\" FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "queryType": "table",
-        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windspeedmph as \"Speed\", windgustmph as \"Gust\" FROM outdoor ORDER BY ts",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, windspeedmph as \"Speed\", windgustmph as \"Gust\" FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "refId": "A",
         "timeColumns": ["time"]
       }]
@@ -471,9 +471,9 @@
       },
       "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
       "targets": [{
-        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, solarradiation as \"Solar (W/m²)\", uv as \"UV Index\" FROM outdoor ORDER BY ts",
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, solarradiation as \"Solar (W/m²)\", uv as \"UV Index\" FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "queryType": "table",
-        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, solarradiation as \"Solar (W/m²)\", uv as \"UV Index\" FROM outdoor ORDER BY ts",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, solarradiation as \"Solar (W/m²)\", uv as \"UV Index\" FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "refId": "A",
         "timeColumns": ["time"]
       }]
@@ -495,9 +495,9 @@
       },
       "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
       "targets": [{
-        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, hourlyrainin as \"Hourly\", dailyrainin as \"Daily\", weeklyrainin as \"Weekly\" FROM outdoor ORDER BY ts",
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, hourlyrainin as \"Hourly\", dailyrainin as \"Daily\", weeklyrainin as \"Weekly\" FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "queryType": "table",
-        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, hourlyrainin as \"Hourly\", dailyrainin as \"Daily\", weeklyrainin as \"Weekly\" FROM outdoor ORDER BY ts",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, hourlyrainin as \"Hourly\", dailyrainin as \"Daily\", weeklyrainin as \"Weekly\" FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "refId": "A",
         "timeColumns": ["time"]
       }]
@@ -523,9 +523,9 @@
       },
       "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
       "targets": [{
-        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, wind_speed_mph as \"Speed\", wind_gust_mph as \"Gust\" FROM nws_weather ORDER BY ts",
+        "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, wind_speed_mph as \"Speed\", wind_gust_mph as \"Gust\" FROM nws_weather WHERE datetime(ts) >= datetime($__from / 1000, 'unixepoch') AND datetime(ts) <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "queryType": "table",
-        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, wind_speed_mph as \"Speed\", wind_gust_mph as \"Gust\" FROM nws_weather ORDER BY ts",
+        "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, wind_speed_mph as \"Speed\", wind_gust_mph as \"Gust\" FROM nws_weather WHERE datetime(ts) >= datetime($__from / 1000, 'unixepoch') AND datetime(ts) <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
         "refId": "A",
         "timeColumns": ["time"]
       }]
@@ -551,16 +551,16 @@
       "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
       "targets": [
         {
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as \"Ambient Weather\" FROM outdoor ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as \"Ambient Weather\" FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "table",
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as \"Ambient Weather\" FROM outdoor ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, tempf as \"Ambient Weather\" FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "refId": "A",
           "timeColumns": ["time"]
         },
         {
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as \"Selected NWS\" FROM nws_weather ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as \"Selected NWS\" FROM nws_weather WHERE datetime(ts) >= datetime($__from / 1000, 'unixepoch') AND datetime(ts) <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "table",
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as \"Selected NWS\" FROM nws_weather ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as \"Selected NWS\" FROM nws_weather WHERE datetime(ts) >= datetime($__from / 1000, 'unixepoch') AND datetime(ts) <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "refId": "B",
           "timeColumns": ["time"]
         }

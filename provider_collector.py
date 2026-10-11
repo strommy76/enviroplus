@@ -257,7 +257,10 @@ def build(contract_path: str, *, env_path: str = _ENV_PATH) -> Collector:
     configure_retention(os.environ.get("ENVIRO_RAW_ROOT", os.path.join(_BASE, "raw-capture")))
     db = connect(require("SQLITE_PATH"))
     ensure_table(db, contract)
-    log = setup_logger(f"{contract.provider}_collector", require("LOG_PATH"))
+    # One log file per service: several RotatingFileHandlers on one file
+    # rename it out from under each other and strand lines in the rotated copies.
+    log = setup_logger(f"{contract.provider}_collector",
+                       os.path.join(_BASE, f"{contract.provider}_collector.log"))
     return Collector(contract=contract, db=db, log=log)
 
 

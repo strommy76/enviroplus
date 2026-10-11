@@ -3,11 +3,20 @@
 --------------------------------------------------------------------------------
 FILE:        ambient_wx.py
 PATH:        ~/projects/enviroplus/ambient_wx.py
-DESCRIPTION: Polls Ambient Weather API (BSWeather WS-2902) every 60 s and
-             writes outdoor readings to the 'outdoor' table in enviro.db.
-             Runs as a standalone service alongside enviro_dash3.py.
+DESCRIPTION: Polls the Ambient Weather API for the configured station
+             (AW_MAC), retains every response verbatim, and writes the
+             observation to the 'outdoor' table. `--replay DAY...` rebuilds
+             rows from retained responses through the same mapping and write.
 
 CHANGELOG:
+2026-10-11 15:40      Claude      [Fix] Classification never raises, so every
+                                      response is retained before anything can
+                                      fail; select the device by AW_MAC instead
+                                      of the first on the account; a partial
+                                      response is one record, not ok + partial;
+                                      .env loads before any path is read and
+                                      import has no side effect; own log file;
+                                      add --replay so 'outdoor' is rebuildable.
 2026-08-06 15:37      Claude      [Feature] Retain the provider response
                                       verbatim before parsing, and record every
                                       collection attempt. A failed pull now
@@ -24,6 +33,7 @@ CHANGELOG:
 --------------------------------------------------------------------------------
 """
 
+import argparse
 import json
 import os
 import sqlite3
@@ -31,6 +41,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from collections import Counter
 from datetime import datetime, timezone
 
 sys.path.insert(0, "/home/pistrommy/projects")
@@ -47,88 +58,71 @@ from shared.raw_retention import (
     OUTCOME_OK,
     OUTCOME_PARTIAL,
     OUTCOME_WRITE_ERROR,
+    read_day,
     record_outcome,
     retain,
 )
 from shared.signal_handler import install_shutdown_handler
 
 PROVIDER = "ambient"
+_BASE = os.path.dirname(os.path.abspath(__file__))
+_ENV_PATH = os.path.join(_BASE, ".env")
+LOG_PATH = os.path.join(_BASE, "ambient_wx.log")
+# PROVISIONAL: request timeout. Settle from observed Ambient response latency
+# (p99 of urlopen duration) once logged.
+REQUEST_TIMEOUT_S = 15
 
 # Presence of an outdoor measurement distinguishes a full record from a
 # console-only one. When the WS-2902 outdoor array drops off RF the console
 # keeps reporting indoor values, and the response simply omits these keys.
 _OUTDOOR_KEYS = ("tempf", "humidity", "windspeedmph", "winddir", "solarradiation")
 
-# ── Paths / config ─────────────────────────────────────────────────────────────
-_BASE       = os.path.dirname(os.path.abspath(__file__))
-_ENV_PATH   = os.path.join(_BASE, ".env")
-LOG_PATH    = os.path.join(_BASE, "enviro.log")
-SQLITE_PATH = os.environ.get("SQLITE_PATH", os.path.join(_BASE, "enviro.db"))
-RAW_ROOT    = os.environ.get("ENVIRO_RAW_ROOT", os.path.join(_BASE, "raw-capture"))
 
-configure_retention(RAW_ROOT)
-
-load_env(_ENV_PATH, expect_key="AW_API_KEY")
-
-AW_API_KEY  = require("AW_API_KEY")
-AW_APP_KEY  = require("AW_APP_KEY")
-AW_MAC      = require("AW_MAC")
-POLL_S      = int(require("AW_POLL_S"))
-
-AW_URL = (
-    f"https://api.ambientweather.net/v1/devices"
-    f"?apiKey={AW_API_KEY}&applicationKey={AW_APP_KEY}"
-)
-
-# ── Logging ────────────────────────────────────────────────────────────────────
-log = setup_logger("ambient_wx", LOG_PATH)
-
-# ── Signal handler ─────────────────────────────────────────────────────────────
-is_shutting_down = install_shutdown_handler(logger=log)
-
-# ── SQLite ─────────────────────────────────────────────────────────────────────
-_db = connect(SQLITE_PATH)
-_db.execute("""
-    CREATE TABLE IF NOT EXISTS outdoor (
-        ts             TEXT PRIMARY KEY,
-        tempf          REAL, tempinf        REAL,
-        humidity       REAL, humidityin     REAL,
-        baromrelin     REAL, baromabsin     REAL,
-        windspeedmph   REAL, windgustmph    REAL,
-        winddir        INTEGER,
-        maxdailygust   REAL,
-        solarradiation REAL, uv             REAL,
-        dewpoint       REAL, feelslike      REAL,
-        hourlyrainin   REAL, dailyrainin    REAL,
-        weeklyrainin   REAL, monthlyrainin  REAL,
-        totalrainin    REAL,
-        lastrain       TEXT
-    )
-""")
-# capture_mode carries write-time lineage. Added by ALTER rather than a table
-# rebuild, which SQLite cannot perform under concurrent writers. No column
-# DEFAULT: a default lets a writer self-certify its own provenance by omission,
-# where NULL states that the provenance is unknown.
-if "capture_mode" not in {r[1] for r in _db.execute("PRAGMA table_info(outdoor)")}:
-    _db.execute("ALTER TABLE outdoor ADD COLUMN capture_mode TEXT")
-    _db.execute("UPDATE outdoor SET capture_mode='live' WHERE capture_mode IS NULL")
-_db.commit()
+def ensure_schema(db: sqlite3.Connection) -> None:
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS outdoor (
+            ts             TEXT PRIMARY KEY,
+            tempf          REAL, tempinf        REAL,
+            humidity       REAL, humidityin     REAL,
+            baromrelin     REAL, baromabsin     REAL,
+            windspeedmph   REAL, windgustmph    REAL,
+            winddir        INTEGER,
+            maxdailygust   REAL,
+            solarradiation REAL, uv             REAL,
+            dewpoint       REAL, feelslike      REAL,
+            hourlyrainin   REAL, dailyrainin    REAL,
+            weeklyrainin   REAL, monthlyrainin  REAL,
+            totalrainin    REAL,
+            lastrain       TEXT,
+            capture_mode   TEXT
+        )
+    """)
+    db.commit()
 
 
-def classify_response(raw: bytes):
-    """Decide what arrived, without doing any I/O.
+def classify_response(raw: bytes, mac: str):
+    """Decide what arrived. Never raises: every response is retained with the
+    outcome this returns, so nothing about its shape may stop retention.
 
-    Returns (observation_or_None, outcome, detail). Pure so the wiring that
-    labels each attempt can be tested -- the defects this replaced all lived
-    here and were unreachable by any test while it was inline in the loop.
+    Returns (observation_or_None, outcome, detail).
     """
     try:
         data = json.loads(raw)
     except ValueError as exc:
         return None, OUTCOME_MALFORMED, str(exc)
-    if not data or "lastData" not in data[0]:
-        return None, OUTCOME_EMPTY, "response carried no lastData"
-    return data[0]["lastData"], OUTCOME_OK, None
+    if not isinstance(data, list) or not all(isinstance(d, dict) for d in data):
+        return None, OUTCOME_MALFORMED, f"expected a device list, got {type(data).__name__}"
+    device = next((d for d in data if str(d.get("macAddress", "")).lower() == mac.lower()), None)
+    if device is None:
+        return None, OUTCOME_EMPTY, "configured station (AW_MAC) not in the device list"
+    observation = device.get("lastData")
+    if not isinstance(observation, dict) or "dateutc" not in observation:
+        return None, OUTCOME_EMPTY, "configured station carried no lastData"
+    if not has_outdoor_reading(observation):
+        # The indoor readings are still valid; the row is written and the
+        # absence is the recorded outcome of this one attempt.
+        return observation, OUTCOME_PARTIAL, "outdoor array absent; console/indoor fields only"
+    return observation, OUTCOME_OK, None
 
 
 def outcome_for_exception(exc: BaseException) -> str:
@@ -148,39 +142,10 @@ def has_outdoor_reading(d: dict) -> bool:
     return any(k in d for k in _OUTDOOR_KEYS)
 
 
-def _fetch():
-    """Fetch, retain the bytes as received, then parse.
-
-    Retention happens before parsing so the canonical record is what the
-    provider actually sent, not what this collector understood. A retention
-    failure is recorded and logged but does not suppress the derived write --
-    blocking it would lose the observation in both tiers instead of one.
-    """
-    req = urllib.request.urlopen(AW_URL, timeout=15)
-    raw = req.read()
-
-    observation, outcome, detail = classify_response(raw)
-    try:
-        retain(PROVIDER, raw, url=AW_URL, outcome=outcome, detail=detail)
-    except Exception as exc:
-        log.error("raw retention failed for %s: %s", PROVIDER, exc, exc_info=True)
-
-    if outcome == OUTCOME_MALFORMED:
-        # Already recorded as MALFORMED above. Raising a plain ValueError
-        # would have the loop's handler record a SECOND record for this one
-        # attempt, labelled "never arrived" for a payload that did arrive.
-        raise OutcomeAlreadyRecorded(f"unparseable Ambient response: {detail}")
-    return observation
-
-
 def row_from_observation(d: dict) -> dict:
-    """Map a provider observation to an `outdoor` row.
-
-    Extracted so replay invokes this mapping rather than duplicating it. A
-    second copy would diverge, making replayed rows differ from live rows along
-    an axis nothing compares.
-    """
-    # dateutc is milliseconds since epoch — convert to UTC timestamp string
+    """Map a provider observation to an `outdoor` row. Live and replay both
+    call this, so a replayed row is the row live would have written."""
+    # dateutc is milliseconds since epoch
     ts = datetime.fromtimestamp(d["dateutc"] / 1000, tz=timezone.utc).strftime(
         "%Y-%m-%d %H:%M:%S"
     )
@@ -209,65 +174,110 @@ def row_from_observation(d: dict) -> dict:
     }
 
 
-def _write(d):
-    if d is None:
-        return
-
-    # An outdoor-array dropout still carries valid indoor readings, so the row
-    # is written with what arrived and the absence is recorded as its own fact
-    # rather than left to be inferred from a column full of nulls.
-    if not has_outdoor_reading(d):
-        record_outcome(PROVIDER, OUTCOME_PARTIAL,
-                       detail="outdoor array absent; console/indoor fields only")
-        log.warning("outdoor array absent from response — indoor fields only")
-
-    row = row_from_observation(d)
-    row["capture_mode"] = "live"
-    if write_row(_db, "outdoor", row, or_ignore=True):
-        log.info("outdoor row written  ts=%s  temp=%s°F  hum=%s%%  wind=%smph",
-                 row["ts"], d.get("tempf"), d.get("humidity"),
-                 d.get("windspeedmph"))
+def write(db, observation: dict, capture_mode: str) -> bool:
+    row = {**row_from_observation(observation), "capture_mode": capture_mode}
+    return write_row(db, "outdoor", row, or_ignore=True)
 
 
-# ── Main loop ──────────────────────────────────────────────────────────────────
+def replay(db, days: list[str]) -> dict:
+    """Rebuild 'outdoor' rows from the responses retained on the named capture
+    days (UTC). Rows already present are left as they are (same key, same
+    mapping); missing rows are written with capture_mode 'replay'."""
+    mac = require("AW_MAC")
+    tally = Counter()
+    for day in days:
+        for _captured, _recorded, blob in read_day(PROVIDER, day):
+            tally["records"] += 1
+            if blob is None:
+                tally["without_payload"] += 1
+                continue
+            observation, outcome, _detail = classify_response(blob, mac)
+            tally[outcome] += 1
+            if observation is not None and write(db, observation, "replay"):
+                tally["written"] += 1
+    return dict(tally)
+
+
+def _fetch(url: str, mac: str, log):
+    """Fetch, retain the bytes as received with their outcome, then return the
+    observation (None when the response carried none)."""
+    raw = urllib.request.urlopen(url, timeout=REQUEST_TIMEOUT_S).read()
+    observation, outcome, detail = classify_response(raw, mac)
+    try:
+        retain(PROVIDER, raw, url=url, outcome=outcome, detail=detail)
+    except Exception as exc:
+        # Losing the canonical copy must not also lose the derived row.
+        log.error("raw retention failed for %s: %s", PROVIDER, exc, exc_info=True)
+    if outcome == OUTCOME_MALFORMED:
+        # Recorded above; the loop must not record a second outcome for it.
+        raise OutcomeAlreadyRecorded(f"unparseable Ambient response: {detail}")
+    if outcome != OUTCOME_OK and detail:
+        log.warning("%s", detail)
+    return observation
+
+
 def run() -> None:
-    """Collector loop.
-
-    Behind a function so importing this module has no side effect. The wiring
-    below -- which failure maps to which recorded outcome -- could not be
-    reached by any test while it sat at module scope, and that is exactly where
-    the defects this replaced were found.
-    """
+    log = setup_logger("ambient_wx", LOG_PATH)
+    load_env(_ENV_PATH, expect_key="AW_API_KEY")
+    configure_retention(os.environ.get("ENVIRO_RAW_ROOT", os.path.join(_BASE, "raw-capture")))
+    mac = require("AW_MAC")
+    poll_s = int(require("AW_POLL_S"))
+    url = ("https://api.ambientweather.net/v1/devices"
+           f"?apiKey={require('AW_API_KEY')}&applicationKey={require('AW_APP_KEY')}")
+    db = connect(require("SQLITE_PATH"))
+    ensure_schema(db)
+    is_shutting_down = install_shutdown_handler(logger=log)
     log.info("ambient_wx starting")
 
     while not is_shutting_down():
         try:
-            _write(_fetch())
+            observation = _fetch(url, mac, log)
+            if observation is not None and write(db, observation, "live"):
+                log.info("outdoor row written  ts=%s  temp=%s°F  hum=%s%%  wind=%smph",
+                         row_from_observation(observation)["ts"], observation.get("tempf"),
+                         observation.get("humidity"), observation.get("windspeedmph"))
         except OutcomeAlreadyRecorded as e:
-            # The outcome for this attempt is already in the canonical store.
             log.warning("%s", e)
         except urllib.error.URLError as e:
-            record_outcome(PROVIDER, outcome_for_exception(e), detail=str(e),
-                           url=AW_URL)
+            record_outcome(PROVIDER, outcome_for_exception(e), detail=str(e), url=url)
             log.warning("API fetch failed: %s", e)
-        except (KeyError, IndexError, ValueError) as e:
-            record_outcome(PROVIDER, outcome_for_exception(e),
-                           detail=f"unexpected response shape: {e}", url=AW_URL)
-            log.warning("Unexpected API response: %s", e)
         except sqlite3.Error as e:
             # The payload arrived and is already retained; only the derived
-            # write failed. Recording it as a fetch error would misattribute
-            # the fault to the wrong subsystem.
+            # write failed.
             record_outcome(PROVIDER, outcome_for_exception(e), detail=repr(e))
             log.error("Derived write failed: %s", e, exc_info=True)
         except Exception as e:
-            record_outcome(PROVIDER, outcome_for_exception(e), detail=repr(e),
-                           url=AW_URL)
+            record_outcome(PROVIDER, outcome_for_exception(e), detail=repr(e), url=url)
             log.error("Unexpected error: %s", e, exc_info=True)
-        time.sleep(POLL_S)
+        time.sleep(poll_s)
 
     log.info("ambient_wx stopped")
 
 
+def _utc_day(text: str) -> str:
+    try:
+        return datetime.strptime(text, "%Y-%m-%d").strftime("%Y-%m-%d")
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{text!r} is not a UTC day in YYYY-MM-DD form") from None
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description="Ambient Weather collector.")
+    parser.add_argument("--replay", nargs="+", metavar="DAY", type=_utc_day,
+                        help="rebuild 'outdoor' rows from responses retained on these UTC capture "
+                             "days and exit; writes to the database named by SQLITE_PATH; "
+                             "include the following day to cover observations captured after "
+                             "midnight UTC")
+    args = parser.parse_args(argv)
+    if not args.replay:
+        run()
+        return
+    load_env(_ENV_PATH, expect_key="AW_API_KEY")
+    configure_retention(os.environ.get("ENVIRO_RAW_ROOT", os.path.join(_BASE, "raw-capture")))
+    db = connect(require("SQLITE_PATH"))
+    ensure_schema(db)
+    print(json.dumps(replay(db, args.replay)))
+
+
 if __name__ == "__main__":
-    run()
+    main()

@@ -55,22 +55,22 @@ def test_importing_a_collector_does_not_run_it(collectors):
 
 def test_ambient_classifies_a_full_response(collectors):
     ambient, _ = collectors
-    raw = json.dumps([{"lastData": {"tempf": 81.3, "dateutc": 1}}]).encode()
-    obs, outcome, detail = ambient.classify_response(raw)
+    raw = json.dumps([{"macAddress": "AA:BB", "lastData": {"tempf": 81.3, "dateutc": 1}}]).encode()
+    obs, outcome, detail = ambient.classify_response(raw, "aa:bb")
     assert outcome == ambient.OUTCOME_OK and detail is None
     assert obs["tempf"] == 81.3
 
 
 def test_ambient_classifies_an_empty_response(collectors):
     ambient, _ = collectors
-    obs, outcome, detail = ambient.classify_response(b"[]")
+    obs, outcome, detail = ambient.classify_response(b"[]", "AA:BB")
     assert obs is None and outcome == ambient.OUTCOME_EMPTY and detail
 
 
 def test_ambient_classifies_a_malformed_response(collectors):
     """Unparseable bytes are a distinct cause, not an empty result."""
     ambient, _ = collectors
-    obs, outcome, detail = ambient.classify_response(b"<html>502 Bad Gateway")
+    obs, outcome, detail = ambient.classify_response(b"<html>502 Bad Gateway", "AA:BB")
     assert obs is None and outcome == ambient.OUTCOME_MALFORMED and detail
 
 

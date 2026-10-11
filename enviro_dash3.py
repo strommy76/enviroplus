@@ -104,7 +104,7 @@ from enviroplus import gas
 from ltr559 import LTR559
 from pms5003 import PMS5003, ChecksumMismatchError, ReadTimeoutError, SerialTimeoutError
 
-from shared.config_service import load_env
+from shared.config_service import load_env, require
 from shared.db_service import connect
 from shared.logging_service import setup_logger
 from shared.utils import utc_now
@@ -114,7 +114,7 @@ import enviro_screens as screens
 # ── Paths ──────────────────────────────────────────────────────────────────────
 _BASE       = os.path.dirname(os.path.abspath(__file__))
 _ENV_PATH   = os.path.join(_BASE, ".env")
-LOG_PATH    = os.path.join(_BASE, "enviro.log")
+LOG_PATH    = os.path.join(_BASE, "enviro_dash.log")
 
 load_env(_ENV_PATH, expect_key="SQLITE_PATH")
 
@@ -123,7 +123,7 @@ load_env(_ENV_PATH, expect_key="SQLITE_PATH")
 # collectors to a new database while this service kept writing the old one.
 SQLITE_PATH = os.environ.get("SQLITE_PATH", os.path.join(_BASE, "enviro.db"))
 
-CONFIG_PATH = os.environ.get("CONFIG_PATH", os.path.join(_BASE, "dynamic_config.json"))
+CONFIG_PATH = require("CONFIG_PATH")
 
 # ── Logging ────────────────────────────────────────────────────────────────────
 log = setup_logger("enviro_dash", LOG_PATH)
@@ -401,7 +401,7 @@ try:
         if os.path.getmtime(CONFIG_PATH) != _config_mtime:
             old_cal = cfg["calibration"]
             cfg = load_config()
-            log.info("dynamic_config.json reloaded")
+            log.info("config reloaded: %s", CONFIG_PATH)
             new_size = cfg["calibration"]["cpu_hist_size"]
             if new_size != old_cal["cpu_hist_size"]:
                 _cpu_hist.__init__(list(_cpu_hist)[-new_size:], maxlen=new_size)
