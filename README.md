@@ -166,11 +166,12 @@ sudo systemctl status enviro_dash
 tail -f ~/projects/enviroplus/enviro.log
 ```
 
-On BSPiLHX, `enviro_dash.service` is the reconciled Pi5 source; the Pi5 filename
-refers to it rather than a second definition. An existing copied unit must first
-be preserved and compared as described in [the repair plan](docs/display-spi-repair.md).
-GPIO9 is the display's DC line: pi-config owns the firmware `spi0-2cs,no_miso`
-binding that frees it. Unit failures use the existing operations alert template.
+Before using this deployment example, reconcile the unit's device bindings and
+operations-alert template with the target host. Repository content does not select
+the active hardware unit; prove that binding from the running service manager as
+required by PROJECT-CONFIG.md. Preserve and compare an existing copied unit as
+described in [the repair plan](docs/display-spi-repair.md). For the repaired display,
+GPIO9 is DC; pi-config owns the `spi0-2cs,no_miso` firmware binding that frees it.
 
 ---
 

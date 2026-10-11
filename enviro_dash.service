@@ -4,11 +4,11 @@ After=network-online.target
 Wants=network-online.target
 # Serial sensors are optional lanes; no UART device binds dashboard lifetime.
 OnFailure=stocks_ops_alert@%n.service
-# One attempt: the observed GPIO ownership failure cannot recover by retry.
-# 120s = effective native startup allowance90s + existing retry spacing30s.
-# PROVISIONAL healthy-boot adequacy; settle on the directed reboot observations.
+# Admit an initial start and one recovery attempt; repeated rapid failure stops.
+# 120s = effective native startup timeout 90s + existing restart spacing 30s.
+# PROVISIONAL horizon: measure failed-start/recovery intervals across boots.
 StartLimitIntervalSec=120s
-StartLimitBurst=1
+StartLimitBurst=2
 
 [Service]
 Type=simple
@@ -18,6 +18,7 @@ WorkingDirectory=/home/pistrommy/projects/enviroplus
 ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do [ -e /dev/i2c-1 ] && [ -e /dev/spidev0.1 ] && exit 0; sleep 1; done; echo "i2c-1 or spidev0.1 never appeared" >&2; exit 1'
 ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python enviro_dash3.py
 Restart=on-failure
+# PROVISIONAL inherited spacing: settle from observed recovery time/attempt cost.
 RestartSec=30
 
 [Install]

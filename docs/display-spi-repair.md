@@ -48,12 +48,59 @@ Pi5 node addresses, so preserve them. The documented generic unit formerly carri
 always-restart10s; use deployed on-failure30s. Pi5 duplicate no longer can restore
 the stale UART gate or misplaced startlimit. Pi3 alternative is not retired here.
 
-One start per120s: the deterministic failure remained after ~69k retries, so
-another retry is not useful recovery. Window derives from current native startup
-allowance90s plus unchanged retry spacing30s and covers this immediate failure.
-Definition marks healthy-boot adequacy provisional; directed reboot startup and
-readings settle it. Existing readiness30×1s and retry30s are unchanged deployed
-values, not newly certified derivations; no universal runtime-failure cap claimed.
+Recovery policy revised under Bryan's October 11 direction to make recovery
+antifragile, and his 10:15 EDT "Yes" to retries relayed by pi-Claude. Permit the
+initial start and one recovery start: two is the minimum that admits recovery
+without returning to the observed unlimited rapid failure loop. Retain the native
+120-second checking horizon: effective startup timeout 90 seconds plus existing
+restart spacing 30 seconds. This counts starts in a window, not lifetime failures;
+it neither classifies errors nor claims all transient faults settle in that time.
+Rapid repeated failure reaches terminal failed/start-limit-hit and existing
+OnFailure; a later manual start after the window can recover. No timer or custom
+recovery service is added. The horizon and inherited spacing remain provisional
+pending measured failed-start/recovery intervals across boots; one healthy boot
+does not settle that population. Nominal healthy runtime is not restart-counted.
+
+Only process/startup exits cross this systemd boundary. Existing sensor-loop and
+SQLite-write catches log and continue; the earlier suggestion that the first
+SQLite publication necessarily causes process exit was incorrect. Healthy rows
+are checked directly, not inferred from active state. No application catch or
+data model change is included in this unit/firmware increment.
+
+C/H remains long-lived unit/firmware with potentially silent collection or boot
+failure. Verification uses native systemd with disposable non-production units
+and the committed restart fields unchanged: a nonzero exit then a running process
+must recover, repeated nonzero exits must hit the limit, and the old burst of one
+must reject the recovery. Substitute only the supervised command/device and alert
+paths, outside the restart-count property; no real sensor/provider outage or test
+notification is induced. Preserve raw results and the exact method in this repo.
+These checks certify native restart admission only, not natural transient-fault
+occurrence, actual sensor health, or new alert delivery. Existing real alert proof
+remains separate. Whole paired revision is reviewed by Astra/OpenAI and GLM-5.3,
+findings adjudicated, then pi-Claude reviews before authorized landing.
+
+At closure, fast-forward each clean main checkout to the actual merged revision
+before comparing/linking the unit. Native daemon-reload changes policy without
+restarting the healthy display process; verify GPIO, fresh rows and exact firmware.
+Remove only the two clean task worktrees after no live unit depends on them. Revert
+the link/policy to the preserved branch revision if cutover fails. No reboot,
+private configuration, application, database or unrelated repair is included.
+
+Bryan's 10:15 EDT "accept" (pi-Claude relay) dispositions firmware drift without
+an ongoing materializer/check as an operator-owned residual. Exact installation
+and closure readback still apply; no drift-monitoring capability is added.
+
+Construction axiom-check of this correction: 1 exact unit/firmware and raw sensor
+rows remain authoritative (enviro_dash.service, firmware/config.txt); 2 native
+process outcomes, no exception whitelist; 3 one admitted retry tolerates an
+isolated process failure while repeated rapid exits remain loud; 4 only native
+burst changes, unused Pi5 alias removed, no framework; 5 native failed/OnFailure
+and exact link/readback boundaries plus revert; 6 documentation no longer selects
+active hardware and closure removes live task-worktree dependency. All CONFORMS
+prospectively; nominal recovery-population adequacy is UNCONFIRMED, not certified.
+Preamble CONFORMS: a single additional admitted start addresses the confirmed
+early-failure lockout; verification exercises the changed admission property and
+adds no retained runtime machinery. Future defect classes outside this plan remain D.
 
 ## Construction axiom-check
 
