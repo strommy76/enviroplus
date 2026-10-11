@@ -7,16 +7,25 @@ this file ever conflicts with it.
 ## Repository Responsibility
 
 Enviroplus owns local environmental sensor display and collection, external
-weather and air-quality collection, provider-response retention, the derived
-SQLite projection, and their backup lane.
+weather and air-quality collection, provider-response retention, the SQLite store (authoritative
+`readings`, derived provider tables), and their backup lane.
 
 ## Authority and Persistence
 
 - Provider response artifacts written through `shared.raw_retention` are the
   canonical source for replayable external observations.
-- The SQLite database is the derived structured projection used by the display
-  and Grafana. It must remain rebuildable from admitted canonical inputs where
-  those inputs exist.
+- The SQLite database holds two kinds of store:
+  - `readings` is authoritative: `enviro_dash3.py` writes each local sensor
+    sample there first and nowhere else. It is append-only; rows are never
+    rewritten or rebuilt. Known-bad spans are annotated (README "Data notes"),
+    not edited.
+  - `outdoor`, `nws_weather` and `epa_air_quality` are derived. Rows captured
+    since retention began (2026-08-06) rebuild through each lane's `--replay`
+    (`ambient_wx.py`, `nws_wx.py`, `provider_collector.py --contract ...`);
+    backfill rows rebuild through `scripts/import_raw_to_derived.py` from the
+    retained history files. Live rows from before 2026-08-06 have no retained
+    response: SQLite and its backups are their only copy, so never rebuild
+    these tables by dropping them.
 - Uncommitted `CONFIG_PATH` selects exactly one dashboard configuration
   document. That selected document owns runtime-tunable sensor calibration,
   thresholds, display behavior, and intervals. Repository content does not
@@ -29,9 +38,13 @@ SQLite projection, and their backup lane.
 
 ## Service Boundaries
 
-- `enviro_dash3.py` owns the local sensor display and its derived SQLite writes.
+- `enviro_dash3.py` owns the local sensor display and the authoritative
+  `readings` writes.
 - `ambient_wx.py` and `nws_wx.py` independently own their provider collection
-  loops and canonical response capture.
+  loops and canonical response capture; `--replay DAY...` re-derives their
+  table from retention through the same mapping and write path live uses.
+- Each service writes its own log file (`<service>.log` beside the code) and
+  the journal; no two processes rotate one file.
 - `provider_collector.py` executes one committed capture contract from
   `contracts/` (`provider_contract.py` defines the contract boundary); the
   AirNow lane is `contracts/airnow_current.json`. A provider API change is a

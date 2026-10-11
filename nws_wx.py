@@ -3,11 +3,20 @@
 --------------------------------------------------------------------------------
 FILE:        nws_wx.py
 PATH:        ~/projects/enviroplus/nws_wx.py
-DESCRIPTION: Polls configured NWS observation stations every 10 min and writes
-             observations to the 'nws_weather' table in enviro.db.
-             Runs as a standalone service alongside ambient_wx.py.
+DESCRIPTION: Polls configured NWS observation stations and writes the newest
+             fresh observation to the 'nws_weather' table. Every response body
+             received is retained verbatim first (an HTTP error raised
+             before a body is read is recorded as fetch_error). `--replay DAY...` rebuilds rows from
+             retained responses through the same parse and write.
 
 CHANGELOG:
+2026-10-11 15:50      Claude      [Fix] Classify the response before retaining
+                                      it and never raise doing so, so a non-JSON
+                                      or wrongly shaped body is retained as
+                                      malformed instead of recorded as "never
+                                      arrived"; own log file; add --replay so
+                                      'nws_weather' is rebuildable from
+                                      retention.
 2026-05-22 03:30      Codex      [Fix] Add configured multi-station freshness
                                       selection, station provenance, import-safe
                                       service entrypoint, and duplicate-aware
@@ -31,6 +40,7 @@ CHANGELOG:
 --------------------------------------------------------------------------------
 """
 
+import argparse
 import json
 import logging
 import os
@@ -40,6 +50,7 @@ import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from collections import Counter
 from datetime import UTC, datetime, timedelta
 from typing import Any, Callable
 
@@ -53,8 +64,10 @@ from shared.raw_retention import (
     configure as configure_retention,
     OUTCOME_EMPTY,
     OUTCOME_FETCH_ERROR,
+    OUTCOME_MALFORMED,
     OUTCOME_OK,
     OUTCOME_WRITE_ERROR,
+    read_day,
     record_outcome,
     retain,
 )
@@ -81,6 +94,10 @@ def outcome_for_exception(exc: BaseException) -> str:
 # ── Paths / config ─────────────────────────────────────────────────────────────
 _BASE       = os.path.dirname(os.path.abspath(__file__))
 _ENV_PATH   = os.path.join(_BASE, ".env")
+LOG_PATH    = os.path.join(_BASE, "nws_wx.log")
+# PROVISIONAL: request timeout. Settle from observed NWS response latency
+# (p99 of urlopen duration) once logged.
+REQUEST_TIMEOUT_S = 15
 
 
 @dataclass(frozen=True)
@@ -94,7 +111,6 @@ class NwsSettings:
     shutdown_check_s: int
     max_observation_age_s: int
     collection_lookback_s: int
-    log_path: str
     sqlite_path: str
 
 
@@ -141,7 +157,6 @@ def load_settings(env_path: str = _ENV_PATH) -> NwsSettings:
         ),
         max_observation_age_s=max_observation_age_s,
         collection_lookback_s=collection_lookback_s,
-        log_path=require("LOG_PATH"),
         sqlite_path=require("SQLITE_PATH"),
     )
 
@@ -170,8 +185,8 @@ def _ensure_schema(conn: sqlite3.Connection) -> None:
     if "station_id" not in columns:
         conn.execute("ALTER TABLE nws_weather ADD COLUMN station_id TEXT")
     if "capture_mode" not in columns:
+        # NULL states unknown provenance; no backfill may claim otherwise.
         conn.execute("ALTER TABLE nws_weather ADD COLUMN capture_mode TEXT")
-        conn.execute("UPDATE nws_weather SET capture_mode='live' WHERE capture_mode IS NULL")
     conn.commit()
 
 
@@ -199,6 +214,29 @@ def _val(obj):
     return obj.get("value")
 
 
+def classify_response(raw: bytes):
+    """Decide what arrived. Never raises: the response is retained with the
+    outcome this returns, so nothing about its shape may stop retention.
+
+    Returns (newest_observation_properties_or_None, outcome, detail).
+    """
+    try:
+        data = json.loads(raw)
+    except ValueError as exc:
+        return None, OUTCOME_MALFORMED, str(exc)
+    features = data.get("features") if isinstance(data, dict) else None
+    if not isinstance(features, list):
+        return None, OUTCOME_MALFORMED, "response carried no features list"
+    if not features:
+        return None, OUTCOME_EMPTY, "observations collection returned no features"
+    try:
+        newest = max((f["properties"] for f in features),
+                     key=lambda p: _parse_observation_ts(p["timestamp"]))
+    except (KeyError, TypeError, ValueError) as exc:
+        return None, OUTCOME_MALFORMED, f"feature without a usable timestamp: {exc!r}"
+    return newest, OUTCOME_OK, None
+
+
 def _fetch(settings: NwsSettings, station: str, now_utc: datetime) -> dict[str, Any]:
     start = (now_utc - timedelta(seconds=settings.collection_lookback_s)).isoformat()
     end = now_utc.isoformat()
@@ -207,34 +245,20 @@ def _fetch(settings: NwsSettings, station: str, now_utc: datetime) -> dict[str, 
         f"?start={start.replace('+00:00', 'Z')}&end={end.replace('+00:00', 'Z')}"
     )
     req = urllib.request.Request(url, headers={"User-Agent": settings.user_agent})
-    resp = urllib.request.urlopen(req, timeout=15)
-    raw = resp.read()
-    # Retain before parsing: the canonical record is the provider's response,
+    raw = urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT_S).read()
+    # Retain before using: the canonical record is the provider's response,
     # not the single observation this collector selects from it. The station is
     # part of the provider key so per-station history stays separable.
+    newest, outcome, detail = classify_response(raw)
     try:
-        empty = not (json.loads(raw).get("features") or [])
-        retain(f"{PROVIDER}/{station}", raw, url=url,
-               outcome=OUTCOME_EMPTY if empty else OUTCOME_OK,
-               detail="observations collection returned no features" if empty else None)
-    except OutcomeAlreadyRecorded:
-        raise
+        retain(f"{PROVIDER}/{station}", raw, url=url, outcome=outcome, detail=detail)
     except Exception as exc:
         log.error("raw retention failed for %s/%s: %s", PROVIDER, station, exc,
                   exc_info=True)
-
-    observations = json.loads(raw)["features"]
-    if not observations:
-        # The retain() above already recorded this attempt. Raising a plain
-        # ValueError would have _select_observation record a second one, and
-        # the loop a third -- three records for one attempt, two of them
-        # calling an arrived-but-empty response a fetch failure.
-        raise OutcomeAlreadyRecorded(
-            f"{station}: observations collection returned no features")
-    return max(
-        (feature["properties"] for feature in observations),
-        key=lambda properties: _parse_observation_ts(properties["timestamp"]),
-    )
+    if newest is None:
+        # Already recorded with its outcome; no second record for this attempt.
+        raise OutcomeAlreadyRecorded(f"{station}: {detail}")
+    return newest
 
 
 def _parse(p: dict[str, Any], station: str) -> dict[str, Any]:
@@ -325,9 +349,10 @@ def _select_observation(
     raise NoFreshObservationError("; ".join(failures))
 
 
-def _write(conn: sqlite3.Connection, logger, d: dict[str, Any]) -> bool:
+def _write(conn: sqlite3.Connection, logger, d: dict[str, Any],
+           capture_mode: str = "live") -> bool:
     ts = d["ts"]
-    d = {**d, "capture_mode": "live"}
+    d = {**d, "capture_mode": capture_mode}
     if ts is None:
         logger.warning("NWS observation has no timestamp, skipping")
         return False
@@ -364,7 +389,7 @@ def run() -> None:
     # write access to the live tier.
     configure_retention(os.environ.get(
         "ENVIRO_RAW_ROOT", os.path.join(_BASE, "raw-capture")))
-    log = setup_logger("nws_wx", settings.log_path)
+    log = setup_logger("nws_wx", LOG_PATH)
     is_shutting_down = install_shutdown_handler(logger=log)
     db = connect(settings.sqlite_path)
     _ensure_schema(db)
@@ -390,5 +415,63 @@ def run() -> None:
     log.info("nws_wx stopped")
 
 
+def replay(settings: NwsSettings, conn: sqlite3.Connection, days: list[str]) -> dict:
+    """Rebuild 'nws_weather' rows from responses retained on the named UTC
+    capture days. Responses from every configured station are taken in capture
+    order, as live received them; each yields its newest observation when it
+    was fresh at capture time, judged exactly as live judges it, and the first
+    row written for a timestamp stands, as it does live. Live fetches a
+    fallback station only when the stations before it failed, so this
+    reproduces live's station choice. Rows already present are kept."""
+    tally = Counter()
+    received = []
+    for station in settings.stations:
+        for day in days:
+            for captured, _recorded, blob in read_day(f"{PROVIDER}/{station}", day):
+                received.append((datetime.fromisoformat(captured), station, blob))
+    received.sort(key=lambda r: r[0])
+    for captured, station, blob in received:
+        tally["records"] += 1
+        if blob is None:
+            tally["without_payload"] += 1
+            continue
+        newest, outcome, _detail = classify_response(blob)
+        tally[outcome] += 1
+        if newest is None:
+            continue
+        observation = _parse(newest, station)
+        if not 0 <= _observation_age_s(observation["ts"], captured) <= settings.max_observation_age_s:
+            tally["not_fresh_at_capture"] += 1
+            continue
+        if _write(conn, log, observation, capture_mode="replay"):
+            tally["written"] += 1
+    return dict(tally)
+
+
+def _utc_day(text: str) -> str:
+    try:
+        return datetime.strptime(text, "%Y-%m-%d").strftime("%Y-%m-%d")
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{text!r} is not a UTC day in YYYY-MM-DD form") from None
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description="NWS observation collector.")
+    parser.add_argument("--replay", nargs="+", metavar="DAY", type=_utc_day,
+                        help="rebuild 'nws_weather' rows from responses retained on these UTC "
+                             "capture days and exit; writes to the database named by SQLITE_PATH; "
+                             "include the following day to cover observations captured after "
+                             "midnight UTC")
+    args = parser.parse_args(argv)
+    if not args.replay:
+        run()
+        return
+    settings = load_settings()
+    configure_retention(os.environ.get("ENVIRO_RAW_ROOT", os.path.join(_BASE, "raw-capture")))
+    conn = connect(settings.sqlite_path)
+    _ensure_schema(conn)
+    print(json.dumps(replay(settings, conn, args.replay)))
+
+
 if __name__ == "__main__":
-    run()
+    main()

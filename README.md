@@ -25,7 +25,7 @@ A missing or failed reading shows `--` and leaves a gap in its trend; it is neve
 
 | Sensor | Chip | Measures | Notes |
 |--------|------|----------|-------|
-| Temperature | BME280 | °F (CPU-compensated) | Factor derived from `cal_actual_f` in `dynamic_config.json` |
+| Temperature | BME280 | °F (self-heat compensated) | Constant offset `calibration.self_heat_offset_c` in the CONFIG_PATH document |
 | Humidity | BME280 | % RH | |
 | Pressure | BME280 | hPa | |
 | Light | LTR559 | Lux | Also used as proximity sensor |
@@ -56,7 +56,7 @@ flowchart LR
         ambient_wx.py
         nws_wx.py
         provider_collector.py
-        dynamic_config.json
+        dynamic_config.pi5.json
     end
 
     subgraph Canonical["Canonical tier"]
@@ -73,7 +73,7 @@ flowchart LR
         OFFSITE[("☁️ Offsite backup\nverified by remote hash")]
     end
 
-    dynamic_config.json -->|hot-reload| enviro_dash3.py
+    dynamic_config.pi5.json -->|hot-reload| enviro_dash3.py
     enviro_dash3.py --> DISPLAY
     enviro_dash3.py -->|every 60s| SQLITE
     ambient_wx.py & nws_wx.py & provider_collector.py -->|response bytes| RAW
@@ -128,8 +128,7 @@ cp .env.example .env   # add credentials — secrets only, no tuning values here
 | Variable | Description |
 |----------|-------------|
 | `SQLITE_PATH` | Path to SQLite database |
-| `LOG_PATH` | Rotating log file path |
-| `CONFIG_PATH` | Path to `dynamic_config.json` |
+| `CONFIG_PATH` | Path to the dashboard config document (`dynamic_config.pi5.json`) |
 | `NWS_API_BASE_URL` | NWS API base URL |
 | `NWS_STATIONS` | Ordered NWS station identifiers; first fresh observation wins |
 | `NWS_USER_AGENT` | NWS-required caller identification |
@@ -138,7 +137,7 @@ cp .env.example .env   # add credentials — secrets only, no tuning values here
 | `NWS_MAX_OBSERVATION_AGE_S` | Maximum accepted NWS latest-observation age in seconds |
 | `NWS_COLLECTION_LOOKBACK_S` | Bounded NWS observations query window in seconds |
 
-All tuning values (calibration, thresholds, intervals) live in `dynamic_config.json` — see below.
+All tuning values (calibration, thresholds, intervals, display) live in the CONFIG_PATH document — see below.
 
 ### 5. Run as a systemd service
 
@@ -150,7 +149,7 @@ sudo systemctl enable --now enviro_dash
 Check status:
 ```bash
 sudo systemctl status enviro_dash
-tail -f ~/projects/enviroplus/enviro.log
+journalctl -u enviro_dash -f        # or tail -f enviro_dash.log; each service has its own <service>.log
 ```
 
 Before using this deployment example, reconcile the unit's device bindings and
@@ -162,16 +161,16 @@ GPIO9 is DC; pi-config owns the `spi0-2cs,no_miso` firmware binding that frees i
 
 ---
 
-## ⚙️ dynamic_config.json
+## ⚙️ Dashboard config (CONFIG_PATH)
 
 All tunable runtime values live here. The running script watches this file and **hot-reloads within 2 seconds** of any change — no restart needed.
 
 ```json
 {
   "calibration": {
-    "cal_actual_f": 74.4,   ← set to your reference thermometer reading
-    "bme_samples":  3,       ← BME280 readings averaged per loop (reduces noise)
-    "cpu_hist_size": 30      ← CPU temp history depth (~1 min of smoothing)
+    "self_heat_offset_c": 6.35,  ← measured BME280 self-heat (see its provenance key)
+    "bme_samples":  3,            ← BME280 readings averaged per loop (reduces noise)
+    "cpu_hist_size": 30           ← CPU temp history (proportional model only)
   },
   "intervals": {
     "publish_s":        60,  ← seconds between SQLite writes
@@ -182,26 +181,24 @@ All tunable runtime values live here. The running script watches this file and *
 }
 ```
 
-**To recalibrate temperature:** just update `cal_actual_f` with your current reference thermometer reading and save. The script recalculates `CPU_FACTOR` automatically.
+**To recalibrate temperature:** re-measure the offset against a reference over 5-minute means and update `self_heat_offset_c`; its `self_heat_offset_provenance` records how the current value was measured.
 
 ---
 
-## 🌡️ CPU Temperature Compensation
+## 🌡️ Temperature Compensation
 
-The BME280 sits millimetres from the Pi's CPU and reads several degrees high. The script auto-derives a correction factor at startup (and on config hot-reload) from a known reference:
+The BME280 sits close to the Pi's CPU and reads high. On this Pi 5 with M.2 spacing the error is a near-constant pedestal, so the dashboard subtracts a measured constant, `calibration.self_heat_offset_c`. `cpu_factor_override` remains only for hardware where the sensor sits directly above the SoC; setting both fails loud. Humidity is corrected for the same self-heating with the Magnus formula.
 
-```
-CPU_FACTOR = (cpu_temp - raw_temp) / (raw_temp - actual_temp)
-compensated = avg(N raw samples) - (avg_cpu - avg_raw) / CPU_FACTOR
-```
+---
 
-The log confirms the calibration on each startup:
+## 📝 Data notes
 
-```
-2026-03-15 22:54:51 INFO  CPU_FACTOR=1.80 (raw=98.4°F  cpu=61.0°C  actual=74.4°F)
-```
+Known-bad spans in the authoritative `readings` table. Rows are kept as written; these notes are how a reader knows to discount them.
 
-> 💡 The Pi 5 with active cooling runs significantly cooler than the 3 B+, so `CPU_FACTOR` will be much smaller — possibly close to 0.
+| Span (UTC) | Columns | Issue |
+|------------|---------|-------|
+| 2026-07-30 → 2026-08-05 | `pm1`, `pm25`, `pm10` | ~85,000 PMS5003 read timeouts; the code of the time re-stored the last good values as fresh, so PM in this span is largely repeats. Fixed 2026-10-11 (failed reads now store NULL). |
+| 2026-09-17 00:26 → 2026-10-11 12:48 | all | No rows: the dashboard could not start after kernel 6.18.50 claimed GPIO9 (fixed by pi-config `spi0-2cs,no_miso`). |
 
 ---
 
@@ -209,7 +206,7 @@ The log confirms the calibration on each startup:
 
 ```sql
 CREATE TABLE readings (
-    ts          TEXT PRIMARY KEY,   -- local time: "2026-03-15 21:30:00"
+    ts          TEXT PRIMARY KEY,   -- UTC: "2026-03-15 21:30:00"
     temp_f      REAL,
     humidity    REAL,
     pressure    REAL,
@@ -258,10 +255,10 @@ ORDER BY ts;
 
 - [x] 10-sensor dashboard on ST7735 display
 - [x] CPU temperature compensation with auto-derived factor
-- [x] SQLite logging with local timestamps + Pi telemetry
+- [x] SQLite logging with UTC timestamps + Pi telemetry
 - [x] Rotating log file
 - [x] systemd service with auto-restart
-- [x] `dynamic_config.json` — hot-reloadable config, single source of truth
+- [x] Hot-reloadable dashboard config, single source of truth
 - [x] BME280 averaging + CPU history smoothing for noise reduction
 - [ ] Ruff linting with pre-commit hook (referee not installed)
 - [ ] Adafruit SCD-41 CO₂ sensor integration

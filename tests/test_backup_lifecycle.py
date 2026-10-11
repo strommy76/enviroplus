@@ -29,7 +29,9 @@ import pytest
 
 sys.path.insert(0, "/home/pistrommy/projects")
 
-_SCRIPT = Path("/home/pistrommy/projects/enviroplus/scripts/backup_enviro.py")
+# The checkout under test, not the live one: an absolute path tested the main
+# checkout from every worktree.
+_SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "backup_enviro.py"
 _spec = importlib.util.spec_from_file_location("backup_enviro", _SCRIPT)
 backup_enviro = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(backup_enviro)

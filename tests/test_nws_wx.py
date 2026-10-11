@@ -47,7 +47,6 @@ def _settings() -> NwsSettings:
         shutdown_check_s=1,
         max_observation_age_s=7200,
         collection_lookback_s=21600,
-        log_path="/tmp/enviroplus-test.log",
         sqlite_path="/tmp/enviroplus-test.db",
     )
 
@@ -83,7 +82,6 @@ def test_load_settings_requires_configured_station_list(tmp_path, monkeypatch):
                 "NWS_SHUTDOWN_CHECK_S=1",
                 "NWS_MAX_OBSERVATION_AGE_S=7200",
                 "NWS_COLLECTION_LOOKBACK_S=21600",
-                "LOG_PATH=/tmp/enviro.log",
                 "SQLITE_PATH=/tmp/enviro.db",
             ]
         )
@@ -98,7 +96,6 @@ def test_load_settings_requires_configured_station_list(tmp_path, monkeypatch):
         "NWS_SHUTDOWN_CHECK_S",
         "NWS_MAX_OBSERVATION_AGE_S",
         "NWS_COLLECTION_LOOKBACK_S",
-        "LOG_PATH",
         "SQLITE_PATH",
     ):
         monkeypatch.delenv(key, raising=False)

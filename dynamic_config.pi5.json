@@ -1,7 +1,7 @@
 {
   "_meta": {
     "path":        "~/projects/enviroplus/dynamic_config.pi5.json",
-    "description": "Pi 5 runtime tuning values. Hot-reloaded automatically — no restart needed. Selected via CONFIG_PATH in .env. Secrets and paths belong in .env, not here.",
+    "description": "Runtime tuning values for enviro_dash3.py. Hot-reloaded automatically — no restart needed. Selected via CONFIG_PATH in .env. Secrets and paths belong in .env, not here.",
     "changelog": [
       "2026-03-15 23:34:22 EDT  Initial config: calibration, intervals, sensor thresholds, display scaling factors.",
       "2026-03-16 03:45:00 EDT  Calibrate gas thresholds to observed indoor baseline (247 rows). rd baseline 97-113 kΩ, nh3 baseline 152-187 kΩ. Old thresholds (rd green_min=150, nh3 green_min=500) were unrealistic.",
@@ -44,14 +44,6 @@
     "display_backlight": "GPIO12",
     "display_rotation":  270,
     "spi_speed_hz":      40000000,
-    "bme280_addr":       118,
-    "lanes": {
-      "_comment": "Per-device lanes. `installed` is a non-derivable operator fact — physical presence is NOT discoverable (a serial port opens with no sensor attached and read() then times out identically to installed-but-dead). Hot-reloaded: flip the bit when hardware is fitted, no restart.",
-      "bme280":  { "installed": true,  "bus": "i2c",  "emits": ["temp_f", "humidity", "pressure"] },
-      "ltr559":  { "installed": true,  "bus": "i2c",  "emits": ["lux"] },
-      "gas":     { "installed": true,  "bus": "i2c",  "emits": ["oxidising", "reducing", "ammonia"] },
-      "pms5003": { "installed": false, "bus": "uart", "emits": ["pm1", "pm25", "pm10"], "note": "not fitted — housing in design 2026-07-29" },
-      "scd41":   { "installed": false, "bus": "i2c",  "emits": ["co2"], "note": "never fitted; planned (operator, 2026-10-11). The display shows no CO2 until it is wired and read. 0x62 verified free on i2c-1." }
-    }
+    "bme280_addr":       118
   }
 }

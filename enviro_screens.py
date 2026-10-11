@@ -120,7 +120,7 @@ def aqi_category(aqi):
     return AQI_CATEGORIES[-1][1:]
 
 
-# ── Threshold colors (bands from dynamic_config.json "thresholds") ─────────────
+# ── Threshold colors (bands from the CONFIG_PATH document, "thresholds") ─────────────
 def band_color(value, band):
     """Green inside the green band, yellow inside the yellow band, else orange."""
     if value is None:

@@ -7,11 +7,9 @@ from pathlib import Path
 sys.path.insert(0,"/home/pistrommy/projects")
 from shared.raw_retention import scrub_body
 OUT=Path.home()/"projects/enviroplus/raw-capture/ambient"; MAN=OUT/"manifest.jsonl"
-env={}
-for l in (Path.home()/"projects/enviroplus/.env").read_text().splitlines():
-    l=l.strip()
-    if l and not l.startswith("#") and "=" in l:
-        k,_,v=l.partition("="); env[k.strip()]=v.strip().strip('"').strip("'")
+from shared.config_service import load_env, require
+load_env(str(Path(__file__).resolve().parents[1]/".env"), expect_key="AW_API_KEY")
+env={k: require(k) for k in ("AW_MAC","AW_API_KEY","AW_APP_KEY")}
 have={p.stem for p in OUT.glob("*.json")}
 def append(rec):
     with MAN.open("a") as f: f.write(json.dumps(rec)+"\n"); f.flush()

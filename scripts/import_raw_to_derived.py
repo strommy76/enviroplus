@@ -137,9 +137,8 @@ def _nws_rows(stations: list[str]):
 def _ensure_capture_mode(conn: sqlite3.Connection, table: str) -> None:
     cols = {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
     if "capture_mode" not in cols:
+        # NULL states unknown provenance; no backfill may claim otherwise.
         conn.execute(f"ALTER TABLE {table} ADD COLUMN capture_mode TEXT")
-        conn.execute(
-            f"UPDATE {table} SET capture_mode='live' WHERE capture_mode IS NULL")
         conn.commit()
 
 
