@@ -156,8 +156,7 @@ All tuning values (calibration, thresholds, intervals) live in `dynamic_config.j
 ### 5. Run as a systemd service
 
 ```bash
-sudo cp enviro_dash.service /etc/systemd/system/
-sudo systemctl daemon-reload
+sudo systemctl link "$PWD/enviro_dash.service"
 sudo systemctl enable --now enviro_dash
 ```
 
@@ -166,6 +165,13 @@ Check status:
 sudo systemctl status enviro_dash
 tail -f ~/projects/enviroplus/enviro.log
 ```
+
+Before using this deployment example, reconcile the unit's device bindings and
+operations-alert template with the target host. Repository content does not select
+the active hardware unit; prove that binding from the running service manager as
+required by PROJECT-CONFIG.md. Preserve and compare an existing copied unit as
+described in [the repair plan](docs/display-spi-repair.md). For the repaired display,
+GPIO9 is DC; pi-config owns the `spi0-2cs,no_miso` firmware binding that frees it.
 
 ---
 

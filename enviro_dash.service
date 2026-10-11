@@ -1,15 +1,25 @@
 [Unit]
 Description=Enviro+ Dashboard
-After=network.target
+After=network-online.target
+Wants=network-online.target
+# Serial sensors are optional lanes; no UART device binds dashboard lifetime.
+OnFailure=stocks_ops_alert@%n.service
+# Admit an initial start and one recovery attempt; repeated rapid failure stops.
+# 120s = effective native startup timeout 90s + existing restart spacing 30s.
+# PROVISIONAL horizon: measure failed-start/recovery intervals across boots.
+StartLimitIntervalSec=120s
+StartLimitBurst=2
 
 [Service]
 Type=simple
 User=pistrommy
 WorkingDirectory=/home/pistrommy/projects/enviroplus
-Environment=PYTHONPATH=/home/pistrommy/projects
+# Preserve the deployed device-readiness check, not the obsolete guessed sleep.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do [ -e /dev/i2c-1 ] && [ -e /dev/spidev0.1 ] && exit 0; sleep 1; done; echo "i2c-1 or spidev0.1 never appeared" >&2; exit 1'
 ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python enviro_dash3.py
-Restart=always
-RestartSec=10
+Restart=on-failure
+# PROVISIONAL inherited spacing: settle from observed recovery time/attempt cost.
+RestartSec=30
 
 [Install]
 WantedBy=multi-user.target

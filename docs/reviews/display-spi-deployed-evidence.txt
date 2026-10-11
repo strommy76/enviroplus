@@ -1,0 +1,117 @@
+2026-10-11T04:55:58-04:00
+85dd9f70-eb19-4ba5-b531-901f88e23515
+gpiochip0 9	"GPIO9"         	output consumer="enviro_dash3-st7735-dc"
+# /etc/systemd/system/enviro_dash.service
+[Unit]
+Description=Enviro+ Dashboard
+After=network-online.target
+Wants=network-online.target
+# Serial sensors are optional lanes; no UART device binds dashboard lifetime.
+OnFailure=stocks_ops_alert@%n.service
+# One attempt: the observed GPIO ownership failure cannot recover by retry.
+# 120s = effective native startup allowance90s + existing retry spacing30s.
+# PROVISIONAL healthy-boot adequacy; settle on the directed reboot observations.
+StartLimitIntervalSec=120s
+StartLimitBurst=1
+
+[Service]
+Type=simple
+User=pistrommy
+WorkingDirectory=/home/pistrommy/projects/enviroplus
+# Preserve the deployed device-readiness check, not the obsolete guessed sleep.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do [ -e /dev/i2c-1 ] && [ -e /dev/spidev0.1 ] && exit 0; sleep 1; done; echo "i2c-1 or spidev0.1 never appeared" >&2; exit 1'
+ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python enviro_dash3.py
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
+NRestarts=0
+ExecMainStartTimestamp=Sun 2026-10-11 04:48:42 EDT
+ExecStartPre={ path=/bin/sh ; argv[]=/bin/sh -c for i in $(seq 1 30); do [ -e /dev/i2c-1 ] && [ -e /dev/spidev0.1 ] && exit 0; sleep 1; done; echo "i2c-1 or spidev0.1 never appeared" >&2; exit 1 ; ignore_errors=no ; start_time=[Sun 2026-10-11 04:48:42 EDT] ; stop_time=[Sun 2026-10-11 04:48:42 EDT] ; pid=1386 ; code=exited ; status=0 }
+OnFailure=stocks_ops_alert@enviro_dash.service.service
+ActiveState=active
+SubState=running
+StartLimitIntervalUSec=2min
+StartLimitBurst=1
+2026-10-11 08:55:49|82.4|51.5|1017.17|0.0
+2026-10-11 08:54:48|82.2|51.8|1017.14|0.0
+2026-10-11 08:53:48|81.6|52.6|1017.14|0.0
+active
+active
+active
+active
+active
+active
+Result=success
+NRestarts=1
+ExecMainStartTimestamp=Sun 2026-10-11 04:49:00 EDT
+ActiveState=active
+SubState=running
+grafana-grafana-1 Up 7 minutes
+stocks_postgres Up 7 minutes (healthy)
+unbound Up 7 minutes
+pihole Up 7 minutes (healthy)
+/var/run/postgresql:5432 - accepting connections
+{
+  "database": "ok",
+  "version": "13.1.1",
+  "commit": "a9cee6e1724a455676bb6c05eef7fc54aa4b19f4"
+}{"BackendState": "Running", "DNSName": "bspilhx.tail32dc7b.ts.net.", "Online": true}
+2026-10-11T04:48:44-04:00 BSPiLHX python[1382]:     with self._connection_factory() as conn:
+2026-10-11T04:48:44-04:00 BSPiLHX python[1382]:          ~~~~~~~~~~~~~~~~~~~~~~~~^^
+2026-10-11T04:48:44-04:00 BSPiLHX python[1382]:   File "/home/pistrommy/projects/stocks/src/services/tier1/runtime.py", line 70, in _connection
+2026-10-11T04:48:44-04:00 BSPiLHX python[1382]:     conn = psycopg.connect(conninfo)
+2026-10-11T04:48:44-04:00 BSPiLHX python[1382]:   File "/home/pistrommy/projects/stocks/.venv/lib/python3.13/site-packages/psycopg/connection.py", line 130, in connect
+2026-10-11T04:48:44-04:00 BSPiLHX python[1382]:     raise new_ex.with_traceback(None)
+2026-10-11T04:48:44-04:00 BSPiLHX python[1382]: psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5432 failed: server closed the connection unexpectedly
+2026-10-11T04:48:44-04:00 BSPiLHX python[1382]:         This probably means the server terminated abnormally
+2026-10-11T04:48:44-04:00 BSPiLHX python[1382]:         before or while processing the request.
+2026-10-11T04:48:44-04:00 BSPiLHX python[1382]: Multiple connection attempts failed. All failures were:
+2026-10-11T04:48:44-04:00 BSPiLHX python[1382]: - host: 'localhost', port: '5432', hostaddr: '::1': connection failed: connection to server at "::1", port 5432 failed: Connection refused
+2026-10-11T04:48:44-04:00 BSPiLHX python[1382]:         Is the server running on that host and accepting TCP/IP connections?
+2026-10-11T04:48:44-04:00 BSPiLHX python[1382]: - host: 'localhost', port: '5432', hostaddr: '127.0.0.1': connection failed: connection to server at "127.0.0.1", port 5432 failed: server closed the connection unexpectedly
+2026-10-11T04:48:44-04:00 BSPiLHX python[1382]:         This probably means the server terminated abnormally
+2026-10-11T04:48:44-04:00 BSPiLHX python[1382]:         before or while processing the request.
+2026-10-11T04:48:45-04:00 BSPiLHX systemd[1]: alpaca_minute_capture.service: Main process exited, code=exited, status=1/FAILURE
+2026-10-11T04:48:45-04:00 BSPiLHX systemd[1]: alpaca_minute_capture.service: Failed with result 'exit-code'.
+2026-10-11T04:48:45-04:00 BSPiLHX systemd[1]: Failed to start alpaca_minute_capture.service - Retain configured Alpaca minute-bar stream deliveries.
+2026-10-11T04:48:45-04:00 BSPiLHX systemd[1]: alpaca_minute_capture.service: Consumed 1.507s CPU time, 132.5M memory peak.
+2026-10-11T04:48:45-04:00 BSPiLHX systemd[1]: alpaca_minute_capture.service: Triggering OnFailure= dependencies.
+2026-10-11T04:49:00-04:00 BSPiLHX systemd[1]: alpaca_minute_capture.service: Scheduled restart job, restart counter is at 1.
+2026-10-11T04:49:00-04:00 BSPiLHX systemd[1]: Starting alpaca_minute_capture.service - Retain configured Alpaca minute-bar stream deliveries...
+2026-10-11T04:49:02-04:00 BSPiLHX systemd[1]: Started alpaca_minute_capture.service - Retain configured Alpaca minute-bar stream deliveries.
+2026-10-11T04:49:45-04:00 BSPiLHX python[1394]: {"ts": "2026-10-11 04:49:45", "level": "INFO", "module": "enviro_dash3", "msg": "SQLite row written"}
+2026-10-11T04:50:46-04:00 BSPiLHX python[1394]: {"ts": "2026-10-11 04:50:46", "level": "INFO", "module": "enviro_dash3", "msg": "SQLite row written"}
+2026-10-11T04:51:47-04:00 BSPiLHX python[1394]: {"ts": "2026-10-11 04:51:47", "level": "INFO", "module": "enviro_dash3", "msg": "SQLite row written"}
+2026-10-11T04:52:47-04:00 BSPiLHX python[1394]: {"ts": "2026-10-11 04:52:47", "level": "INFO", "module": "enviro_dash3", "msg": "SQLite row written"}
+2026-10-11T04:53:48-04:00 BSPiLHX python[1394]: {"ts": "2026-10-11 04:53:48", "level": "INFO", "module": "enviro_dash3", "msg": "SQLite row written"}
+2026-10-11T04:54:48-04:00 BSPiLHX python[1394]: {"ts": "2026-10-11 04:54:48", "level": "INFO", "module": "enviro_dash3", "msg": "SQLite row written"}
+2026-10-11T04:55:49-04:00 BSPiLHX python[1394]: {"ts": "2026-10-11 04:55:49", "level": "INFO", "module": "enviro_dash3", "msg": "SQLite row written"}
+2026-10-11T04:44:19-04:00 BSPiLHX systemd[1]: Starting stocks_ops_alert@enviro_dash.service.service - Stocks operations alert delivery for enviro_dash.service...
+2026-10-11T04:44:19-04:00 BSPiLHX python[1481013]: STOCKS_OPS_ALERT_DELIVERY {"active": true, "event": "observation", "identity": "enviro_dash.service", "problem": "systemd_unit_failed", "source": "systemd", "timestamp": "2026-10-11T08:44:19.835347+00:00"}
+2026-10-11T04:44:19-04:00 BSPiLHX python[1481013]: STOCKS_OPS_ALERT_DELIVERY {"event": "delivery_attempt", "identities": ["enviro_dash.service"], "timestamp": "2026-10-11T08:44:19.842159+00:00", "transition": "ACTIVE"}
+2026-10-11T04:44:20-04:00 BSPiLHX python[1481013]: STOCKS_OPS_ALERT_DELIVERY {"delivered": true, "detail": "HTTP transport confirmed", "event": "delivery_result", "identities": ["enviro_dash.service"], "timestamp": "2026-10-11T08:44:20.017218+00:00", "transition": "ACTIVE"}
+2026-10-11T04:44:20-04:00 BSPiLHX systemd[1]: stocks_ops_alert@enviro_dash.service.service: Deactivated successfully.
+2026-10-11T04:44:20-04:00 BSPiLHX systemd[1]: Finished stocks_ops_alert@enviro_dash.service.service - Stocks operations alert delivery for enviro_dash.service.
+2026-10-11T04:44:20-04:00 BSPiLHX systemd[1]: stocks_ops_alert@enviro_dash.service.service: Consumed 954ms CPU time, 67M memory peak.
+2026-10-11T04:44:49-04:00 BSPiLHX systemd[1]: Starting stocks_ops_alert@enviro_dash.service.service - Stocks operations alert delivery for enviro_dash.service...
+2026-10-11T04:44:49-04:00 BSPiLHX python[1481153]: STOCKS_OPS_ALERT_DELIVERY {"active": true, "event": "observation", "identity": "enviro_dash.service", "problem": "systemd_unit_failed", "source": "systemd", "timestamp": "2026-10-11T08:44:49.942736+00:00"}
+2026-10-11T04:44:50-04:00 BSPiLHX systemd[1]: stocks_ops_alert@enviro_dash.service.service: Deactivated successfully.
+2026-10-11T04:44:50-04:00 BSPiLHX systemd[1]: Finished stocks_ops_alert@enviro_dash.service.service - Stocks operations alert delivery for enviro_dash.service.
+0:0 755 /boot/firmware/config.txt
+/home/pistrommy/projects/.implementation-worktrees/enviroplus-display/enviro_dash.service
+
+Evidence-completeness followup, 2026-10-11 05:01 EDT; native journal/cmp:
+2026-10-11T04:44:19-04:00 BSPiLHX systemd[1]: enviro_dash.service: Main process exited, code=exited, status=1/FAILURE
+2026-10-11T04:44:19-04:00 BSPiLHX systemd[1]: enviro_dash.service: Failed with result 'exit-code'.
+2026-10-11T04:44:49-04:00 BSPiLHX systemd[1]: enviro_dash.service: Scheduled restart job, restart counter is at 1.
+2026-10-11T04:44:49-04:00 BSPiLHX systemd[1]: enviro_dash.service: Start request repeated too quickly.
+2026-10-11T04:44:49-04:00 BSPiLHX systemd[1]: enviro_dash.service: Failed with result 'exit-code'.
+2026-10-11T04:44:49-04:00 BSPiLHX systemd[1]: Failed to start enviro_dash.service - Enviro+ Dashboard.
+Native sudo cmp /boot/firmware/config.txt reviewed firmware/config.txt:
+Firmware readback cmp completed: identical
+Native command used set -e; comparison exited0 before success marker.
+NRestarts=0
+ActiveState=active
+SubState=running
