@@ -4,7 +4,9 @@
 FILE:        ambient_wx.py
 PATH:        ~/projects/enviroplus/ambient_wx.py
 DESCRIPTION: Polls the Ambient Weather API for the configured station
-             (AW_MAC), retains every response verbatim, and writes the
+             (AW_MAC), retains every response body received verbatim (an
+             HTTP error raised before a body is read is recorded as
+             fetch_error), and writes the
              observation to the 'outdoor' table. `--replay DAY...` rebuilds
              rows from retained responses through the same mapping and write.
 

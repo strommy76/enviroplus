@@ -4,8 +4,9 @@
 FILE:        nws_wx.py
 PATH:        ~/projects/enviroplus/nws_wx.py
 DESCRIPTION: Polls configured NWS observation stations and writes the newest
-             fresh observation to the 'nws_weather' table. Every response is
-             retained verbatim first. `--replay DAY...` rebuilds rows from
+             fresh observation to the 'nws_weather' table. Every response body
+             received is retained verbatim first (an HTTP error raised
+             before a body is read is recorded as fetch_error). `--replay DAY...` rebuilds rows from
              retained responses through the same parse and write.
 
 CHANGELOG:
@@ -416,31 +417,34 @@ def run() -> None:
 
 def replay(settings: NwsSettings, conn: sqlite3.Connection, days: list[str]) -> dict:
     """Rebuild 'nws_weather' rows from responses retained on the named UTC
-    capture days, for every configured station. Each response yields its
-    newest observation when it was fresh at capture time, judged exactly as
-    live judges it; rows already present are kept. Live fetches a fallback
-    station only when the stations before it failed, so retention holds a
-    fallback response only for those cycles and replay reproduces live's
-    station choice (2026-10-10: 29 of 29 rows, identical)."""
+    capture days. Responses from every configured station are taken in capture
+    order, as live received them; each yields its newest observation when it
+    was fresh at capture time, judged exactly as live judges it, and the first
+    row written for a timestamp stands, as it does live. Live fetches a
+    fallback station only when the stations before it failed, so this
+    reproduces live's station choice. Rows already present are kept."""
     tally = Counter()
+    received = []
     for station in settings.stations:
         for day in days:
             for captured, _recorded, blob in read_day(f"{PROVIDER}/{station}", day):
-                tally["records"] += 1
-                if blob is None:
-                    tally["without_payload"] += 1
-                    continue
-                newest, outcome, _detail = classify_response(blob)
-                tally[outcome] += 1
-                if newest is None:
-                    continue
-                observation = _parse(newest, station)
-                age_s = _observation_age_s(observation["ts"], datetime.fromisoformat(captured))
-                if not 0 <= age_s <= settings.max_observation_age_s:
-                    tally["not_fresh_at_capture"] += 1
-                    continue
-                if _write(conn, log, observation, capture_mode="replay"):
-                    tally["written"] += 1
+                received.append((datetime.fromisoformat(captured), station, blob))
+    received.sort(key=lambda r: r[0])
+    for captured, station, blob in received:
+        tally["records"] += 1
+        if blob is None:
+            tally["without_payload"] += 1
+            continue
+        newest, outcome, _detail = classify_response(blob)
+        tally[outcome] += 1
+        if newest is None:
+            continue
+        observation = _parse(newest, station)
+        if not 0 <= _observation_age_s(observation["ts"], captured) <= settings.max_observation_age_s:
+            tally["not_fresh_at_capture"] += 1
+            continue
+        if _write(conn, log, observation, capture_mode="replay"):
+            tally["written"] += 1
     return dict(tally)
 
 
