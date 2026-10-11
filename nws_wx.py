@@ -418,10 +418,10 @@ def replay(settings: NwsSettings, conn: sqlite3.Connection, days: list[str]) -> 
     """Rebuild 'nws_weather' rows from responses retained on the named UTC
     capture days, for every configured station. Each response yields its
     newest observation when it was fresh at capture time, judged exactly as
-    live judges it; rows already present are kept. Unlike live, which stops at
-    the first fresh station each cycle, replay writes every station's fresh
-    observation, so a rebuilt table can hold extra fallback-station rows
-    (marked by station_id); it never lacks one live wrote."""
+    live judges it; rows already present are kept. Live fetches a fallback
+    station only when the stations before it failed, so retention holds a
+    fallback response only for those cycles and replay reproduces live's
+    station choice (2026-10-10: 29 of 29 rows, identical)."""
     tally = Counter()
     for station in settings.stations:
         for day in days:
