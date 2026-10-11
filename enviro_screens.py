@@ -133,13 +133,16 @@ def band_color(value, band):
 
 
 def gas_color(channel, kohm, thresholds):
-    """Severity of one MOS channel. Oxidising: higher resistance = more NO2.
-    Reducing and NH3: lower resistance = more gas."""
+    """Severity of one MOS channel, on the bands the operator calibrated
+    (2026-03-16) and the previous display used: every channel is worse at LOW
+    resistance. For oxidising that means red at or below `green_max` and green
+    above `yellow_max`; the key names do not read that way, but the observed
+    indoor baseline (about 90 kOhm) sits green under it."""
     if kohm is None:
         return DIM
     if channel == "oxidising":
         t = thresholds["oxidising_k"]
-        return GREEN if kohm <= t["green_max"] else YELLOW if kohm <= t["yellow_max"] else RED
+        return RED if kohm <= t["green_max"] else YELLOW if kohm <= t["yellow_max"] else GREEN
     t = thresholds["reducing_k" if channel == "reducing" else "ammonia_k"]
     return GREEN if kohm >= t["green_min"] else YELLOW if kohm >= t["yellow_min"] else RED
 

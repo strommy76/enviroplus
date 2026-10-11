@@ -82,3 +82,10 @@ def test_every_page_renders_full_and_absent_data(page, present):
 def test_pages_differ_and_mark_the_current_page():
     frames = [screens.render(p, _state(True)).tobytes() for p in range(len(screens.PAGES))]
     assert len(set(frames)) == len(frames)
+
+
+@pytest.mark.parametrize("kohm, color", [(90.0, screens.GREEN), (50.0, screens.YELLOW), (30.0, screens.RED)])
+def test_oxidising_bands_keep_the_calibrated_direction(kohm, color):
+    # Operator-calibrated bands (2026-03-16): the indoor baseline, about 90 kOhm,
+    # is green; resistance at or below oxidising_k.green_max is red.
+    assert screens.gas_color("oxidising", kohm, THRESHOLDS) == color

@@ -8,7 +8,8 @@
       "2026-03-16 04:00:00 EDT  Update cal_actual_f 74.4→75.1 per overnight hygrometer reference (74.9-75.3°F).",
       "2026-03-16 00:00:00 EDT  Add hardware section for Pi 5 port — SPI, GPIO pins, I2C addr. Values here match Pi 3 B+ / Pi 5 wiring (Enviro+ HAT pinout is identical).",
       "2026-03-16 00:00:00 EDT  Add cpu_factor_override=1.8488. Pi 5 runs hotter so BME280 is at 34.7°C steady-state vs 22.7°C at cold startup, making the computed CPU_FACTOR wrong. Override bypasses startup calibration with a steady-state-measured value. Null = revert to computed.",
-      "2026-03-18 00:00:00 EDT  Split from dynamic_config.json into Pi 5-specific file. Pi 3 B+ uses dynamic_config.json; Pi 5 selects this file via CONFIG_PATH in .env."
+      "2026-03-18 00:00:00 EDT  Split from dynamic_config.json into Pi 5-specific file. Pi 3 B+ uses dynamic_config.json; Pi 5 selects this file via CONFIG_PATH in .env.",
+      "2026-10-11 15:10:00 EDT  display: replace bar/plot scaling keys with tap_proximity and outdoor_stale_s (four-page LCD, PR #22); thresholds: drop unused pm1/pm25/pm10/aq_pm25 (AQI uses the EPA table in enviro_screens.py)."
     ]
   },
   "calibration": {
