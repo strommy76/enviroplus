@@ -51,7 +51,7 @@
       "ltr559":  { "installed": true,  "bus": "i2c",  "emits": ["lux"] },
       "gas":     { "installed": true,  "bus": "i2c",  "emits": ["oxidising", "reducing", "ammonia"] },
       "pms5003": { "installed": false, "bus": "uart", "emits": ["pm1", "pm25", "pm10"], "note": "not fitted — housing in design 2026-07-29" },
-      "scd41":   { "installed": false, "bus": "i2c",  "emits": ["co2"], "note": "never fitted; would replace the hardcoded CO2 placeholder. 0x62 verified free on i2c-1." }
+      "scd41":   { "installed": false, "bus": "i2c",  "emits": ["co2"], "note": "never fitted; planned (operator, 2026-10-11). The display shows no CO2 until it is wired and read. 0x62 verified free on i2c-1." }
     }
   }
 }

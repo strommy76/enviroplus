@@ -19,13 +19,6 @@ A missing or failed reading shows `--` and leaves a gap in its trend; it is neve
 
 **Color coding:** the AQI gauge and PM2.5 value use the EPA category colors (Good green, Moderate yellow, Unhealthy for Sensitive Groups orange, Unhealthy red, Very Unhealthy purple, Hazardous maroon). Indoor temperature, humidity and gas values use the green/yellow/orange (gas: red) bands in `thresholds`.
 
--------|---------|
-| 🟢 Green | Normal / safe |
-| 🟡 Yellow | Elevated / watch |
-| 🟠 Orange | High / caution |
-| 🔴 Red | Dangerous |
-| 🟣 Magenta | Hazardous (PM2.5 > 150) |
-
 ---
 
 ## 🔬 Sensors

@@ -40,6 +40,12 @@ def test_pm25_aqi_matches_2024_epa_table(pm25, expected):
     assert screens.pm_aqi(pm25, None) == expected
 
 
+# PM10 table (unchanged by the 2024 rule), truncated to whole ug/m3.
+@pytest.mark.parametrize("pm10, expected", [(54, 50), (55, 51), (154.9, 100), (425, 301), (604, 500)])
+def test_pm10_aqi_matches_epa_table(pm10, expected):
+    assert screens.pm_aqi(None, pm10) == expected
+
+
 def test_aqi_is_the_larger_sub_index():
     # PM10 155 is the bottom of its USG band (101); PM2.5 5.0 alone is 28.
     assert screens.pm_aqi(5.0, 155) == 101
@@ -50,7 +56,9 @@ def test_absent_pm_is_no_aqi_not_zero():
     assert screens.aqi_category(None) == ("NO DATA", screens.DIM)
 
 
-@pytest.mark.parametrize("aqi, name", [(50, "GOOD"), (51, "MODERATE"), (151, "UNHEALTHY"), (301, "HAZARDOUS")])
+@pytest.mark.parametrize("aqi, name", [(50, "GOOD"), (51, "MODERATE"), (100, "MODERATE"), (101, "SENSITIVE"),
+                                       (150, "SENSITIVE"), (151, "UNHEALTHY"), (200, "UNHEALTHY"),
+                                       (201, "V UNHEALTHY"), (300, "V UNHEALTHY"), (301, "HAZARDOUS")])
 def test_category_edges(aqi, name):
     assert screens.aqi_category(aqi)[0] == name
 
