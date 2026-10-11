@@ -104,7 +104,8 @@ Preboot process still failed from real GPIO contention, as expected.
 Native journal proves actual OnFailure HTTP delivery at04:44:20.017218 EDT:
 identityenviro_dash.service, transitionACTIVE, deliveredtrue, detailHTTP transport
 confirmed. At04:44:49 retry was refused, Start request repeated too quickly;
-at04:45:08 unitfailed with NRestarts1, effective interval2min/burst1. Both previously
+The failure occurred at 04:44:49; the 04:45:08 status inspection showed the unit
+failed with NRestarts1, effective interval2min/burst1. Both previously
 unconfirmed delivery and limiting findings now confirmed by actual behavior.
 
 Firmware preimage cmp passed immediately before application. Native mktemp on
@@ -293,3 +294,26 @@ Current live process/readings are verified independently; source edits alone are
 not claimed as an activated policy. The next review class is the corrected restart
 admission, value derivation, alias removal, host authority and truthful evidence
 contracts across the whole paired artifact, not a new speculative campaign.
+
+Whole-paired correction reviews completed at Enviro a20d783 / pi-config 4e500e9:
+Astra/OpenAI 10:35 EDT, GLM-5.3/Ollama 10:37 EDT. Each returned seven conforming
+axiom/admission rows, no blocking source defect. Author individual dispositions:
+
+- Astra: early-recovery admission CONFIRMED closed; unlimited rapid failures,
+  broken alias consumers and claimed production activation REFUTED by native
+  control/readback/search. Exact invocation provenance CONFIRMED from original
+  sudo journal. Natural recovery-population adequacy UNCONFIRMED, explicitly
+  provisional at definitions. No runtime correction or extra round is needed.
+- GLM finding 1 retained raw verification provenance CONFIRMED, closed by adding
+  original unit journals, exact sudo-recorded invocations and removal/readback to
+  docs/reviews/display-recovery-evidence.txt. No check rerun or fabricated producer.
+- GLM finding 2 event-time ambiguity UNCONFIRMED in first packet: 04:45:08 names
+  a status inspection, not a journal transition. Text now distinguishes the
+  raw-confirmed failure at 04:44:49 from that later inspection; no invented line.
+
+GLM's other source/effect checks concurred with the actual bounds and operator
+residual; the raw finder report is retained at docs/reviews/display-recovery-glm.md.
+These commits add provenance/clarification only; runtime bytes stay e82cf8c.
+No named defect class requires another internal review round. External pi-Claude
+review and authorized landing/cutover remain pending; no revised production
+effect is yet claimed.

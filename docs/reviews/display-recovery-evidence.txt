@@ -1,0 +1,50 @@
+Native October 11 restart-admission journal, original verification commands,
+real alert recovery and post-cleanup readback. Source Enviro a20d783 / pi-config
+4e500e9; native systemd 257. This is immutable observed provenance, not desired
+unit configuration. Method and property scope: docs/display-spi-validation.md.
+
+2026-10-11T10:30:28-04:00 BSPiLHX systemd[1]: Started enviro-restart-recovery-verification.service - [systemd-run] /bin/sh -c "if [ -e \"\$1\" ]; then exec /usr/bin/sleep infinity; fi; touch \"\$1\"; exit 1" sh /tmp/enviro-restart-verification.Kvrhso/recovery-started.
+2026-10-11T10:30:28-04:00 BSPiLHX systemd[1]: enviro-restart-recovery-verification.service: Main process exited, code=exited, status=1/FAILURE
+2026-10-11T10:30:28-04:00 BSPiLHX systemd[1]: enviro-restart-recovery-verification.service: Failed with result 'exit-code'.
+2026-10-11T10:30:28-04:00 BSPiLHX systemd[1]: Started enviro-restart-lockout-verification.service - [systemd-run] /bin/sh -c "if [ -e \"\$1\" ]; then exec /usr/bin/sleep infinity; fi; touch \"\$1\"; exit 1" sh /tmp/enviro-restart-verification.Kvrhso/lockout-started.
+2026-10-11T10:30:28-04:00 BSPiLHX systemd[1]: Started enviro-restart-repeated-verification.service - [systemd-run] /usr/bin/false.
+2026-10-11T10:30:28-04:00 BSPiLHX systemd[1]: enviro-restart-lockout-verification.service: Main process exited, code=exited, status=1/FAILURE
+2026-10-11T10:30:28-04:00 BSPiLHX systemd[1]: enviro-restart-lockout-verification.service: Failed with result 'exit-code'.
+2026-10-11T10:30:28-04:00 BSPiLHX systemd[1]: enviro-restart-repeated-verification.service: Main process exited, code=exited, status=1/FAILURE
+2026-10-11T10:30:28-04:00 BSPiLHX systemd[1]: enviro-restart-repeated-verification.service: Failed with result 'exit-code'.
+2026-10-11T10:30:58-04:00 BSPiLHX systemd[1]: enviro-restart-recovery-verification.service: Scheduled restart job, restart counter is at 1.
+2026-10-11T10:30:58-04:00 BSPiLHX systemd[1]: Started enviro-restart-recovery-verification.service - [systemd-run] /bin/sh -c "if [ -e \"\$1\" ]; then exec /usr/bin/sleep infinity; fi; touch \"\$1\"; exit 1" sh /tmp/enviro-restart-verification.Kvrhso/recovery-started.
+2026-10-11T10:30:58-04:00 BSPiLHX systemd[1]: enviro-restart-lockout-verification.service: Scheduled restart job, restart counter is at 1.
+2026-10-11T10:30:58-04:00 BSPiLHX systemd[1]: enviro-restart-lockout-verification.service: Start request repeated too quickly.
+2026-10-11T10:30:58-04:00 BSPiLHX systemd[1]: enviro-restart-lockout-verification.service: Failed with result 'exit-code'.
+2026-10-11T10:30:58-04:00 BSPiLHX systemd[1]: Failed to start enviro-restart-lockout-verification.service - [systemd-run] /bin/sh -c "if [ -e \"\$1\" ]; then exec /usr/bin/sleep infinity; fi; touch \"\$1\"; exit 1" sh /tmp/enviro-restart-verification.Kvrhso/lockout-started.
+2026-10-11T10:30:58-04:00 BSPiLHX systemd[1]: enviro-restart-repeated-verification.service: Scheduled restart job, restart counter is at 1.
+2026-10-11T10:30:58-04:00 BSPiLHX systemd[1]: Started enviro-restart-repeated-verification.service - [systemd-run] /usr/bin/false.
+2026-10-11T10:30:58-04:00 BSPiLHX systemd[1]: enviro-restart-repeated-verification.service: Main process exited, code=exited, status=1/FAILURE
+2026-10-11T10:30:58-04:00 BSPiLHX systemd[1]: enviro-restart-repeated-verification.service: Failed with result 'exit-code'.
+2026-10-11T10:31:28-04:00 BSPiLHX systemd[1]: enviro-restart-repeated-verification.service: Scheduled restart job, restart counter is at 2.
+2026-10-11T10:31:28-04:00 BSPiLHX systemd[1]: enviro-restart-repeated-verification.service: Start request repeated too quickly.
+2026-10-11T10:31:28-04:00 BSPiLHX systemd[1]: enviro-restart-repeated-verification.service: Failed with result 'exit-code'.
+2026-10-11T10:31:28-04:00 BSPiLHX systemd[1]: Failed to start enviro-restart-repeated-verification.service - [systemd-run] /usr/bin/false.
+2026-10-11T10:32:58-04:00 BSPiLHX systemd[1]: Stopping enviro-restart-recovery-verification.service - [systemd-run] /bin/sh -c "if [ -e \"\$1\" ]; then exec /usr/bin/sleep infinity; fi; touch \"\$1\"; exit 1" sh /tmp/enviro-restart-verification.Kvrhso/recovery-started...
+2026-10-11T10:32:58-04:00 BSPiLHX systemd[1]: enviro-restart-recovery-verification.service: Deactivated successfully.
+2026-10-11T10:32:58-04:00 BSPiLHX systemd[1]: Stopped enviro-restart-recovery-verification.service - [systemd-run] /bin/sh -c "if [ -e \"\$1\" ]; then exec /usr/bin/sleep infinity; fi; touch \"\$1\"; exit 1" sh /tmp/enviro-restart-verification.Kvrhso/recovery-started.
+pistrommy : PWD=/home/pistrommy/projects ; USER=root ; COMMAND=/usr/bin/systemd-run --unit=enviro-restart-recovery-verification -p User=pistrommy -p Type=simple -p StartLimitIntervalSec=120s -p StartLimitBurst=2 -p Restart=on-failure -p RestartSec=30 /bin/sh -c 'if [ -e "$1" ]; then exec /usr/bin/sleep infinity; fi; touch "$1"; exit 1' sh /tmp/enviro-restart-verification.Kvrhso/recovery-started
+pistrommy : PWD=/home/pistrommy/projects ; USER=root ; COMMAND=/usr/bin/systemd-run --unit=enviro-restart-lockout-verification -p User=pistrommy -p Type=simple -p StartLimitIntervalSec=120s -p StartLimitBurst=1 -p Restart=on-failure -p RestartSec=30 /bin/sh -c 'if [ -e "$1" ]; then exec /usr/bin/sleep infinity; fi; touch "$1"; exit 1' sh /tmp/enviro-restart-verification.Kvrhso/lockout-started
+pistrommy : PWD=/home/pistrommy/projects ; USER=root ; COMMAND=/usr/bin/systemd-run --unit=enviro-restart-repeated-verification -p User=pistrommy -p Type=simple -p StartLimitIntervalSec=120s -p StartLimitBurst=2 -p Restart=on-failure -p RestartSec=30 /usr/bin/false
+STOCKS_OPS_ALERT_DELIVERY {"active": false, "event": "observation", "identity": "enviro_dash.service", "problem": "systemd_unit_recovered", "source": "systemd", "timestamp": "2026-10-11T09:02:03.809360+00:00"}
+STOCKS_OPS_ALERT_DELIVERY {"event": "delivery_attempt", "identities": ["alpaca_minute_capture.service", "enviro_dash.service"], "timestamp": "2026-10-11T09:02:03.817438+00:00", "transition": "RECOVERED"}
+STOCKS_OPS_ALERT_DELIVERY {"delivered": true, "detail": "HTTP transport confirmed", "event": "delivery_result", "identities": ["alpaca_minute_capture.service", "enviro_dash.service"], "timestamp": "2026-10-11T09:02:04.040213+00:00", "transition": "RECOVERED"}
+Id=enviro-restart-recovery-verification.service
+LoadState=not-found
+
+Id=enviro-restart-lockout-verification.service
+LoadState=not-found
+
+Id=enviro-restart-repeated-verification.service
+LoadState=not-found
+MainPID=1394
+NRestarts=0
+ActiveState=active
+StartLimitBurst=1
+10:38 EDT
