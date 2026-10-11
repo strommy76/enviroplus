@@ -85,3 +85,109 @@ execution shape, not unperformed results.
 Primary contracts: [Grafana Postgres time-series queries](https://grafana.com/docs/grafana/latest/datasources/postgres/query-editor/),
 [native datasource API](https://grafana.com/docs/grafana/latest/developer-resources/api-reference/http-api/api-legacy/data_source/).
 The installed Grafana 13.1.1 behavior remains the deployment evidence.
+
+## Source execution and independent review — 13:19–13:25 EDT
+
+Named implementation input: c593f1a165226842f4128ebe5357e6e2312e933e, against
+2d2a8107fc4f24c955e40cb7b33cefd8bc663118. This follow-up records observations;
+the dashboard bytes remain unchanged from that reviewed revision.
+
+Complete source-object comparison: 59 panels become 26 (five retained rows,
+15 environmental/system panels, six ticker stats). Exactly 28 stock panels and
+five empty stock rows are removed. Every field of the 15 environmental/system
+panels equals baseline except gridPos.y. All six ticker presentations match
+except their deliberately replaced datasource/query and superseded sorting.
+No retained rectangles overlap; no active phantom reference remains in Home.
+
+One-time native method: load actual candidate panel targets, add their declared
+panel datasource to the native request, then POST /api/ds/query to the current
+TLS-verified Grafana using its private credential only in process memory. For
+each ticker, execute the unchanged candidate rawSql/time_series target. Compare
+all returned times/values with an independent table-format source read selecting
+bar_date::text and close, ordered descending with LIMIT 90, reversed locally;
+the expected UTC dates derive from the source, not from candidate output. Native
+Postgres labels the schema time field `Time`; use its declared time type rather
+than presuming a lowercase rendered field name. An initial method attempt used
+that wrong field label and failed before reporting a pass; it changed no source
+or stored rows. Run every unchanged environmental/system target through its
+real SQLite plugin with the supported queryText field and its complete format
+attributes; do not reinterpret or rewrite its SQL.
+
+Observed: all six ticker targets returned 90 chronological points, with all
+540 date/value pairs equal to independent direct source reads. Latest date for
+each is 2026-10-09; that actual date is retained, not fabricated as current.
+All 16 unchanged environmental/system queries succeeded. This establishes query
+execution, not browser-rendered visuals or an environmental freshness claim.
+
+Two negative constructions execute changes to actual target SQL through that
+same native backend: replacing its relation with a nonexistent one produces
+a native query failure; changing inner latest-90 selection to oldest-90 produces
+a last date different from the independent source's latest date. The latter
+would violate the latest-price/history contract despite returning valid frames.
+These observations establish sensitivity to those actual SQL violations only;
+they do not turn a configuration parse or generic test pass into wider proof.
+
+Astra/OpenAI reviewed the entire c593f1a delta and complete source/runtime seams.
+It independently executed all six targets, read all 15,947 current source rows
+for those instruments in a read-only Postgres transaction, sorted each complete
+history, selected latest 90 and compared all 540 returned date/value pairs:
+equal, ascending, numeric and non-null. It independently confirmed exact panel
+preservation, removal counts, layout and current provisioner definitions.
+No confirmed dashboard defect was found; all canonical axiom questions conform.
+
+Astra's full served-dashboard inventory found one additional substring in the
+Strategies v2 historical May 6 cutover changelog. REFUTED as a live dependency:
+that append-only provenance names the old transition, not a current query or
+datasource reference. Do not rewrite history to satisfy a string scan.
+BTC daily-bar freshness is CONFIRMED as the existing separately raised
+observation; the faithful projection is not its correction. Deployment remains
+UNCONFIRMED until the separate native publication/deletion checks are executed.
+
+GLM-5.3/Ollama reviewed the complete same artifact, complete baseline, project
+authorities, native provisioner/datasource files and the one-time method. It
+found no candidate dashboard defect and statically confirmed the removal,
+query semantics and preservation. Executed results were not yet in its packet;
+its inability to independently execute this host is retained, not called a pass.
+Individual finding dispositions:
+
+- Title-to-ticker coupling in the one-time negative demonstration: CONFIRMED at
+  method source, closed without action because it is not a defect in this named
+  single-run outcome. The actual SPY title equals its actual query ticker, the
+  completed observation is valid, and the tool has no future consumer. A
+  hypothetical retitled/reused method is outside its declared short lifetime;
+  no permanent mechanism or new review round is justified. The primary
+  comparisons extract the actual query ticker and do not depend on title.
+- Missing recorded execution output: UNCONFIRMED by GLM at its dispatch revision,
+  closed here by recording the actual observations and native method/input
+  provenance before deployment. No fabricated reviewer execution or pass.
+- Inventory coverage beyond Home: UNCONFIRMED by GLM, independently exercised
+  by Astra and the author; the pre-deletion full served-reference check remains.
+
+### Implementation axiom-check
+
+| Axiom | Falsification question | Result |
+|---|---|---|
+| 1 Truth is absolute | Times/values differ from current source? | CONFORMS |
+| 2 Cognition is adaptive | New curated routing registry introduced? | CONFORMS |
+| 3 Antifragility is doctrine | Candidate/provisioner recreates retired integration? | CONFORMS |
+| 4 KISS | Mechanism protects an unobserved case? | CONFORMS |
+| 5 Boundaries | Invalid query reads as success? | CONFORMS |
+| 6 Maintenance is directional | Unrelated panel/ownership changed? | CONFORMS |
+| Preamble | Mechanism exceeds demonstrated need? | CONFORMS |
+
+Locations/constructions: all six actual Home targets and direct source content
+agree through two independent native methods (1); the complete two-file source
+delta adds no runtime registry or routing, only the existing operator-selected
+UI (2); complete candidate/provisioning inspection removes live references and
+the declared native retirement boundary requires a served recheck (3); no
+service, guard, framework, dependency or collector code is introduced (4,
+Preamble); actual missing-relation and wrong-history target mutations fail their
+native/independent-data boundaries, with no fallback (5); complete retained
+object comparison proves the bounded layout-only environmental change and
+preserves existing owners, stores and schedules (6). Source conformance is not
+a claim that the not-yet-deployed retirement has occurred.
+
+## Remaining verdict and effect
+
+Whole-artifact internal review is adjudicated; external pi-Claude source review
+and operator merge verdict remain. Production Home/datasource are unchanged.
