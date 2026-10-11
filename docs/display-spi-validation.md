@@ -76,3 +76,46 @@ no backup workaround/repair or phantom directory created by this change.
 
 No desired unit/firmware has been activated and no reboot performed. Required
 real-failure alert/rate-limit observation and postboot effect remain pending.
+
+## Authorized activation, October11 04:42–04:45 EDT
+
+Bryan renewed the direction to read and execute msg_enviro_dash_fix.md after its
+gate update. Native evidence supersedes the earlier failed-gate observation:
+host_backup ran04:31:19–04:39:04, inactive/dead, Resultsuccess, exit0. Actual
+snapshot73072cae16d42e71cf785862064b19d0e867c5a53306d85f80dbbf8c91b36dd3
+contains / and /boot/firmware. Same invocation checked5 snapshots and read97/97
+sampled packs of1150 total, native no errors were found. This is sampled checking,
+not an assertion every data pack was read. Stocks replication completed04:28:03,
+exit0. Both required native gates satisfied before reboot.
+
+No merge verdict inferred: PRs20/13 remain open. Directed host activation uses
+the reviewed existing branches, unit source at enviroplus cb61d50 (runtime bytes
+d86f867), firmware at pi-config e733d14. Do not remove these worktrees while the
+installed unit depends on them; landing and final link cutover remain pending.
+
+One-time method/result (H): native cp --preserve=all saved exact original firmware
+and unit under /home/pistrommy/projects/.display-spi-recovery.FiknMd; cmp proved
+both unchanged. Stop old loop; unlink only /etc/systemd/system/enviro_dash.service
+after preservation; native systemctl link selects the reviewed repository unit;
+daemon-reload, reset-failed once to arm the measured attempt, start at04:44:18.
+Reset clears start counters, not retained journal; it is not claimed resolution.
+Preboot process still failed from real GPIO contention, as expected.
+
+Native journal proves actual OnFailure HTTP delivery at04:44:20.017218 EDT:
+identityenviro_dash.service, transitionACTIVE, deliveredtrue, detailHTTP transport
+confirmed. At04:44:49 retry was refused, Start request repeated too quickly;
+at04:45:08 unitfailed with NRestarts1, effective interval2min/burst1. Both previously
+unconfirmed delivery and limiting findings now confirmed by actual behavior.
+
+Firmware preimage cmp passed immediately before application. Native mktemp on
+/boot/firmware staged desired source; install retained root:root/mode755; cmp
+verified staged bytes; mv -T atomically replaced exact config.txt; readback cmp
+passed. Desired firmware is staged for reboot, not claimed already effective.
+
+Preboot identity6597eef8-6996-40cd-81d0-d6fd907f4207. Native active lanes:
+alpaca_minute_capture, market_monitor, ambient_wx, nws_wx, airnow_wx, tailscaled;
+Postgres containerstocks_postgres healthy, Grafana containergrafana-grafana-1
+running. Baseline max reading2026-09-17 00:24:27. Reboot explicitly directed;
+postboot GPIO9 ownership, service startup, new real readings, capture/database/
+Grafana/tailscale health and distinct effect review are still required. Healthy
+boot timing remains provisional until measured. No backup/broker repair performed.
