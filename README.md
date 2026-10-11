@@ -1,36 +1,23 @@
 # 🌡️ Enviro+ Dashboard
 
-A high-density, real-time air quality and environment monitor running on a Raspberry Pi with a [Pimoroni Enviro+](https://github.com/pimoroni/enviroplus-python) HAT. All 10 sensors displayed on a 160×80 ST7735 screen with color-coded bars, sparklines, and persistent SQLite logging.
+A high-density, real-time air quality and environment monitor running on a Raspberry Pi with a [Pimoroni Enviro+](https://github.com/pimoroni/enviroplus-python) HAT. Four pages on the 160×80 ST7735 screen (indoor air, particulates, outdoor weather, gas), changed by a wave over the proximity sensor, with persistent SQLite logging.
 
 ---
 
-## 🖥️ Display Layout
+## 🖥️ Display Pages
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│ ENVIRO+                                              9:45 PM   │  ← header
-├────────────────────────────────────────────────────────────────┤
-│ 🌡 72.3°F  ▓▓▓▓▓▓▓▓░░░░░░░   💧 H:49%  ▓▓▓▓▓░░░░░░░░░░░░   │  ← weather row
-├────────────────────────────────────────────────────────────────┤
-│ ☁  Ox:47k  ▓▓▓▓░░░  Rd:120k ░░░░░░░░  N3:158k ░░░░░░░░░░░   │  ← gas row
-├────────────────────────────────────────────────────────────────┤
-│ · ·PM1:2   ▓░░░░░░  2.5:3   ▓░░░░░░░  PM10:4  ▓░░░░░░░░░░   │  ← particulates
-├────────────────────────────────────────────────────────────────┤
-│ ☀ Lux:142   P:1013                              ┌ GOOD ┐       │  ← light + AQ
-├──────────────────────────────┬─────────────────────────────────┤
-│ T°F  ················        │ PM2.5  ·····················    │  ← sparklines
-└──────────────────────────────┴─────────────────────────────────┘
-```
+`enviro_screens.py` draws each page; a hand over the LTR559 proximity sensor moves to the next one. Corner dots show which page is on.
 
-**Color coding:**
+| Page | Shows |
+|------|-------|
+| 1 · Glance | EPA AQI gauge (2024 PM2.5 table); indoor °F, humidity, pressure; outdoor °F and humidity from the Ambient station with trend |
+| 2 · Air | PM1, PM2.5, PM10 in µg/m³ with trend lines on one shared scale |
+| 3 · Outside | Wind direction, speed and gust; UV; daily rain (Ambient station) |
+| 4 · Gas | Oxidising, reducing, NH3 sensor resistance in kΩ with trends |
 
-| Color | Meaning |
-|-------|---------|
-| 🟢 Green | Normal / safe |
-| 🟡 Yellow | Elevated / watch |
-| 🟠 Orange | High / caution |
-| 🔴 Red | Dangerous |
-| 🟣 Magenta | Hazardous (PM2.5 > 150) |
+A missing or failed reading shows `--` and leaves a gap in its trend; it is never drawn as zero. Outdoor values older than `display.outdoor_stale_s` show `--`.
+
+**Color coding:** the AQI gauge and PM2.5 value use the EPA category colors (Good green, Moderate yellow, Unhealthy for Sensitive Groups orange, Unhealthy red, Very Unhealthy purple, Hazardous maroon). Indoor temperature, humidity and gas values use the green/yellow/orange (gas: red) bands in `thresholds`.
 
 ---
 
@@ -190,8 +177,8 @@ All tunable runtime values live here. The running script watches this file and *
     "publish_s":        60,  ← seconds between SQLite writes
     "display_refresh_s": 2   ← display update rate
   },
-  "thresholds": { ... },     ← color breakpoints for all sensors
-  "display":    { ... }      ← bar graph scaling factors
+  "thresholds": { ... },     ← color bands for temperature, humidity and gas
+  "display":    { ... }      ← proximity tap level, outdoor staleness
 }
 ```
 

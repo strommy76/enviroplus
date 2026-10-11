@@ -8,7 +8,8 @@
       "2026-03-16 04:00:00 EDT  Update cal_actual_f 74.4→75.1 per overnight hygrometer reference (74.9-75.3°F).",
       "2026-03-16 00:00:00 EDT  Add hardware section for Pi 5 port — SPI, GPIO pins, I2C addr. Values here match Pi 3 B+ / Pi 5 wiring (Enviro+ HAT pinout is identical).",
       "2026-03-16 00:00:00 EDT  Add cpu_factor_override=1.8488. Pi 5 runs hotter so BME280 is at 34.7°C steady-state vs 22.7°C at cold startup, making the computed CPU_FACTOR wrong. Override bypasses startup calibration with a steady-state-measured value. Null = revert to computed.",
-      "2026-03-18 00:00:00 EDT  Split from dynamic_config.json into Pi 5-specific file. Pi 3 B+ uses dynamic_config.json; Pi 5 selects this file via CONFIG_PATH in .env."
+      "2026-03-18 00:00:00 EDT  Split from dynamic_config.json into Pi 5-specific file. Pi 3 B+ uses dynamic_config.json; Pi 5 selects this file via CONFIG_PATH in .env.",
+      "2026-10-11 15:10:00 EDT  display: replace bar/plot scaling keys with tap_proximity and outdoor_stale_s (four-page LCD, PR #22); thresholds: drop unused pm1/pm25/pm10/aq_pm25 (AQI uses the EPA table in enviro_screens.py)."
     ]
   },
   "calibration": {
@@ -28,19 +29,12 @@
     "humidity":    {"green_min": 30, "green_max": 70, "yellow_min": 20, "yellow_max": 80},
     "oxidising_k": {"green_max": 40, "yellow_max": 60},
     "reducing_k":  {"yellow_min": 60,  "green_min": 90},
-    "ammonia_k":   {"yellow_min": 80,  "green_min": 140},
-    "pm1":         {"green_max": 12, "yellow_max": 35},
-    "pm25":        {"green_max": 12, "yellow_max": 35},
-    "pm10":        {"green_max": 25, "yellow_max": 50},
-    "aq_pm25":     {"good": 12, "moderate": 35, "usg": 55, "unhealthy": 150}
+    "ammonia_k":   {"yellow_min": 80,  "green_min": 140}
   },
   "display": {
-    "ox_bar_max_k":     120,
-    "rd_bar_max_k":     150,
-    "nh3_bar_max_k":    250,
-    "pm_bar_max":       50,
-    "temp_bar_min_f":   40,
-    "temp_bar_range_f": 80
+    "tap_proximity":    1500,
+    "outdoor_stale_s":  300,
+    "_provisional":     "tap_proximity: LTR559 raw proximity (0-2047) a hand must reach to change page, taken from Pimoroni's Enviro+ examples; settle from the logged no-hand baseline and a hand pass at this enclosure. outdoor_stale_s: 5 x ambient_wx's 60 s poll; settle from observed outdoor row inter-arrival gaps."
   },
   "hardware": {
     "_comment":          "Enviro+ HAT pinout is the same on Pi 3 B+ and Pi 5 — only serial device may differ (set PMS5003_DEVICE in .env)",
@@ -57,7 +51,7 @@
       "ltr559":  { "installed": true,  "bus": "i2c",  "emits": ["lux"] },
       "gas":     { "installed": true,  "bus": "i2c",  "emits": ["oxidising", "reducing", "ammonia"] },
       "pms5003": { "installed": false, "bus": "uart", "emits": ["pm1", "pm25", "pm10"], "note": "not fitted — housing in design 2026-07-29" },
-      "scd41":   { "installed": false, "bus": "i2c",  "emits": ["co2"], "note": "never fitted; would replace the hardcoded CO2 placeholder. 0x62 verified free on i2c-1." }
+      "scd41":   { "installed": false, "bus": "i2c",  "emits": ["co2"], "note": "never fitted; planned (operator, 2026-10-11). The display shows no CO2 until it is wired and read. 0x62 verified free on i2c-1." }
     }
   }
 }
