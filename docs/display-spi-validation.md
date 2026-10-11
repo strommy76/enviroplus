@@ -119,3 +119,53 @@ running. Baseline max reading2026-09-17 00:24:27. Reboot explicitly directed;
 postboot GPIO9 ownership, service startup, new real readings, capture/database/
 Grafana/tailscale health and distinct effect review are still required. Healthy
 boot timing remains provisional until measured. No backup/broker repair performed.
+
+## Postboot direct validation, October11 04:54–04:56 EDT
+
+Boot85dd9f70-eb19-4ba5-b531-901f88e23515 differs from the recorded preboot identity.
+Privileged native GPIO9 is output, consumerenviro_dash3-st7735-dc, no longerkernel.
+Firmware readback still exactly desired source, root:root755. Unit still links
+the reviewed owner worktree; no alternate copied definition was installed.
+Dashboard started04:48:42, readiness exited0 within that same second, active/
+running with zero restarts through04:55:58. Real SQLite rows now arrive every
+60–61s with temperature/humidity/pressure values; row timestamps08:53:48,
+08:54:48,08:55:49 UTC agree with same native journal04:53:48,04:54:48,04:55:49 EDT.
+This proves restoration on this observed boot, not a bound on all future starts.
+Nominal adequacy was observed for this boot; population tail remains unmeasured.
+
+Active native collection lanes: alpaca_minute_capture, market_monitor, ambient_wx,
+nws_wx, airnow_wx. PostgreSQL containerhealthy and native pg_isready accepts;
+Grafana HTTPS https://bspilhx.tail32dc7b.ts.net:3000/api/health passed trusted TLS
+and returned databaseok. Tailscale BackendStateRunning, SelfOnlinetrue.
+Full raw relevant observations preserved docs/reviews/display-spi-deployed-evidence.txt.
+
+Observed Stocks startup finding: initial Alpaca attempt failed04:48:44–45 from
+PostgreSQL connection refusal/closing during boot; native retry04:49:00 reached
+active at04:49:02 and remained running. Its NRestarts1 is not zero and is not
+hidden. Display firmware/unit do not alter this database startup boundary; raised
+to pi-Claude under D, not repaired or relabeled as a loss-free start here.
+
+Author deployed-effect axiom-check:
+
+| Axiom | Result | Evidence |
+|---|---|---|
+| 1 Truth | CONFORMS | Source/readback; actual fresh rows |
+| 2 Cognition | CONFORMS | Native GPIO/process, no roster |
+| 3 Antifragility | CONFORMS | GPIO released; failures remained loud |
+| 4 KISS | CONFORMS | Only directed native mechanisms |
+| 5 Boundaries | CONFORMS | Gate, actual delivery, real recovery |
+| 6 Maintenance | CONFORMS | Single linked source; landing pending |
+| Preamble | CONFORMS | Observed outage resolved at source |
+
+Questions executed against the finite deployment:1 can observed effect come from
+a diverging firmware/unit or stale rows (cmp/nativecat/latest rows sayno);2 did
+verification assume chip/address from a roster (privileged namedGPIO and actual
+service establishit);3 did boot still leave pin conflict or swallow a failure
+(display owns9, real preboot alert, startup error disclosed);4 was added machinery
+unreachable or unnecessary (real failure then recovery crosses changed boundaries);
+5 were gates or integration failures ignored (actual terminal backup/check,
+HTTP confirmed and startup retry recorded);6 did rollout duplicate source or
+retire an active dependency (single native link, no worktree removal). Preamble:
+one option and existing native boundaries restore measured collection, not a
+new monitoring framework. Repo landing/cutover and distinct cross-family effect
+review remain pending; this observation is not the operator's merge verdict.
