@@ -22,18 +22,11 @@
     "humidity":    {"green_min": 30, "green_max": 70, "yellow_min": 20, "yellow_max": 80},
     "oxidising_k": {"green_max": 40, "yellow_max": 60},
     "reducing_k":  {"yellow_min": 60,  "green_min": 90},
-    "ammonia_k":   {"yellow_min": 80,  "green_min": 140},
-    "pm1":         {"green_max": 12, "yellow_max": 35},
-    "pm25":        {"green_max": 12, "yellow_max": 35},
-    "pm10":        {"green_max": 25, "yellow_max": 50},
-    "aq_pm25":     {"good": 12, "moderate": 35, "usg": 55, "unhealthy": 150}
+    "ammonia_k":   {"yellow_min": 80,  "green_min": 140}
   },
   "display": {
-    "ox_bar_max_k":     120,
-    "rd_bar_max_k":     150,
-    "nh3_bar_max_k":    250,
-    "pm_bar_max":       50,
-    "temp_bar_min_f":   40,
-    "temp_bar_range_f": 80
+    "tap_proximity":    1500,
+    "outdoor_stale_s":  300,
+    "_provisional":     "tap_proximity: LTR559 raw proximity (0-2047) a hand must reach to change page, taken from Pimoroni's Enviro+ examples; settle from the logged no-hand baseline and a hand pass at this enclosure. outdoor_stale_s: 5 x ambient_wx's 60 s poll; settle from observed outdoor row inter-arrival gaps."
   }
 }
