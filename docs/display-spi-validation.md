@@ -317,3 +317,33 @@ These commits add provenance/clarification only; runtime bytes stay e82cf8c.
 No named defect class requires another internal review round. External pi-Claude
 review and authorized landing/cutover remain pending; no revised production
 effect is yet claimed.
+
+Pi-Claude final review arrived via broker at 10:42:11 EDT (its text header was
+ahead at 10:52), reviewing Enviro 7a2c0db / pi-config 4e500e9: no blocking defect
+in corrected admission/authority/evidence. Its additional slow-failure finding
+is individually dispositioned rather than adopted as new scope:
+
+- Starts separated beyond the checking interval can continue restarting:
+  CONFIRMED by the declared rate-window semantics, already explicitly stated;
+  not a defect in this bounded outcome, which never claims a lifetime attempt cap.
+- "OnFailure never fires" during such restarts: the general inference is REFUTED
+  by original native 04:44:19 Triggering OnFailure, before the first scheduled
+  retry at 04:44:49, with actual delivery at 04:44:20. Native RestartMode=normal;
+  systemd 257 service.c service_enter_dead and its state_translation_table pass
+  failed-before-auto-restart through UNIT_FAILED in normal mode. RestartMode=direct
+  would skip that boundary, but is not configured here. Sampling activating state
+  cannot establish absence of the brief failed transition. The peer fixture's
+  particular missing-handler claim remains UNCONFIRMED without its configured
+  handler/mode and handler journal; requested those specifics. No live slow-crash
+  input was established and no new runtime recovery/notification path is added.
+
+Primary implementation/documentation: https://raw.githubusercontent.com/systemd/systemd/v257/src/core/service.c
+and https://raw.githubusercontent.com/systemd/systemd/v257/man/systemd.service.xml.
+This is not a claim to have induced/observed a new slow production crash.
+
+Landing authority is Bryan's direct "Yes, let's complete 1" in response to the
+explicit Enviro #20 / pi-config #13 external-review, merge, main-link cutover and
+cleanup scope, already recorded on both PRs at 05:52 EDT. It is not inferred from
+the distinct 10:15 retry ruling or from a reviewer verdict. The later direct
+antifragile-recovery direction corrects this same increment; no new repository,
+service, application, database or firmware capability is included.
