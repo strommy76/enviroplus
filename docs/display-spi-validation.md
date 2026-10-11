@@ -210,3 +210,86 @@ all findings dispositioned, no further named defect class warrants another round
 Physical display appearance/future timing remain unconfirmed and are not claimed.
 PRs20/13 and active owner-worktree link remain for operator merge judgment, not
 silently landed under approval for reboot. External pi-Claude handoff follows.
+
+## October 11 correction and native restart-admission verification
+
+Pi-Claude's 06:05 EDT review of Enviro 4f63f1f / pi-config d65f18b confirmed
+the single-start restriction and unused Pi5 alias. Bryan's direct direction to
+make recovery antifragile and his 10:15 EDT "Yes" to retries supersede the earlier
+choice to retain burst one. Revised unit admits two starts per 120-second checking
+window: initial attempt plus recovery, not a lifetime attempt limit. Window and
+inherited spacing are provisional for natural failed-start/recovery populations.
+
+Independent peer findings adjudicated at actual source:
+
+1. CONFIRMED: burst one rejects an early failed start's automatic recovery. Closed
+   by burst two with unchanged native restart/alert owners; no error classifier.
+   First sensor-loop/SQLite-write errors are caught within enviro_dash3.py and do
+   not themselves exit. That example in the prior explanation is REFUTED; these
+   checks never certify application freshness from process-active state.
+2. CONFIRMED: deployment instructions need host reconciliation. README now defers
+   active hardware selection to native service-manager evidence and requires the
+   device/alert bindings be reconciled. Declaring desired source was not itself
+   proof of a different selected runtime profile; no such authority inference is
+   retained. Other-host notification success is not claimed.
+3. CONFIRMED: Pi5 alias has no live consumer in Enviro/pi-config/Stocks/agent-config
+   searches, excluding immutable historical records. Removed rather than kept as
+   a compatibility capability. No Pi3 consumer was established; no Pi3 mutation.
+4. UNCONFIRMED firmware drift, explicitly accepted as residual by Bryan's "accept"
+   at 10:15 EDT, relayed by pi-Claude. Existing exact installation/readback stays;
+   no monitoring/materialization framework is added.
+5. CONFIRMED cosmetic joined tokens corrected in current plan headers. Historical
+   raw journals/reviewer reports retain original bytes as provenance.
+6. CONFIRMED: original 04:44:49 repeated failure was notification-de-duplicated;
+   it did not deliver a separate terminal-lockout notification. Existing deadman
+   observed Enviro recovery at 05:02:03.809360 EDT and HTTP-confirmed RECOVERED at
+   05:02:04.040213 EDT. This re-arms future notification generations. Native failed
+   state/journal identifies lockout; no claim the initial page distinguishes phases.
+7. Cutover explicitly fast-forwards clean main checkouts to merged revisions before
+   exact source comparisons and native linking. No worktree cleanup before proof.
+
+Method (H), Enviro runtime e82cf8c, native systemd 257, 10:30:28–10:31:58 EDT:
+three disposable `systemd-run` services carry Type=simple, User=pistrommy,
+Restart=on-failure, RestartSec=30 and StartLimitIntervalSec=120s, matching source.
+Recovery and old-policy control commands are `/bin/sh -c 'if [ -e "$1" ]; then
+exec /usr/bin/sleep infinity; fi; touch "$1"; exit 1' sh MARKER`, with separate
+markers in /tmp/enviro-restart-verification.Kvrhso. Repeated-failure command is
+/usr/bin/false. No production hardware/DB/provider command or OnFailure alert is
+used: only the supervised process/device/notification paths are substituted,
+outside the native restart-admission property. A nonzero startup exit is an actual
+counterpart outcome proven by the original GPIO failure, not a new runtime producer.
+
+Observed results, not inferred from the intended policy:
+
+| Native check | Burst | Actual result |
+|---|---|---|
+| enviro-restart-recovery-verification | 2 | Running after restart at 10:30:58 |
+| enviro-restart-lockout-verification | 1 | Recovery refused at 10:30:58 |
+| enviro-restart-repeated-verification | 2 | Third start refused at 10:31:28 |
+
+Old-policy and recovery commands differ only in native burst value; old burst one
+fails the recovery property while the revised field admits it. Repeated exits
+cross actual native failed/"Start request repeated too quickly". This proves only
+native admission/termination, not natural fault likelihood, recovery-duration
+adequacy, healthy sensor semantics, or actual notification delivery. Journals
+and exact invocations remain in the host journal; original real alert and changing
+sensor-row evidence remain separate. Completed fixtures are stopped/reset and
+removed by native systemd; no disposable service is retained in the product.
+
+Verification-mode axiom-check against the complete paired delta and native result:
+
+| Axiom | Result | Executed question and location |
+|---|---|---|
+| 1 Truth | CONFORMS | Unit fields match native controls; firmware/data unchanged; README defers live selection. |
+| 2 Cognition | CONFORMS | enviro_dash.service admits actual exit outcomes; no cause whitelist or inferred profile. |
+| 3 Antifragility | CONFORMS | Native isolated failed exit recovers; repeated rapid exits remain failed; no success fallback. |
+| 4 KISS | CONFORMS | One burst-field correction; alias deleted; no retained framework, fixture or new service. |
+| 5 Boundaries | CONFORMS | Native recovery/refusal observed; journals/OnFailure distinct; exact cutover/revert declared. |
+| 6 Maintenance | CONFORMS | Current plan/README align; unused alias removed; live worktree retained until cutover. |
+| Preamble | CONFORMS | Changed admission has observed old-policy violation and native recovery; no speculative mechanisms. |
+
+Population adequacy remains UNCONFIRMED as explicitly marked at definitions.
+Current live process/readings are verified independently; source edits alone are
+not claimed as an activated policy. The next review class is the corrected restart
+admission, value derivation, alias removal, host authority and truthful evidence
+contracts across the whole paired artifact, not a new speculative campaign.

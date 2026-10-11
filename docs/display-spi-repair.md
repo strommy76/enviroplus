@@ -3,7 +3,7 @@
 Authority: Bryan's "Yes, fix it" and "Reboot when the backup is done and validated",
 relayed by pi-Claude in msg_enviro_dash_fix.md, October11. User directly instructed
 pi-codex to execute that relay. Header clock is ahead of native time; native journal
-timestamps govern effects and backup gates. Enviro baselinef6fbac8; pi-config25ad2058.
+timestamps govern effects and backup gates. Enviro baseline f6fbac8; pi-config 25ad2058.
 
 ## One execution plan and C/H declaration
 
@@ -19,8 +19,8 @@ preimage plus reboot, and preserved unit/source; keep all sensor/database data.
    No new generic materializer. Directed one-time application: preserve original,
    compare live against preimage, native same-filesystem staged install/rename,
    verify exact desired content. Commit method/results/provenance under H.
-2. Make documented enviro_dash.service the reconciled Pi5 authority; Pi5 filename
-   refers to it. Preserve verified deployed no-UART-bind/readiness behavior;
+2. Make documented enviro_dash.service the reconciled desired unit; remove the
+   unused Pi5 filename. Preserve verified deployed no-UART-bind/readiness behavior;
    move startlimit into Unit and use existing stocks_ops_alert@ OnFailure.
    Do not copy installed content as authority: analyze each difference below.
 3. Preserve installed unit, stop current failed loop, install accepted repo source
@@ -111,7 +111,7 @@ adds no retained runtime machinery. Future defect classes outside this plan rema
 | 3 Antifragility | CONFORMS | Native GPIO role and loud unit boundary? |
 | 4 KISS | CONFORMS | One overlay parameter/native alert, no framework? |
 | 5 Boundaries | CONFORMS | Native failure/backup/reboot proof gates declared? |
-| 6 Maintenance | CONFORMS | Duplicate Pi5 content and copy instruction removed? |
+| 6 Maintenance | CONFORMS | Unused Pi5 filename and copy instruction removed? |
 | Preamble | CONFORMS | Confirmed GPIO conflict and silent restart loop? |
 
 Evidence locations: firmware config/overlay README, actual ST7735 constructor,
