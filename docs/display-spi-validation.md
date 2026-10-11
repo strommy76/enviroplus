@@ -169,3 +169,44 @@ retire an active dependency (single native link, no worktree removal). Preamble:
 one option and existing native boundaries restore measured collection, not a
 new monitoring framework. Repo landing/cutover and distinct cross-family effect
 review remain pending; this observation is not the operator's merge verdict.
+
+Distinct Astra/OpenAI effect review returned04:59 EDT against frozen paired
+heads6f3da57/d65f18b; independently inspected native deployment04:58. All seven
+axiom/admission rows conformed; no blocking effect defect or source correction.
+Author dispositions: GPIO conflict/restart loop CONFIRMED closed by actual
+deployment; merely inferred alert/limiting/collection recovery REFUTED by actual
+journal and changing sensor values; physical pixel appearance and future-boot
+timing UNCONFIRMED, no such success claim made. Reviewer confirmed unrelated
+Alpaca startup failure/recovery, retained D escalation, no display correction.
+Reviewer verified all required service/DB/Grafana/Tailscale boundaries. GLM
+effect review returned05:00 EDT, all seven axiom/admission rows conforming;
+no blocking defect. No extra source round or new runtime code added.
+
+GLM effect findings individually adjudicated:
+1. Required effect achieved CONFIRMED from GPIO/rows/journal/real health interfaces;
+   no source correction. Nominal adequacy is one measured boot, not future tail.
+2. Historical rationale remains in the limit comment CONFIRMED; a defect in the
+   authorized outcome is not established. The comment explicitly says observed
+   failure, not that ownership remains broken. Forward rate limiting is itself
+   directed scope, and this repaired boundary was actually exercised. One admitted
+   start passes this healthy boot; no observed nominal Enviro retry establishes a
+   larger burst requirement. That is insufficient evidence for such a requirement,
+   not proof transient failures cannot occur. Closing without code action: retain
+   the declared minimum policy for the operator's merge judgment rather than add
+   an unsupported retry budget. Its concrete behavior is visible: failure inside
+   the window terminates after the alert rather than automatically retrying.
+3. Raw evidence completeness UNCONFIRMED in first packet, closed by native05:01
+   append: original-boot failure/restart-refusal lines and explicit successful
+   readback cmp now in raw evidence. No behavior changed to make a check pass.
+4. Stale/replayed rows, divergent unit and broken shared import REFUTED by actual
+   data/source/native binding; no correction. Earlier section dispute likewise
+   refuted by source and effective native properties, not a digest assertion.
+5. Initial Alpaca readiness failure CONFIRMED outside this change, D escalation
+   retained. Branch-linked unit/main-app arrangement is intentional pending
+   landing, with identical unchanged application bytes; no cleanup until cutover.
+
+Both required independent families completed distinct deployed-effect review;
+all findings dispositioned, no further named defect class warrants another round.
+Physical display appearance/future timing remain unconfirmed and are not claimed.
+PRs20/13 and active owner-worktree link remain for operator merge judgment, not
+silently landed under approval for reboot. External pi-Claude handoff follows.

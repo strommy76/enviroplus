@@ -101,3 +101,17 @@ pihole Up 7 minutes (healthy)
 2026-10-11T04:44:50-04:00 BSPiLHX systemd[1]: Finished stocks_ops_alert@enviro_dash.service.service - Stocks operations alert delivery for enviro_dash.service.
 0:0 755 /boot/firmware/config.txt
 /home/pistrommy/projects/.implementation-worktrees/enviroplus-display/enviro_dash.service
+
+Evidence-completeness followup, 2026-10-11 05:01 EDT; native journal/cmp:
+2026-10-11T04:44:19-04:00 BSPiLHX systemd[1]: enviro_dash.service: Main process exited, code=exited, status=1/FAILURE
+2026-10-11T04:44:19-04:00 BSPiLHX systemd[1]: enviro_dash.service: Failed with result 'exit-code'.
+2026-10-11T04:44:49-04:00 BSPiLHX systemd[1]: enviro_dash.service: Scheduled restart job, restart counter is at 1.
+2026-10-11T04:44:49-04:00 BSPiLHX systemd[1]: enviro_dash.service: Start request repeated too quickly.
+2026-10-11T04:44:49-04:00 BSPiLHX systemd[1]: enviro_dash.service: Failed with result 'exit-code'.
+2026-10-11T04:44:49-04:00 BSPiLHX systemd[1]: Failed to start enviro_dash.service - Enviro+ Dashboard.
+Native sudo cmp /boot/firmware/config.txt reviewed firmware/config.txt:
+Firmware readback cmp completed: identical
+Native command used set -e; comparison exited0 before success marker.
+NRestarts=0
+ActiveState=active
+SubState=running
