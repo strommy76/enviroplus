@@ -187,7 +187,65 @@ object comparison proves the bounded layout-only environmental change and
 preserves existing owners, stores and schedules (6). Source conformance is not
 a claim that the not-yet-deployed retirement has occurred.
 
-## Remaining verdict and effect
+## Reviewed publication and native retirement — 13:35–13:39 EDT
 
-Whole-artifact internal review is adjudicated; external pi-Claude source review
-and operator merge verdict remain. Production Home/datasource are unchanged.
+Pi-Claude's source review sent at 13:35 EDT covered complete e68b1c3 against
+2d2a810, independently verified removal/preservation/layout and executed BTC's
+exact target: 90 points, 2026-07-12 through 2026-10-09, no error. No blocking
+defect was found. It clarified the existing BTC history includes weekends, then
+stops at October 9: the two-day collection gap is not a Friday-only series.
+That observation remains outside this retirement; pi-Claude is diagnosing it
+read-only, not adding a repair to this increment.
+
+At 13:36 EDT, pi-Claude relayed Bryan verbatim:
+"Weird on the Bitcoin. Yes, let's merge 21". PR #21 landed as bb72e52.
+Before publication, the current live Home still equaled the baseline owner
+content. The production checkout fast-forwarded to the approved merge and its
+existing mounted owner file was published through supported native
+POST /api/admin/provisioning/dashboards/reload: HTTP 200, configurations reloaded.
+No container or acquisition service was restarted.
+
+After publication, every served Home field equaled the reviewed source except
+native id/version and source _meta. The live UID remains home-combined-dash,
+with 26 panels. Requests taken directly from the served panel targets preserved
+their datasource and all query/format attributes; the SQLite frontend's required
+queryText was supplied from its unchanged rawQueryText. All 22 served Home
+queries passed: six stock stats each with 90 ascending points and the 16
+environmental/system queries. This is native query/content verification, not a
+claim of browser-rendered visual inspection.
+
+Re-inventory of all six served dashboards found no active stocks-sqlite-ds
+references, excluding only the proved historical source changelog. The exact
+native datasource was then resolved by UID and type, confirmed unprovisioned,
+and retired through DELETE /api/datasources/uid/stocks-sqlite-ds: HTTP 200,
+Data source deleted. A subsequent GET on that UID returned 404. No direct
+Grafana DB edit, sidecar operation, provider-data deletion or replacement occurred.
+
+Every remaining native datasource health check returned HTTP 200/OK: EnviroPlus
+SQLite, Lexx Postgres, PiHoleWatch SQLite and Stocks Postgres. Grafana's recorded
+start time stayed 16:59:23 UTC throughout this change. The retired file-backed
+integration is gone rather than having its failure suppressed; current provisioner
+definitions contain no path ready to recreate it.
+
+Distinct pi-Claude deployed-effect review was requested at 13:39 EDT. Its reply
+(broker defd81da-5ae1-469f-9e65-1fc7653902ed, sent 13:47 EDT; message header
+13:46 EDT) independently confirmed the native retirement: GET returns 404,
+all four remaining datasources are healthy, and no active datasource object in
+any of the six served dashboards references the retired UID. It executed all
+22 served Home targets with their complete attributes through the native backend:
+zero errors and zero empty results. This agrees with the author's deployed
+content/query checks; no new defect or additional review round is indicated.
+
+Pi-Claude's separate read-only BTC diagnosis reported 2,003 daily rows over
+2,003 calendar days, 2021-04-16 through 2026-10-09, with no missing historical
+dates. It identified the acquisition cutoff as latest_completed_session_date
+on the NYSE calendar, delaying weekend bars until Monday's run. This refines
+the earlier freshness observation: it is delayed collection, not demonstrated
+historical loss. No collector repair or freshness accommodation was made here.
+
+The authorized runtime increment is complete. This final documentation records
+the observed effect and adjudication without changing the reviewed dashboard.
+Scoped cleanup removes only the merged task branch/worktree and its one-time
+local review/query artifacts; source, method, results and review provenance
+remain in this repository and PR #21. No provider data or unrelated work is
+part of that cleanup.
