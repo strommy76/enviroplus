@@ -843,7 +843,8 @@
       "2026-04-21 — Add Indoor vs Outdoor PM2.5 overlay panel with EPA AQI → µg/m³ conversion for distinguishing indoor events from outdoor infiltration",
       "2026-04-21 — Fix Indoor vs Outdoor PM panel: EPA table stores timestamps in local ET; add DST-aware +4/+5 hour offset to align with UTC indoor timestamps",
       "2026-04-21 — Outdoor PM series uses stepAfter interpolation + visible points to reflect hourly-sampled AirNow data (not continuous)",
-      "2026-04-21 — Revert stepped lines; restore default smooth interpolation on outdoor PM series"
+      "2026-04-21 — Revert stepped lines; restore default smooth interpolation on outdoor PM series",
+      "2026-10-20 — CO₂ stat and time series (SCD41); Temperature/Humidity stats and the T&H series read the SCD41, with the BME280 series kept for comparison"
     ],
     "timezone_note": "AirNow (EPA) rows carry the provider's stated wall-clock in ts and its zone label in local_time_zone; Enviro+ readings are UTC. The EPA query shifts ts by the captured label (EDT +4h, EST +5h; rows captured before the label was projected are EST, which the retired endpoint reported all year)."
   }

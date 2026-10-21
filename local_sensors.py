@@ -49,8 +49,10 @@ from raw_retention import read_day
 
 PROVIDER = "local_sensors"
 
-# One driver reading per entry: the PMS5003 frame is retained as the bytes the
-# driver checksummed, so particle counts and the atmospheric-environment
+# One driver reading per entry: the PMS5003 frame body is retained as
+# PMS5003Data.raw_data, the 28 bytes (14 big-endian words, checksum last) after
+# the 0x42 0x4D start bytes and length word, which pms5003 1.0.1 reads and
+# checksums separately. So particle counts and the atmospheric-environment
 # channels survive alongside the three values readings carries.
 # Standard-particle µg/m³ words, the ones pm_ug_per_m3(size) returns by default.
 _PMS_STANDARD = {"pm1": 0, "pm25": 1, "pm10": 2}  # PMS5003Data.data indices
@@ -226,7 +228,9 @@ def replay(db, days: list[str], cfg: dict) -> dict:
     same derive_row on the same records, so such a record would already have
     stopped live.
     Rows from before the first read Tier 1 holds are never deleted, so the
-    interval that read falls in keeps the row live wrote for it."""
+    interval that read falls in keeps the row live wrote for it.
+    Assumes publish_s divides a day (it is 60): an interval spanning UTC
+    midnight would be derived without its post-midnight reads."""
     calibration, publish_s = cfg["calibration"], cfg["intervals"]["publish_s"]
     cutover = _first_retained_read()
     tally = {"samples": 0, "rows": 0}

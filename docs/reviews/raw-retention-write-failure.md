@@ -35,7 +35,7 @@ The 2026-08-06 rationale was "losing an observation in both tiers to protect one
 - No retention write failure has been observed on this host. It had 206 GB free on 2026-10-20 and NVMe storage.
 - A buffer would die with the process anyway.
 - Stopping on a failed log write is current write-ahead-log practice. PostgreSQL panics on fsync failure, since the 2018 fsync data-loss reports.
-- systemd's restart, backing off without a stop limit, is the retry, so collection resumes once the fault clears.
+- systemd's flat restart, with no stop limit, is the retry, so collection resumes once the fault clears.
 
 ## Change
 
@@ -67,13 +67,10 @@ The 2026-08-06 rationale was "losing an observation in both tiers to protect one
 
 **Where failure surfaces:**
 - `RetentionWriteError` reaches the consumer.
-- The consumer process exits. systemd triggers `OnFailure` on every failed exit (systemd 257) and restarts it, backing off from 10–30 s to 300 s.
+- The consumer process exits. systemd triggers `OnFailure` on every failed exit (systemd 257) and restarts it flat every 10 s (collectors) or 30 s (dashboard), with no stop limit (operator, 23:29).
 - A double fault, where `ftruncate` also fails after a failed write, can still leave a torn tail. That would make `read_day` raise for the day, which surfaces at replay. This is residual.
 
-**Revert:** revert this merge and the enviroplus consumer changes together. The enviroplus code imports `RetentionWriteError`, so landing order matters:
-1. Land `shared` first.
-2. Then enviroplus.
-3. Then restart the consumers.
+**Revert:** the module now lives in enviroplus with its consumers (operator, 23:23), so a revert is one enviroplus revert followed by restarting the consumers. No `shared` change is involved.
 
 **Irreversible effects:** none.
 

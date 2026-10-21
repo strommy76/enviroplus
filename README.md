@@ -14,6 +14,7 @@ A high-density, real-time air quality and environment monitor running on a Raspb
 | 2 · Air | PM1, PM2.5, PM10 in µg/m³ with trend lines on one shared scale |
 | 3 · Outside | Wind direction, speed and gust; UV; daily rain (Ambient station) |
 | 4 · Gas | Oxidising, reducing, NH3 sensor resistance in kΩ with trends |
+| 5 · CO₂ | SCD41 CO₂ in ppm, colored by the UBA guide-value bands, with a trend |
 
 A missing or failed reading shows `--` and leaves a gap in its trend; it is never drawn as zero. Outdoor values older than `display.outdoor_stale_s` show `--`.
 

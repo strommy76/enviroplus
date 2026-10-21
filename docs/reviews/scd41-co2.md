@@ -74,7 +74,7 @@ The `47f9dd6` measurement:
   - The CPU temperature in raw sysfs millidegrees.
   - LTR559 lux.
   - MICS6814 resistance in ohms.
-  - The checksummed PMS5003 frame as bytes, which keeps the particle counts and the atmospheric channels.
+  - The PMS5003 frame body as bytes (`PMS5003Data.raw_data`, 14 words after the start bytes and length word, checksum last). It keeps the particle counts and the atmospheric channels.
   - The SCD41 CO₂, temperature and RH.
   - `/proc` load, memory and uptime.
   - Page taps: each rising edge of the LTR559 proximity past `display.tap_proximity`, with its reading and threshold. Per the operator at 23:11, "Can we make the proximity Tier 1 but only record events?", the 10 Hz polls themselves are not kept.
@@ -303,12 +303,10 @@ Shared and consumer changes:
 
 The ambient and NWS loop-level re-raises have no test.
 
-**The supported Ruff lane was red on `main` before this change** (AGENTS D, not acted on):
-- `ruff check`: 38 findings.
-- `ruff format --check`: 19 files.
-- Ruff is not in the dashboard interpreter.
-
-This branch removes one pre-existing finding in each of `enviro_dash3.py` and `tests/test_dash_loop.py`, and its new files are clean.
+**The Ruff lane, resolved:**
+- It was red on `main` (d350673): `ruff check` 38 findings, `ruff format --check` 19 files, and no Ruff in the dashboard interpreter.
+- Per the operator at 23:21, the mechanical baseline landed separately on `main` as `dca458b` + `d900d0d`, with the canonical check passing and a note recorded. `ruff==0.15.12` is pinned and installed.
+- This branch merged it, and its canonical check passes; the note is on the landing commit.
 
 ## Review: 8617150 + shared 1cdf41b (architecture-reviewer, Anthropic), dispositions
 
@@ -355,7 +353,30 @@ No further review round. The remaining classes are wording and operator-weighed 
 
 Six Anthropic architecture-reviewer rounds were run, the last on 1478c15: NO BLOCK.
 
-**Provider families (k):** pi-claude itself can dispatch only Anthropic seats. An OpenAI-family seat was reachable through pi-codex, but was not requested: the operator assigned this work to pi-claude "while Codex is otherwise engaged". Whether to add it before landing is the operator's call.
+**Provider families (k):** the earlier statement that other families were "unreachable" was wrong. agent-config's `scripts/heterogeneous_review_seat.py` (GLM, via Ollama) is provisioned on this host and usable by pi-claude. It was dispatched on c414461 (operator, 23:40: "What about GLM?"). The raw report is retained verbatim in `docs/reviews/scd41-co2-glm-c414461.md`.
+
+**GLM seat (c414461), verdict BLOCK, conditional on F1. Dispositions:**
+
+| # | Finding | Disposition |
+|---|---|---|
+| F1 | PMS frame offset / default word set | REFUTED from source; wording fixed |
+| F2 | Write-failure record: backoff, landing order | CONFIRMED; closed |
+| F3 | README page table lacks CO₂ | CONFIRMED; closed |
+| F4 | Canonical check red | REFUTED: baseline landed, check passes |
+| F5 | Grafana changelog not appended | CONFIRMED; closed |
+| F6 | Non-divisor publish_s at midnight | CONFIRMED latent; documented in `replay` |
+
+**F1, refuted from the pinned source:**
+- In pms5003 1.0.1, `read()` consumes the `0x42 0x4D` start bytes and the length word itself, then builds `PMS5003Data(raw_data)` from the following 28 bytes (`struct.unpack(">HHHHHHHHHHHHHH")`).
+- `pm_ug_per_m3(size)` defaults to `atmospheric_environment=False` and returns `data[0..2]`.
+- So `raw_data` is the 14-word body, words 0–2 are the standard-particle values the previous live code stored, and the test's 28-byte frame matches the real shape.
+- The round-5 reviewer reached the same result independently.
+- The confusing phrase "the bytes the driver checksummed" is replaced with the exact layout.
+
+**F4, refuted:**
+- The baseline landed as `dca458b` + `d900d0d`, and this branch merged it.
+- The canonical check on c414461 passed (note recorded).
+- The stale "Ruff lane red" passage the seat read is now updated.
 
 **Round 6 (1478c15), dispositions:**
 
