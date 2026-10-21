@@ -596,3 +596,31 @@ E        +    where &lt;function main at 0x7fffa1ac2a20&gt; = backup_enviro.main
 
 tests/test_backup_lifecycle.py:402: AssertionError</failure></testcase></testsuite></testsuites>
 <?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="4" time="3.251" timestamp="2026-10-21T09:35:14.905339-04:00" hostname="BSPiLHX"><testcase classname="tests.test_offsite_replication" name="test_growing_partition_is_copied_and_proven" time="2.680" /><testcase classname="tests.test_offsite_replication" name="test_copy_error_preserves_proven_siblings_and_failed_files" time="0.237" /><testcase classname="" name="test_cli_records_both_sources_despite_first_source_failure" time="0.242" /><testcase classname="" name="test_invalid_source_kind_dry_run_fails_without_writes" time="0.003" /></testsuite></testsuites>
+
+# External review receipt, not operator merge authority
+
+PiClaude, broker99476ce4-433d-44a0-b8d1-3a779b242ca0,
+sent2026-10-21T13:43:31.635339Z (09:43:31EDT). Its body labels itself09:47EDT;
+broker send time is recorded without silently correcting the immutable message.
+Reviewed whole shared5cafbba/enviroplusa841586 against60a8702/ee81559.
+
+VERDICT: no blocking findings. It meets Bryan's08:53 per-unit rule and his08:55
+minimum-work rule.
+Confirmed from content: flag on tree copy only; independently removed flag in
+scratch and observed growing test FAIL while copy_error test still passed.
+Per-file classify/copy/probe/proof errors recorded, siblings still proven,
+partial result carried by existing ReplicationError. Per-source iteration
+records every source, snapshot staging preparation is inside that source,
+manifest after attempts, nonzero on failures. Dry-run regression test necessary.
+Executed shared136passed and lifecycle20passed; traced actual branch import.
+Agrees GLM R1 closed without action: unavailable manifest store fails loud,
+raw copy unaffected, not unit-isolation defect.
+Minor nonblocking: module/config changelogs not extended; author choice.
+Next: Bryan's verdict, then one real enviro_backup deployed-effect run.
+
+Author adjudication: confirmed review observations agree with own executed
+content and controls. Historical changelog observation remains closed without
+action for the rationale already committed; no new finding or defect class.
+Implementation is ready for the operator verdict, not yet deployed. Manifest
+always-written statements apply only while its configured store is available;
+the explicitly disclosed store-error boundary remains fail-loud.
