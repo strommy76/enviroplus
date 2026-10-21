@@ -15,15 +15,10 @@ Environment=PYTHONPATH=/home/pistrommy/projects
 ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python nws_wx.py
 Restart=always
 RestartSec=10
-# Back off instead of stopping: a fault such as a full disk retries for as long
-# as it lasts, from the existing 10 s spacing up to the maximum, so collection
-# resumes by itself and the per-failure alerts thin out. The step count runs
-# from boot or the last manual start, not per fault: after five automatic
-# restarts every later one waits the maximum. The start limit stays
-# the systemd default (5 starts / 10 s), which spacing >= 10 s never reaches.
-# PROVISIONAL maximum: settle from observed Tier 1 write-failure recovery times.
-RestartSteps=5
-RestartMaxDelaySec=300
+# Flat restart every 10 s, with no stop limit (the systemd default of 5
+# starts / 10 s is never reached at this spacing): collection resumes within
+# one interval of the fault clearing. Repeat alerts are throttled by the
+# alert service itself (stocks alert_config repage_seconds), not here.
 
 [Install]
 WantedBy=multi-user.target

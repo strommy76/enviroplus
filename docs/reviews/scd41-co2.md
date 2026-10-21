@@ -16,6 +16,8 @@ Bryan, 2026-10-20, to pi-claude:
 - 22:38 EDT, on pi-claude's recommendation: "no, fold it in"
 - 23:21 EDT: "Why do we need it? Why are we putting any project code or logic outside the project?"
 - 23:23 EDT, on moving `raw_retention` into enviroplus: "Yes, move it"
+- 23:21 EDT, on a separate Ruff formatting commit plus a pinned Ruff: "I agree with you"
+- 23:29 EDT, on dropping the restart backoff for a flat restart: "I agree with your recommendation"
 
 Executor: pi-claude, by operator assignment (AGENTS B).
 
@@ -277,11 +279,13 @@ Shared and consumer changes:
 | `raw_retention.py` | `retain()`/`record_outcome()` raise `RetentionWriteError`; torn line truncated |
 | enviroplus collectors | `retain()` no longer wrapped; loops re-raise |
 | enviroplus dashboard | Its Tier 1 write raises before derivation |
-| Collector and dashboard units | `OnFailure` on every failed exit; restart backoff, no stop limit |
+| Collector and dashboard units | `OnFailure` on every failed exit; flat restart, no stop limit |
 
-**Units:** each unit restarts from its existing spacing (10 s for the collectors, 30 s for the dashboard) and backs off over 5 steps to 300 s.
-- That maximum is PROVISIONAL. Settle it from observed recovery times.
-- No start limit beyond the systemd default, which this spacing never reaches. So a fault such as a full disk retries for as long as it lasts, and collection resumes by itself.
+**Units** (operator, 23:29): each unit restarts at its existing flat spacing, 10 s for the collectors and 30 s for the dashboard.
+- No stop limit: the systemd default of 5 starts per 10 s is never reached at that spacing. So a fault such as a full disk retries for as long as it lasts, and collection resumes within one interval of the cause being fixed.
+- Repeat alerts are throttled by the alert service itself (`stocks` `alert_config` `repage_seconds`), not by the units.
+- The backoff (`RestartSteps`/`RestartMaxDelaySec`) of b9acd31 is removed, and with it the E-R2 residual.
+- Neither restart nor backoff finds or fixes a root cause. The cause is in the journal, as the raised OS error. Correcting it is manual.
 - **Change to a prior decision:** this replaces `enviro_dash.service`'s 120 s/2 start limit, set PROVISIONAL in the 2026-10-11 display repair. Under it, one full-disk event would have stopped the dashboard for good.
 
 **Practice adopted:** write-ahead, then derive only from what is stored, report the write's own outcome, and alert through a watched channel. The `shared` review artifact `docs/retention-write-failure-review.md` has the reasoning and why no retry buffer was added.
@@ -334,12 +338,12 @@ Verdict: NO BLOCK on both.
 | # | Finding | Disposition |
 |---|---|---|
 | E-R1 | Old-grid row survived a mid-day start | Closed: delete from the day's start |
-| E-R2 | Backoff step never resets per fault | Comments corrected; residual for operator |
+| E-R2 | Backoff step never resets per fault | Closed: backoff removed (operator, 23:29) |
 | E-R3 | `derive_row` error deletes rest of day | Residual reworded above |
 | E-R4 | README replay bound stale | Closed |
 | S-R1, S-R2 | fstat/append race; first-read cost | No defect |
 
-**E-R2:** systemd counts restart steps from boot or the last manual start, not per fault. After five automatic restarts, each later restart waits the full 300 s.
+**E-R2:** systemd counted restart steps from boot or the last manual start, not per fault. The backoff is removed instead.
 
 **Proximity:** after the operator's 23:11 ruling, Tier 1 keeps tap events instead of every poll. Removing the tap recording fails 1 test. E-R1: restoring the interval-start bound fails 1 test. The suite gives 254 passed.
 
