@@ -81,6 +81,7 @@ class OutcomeAlreadyRecorded(Exception):
     that arrived and was stored would be labelled "never arrived".
     """
 
+
 # Credential-bearing keys carried inside a payload BODY. A device secret is not
 # a fact about the weather: it has no reconstruction value and is pure liability
 # in a store that gets backed up. Doctrine's repair for an artifact that cannot
@@ -104,12 +105,12 @@ _SAFE_KEY_PART = re.compile(r"^[A-Za-z0-9._-]+$")
 # a failure to fetch, and recording it as one would make the canonical store lie
 # about which subsystem broke.
 OUTCOME_OK = "ok"
-OUTCOME_DUPLICATE = "duplicate"        # byte-identical to the previous payload
-OUTCOME_EMPTY = "empty"                # arrived, carried no observation
-OUTCOME_MALFORMED = "malformed"        # arrived, could not be parsed
-OUTCOME_PARTIAL = "partial"            # arrived, a sensor group was absent
-OUTCOME_FETCH_ERROR = "fetch_error"    # never arrived
-OUTCOME_WRITE_ERROR = "write_error"    # arrived and stored; derived write failed
+OUTCOME_DUPLICATE = "duplicate"  # byte-identical to the previous payload
+OUTCOME_EMPTY = "empty"  # arrived, carried no observation
+OUTCOME_MALFORMED = "malformed"  # arrived, could not be parsed
+OUTCOME_PARTIAL = "partial"  # arrived, a sensor group was absent
+OUTCOME_FETCH_ERROR = "fetch_error"  # never arrived
+OUTCOME_WRITE_ERROR = "write_error"  # arrived and stored; derived write failed
 
 
 # The canonical root is declared, never inferred. A default that decides where
@@ -203,7 +204,7 @@ def _append(provider: str, record: dict, when: datetime) -> None:
 
     An unsafe provider key is a programming fault and raises ValueError.
     """
-    _safe_provider_dir(provider)          # ValueError for an unsafe key
+    _safe_provider_dir(provider)  # ValueError for an unsafe key
     data = (json.dumps(record, separators=(",", ":")) + "\n").encode("utf-8")
     try:
         fd = os.open(_day_file(provider, when), os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o666)
@@ -212,7 +213,7 @@ def _append(provider: str, record: dict, when: datetime) -> None:
             try:
                 view = memoryview(data)
                 while view:
-                    view = view[os.write(fd, view):]
+                    view = view[os.write(fd, view) :]
                 os.fsync(fd)
             except OSError:
                 os.ftruncate(fd, start)
@@ -220,8 +221,7 @@ def _append(provider: str, record: dict, when: datetime) -> None:
         finally:
             os.close(fd)
     except OSError as exc:
-        raise RetentionWriteError(
-            f"raw retention write failed for {provider}: {exc}") from exc
+        raise RetentionWriteError(f"raw retention write failed for {provider}: {exc}") from exc
 
 
 # Digest of the last payload retained, so the dedup check is O(1) per call rather
@@ -276,8 +276,14 @@ def _last_sha(provider: str, when: datetime) -> str | None:
     return found
 
 
-def retain(provider: str, raw: bytes, *, url: str | None = None,
-           outcome: str = OUTCOME_OK, detail: str | None = None) -> str:
+def retain(
+    provider: str,
+    raw: bytes,
+    *,
+    url: str | None = None,
+    outcome: str = OUTCOME_OK,
+    detail: str | None = None,
+) -> str:
     """Store a provider response verbatim and record its arrival.
 
     Consecutive byte-identical payloads are recorded but not re-stored: for
@@ -296,16 +302,19 @@ def retain(provider: str, raw: bytes, *, url: str | None = None,
         previous = _last_sha(provider, now)
     except OSError as exc:
         # Creating or reading the day file failed: the record cannot be stored.
-        raise RetentionWriteError(
-            f"raw retention write failed for {provider}: {exc}") from exc
+        raise RetentionWriteError(f"raw retention write failed for {provider}: {exc}") from exc
     if digest == previous:
-        _append(provider, {
-            "captured_utc": now.isoformat(),
-            "outcome": OUTCOME_DUPLICATE,
-            "sha256": digest,
-            "bytes": len(stored),
-            "url": redact(url),
-        }, now)
+        _append(
+            provider,
+            {
+                "captured_utc": now.isoformat(),
+                "outcome": OUTCOME_DUPLICATE,
+                "sha256": digest,
+                "bytes": len(stored),
+                "url": redact(url),
+            },
+            now,
+        )
         return OUTCOME_DUPLICATE
 
     record = {
@@ -327,8 +336,9 @@ def retain(provider: str, raw: bytes, *, url: str | None = None,
     return outcome
 
 
-def record_outcome(provider: str, outcome: str, *, detail: str | None = None,
-                   url: str | None = None) -> None:
+def record_outcome(
+    provider: str, outcome: str, *, detail: str | None = None, url: str | None = None
+) -> None:
     """Record a collection attempt that produced no payload.
 
     This is the fact that replaces an empty row: the attempt happened, it
@@ -336,12 +346,16 @@ def record_outcome(provider: str, outcome: str, *, detail: str | None = None,
     could not be stored.
     """
     now = datetime.now(timezone.utc)
-    _append(provider, {
-        "captured_utc": now.isoformat(),
-        "outcome": outcome,
-        "detail": detail,
-        "url": redact(url),
-    }, now)
+    _append(
+        provider,
+        {
+            "captured_utc": now.isoformat(),
+            "outcome": outcome,
+            "detail": detail,
+            "url": redact(url),
+        },
+        now,
+    )
 
 
 def days(provider: str) -> list[str]:

@@ -28,8 +28,10 @@ def root(tmp_path, monkeypatch):
 
 def _fail_fsync(monkeypatch):
     """The line reaches the file, then the disk refuses to make it durable."""
+
     def fsync(_fd):
         raise OSError(errno.ENOSPC, "No space left on device")
+
     monkeypatch.setattr(rr.os, "fsync", fsync)
 
 
@@ -85,6 +87,7 @@ def test_a_short_write_then_a_full_disk_leaves_no_torn_line(root, monkeypatch):
         if len(calls) == 1:
             return real_write(fd, bytes(data[: len(data) // 2]))
         raise OSError(errno.ENOSPC, "No space left on device")
+
     monkeypatch.setattr(rr.os, "write", write)
     with pytest.raises(rr.RetentionWriteError):
         rr.retain("acme", b'{"v":2}')
@@ -92,13 +95,17 @@ def test_a_short_write_then_a_full_disk_leaves_no_torn_line(root, monkeypatch):
     monkeypatch.setattr(rr.os, "write", real_write)
     rr.retain("acme", b'{"v":3}')
     assert [blob for _c, _o, blob in rr.read_day("acme", _day(root).stem)] == [
-        b'{"v":1}', b'{"v":3}']
+        b'{"v":1}',
+        b'{"v":3}',
+    ]
 
 
 def test_a_day_file_that_cannot_be_read_for_dedup_is_a_write_error(root, monkeypatch):
     """Every way retain() can fail to store raises the same error."""
+
     def unreadable(*a, **k):
         raise PermissionError(errno.EACCES, "Permission denied")
+
     monkeypatch.setattr(rr, "_tail_sha", unreadable)
     with pytest.raises(rr.RetentionWriteError):
         rr.retain("acme", b'{"v":1}')

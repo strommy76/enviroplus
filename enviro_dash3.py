@@ -116,20 +116,19 @@ from pms5003 import PMS5003, ChecksumMismatchError, ReadTimeoutError, SerialTime
 from sensirion_driver_adapters.i2c_adapter.i2c_channel import I2cChannel
 from sensirion_i2c_driver import CrcCalculator, I2cConnection, LinuxI2cTransceiver
 from sensirion_i2c_scd4x.device import Scd4xDevice
-
 from shared.config_service import load_env, require
 from shared.db_service import connect
 from shared.logging_service import setup_logger
-from raw_retention import OUTCOME_OK, OUTCOME_PARTIAL, retain
-from raw_retention import configure as configure_retention
 
 import enviro_screens as screens
 import local_sensors
+from raw_retention import OUTCOME_OK, OUTCOME_PARTIAL, retain
+from raw_retention import configure as configure_retention
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-_BASE       = os.path.dirname(os.path.abspath(__file__))
-_ENV_PATH   = os.path.join(_BASE, ".env")
-LOG_PATH    = os.path.join(_BASE, "enviro_dash.log")
+_BASE = os.path.dirname(os.path.abspath(__file__))
+_ENV_PATH = os.path.join(_BASE, ".env")
+LOG_PATH = os.path.join(_BASE, "enviro_dash.log")
 
 load_env(_ENV_PATH, expect_key="SQLITE_PATH")
 
@@ -168,29 +167,37 @@ local_sensors.ensure_schema(_db)
 
 # ── Display ────────────────────────────────────────────────────────────────────
 _hw = cfg["hardware"]
-disp = st7735.ST7735(port=_hw["spi_port"], cs=_hw["spi_cs"],
-                     dc=_hw["display_dc"], backlight=_hw["display_backlight"],
-                     rotation=_hw["display_rotation"],
-                     spi_speed_hz=_hw["spi_speed_hz"])
+disp = st7735.ST7735(
+    port=_hw["spi_port"],
+    cs=_hw["spi_cs"],
+    dc=_hw["display_dc"],
+    backlight=_hw["display_backlight"],
+    rotation=_hw["display_rotation"],
+    spi_speed_hz=_hw["spi_speed_hz"],
+)
 disp.begin()
 W, H = disp.width, disp.height  # 160 × 80
 
 # ── Sensors ────────────────────────────────────────────────────────────────────
-_i2c_bus       = int(os.environ.get("I2C_BUS", 1))
-_pms_device    = os.environ.get("PMS5003_DEVICE", "/dev/ttyAMA0")
+_i2c_bus = int(os.environ.get("I2C_BUS", 1))
+_pms_device = os.environ.get("PMS5003_DEVICE", "/dev/ttyAMA0")
 _cpu_temp_path = os.environ.get("CPU_TEMP_PATH", "/sys/class/thermal/thermal_zone0/temp")
-_bus           = smbus2.SMBus(_i2c_bus)
-_bme_addr      = _hw["bme280_addr"]
-_bme_sensor    = bme280.BME280(i2c_addr=_bme_addr, i2c_dev=_bus)
-ltr559_sensor  = LTR559()
+_bus = smbus2.SMBus(_i2c_bus)
+_bme_addr = _hw["bme280_addr"]
+_bme_sensor = bme280.BME280(i2c_addr=_bme_addr, i2c_dev=_bus)
+ltr559_sensor = LTR559()
 pms5003_sensor = PMS5003(device=_pms_device)
 
 # SCD41 shares the I2C bus; 0x62 is fixed in the part. Sensirion's CRC-8
 # parameters (poly 0x31, init 0xFF) are from its datasheet and driver examples.
 SCD41_ADDR = 0x62
-scd41_sensor = Scd4xDevice(I2cChannel(
-    I2cConnection(LinuxI2cTransceiver(f"/dev/i2c-{_i2c_bus}")),
-    slave_address=SCD41_ADDR, crc=CrcCalculator(8, 0x31, 0xFF, 0x0)))
+scd41_sensor = Scd4xDevice(
+    I2cChannel(
+        I2cConnection(LinuxI2cTransceiver(f"/dev/i2c-{_i2c_bus}")),
+        slave_address=SCD41_ADDR,
+        crc=CrcCalculator(8, 0x31, 0xFF, 0x0),
+    )
+)
 _scd41_measuring = False
 
 
@@ -213,12 +220,12 @@ def _pi_raw():
     with open("/proc/loadavg") as f:
         loadavg_1m = float(f.read().split()[0])
     with open("/proc/meminfo") as f:
-        mem_available_kb = next(int(line.split()[1]) for line in f
-                                if line.startswith("MemAvailable"))
+        mem_available_kb = next(
+            int(line.split()[1]) for line in f if line.startswith("MemAvailable")
+        )
     with open("/proc/uptime") as f:
         uptime_s = float(f.read().split()[0])
-    return {"loadavg_1m": loadavg_1m, "mem_available_kb": mem_available_kb,
-            "uptime_s": uptime_s}
+    return {"loadavg_1m": loadavg_1m, "mem_available_kb": mem_available_kb, "uptime_s": uptime_s}
 
 
 def read_sample():
@@ -232,9 +239,13 @@ def read_sample():
     sample["bme280"] = []
     for _ in range(cfg["calibration"]["bme_samples"]):
         _bme_sensor.update_sensor()
-        sample["bme280"].append({"temperature": _bme_sensor.temperature,
-                                 "humidity": _bme_sensor.humidity,
-                                 "pressure": _bme_sensor.pressure})
+        sample["bme280"].append(
+            {
+                "temperature": _bme_sensor.temperature,
+                "humidity": _bme_sensor.humidity,
+                "pressure": _bme_sensor.pressure,
+            }
+        )
     with open(_cpu_temp_path) as f:
         sample["cpu_temp_milli_c"] = int(f.read())
     sample["ltr559_lux"] = ltr559_sensor.get_lux()
@@ -266,8 +277,11 @@ def read_sample():
             # to the next sample. BME280 reports hPa, the driver takes Pa.
             scd41_sensor.set_ambient_pressure(sample["bme280"][-1]["pressure"] * 100)
             co2, scd_t, scd_rh = scd41_sensor.read_measurement()
-            sample["scd41"] = {"co2_ppm": co2.value, "temperature_c": scd_t.value,
-                               "rh": scd_rh.value}
+            sample["scd41"] = {
+                "co2_ppm": co2.value,
+                "temperature_c": scd_t.value,
+                "rh": scd_rh.value,
+            }
     except OSError as e:
         # I2cError subclasses OSError; the transceiver's own address ioctl
         # raises a plain OSError. Either is this lane's failed read.
@@ -281,18 +295,21 @@ def retain_sample(sample):
     """Write the record to Tier 1. A failed lane makes the record partial. A
     record the store could not keep raises RetentionWriteError, which ends the
     process before anything is derived from it."""
-    failed = sorted(k[:-len("_error")] for k in sample if k.endswith("_error"))
-    retain(local_sensors.PROVIDER, json.dumps(sample, separators=(",", ":")).encode(),
-           outcome=OUTCOME_PARTIAL if failed else OUTCOME_OK,
-           detail=("failed: " + ", ".join(failed)) if failed else None)
+    failed = sorted(k[: -len("_error")] for k in sample if k.endswith("_error"))
+    retain(
+        local_sensors.PROVIDER,
+        json.dumps(sample, separators=(",", ":")).encode(),
+        outcome=OUTCOME_PARTIAL if failed else OUTCOME_OK,
+        detail=("failed: " + ", ".join(failed)) if failed else None,
+    )
 
 
 # ── Trend history ──────────────────────────────────────────────────────────────
 # One sample per pixel of the widest trend line (Air page, 108 px).
 TREND_POINTS = 108
-pm_hist  = {k: deque(maxlen=TREND_POINTS) for k in ("pm1", "pm25", "pm10")}
+pm_hist = {k: deque(maxlen=TREND_POINTS) for k in ("pm1", "pm25", "pm10")}
 gas_hist = {k: deque(maxlen=TREND_POINTS) for k in ("oxidising", "reducing", "ammonia")}
-co2_hist = deque(maxlen=TREND_POINTS)   # one point per publish interval
+co2_hist = deque(maxlen=TREND_POINTS)  # one point per publish interval
 
 
 # ── Outdoor (Ambient station rows written by ambient_wx.py) ────────────────────
@@ -305,10 +322,27 @@ def read_outdoor():
     """
     rows = _db.execute(
         "SELECT ts, tempf, humidity, windspeedmph, windgustmph, winddir, uv, dailyrainin"
-        " FROM outdoor ORDER BY ts DESC LIMIT ?", (TREND_POINTS,)
+        " FROM outdoor ORDER BY ts DESC LIMIT ?",
+        (TREND_POINTS,),
     ).fetchall()
-    rows = [dict(zip(("ts", "tempf", "humidity", "windspeedmph", "windgustmph",
-                      "winddir", "uv", "dailyrainin"), r)) for r in reversed(rows)]
+    rows = [
+        dict(
+            zip(
+                (
+                    "ts",
+                    "tempf",
+                    "humidity",
+                    "windspeedmph",
+                    "windgustmph",
+                    "winddir",
+                    "uv",
+                    "dailyrainin",
+                ),
+                r,
+            )
+        )
+        for r in reversed(rows)
+    ]
     latest = rows[-1] if rows else None
     if latest is not None:
         observed = datetime.strptime(latest["ts"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
@@ -339,8 +373,13 @@ def wait_for_next_frame(page, near):
         proximity = ltr559_sensor.get_proximity()
         now_near = proximity >= d["tap_proximity"]
         if now_near and not near:
-            _tap_events.append({"read_utc": _utc_iso(), "proximity": proximity,
-                                "tap_proximity": d["tap_proximity"]})
+            _tap_events.append(
+                {
+                    "read_utc": _utc_iso(),
+                    "proximity": proximity,
+                    "tap_proximity": d["tap_proximity"],
+                }
+            )
             page = (page + 1) % len(screens.PAGES)
             disp.display(screens.render(page, state))
         near = now_near
@@ -399,7 +438,8 @@ try:
             # Indoor temperature and RH come from the SCD41, mounted clear of
             # the Pi's heat; pressure from the BME280.
             "indoor": {
-                "temp_f": None if scd41_shown is None
+                "temp_f": None
+                if scd41_shown is None
                 else local_sensors.c2f(scd41_shown["temperature_c"]),
                 "humidity": None if scd41_shown is None else scd41_shown["rh"],
                 "pressure": now["pressure"],

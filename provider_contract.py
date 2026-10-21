@@ -40,7 +40,11 @@ from shared.config_service import ConfigError, require
 _TS_FORMAT = "%Y-%m-%d %H:%M:%S"
 # SQLite storage classes a declared column may carry, with the Python types a
 # projected value must have to be stored without affinity conversion.
-_STORAGE_CLASSES: dict[str, tuple[type, ...]] = {"INTEGER": (int,), "REAL": (int, float), "TEXT": (str,)}
+_STORAGE_CLASSES: dict[str, tuple[type, ...]] = {
+    "INTEGER": (int,),
+    "REAL": (int, float),
+    "TEXT": (str,),
+}
 # Joins the date and clock fields so one strptime call validates both against
 # their formats. Must not be whitespace: strptime relaxes whitespace in the
 # format to \s+, which would let a padded provider value through.
@@ -78,8 +82,8 @@ class FieldOp:
 @dataclass(frozen=True)
 class Pivot:
     by: str
-    vocabulary: Mapping[str, str]   # provider value -> store key
-    columns: Mapping[str, str]      # "{key}_suffix" template -> item field
+    vocabulary: Mapping[str, str]  # provider value -> store key
+    columns: Mapping[str, str]  # "{key}_suffix" template -> item field
 
 
 @dataclass(frozen=True)
@@ -93,7 +97,7 @@ class Contract:
     row: Mapping[str, TimeOp | FieldOp]
     table: str
     primary_key: str
-    columns: Mapping[str, str]      # column -> SQLite type
+    columns: Mapping[str, str]  # column -> SQLite type
 
     def request_url(self) -> str:
         return f"{self.url}?{urlencode(self.params)}"
@@ -111,6 +115,7 @@ class Contract:
 
 
 # ── Loader ─────────────────────────────────────────────────────────────────────
+
 
 def _key(obj: Mapping[str, Any], key: str, ctx: str) -> Any:
     if not isinstance(obj, Mapping) or key not in obj:
@@ -143,7 +148,7 @@ def _resolve(spec: Any, ctx: str) -> str:
         return _text(require(key), f"{ctx} (environment key {key})")
     if isinstance(spec, Mapping) and set(spec) == {"literal"}:
         return _text(spec["literal"], f"{ctx}.literal")
-    raise ContractError(f"{ctx}: must be {{\"env\": KEY}} or {{\"literal\": value}}, got {spec!r}")
+    raise ContractError(f'{ctx}: must be {{"env": KEY}} or {{"literal": value}}, got {spec!r}')
 
 
 def _resolve_int(spec: Any, ctx: str) -> int:
@@ -156,7 +161,12 @@ def _resolve_int(spec: Any, ctx: str) -> int:
 
 
 def _time_op(spec: Mapping[str, Any], ctx: str) -> TimeOp:
-    if not isinstance(spec, Mapping) or set(spec) != {"date", "date_format", "clock", "clock_format"}:
+    if not isinstance(spec, Mapping) or set(spec) != {
+        "date",
+        "date_format",
+        "clock",
+        "clock_format",
+    }:
         raise ContractError(f"{ctx}: must declare exactly date, date_format, clock, clock_format")
     return TimeOp(**{k: _text(v, f"{ctx}.{k}") for k, v in spec.items()})
 
@@ -166,7 +176,9 @@ def _row_op(spec: Any, ctx: str) -> TimeOp | FieldOp:
         return _time_op(spec["time"], f"{ctx}.time")
     if isinstance(spec, Mapping) and set(spec) == {"field"}:
         return FieldOp(field=_text(spec["field"], f"{ctx}.field"))
-    raise ContractError(f"{ctx}: unknown projection op; expected {{\"time\": ...}} or {{\"field\": ...}}")
+    raise ContractError(
+        f'{ctx}: unknown projection op; expected {{"time": ...}} or {{"field": ...}}'
+    )
 
 
 def _pivot(spec: Mapping[str, Any], ctx: str) -> Pivot:
@@ -175,7 +187,9 @@ def _pivot(spec: Mapping[str, Any], ctx: str) -> Pivot:
         try:
             rendered = template.format(key="k")
         except (KeyError, IndexError, ValueError):
-            raise ContractError(f"{ctx}.columns: template {template!r} must reference only {{key}}") from None
+            raise ContractError(
+                f"{ctx}.columns: template {template!r} must reference only {{key}}"
+            ) from None
         if rendered == template:
             raise ContractError(f"{ctx}.columns: template {template!r} does not reference {{key}}")
     return Pivot(
@@ -204,30 +218,38 @@ def load_contract(path: str | Path) -> Contract:
     params_spec = _key(request, "params", f"{ctx}.request")
     if not isinstance(params_spec, Mapping):
         raise ContractError(f"{ctx}.request.params: must be an object")
-    params = {_text(k, f"{ctx}.request.params key"): _resolve(v, f"{ctx}.request.params[{k!r}]")
-              for k, v in params_spec.items()}
+    params = {
+        _text(k, f"{ctx}.request.params key"): _resolve(v, f"{ctx}.request.params[{k!r}]")
+        for k, v in params_spec.items()
+    }
 
     response = _key(doc, "response", ctx)
     pivot = _pivot(_key(response, "pivot", f"{ctx}.response"), f"{ctx}.response.pivot")
     row_spec = _key(response, "row", f"{ctx}.response")
     if not isinstance(row_spec, Mapping) or not row_spec:
         raise ContractError(f"{ctx}.response.row: must be a non-empty object")
-    row = {_text(col, f"{ctx}.response.row key"): _row_op(op, f"{ctx}.response.row[{col!r}]")
-           for col, op in row_spec.items()}
+    row = {
+        _text(col, f"{ctx}.response.row key"): _row_op(op, f"{ctx}.response.row[{col!r}]")
+        for col, op in row_spec.items()
+    }
 
     store = _key(doc, "store", ctx)
     columns = _str_mapping(_key(store, "columns", f"{ctx}.store"), f"{ctx}.store.columns")
     for column, typ in columns.items():
         if typ not in _STORAGE_CLASSES:
-            raise ContractError(f"{ctx}.store.columns[{column!r}]: storage class must be one of "
-                                f"{sorted(_STORAGE_CLASSES)}, got {typ!r}")
+            raise ContractError(
+                f"{ctx}.store.columns[{column!r}]: storage class must be one of "
+                f"{sorted(_STORAGE_CLASSES)}, got {typ!r}"
+            )
     primary_key = _text(_key(store, "primary_key", f"{ctx}.store"), f"{ctx}.store.primary_key")
 
     contract = Contract(
         provider=_text(_key(doc, "provider", ctx), f"{ctx}.provider"),
         url=_text(_key(request, "url", f"{ctx}.request"), f"{ctx}.request.url"),
         params=params,
-        timeout_s=_positive_int(_key(request, "timeout_s", f"{ctx}.request"), f"{ctx}.request.timeout_s"),
+        timeout_s=_positive_int(
+            _key(request, "timeout_s", f"{ctx}.request"), f"{ctx}.request.timeout_s"
+        ),
         poll_s=_resolve_int(_key(doc, "poll_s", ctx), f"{ctx}.poll_s"),
         pivot=pivot,
         row=row,
@@ -243,26 +265,38 @@ def load_contract(path: str | Path) -> Contract:
     if produced != declared:
         raise ContractError(
             f"{ctx}: produced columns must equal store.columns; "
-            f"undeclared={sorted(produced - declared)} never_produced={sorted(declared - produced)}")
+            f"undeclared={sorted(produced - declared)} never_produced={sorted(declared - produced)}"
+        )
     if primary_key not in row or not isinstance(row[primary_key], TimeOp):
-        raise ContractError(f"{ctx}.store.primary_key: {primary_key!r} must be a time projection "
-                            "(the derived row is keyed by the provider's stated observation time)")
+        raise ContractError(
+            f"{ctx}.store.primary_key: {primary_key!r} must be a time projection "
+            "(the derived row is keyed by the provider's stated observation time)"
+        )
     for column, op in row.items():
         if isinstance(op, TimeOp) and columns[column] != "TEXT":
-            raise ContractError(f"{ctx}.store.columns[{column!r}]: a time projection is TEXT, declared {columns[column]!r}")
+            raise ContractError(
+                f"{ctx}.store.columns[{column!r}]: a time projection is TEXT, declared {columns[column]!r}"
+            )
     return contract
 
 
 # ── Projection ─────────────────────────────────────────────────────────────────
 
+
 def _time(op: TimeOp, item: Mapping[str, Any]) -> str:
     date, clock = item.get(op.date), item.get(op.clock)
     if not isinstance(date, str) or not isinstance(clock, str):
-        raise ProjectionError(f"{op.date!r}/{op.clock!r} must both be strings, got {date!r}/{clock!r}")
+        raise ProjectionError(
+            f"{op.date!r}/{op.clock!r} must both be strings, got {date!r}/{clock!r}"
+        )
     try:
-        stated = datetime.strptime(f"{date}{_JOIN}{clock}", f"{op.date_format}{_JOIN}{op.clock_format}")
+        stated = datetime.strptime(
+            f"{date}{_JOIN}{clock}", f"{op.date_format}{_JOIN}{op.clock_format}"
+        )
     except ValueError as exc:
-        raise ProjectionError(f"time fields {date!r} {clock!r} do not match declared formats: {exc}") from None
+        raise ProjectionError(
+            f"time fields {date!r} {clock!r} do not match declared formats: {exc}"
+        ) from None
     return stated.strftime(_TS_FORMAT)
 
 
@@ -277,7 +311,8 @@ def _typed(contract: Contract, column: str, value: Any) -> Any:
     allowed = _STORAGE_CLASSES[contract.columns[column]]
     if isinstance(value, bool) or not isinstance(value, allowed):
         raise ProjectionError(
-            f"{column}: value {value!r} is not {contract.columns[column]} as declared")
+            f"{column}: value {value!r} is not {contract.columns[column]} as declared"
+        )
     return value
 
 
@@ -344,8 +379,12 @@ def project(contract: Contract, data: Any) -> tuple[dict[str, Any], tuple[str, .
             # An omitted field and a field sent as null are different statements
             # (one keeps the earlier value, the other overwrites it), so they
             # must not collapse into one reading of "agreement".
-            stated = {json.dumps(item[field], sort_keys=True, default=repr) if field in item else "<unstated>"
-                      for item in data}
+            stated = {
+                json.dumps(item[field], sort_keys=True, default=repr)
+                if field in item
+                else "<unstated>"
+                for item in data
+            }
             if len(stated) > 1:
                 raise ProjectionError(f"items disagree on {field!r}: {sorted(stated)}")
     for column, op in contract.row.items():

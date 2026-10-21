@@ -36,8 +36,10 @@ import pytest
 
 REPO = Path(__file__).resolve().parents[1]
 
-READINGS = ("ts, temp_f, humidity, pressure, lux, oxidising, reducing, ammonia, pm1, pm25, pm10,"
-            " cpu_temp_c, cpu_load, mem_free_mb, uptime_s, co2_ppm, scd41_temp_c, scd41_rh")
+READINGS = (
+    "ts, temp_f, humidity, pressure, lux, oxidising, reducing, ammonia, pm1, pm25, pm10,"
+    " cpu_temp_c, cpu_load, mem_free_mb, uptime_s, co2_ppm, scd41_temp_c, scd41_rh"
+)
 
 
 class _Stop(BaseException):
@@ -55,8 +57,9 @@ class I2cError(IOError):
 def frame(pm1, pm25, pm10):
     """A PMS5003 data frame: 14 big-endian words, standard-particle µg/m³ first,
     then the atmospheric-environment ones (distinct here, so a mix-up shows)."""
-    return struct.pack(">14H", pm1, pm25, pm10, pm1 + 10, pm25 + 10, pm10 + 10,
-                       300, 90, 20, 4, 1, 0, 0, 0)
+    return struct.pack(
+        ">14H", pm1, pm25, pm10, pm1 + 10, pm25 + 10, pm10 + 10, 300, 90, 20, 4, 1, 0, 0, 0
+    )
 
 
 class Signal:
@@ -67,8 +70,9 @@ class Signal:
         self.value = value
 
 
-def _install_drivers(monkeypatch, pms_reads, gas_reads, scd41_reads, scd41_calls, bme_reads,
-                     proximity_reads):
+def _install_drivers(
+    monkeypatch, pms_reads, gas_reads, scd41_reads, scd41_calls, bme_reads, proximity_reads
+):
     class Display:
         width, height = 160, 80
 
@@ -142,20 +146,27 @@ def _install_drivers(monkeypatch, pms_reads, gas_reads, scd41_reads, scd41_calls
 
     module("sensirion_i2c_scd4x")
     module("sensirion_i2c_scd4x.device", Scd4xDevice=Scd4xDevice)
-    module("sensirion_i2c_driver", CrcCalculator=lambda *a: None,
-           I2cConnection=lambda t: None, LinuxI2cTransceiver=lambda path: None)
+    module(
+        "sensirion_i2c_driver",
+        CrcCalculator=lambda *a: None,
+        I2cConnection=lambda t: None,
+        LinuxI2cTransceiver=lambda path: None,
+    )
     module("sensirion_i2c_driver.errors", I2cError=I2cError)
     module("sensirion_driver_adapters")
     module("sensirion_driver_adapters.i2c_adapter")
-    module("sensirion_driver_adapters.i2c_adapter.i2c_channel",
-           I2cChannel=lambda *a, **k: None)
+    module("sensirion_driver_adapters.i2c_adapter.i2c_channel", I2cChannel=lambda *a, **k: None)
     module("st7735", ST7735=Display)
     module("smbus2", SMBus=lambda *a, **k: None)
     module("bme280", BME280=BME280)
     module("ltr559", LTR559=LTR559)
-    module("pms5003", PMS5003=PMS5003, ReadTimeoutError=ReadTimeoutError,
-           ChecksumMismatchError=type("ChecksumMismatchError", (Exception,), {}),
-           SerialTimeoutError=type("SerialTimeoutError", (Exception,), {}))
+    module(
+        "pms5003",
+        PMS5003=PMS5003,
+        ReadTimeoutError=ReadTimeoutError,
+        ChecksumMismatchError=type("ChecksumMismatchError", (Exception,), {}),
+        SerialTimeoutError=type("SerialTimeoutError", (Exception,), {}),
+    )
 
     def read_all():
         outcome = next(gas_reads)
@@ -173,9 +184,19 @@ GOOD = frame(1, 2, 3)
 class Run:
     """One loop run: what reached Tier 1 and Tier 2, and what was drawn."""
 
-    def __init__(self, tmp_path, monkeypatch, rows, pms_reads=None, gas_reads=None,
-                 scd41_reads=None, bme_reads=None, prepare_db=None, publish_s=1,
-                 proximity_reads=None):
+    def __init__(
+        self,
+        tmp_path,
+        monkeypatch,
+        rows,
+        pms_reads=None,
+        gas_reads=None,
+        scd41_reads=None,
+        bme_reads=None,
+        prepare_db=None,
+        publish_s=1,
+        proximity_reads=None,
+    ):
         self.scd41_calls, self.states = [], []
         app = tmp_path / "app"
         app.mkdir()
@@ -188,34 +209,51 @@ class Run:
         (app / "config.json").write_text(json.dumps(self.config))
         self.db = tmp_path / "enviro.db"
         with sqlite3.connect(self.db) as conn:
-            conn.execute("CREATE TABLE outdoor (ts TEXT PRIMARY KEY, tempf REAL, humidity REAL,"
-                         " windspeedmph REAL, windgustmph REAL, winddir REAL, uv REAL,"
-                         " dailyrainin REAL)")
+            conn.execute(
+                "CREATE TABLE outdoor (ts TEXT PRIMARY KEY, tempf REAL, humidity REAL,"
+                " windspeedmph REAL, windgustmph REAL, winddir REAL, uv REAL,"
+                " dailyrainin REAL)"
+            )
             if prepare_db:
                 prepare_db(conn)
         cpu = tmp_path / "cpu_temp"
         cpu.write_text("52000")
-        (app / ".env").write_text(f"SQLITE_PATH={self.db}\nCONFIG_PATH={app / 'config.json'}\n"
-                                  f"CPU_TEMP_PATH={cpu}\n")
+        (app / ".env").write_text(
+            f"SQLITE_PATH={self.db}\nCONFIG_PATH={app / 'config.json'}\nCPU_TEMP_PATH={cpu}\n"
+        )
         for key in ("SQLITE_PATH", "CONFIG_PATH", "CPU_TEMP_PATH"):
-            monkeypatch.setenv(key, "")   # registers the original for restore,
-            monkeypatch.delenv(key)       # then lets the module's .env load set it
+            monkeypatch.setenv(key, "")  # registers the original for restore,
+            monkeypatch.delenv(key)  # then lets the module's .env load set it
 
-        _install_drivers(monkeypatch, pms_reads or itertools.repeat(GOOD),
-                         gas_reads or itertools.repeat(None),
-                         scd41_reads or itertools.repeat(None), self.scd41_calls,
-                         bme_reads or itertools.repeat((27.0, 50.0, 1016.0)),
-                         proximity_reads or itertools.repeat(0))
+        _install_drivers(
+            monkeypatch,
+            pms_reads or itertools.repeat(GOOD),
+            gas_reads or itertools.repeat(None),
+            scd41_reads or itertools.repeat(None),
+            self.scd41_calls,
+            bme_reads or itertools.repeat((27.0, 50.0, 1016.0)),
+            proximity_reads or itertools.repeat(0),
+        )
         monkeypatch.syspath_prepend(str(app))
         for name in ("enviro_screens", "local_sensors"):
             monkeypatch.delitem(sys.modules, name, raising=False)
         import enviro_screens
+
         real_render = enviro_screens.render
-        monkeypatch.setattr(enviro_screens, "render",
-                            lambda page, state: self.states.append(
-                                {"co2": state["co2"], "co2_hist": list(state["co2_hist"]),
-                                 "indoor": dict(state["indoor"])})
-                            or real_render(page, state))
+        monkeypatch.setattr(
+            enviro_screens,
+            "render",
+            lambda page, state: (
+                self.states.append(
+                    {
+                        "co2": state["co2"],
+                        "co2_hist": list(state["co2_hist"]),
+                        "indoor": dict(state["indoor"]),
+                    }
+                )
+                or real_render(page, state)
+            ),
+        )
 
         # Starts at the real time, aligned to an interval: raw_retention files
         # each record under the real UTC day, so the test reads that day.
@@ -228,12 +266,17 @@ class Run:
 
         def sleep(_seconds):
             with sqlite3.connect(self.db) as conn:
-                have = conn.execute("SELECT count(*) FROM sqlite_master"
-                                    " WHERE name='readings'").fetchone()[0] and \
-                    conn.execute("SELECT count(*) FROM readings WHERE ts >= ?",
-                                 (since,)).fetchone()[0]
+                have = (
+                    conn.execute(
+                        "SELECT count(*) FROM sqlite_master WHERE name='readings'"
+                    ).fetchone()[0]
+                    and conn.execute(
+                        "SELECT count(*) FROM readings WHERE ts >= ?", (since,)
+                    ).fetchone()[0]
+                )
             if have >= rows:
                 raise _Stop
+
         monkeypatch.setattr(time, "sleep", sleep)
 
         try:
@@ -247,8 +290,12 @@ class Run:
 
     def tier1(self):
         from raw_retention import read_day
-        return [(outcome, json.loads(blob)) for _c, outcome, blob in
-                read_day("local_sensors", self.day) if blob is not None]
+
+        return [
+            (outcome, json.loads(blob))
+            for _c, outcome, blob in read_day("local_sensors", self.day)
+            if blob is not None
+        ]
 
 
 def test_failed_pm_read_is_stored_as_null_not_the_last_good_value(tmp_path, monkeypatch):
@@ -293,22 +340,25 @@ def test_readings_are_derived_and_replay_reproduces_them(tmp_path, monkeypatch):
     assert live[0][1:3] == (69.2, 73.3)
 
     import local_sensors
+
     with sqlite3.connect(run.db) as conn:
         conn.execute("DELETE FROM readings")
-        assert local_sensors.replay(conn, [run.start.date().isoformat()],
-                                    run.config)["rows"] == 4
+        assert local_sensors.replay(conn, [run.start.date().isoformat()], run.config)["rows"] == 4
         replayed = conn.execute(f"SELECT {READINGS} FROM readings ORDER BY ts").fetchall()
     # Replay also closes the interval live had not closed when it stopped.
     assert replayed[:3] == live
 
     # Replaying under a new calibration replaces the rows in place: the same
     # four rows, each 1.0 °C (1.8 °F) cooler.
-    recalibrated = {**run.config,
-                    "calibration": {**run.config["calibration"], "self_heat_offset_c": 7.35}}
+    recalibrated = {
+        **run.config,
+        "calibration": {**run.config["calibration"], "self_heat_offset_c": 7.35},
+    }
     with sqlite3.connect(run.db) as conn:
         local_sensors.replay(conn, [run.start.date().isoformat()], recalibrated)
         assert conn.execute("SELECT ts, temp_f FROM readings ORDER BY ts").fetchall() == [
-            (ts, round(t - 1.8, 1)) for ts, t, *_ in replayed]
+            (ts, round(t - 1.8, 1)) for ts, t, *_ in replayed
+        ]
 
     # Replaying on a coarser grid replaces the one-second rows; none is left
     # behind on the old grid.
@@ -316,7 +366,8 @@ def test_readings_are_derived_and_replay_reproduces_them(tmp_path, monkeypatch):
     with sqlite3.connect(run.db) as conn:
         assert local_sensors.replay(conn, [run.start.date().isoformat()], coarser)["rows"] == 1
         assert conn.execute("SELECT ts FROM readings").fetchall() == [
-            (run.start.strftime("%Y-%m-%d %H:%M:%S"),)]
+            (run.start.strftime("%Y-%m-%d %H:%M:%S"),)
+        ]
 
 
 def test_scd41_sample_is_stored_once_as_reported_and_a_gap_is_null(tmp_path, monkeypatch):
@@ -325,7 +376,10 @@ def test_scd41_sample_is_stored_once_as_reported_and_a_gap_is_null(tmp_path, mon
     run = Run(tmp_path, monkeypatch, rows=3, scd41_reads=scd)
     # The interval after a sample, with none of its own, is NULL, not a repeat.
     assert run.readings("co2_ppm, scd41_temp_c, scd41_rh") == [
-        sample, (None, None, None), (640, 24.0, 48.0)]
+        sample,
+        (None, None, None),
+        (640, 24.0, 48.0),
+    ]
 
 
 def test_scd41_gets_bme280_pressure_in_pa_and_restarts_measurement(tmp_path, monkeypatch):
@@ -345,7 +399,8 @@ def test_scd41_i2c_error_is_a_failed_read_and_the_lane_restarts(tmp_path, monkey
 
 
 def test_display_clears_co2_after_a_silent_interval_and_the_trend_shows_the_gap(
-        tmp_path, monkeypatch):
+    tmp_path, monkeypatch
+):
     scd = iter([(612, 23.9, 47.6), None, None, None])
     run = Run(tmp_path, monkeypatch, rows=3, scd41_reads=scd)
     assert [s["co2"] for s in run.states] == [612, 612, None, None]
@@ -356,26 +411,50 @@ def test_display_clears_co2_after_a_silent_interval_and_the_trend_shows_the_gap(
 
 
 def test_an_existing_fifteen_column_table_keeps_its_rows_and_gains_the_new_columns(
-        tmp_path, monkeypatch):
-    legacy = ("2026-10-20 12:00:00", 76.5, 51.0, 1018.6, 3.2, 40.1, 100.2, 150.3,
-              0.4, 1.2, 2.0, 52.0, 0.5, 6000.0, 3600)
+    tmp_path, monkeypatch
+):
+    legacy = (
+        "2026-10-20 12:00:00",
+        76.5,
+        51.0,
+        1018.6,
+        3.2,
+        40.1,
+        100.2,
+        150.3,
+        0.4,
+        1.2,
+        2.0,
+        52.0,
+        0.5,
+        6000.0,
+        3600,
+    )
 
     def prepare(conn):
-        conn.execute("CREATE TABLE readings (ts TEXT PRIMARY KEY, temp_f REAL, humidity REAL,"
-                     " pressure REAL, lux REAL, oxidising REAL, reducing REAL, ammonia REAL,"
-                     " pm1 REAL, pm25 REAL, pm10 REAL, cpu_temp_c REAL, cpu_load REAL,"
-                     " mem_free_mb REAL, uptime_s INTEGER)")
+        conn.execute(
+            "CREATE TABLE readings (ts TEXT PRIMARY KEY, temp_f REAL, humidity REAL,"
+            " pressure REAL, lux REAL, oxidising REAL, reducing REAL, ammonia REAL,"
+            " pm1 REAL, pm25 REAL, pm10 REAL, cpu_temp_c REAL, cpu_load REAL,"
+            " mem_free_mb REAL, uptime_s INTEGER)"
+        )
         conn.execute("INSERT INTO readings VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", legacy)
 
-    run = Run(tmp_path, monkeypatch, rows=1, scd41_reads=iter([(612, 23.9, 47.6), None]),
-              prepare_db=prepare)
+    run = Run(
+        tmp_path,
+        monkeypatch,
+        rows=1,
+        scd41_reads=iter([(612, 23.9, 47.6), None]),
+        prepare_db=prepare,
+    )
     rows = run.readings()
     assert rows[0] == legacy + (None, None, None)
     assert rows[1][15:] == (612, 23.9, 47.6)
 
 
 def test_an_interval_takes_each_lanes_newest_read_and_the_mean_bme280_temperature(
-        tmp_path, monkeypatch):
+    tmp_path, monkeypatch
+):
     # Three-second intervals of three reads each (one read per second).
     n = json.loads((REPO / "dynamic_config.pi5.json").read_text())["calibration"]["bme_samples"]
     temps = itertools.cycle([26.0, 27.0, 28.0])
@@ -383,8 +462,9 @@ def test_an_interval_takes_each_lanes_newest_read_and_the_mean_bme280_temperatur
     bme = ((next(temps), next(rh), 1016.0) for _ in itertools.count())
     pms = iter([frame(1, 2, 3), frame(4, 5, 6), ReadTimeoutError("no frame")] * 3)
     scd = iter([(600, 23.0, 45.0), (610, 23.5, 46.0), None] * 3)
-    run = Run(tmp_path, monkeypatch, rows=2, pms_reads=pms, scd41_reads=scd,
-              bme_reads=bme, publish_s=3)
+    run = Run(
+        tmp_path, monkeypatch, rows=2, pms_reads=pms, scd41_reads=scd, bme_reads=bme, publish_s=3
+    )
     rows = run.readings("ts, temp_f, humidity, pm1, pm25, pm10, co2_ppm, scd41_temp_c")
     # Keyed by the interval's start, not by its last read two seconds later.
     assert rows[0][0] == run.start.strftime("%Y-%m-%d %H:%M:%S")
@@ -405,15 +485,17 @@ def test_an_interval_takes_each_lanes_newest_read_and_the_mean_bme280_temperatur
 def test_replay_of_a_day_includes_its_last_reads_filed_after_midnight(tmp_path, monkeypatch):
     """raw_retention files a record under the day it was retained; a read just
     before midnight retained just after is in the next day's file."""
+    import local_sensors
     import raw_retention
 
-    import local_sensors
-
     cfg = json.loads((REPO / "dynamic_config.pi5.json").read_text())
-    base = {"bme280": [{"temperature": 27.0, "humidity": 50.0, "pressure": 1016.0}] * 3,
-            "cpu_temp_milli_c": 52000, "ltr559_lux": 120.0,
-            "mics6814_ohms": {"oxidising": 45000.0, "reducing": 105000.0, "nh3": 150000.0},
-            "pi": {"loadavg_1m": 0.5, "mem_available_kb": 6000000, "uptime_s": 100.0}}
+    base = {
+        "bme280": [{"temperature": 27.0, "humidity": 50.0, "pressure": 1016.0}] * 3,
+        "cpu_temp_milli_c": 52000,
+        "ltr559_lux": 120.0,
+        "mics6814_ohms": {"oxidising": 45000.0, "reducing": 105000.0, "nh3": 150000.0},
+        "pi": {"loadavg_1m": 0.5, "mem_available_kb": 6000000, "uptime_s": 100.0},
+    }
 
     class Clock(datetime):
         at = None
@@ -423,23 +505,30 @@ def test_replay_of_a_day_includes_its_last_reads_filed_after_midnight(tmp_path, 
             return cls.at
 
     monkeypatch.setattr(raw_retention, "datetime", Clock)
-    for read, filed, co2 in (("2026-10-21T23:59:58+00:00", "2026-10-21T23:59:58+00:00", 600),
-                             ("2026-10-21T23:59:59.900+00:00", "2026-10-22T00:00:00.100+00:00", 610),
-                             ("2026-10-22T00:00:01+00:00", "2026-10-22T00:00:01+00:00", 620)):
+    for read, filed, co2 in (
+        ("2026-10-21T23:59:58+00:00", "2026-10-21T23:59:58+00:00", 600),
+        ("2026-10-21T23:59:59.900+00:00", "2026-10-22T00:00:00.100+00:00", 610),
+        ("2026-10-22T00:00:01+00:00", "2026-10-22T00:00:01+00:00", 620),
+    ):
         Clock.at = datetime.fromisoformat(filed)
-        sample = {**base, "read_utc": read,
-                  "scd41": {"co2_ppm": co2, "temperature_c": 23.0, "rh": 45.0}}
+        sample = {
+            **base,
+            "read_utc": read,
+            "scd41": {"co2_ppm": co2, "temperature_c": 23.0, "rh": 45.0},
+        }
         raw_retention.retain(local_sensors.PROVIDER, json.dumps(sample).encode())
 
     db = sqlite3.connect(tmp_path / "replay.db")
     local_sensors.ensure_schema(db)
     assert local_sensors.replay(db, ["2026-10-21"], cfg) == {"samples": 2, "rows": 1}
     assert db.execute("SELECT ts, co2_ppm FROM readings").fetchall() == [
-        ("2026-10-21 23:59:00", 610)]
+        ("2026-10-21 23:59:00", 610)
+    ]
 
 
 def test_a_hot_reloaded_publish_interval_closes_the_open_interval_on_its_own_grid(
-        tmp_path, monkeypatch):
+    tmp_path, monkeypatch
+):
     """publish_s 1 -> 3 mid-run: the open one-second interval is written under
     its own key, not the coarser grid's (which would land on an earlier row)."""
     config_path = []
@@ -461,6 +550,7 @@ def test_a_hot_reloaded_publish_interval_closes_the_open_interval_on_its_own_gri
         app = a[0] / "app"
         config_path.append(app / "config.json")
         original(self, *a, **k)
+
     monkeypatch.setattr(Run, "__init__", capture)
     scd = iter([(600, 23.0, 45.0), (601, 23.0, 45.0), (602, 23.0, 45.0)] + [None] * 20)
     run = Run(tmp_path, monkeypatch, rows=3, scd41_reads=scd, bme_reads=bme())
@@ -481,12 +571,13 @@ def test_a_pre_tier1_row_sharing_the_first_intervals_key_is_kept(tmp_path, monke
         conn.execute("INSERT INTO readings VALUES (?, 99.9)", (legacy_ts,))
 
     run = Run(tmp_path, monkeypatch, rows=2, prepare_db=prepare)
-    assert run.start == start   # the run began in the same minute
+    assert run.start == start  # the run began in the same minute
     assert run.readings("ts, temp_f")[0] == (legacy_ts, 99.9)
 
 
 def test_a_read_the_canonical_tier_could_not_store_ends_the_process_underived(
-        tmp_path, monkeypatch):
+    tmp_path, monkeypatch
+):
     """The third read's Tier 1 append fails: the process ends (restart and
     OnFailure surface it), and no readings row is derived from that read."""
     import raw_retention
@@ -497,12 +588,16 @@ def test_a_read_the_canonical_tier_could_not_store_ends_the_process_underived(
         if next(appends) == 2:
             raise OSError(28, "No space left on device")
         real_fsync(fd)
+
     monkeypatch.setattr(raw_retention.os, "fsync", fsync)
     run = None
     with pytest.raises(raw_retention.RetentionWriteError):
-        run = Run(tmp_path, monkeypatch, rows=99, scd41_reads=iter([(600, 23.0, 45.0),
-                                                                    (601, 23.0, 45.0),
-                                                                    (602, 23.0, 45.0)]))
+        run = Run(
+            tmp_path,
+            monkeypatch,
+            rows=99,
+            scd41_reads=iter([(600, 23.0, 45.0), (601, 23.0, 45.0), (602, 23.0, 45.0)]),
+        )
     assert run is None
     with sqlite3.connect(tmp_path / "enviro.db") as conn:
         # Read 1's interval was closed by read 2; read 2's would have been
@@ -513,14 +608,16 @@ def test_a_read_the_canonical_tier_could_not_store_ends_the_process_underived(
 def _retain_reads(monkeypatch, reads):
     """Retain local_sensors records with the given read times (and file them
     at those times), each carrying its co2 as a marker."""
+    import local_sensors
     import raw_retention
 
-    import local_sensors
-
-    base = {"bme280": [{"temperature": 27.0, "humidity": 50.0, "pressure": 1016.0}] * 3,
-            "cpu_temp_milli_c": 52000, "ltr559_lux": 120.0,
-            "mics6814_ohms": {"oxidising": 45000.0, "reducing": 105000.0, "nh3": 150000.0},
-            "pi": {"loadavg_1m": 0.5, "mem_available_kb": 6000000, "uptime_s": 100.0}}
+    base = {
+        "bme280": [{"temperature": 27.0, "humidity": 50.0, "pressure": 1016.0}] * 3,
+        "cpu_temp_milli_c": 52000,
+        "ltr559_lux": 120.0,
+        "mics6814_ohms": {"oxidising": 45000.0, "reducing": 105000.0, "nh3": 150000.0},
+        "pi": {"loadavg_1m": 0.5, "mem_available_kb": 6000000, "uptime_s": 100.0},
+    }
 
     class Clock(datetime):
         at = None
@@ -533,20 +630,31 @@ def _retain_reads(monkeypatch, reads):
         m.setattr(raw_retention, "datetime", Clock)
         for read, co2 in reads:
             Clock.at = datetime.fromisoformat(read)
-            raw_retention.retain(local_sensors.PROVIDER, json.dumps(
-                {**base, "read_utc": read,
-                 "scd41": {"co2_ppm": co2, "temperature_c": 23.0, "rh": 45.0}}).encode())
+            raw_retention.retain(
+                local_sensors.PROVIDER,
+                json.dumps(
+                    {
+                        **base,
+                        "read_utc": read,
+                        "scd41": {"co2_ppm": co2, "temperature_c": 23.0, "rh": 45.0},
+                    }
+                ).encode(),
+            )
 
 
-def test_replay_rewrites_each_days_first_interval_but_not_the_cutover_one(
-        tmp_path, monkeypatch):
+def test_replay_rewrites_each_days_first_interval_but_not_the_cutover_one(tmp_path, monkeypatch):
     import local_sensors
 
     cfg = json.loads((REPO / "dynamic_config.pi5.json").read_text())
     # Tier 1 begins 2026-10-21 09:00:30; the next day's first read is mid-interval.
-    _retain_reads(monkeypatch, [("2026-10-21T09:00:30+00:00", 500),
-                                ("2026-10-22T10:00:01+00:00", 600),
-                                ("2026-10-22T10:00:02+00:00", 601)])
+    _retain_reads(
+        monkeypatch,
+        [
+            ("2026-10-21T09:00:30+00:00", 500),
+            ("2026-10-22T10:00:01+00:00", 600),
+            ("2026-10-22T10:00:02+00:00", 601),
+        ],
+    )
     db = sqlite3.connect(tmp_path / "r.db")
     local_sensors.ensure_schema(db)
     # 09:55:00 stands for a row from an earlier publish_s grid, before the day's
@@ -558,16 +666,17 @@ def test_replay_rewrites_each_days_first_interval_but_not_the_cutover_one(
         # Starts before the first Tier 1 read: kept as written.
         ("2026-10-21 09:00:00", -1),
         # Starts before that day's first read, but after Tier 1 began: rebuilt.
-        ("2026-10-22 10:00:00", 601)]
+        ("2026-10-22 10:00:00", 601),
+    ]
 
 
-def test_a_day_with_an_unreadable_record_fails_replay_before_any_row_changes(
-        tmp_path, monkeypatch):
+def test_a_day_with_an_unreadable_record_fails_replay_before_any_row_changes(tmp_path, monkeypatch):
     import local_sensors
 
     cfg = json.loads((REPO / "dynamic_config.pi5.json").read_text())
-    _retain_reads(monkeypatch, [("2026-10-22T10:00:01+00:00", 600),
-                                ("2026-10-22T10:01:01+00:00", 601)])
+    _retain_reads(
+        monkeypatch, [("2026-10-22T10:00:01+00:00", 600), ("2026-10-22T10:01:01+00:00", 601)]
+    )
     day_file = Path(os.environ["ENVIRO_RAW_ROOT"]) / "local_sensors" / "2026-10-22.ndjson"
     with day_file.open("a") as fh:
         fh.write('{"captured_utc": "2026-10-22T10:02:01+00:00", "outcome": "ok", "payl\n')
@@ -579,11 +688,14 @@ def test_a_day_with_an_unreadable_record_fails_replay_before_any_row_changes(
     with pytest.raises(ValueError):
         local_sensors.replay(db, ["2026-10-22"], cfg)
     assert db.execute("SELECT ts, co2_ppm FROM readings ORDER BY ts").fetchall() == [
-        ("2026-10-22 10:00:00", -1), ("2026-10-22 10:01:00", -1)]
+        ("2026-10-22 10:00:00", -1),
+        ("2026-10-22 10:01:00", -1),
+    ]
 
 
 def test_each_tap_is_retained_once_with_the_reading_that_crossed_the_threshold(
-        tmp_path, monkeypatch):
+    tmp_path, monkeypatch
+):
     tap = json.loads((REPO / "dynamic_config.pi5.json").read_text())["display"]["tap_proximity"]
     # Two separate taps: near, held near (not a second tap), away, near again.
     reads = iter([0, tap + 5, tap + 9, 0, tap + 1] + [0] * 10_000)

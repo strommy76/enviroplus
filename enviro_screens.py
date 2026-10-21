@@ -41,19 +41,19 @@ def _font(px):
 
 
 # ── Palette ────────────────────────────────────────────────────────────────────
-BG     = (6, 8, 14)
-SEP    = (26, 30, 46)
-DIM    = (80, 88, 112)
-WHITE  = (236, 240, 248)
-GREEN  = (40, 215, 75)
+BG = (6, 8, 14)
+SEP = (26, 30, 46)
+DIM = (80, 88, 112)
+WHITE = (236, 240, 248)
+GREEN = (40, 215, 75)
 YELLOW = (235, 195, 0)
 ORANGE = (255, 125, 0)
-RED    = (255, 45, 45)
+RED = (255, 45, 45)
 PURPLE = (148, 0, 211)
 MAROON = (126, 0, 35)
-CYAN   = (0, 215, 195)
-BLUE   = (80, 150, 255)
-AMBER  = (255, 170, 40)
+CYAN = (0, 215, 195)
+BLUE = (80, 150, 255)
+AMBER = (255, 170, 40)
 MAGENTA = (205, 45, 205)
 
 # ── EPA AQI ────────────────────────────────────────────────────────────────────
@@ -106,10 +106,14 @@ def pm_aqi(pm25, pm10):
     """AQI = the larger of the PM2.5 and PM10 sub-indices; None if neither.
     EPA truncates PM2.5 to 0.1 ug/m3 and PM10 to 1 ug/m3 before the lookup,
     which is what makes the gaps between table rows (9.0 -> 9.1) unreachable."""
-    subs = [s for s in (
-        aqi_sub(None if pm25 is None else math.floor(pm25 * 10) / 10, PM25_BREAKPOINTS),
-        aqi_sub(None if pm10 is None else math.floor(pm10), PM10_BREAKPOINTS),
-    ) if s is not None]
+    subs = [
+        s
+        for s in (
+            aqi_sub(None if pm25 is None else math.floor(pm25 * 10) / 10, PM25_BREAKPOINTS),
+            aqi_sub(None if pm10 is None else math.floor(pm10), PM10_BREAKPOINTS),
+        )
+        if s is not None
+    ]
     return max(subs) if subs else None
 
 
@@ -214,7 +218,13 @@ def _glance(d, s):
     ind, t = s["indoor"], s["thresholds"]
     _text(d, (80, 3), "INDOOR", 8, DIM)
     _text(d, (80, 11), _fmt(ind["temp_f"], ".0f") + "°", 26, band_color(ind["temp_f"], t["temp_f"]))
-    _text(d, (124, 13), _fmt(ind["humidity"], ".0f") + "%", 12, band_color(ind["humidity"], t["humidity"]))
+    _text(
+        d,
+        (124, 13),
+        _fmt(ind["humidity"], ".0f") + "%",
+        12,
+        band_color(ind["humidity"], t["humidity"]),
+    )
     _text(d, (124, 28), _fmt(ind["pressure"], ".0f"), 9, DIM)
 
     d.line((80, 43, 156, 43), fill=SEP)

@@ -34,10 +34,12 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 
-from provider_contract import Contract, ProjectionError, load_contract, project
 from shared.config_service import ConfigError, load_env, require
 from shared.db_service import connect, write_row
 from shared.logging_service import setup_logger
+from shared.signal_handler import install_shutdown_handler
+
+from provider_contract import Contract, ProjectionError, load_contract, project
 from raw_retention import (
     OUTCOME_EMPTY,
     OUTCOME_FETCH_ERROR,
@@ -46,12 +48,13 @@ from raw_retention import (
     OUTCOME_PARTIAL,
     OUTCOME_WRITE_ERROR,
     RetentionWriteError,
-    configure as configure_retention,
     read_day,
     record_outcome,
     retain,
 )
-from shared.signal_handler import install_shutdown_handler
+from raw_retention import (
+    configure as configure_retention,
+)
 
 _BASE = os.path.dirname(os.path.abspath(__file__))
 _ENV_PATH = os.path.join(_BASE, ".env")
@@ -141,7 +144,8 @@ class Collector:
         provider = self.contract.provider
         if arrival.row is None:
             (self.log.error if arrival.outcome == OUTCOME_MALFORMED else self.log.info)(
-                "%s: %s", provider, arrival.detail)
+                "%s: %s", provider, arrival.detail
+            )
             return False
         if arrival.absent:
             self.log.warning("%s: %s", provider, arrival.detail)
@@ -152,10 +156,16 @@ class Collector:
         # retention tier's dedup answer: the derived store is its own truth.
         # Every statement stays in retention, so the projection can be
         # re-derived under different logic later.
-        written = write_row(self.db, self.contract.table, arrival.row, upsert_on=self.contract.primary_key)
+        written = write_row(
+            self.db, self.contract.table, arrival.row, upsert_on=self.contract.primary_key
+        )
         if written:
-            self.log.info("%s row written  %s=%s", provider, self.contract.primary_key,
-                          arrival.row[self.contract.primary_key])
+            self.log.info(
+                "%s row written  %s=%s",
+                provider,
+                self.contract.primary_key,
+                arrival.row[self.contract.primary_key],
+            )
         return written
 
     def replay(self, days: list[str], *, today: str | None = None) -> dict[str, Any]:
@@ -175,7 +185,9 @@ class Collector:
         wanted = sorted(set(days))
         last = today or datetime.now(timezone.utc).strftime("%Y-%m-%d")
         if wanted[-1] > last:
-            raise ConfigError(f"observation day {wanted[-1]} is after today ({last}); no statement about it can exist")
+            raise ConfigError(
+                f"observation day {wanted[-1]} is after today ({last}); no statement about it can exist"
+            )
         # A provider's stated date is local to the provider; the capture day is UTC. The two can differ
         # by at most one day in either direction, so the scan starts one UTC day before the earliest
         # named observation day and runs through today.
@@ -193,21 +205,44 @@ class Collector:
                 if arrival.outcome != recorded_outcome:
                     tally["reclassified"] += 1
                 if arrival.row is None:
-                    self.write(arrival)          # logs the malformed/empty statement like live does
+                    self.write(arrival)  # logs the malformed/empty statement like live does
                     continue
                 if str(arrival.row[self.contract.primary_key])[:10] not in wanted:
                     tally["other_dates"] += 1
                     continue
                 if self.write(arrival):
                     tally["written"] += 1
-        return {"provider": provider, "days": wanted, "capture_days_scanned": len(scan),
-                **{k: tally[k] for k in ("records", "without_payload", "projected", "other_dates", "written",
-                                         OUTCOME_OK, OUTCOME_PARTIAL, OUTCOME_EMPTY, OUTCOME_MALFORMED, "reclassified")}}
+        return {
+            "provider": provider,
+            "days": wanted,
+            "capture_days_scanned": len(scan),
+            **{
+                k: tally[k]
+                for k in (
+                    "records",
+                    "without_payload",
+                    "projected",
+                    "other_dates",
+                    "written",
+                    OUTCOME_OK,
+                    OUTCOME_PARTIAL,
+                    OUTCOME_EMPTY,
+                    OUTCOME_MALFORMED,
+                    "reclassified",
+                )
+            },
+        }
 
-    def run(self, is_shutting_down: Callable[[], bool], sleep: Callable[[float], None] = time.sleep) -> None:
+    def run(
+        self, is_shutting_down: Callable[[], bool], sleep: Callable[[float], None] = time.sleep
+    ) -> None:
         provider = self.contract.provider
-        self.log.info("%s collector starting  url=%s  poll_s=%d", provider,
-                      self.contract.url, self.contract.poll_s)
+        self.log.info(
+            "%s collector starting  url=%s  poll_s=%d",
+            provider,
+            self.contract.url,
+            self.contract.poll_s,
+        )
         while not is_shutting_down():
             try:
                 self.attempt()
@@ -217,8 +252,12 @@ class Collector:
                 # restart and OnFailure policy surface it.
                 raise
             except Exception as exc:
-                record_outcome(provider, outcome_for_exception(exc), detail=repr(exc),
-                               url=self.contract.request_url())
+                record_outcome(
+                    provider,
+                    outcome_for_exception(exc),
+                    detail=repr(exc),
+                    url=self.contract.request_url(),
+                )
                 self.log.error("%s attempt failed: %s", provider, exc, exc_info=True)
             waited = 0
             while waited < self.contract.poll_s and not is_shutting_down():
@@ -237,11 +276,14 @@ def ensure_table(db: sqlite3.Connection, contract: Contract) -> None:
     rather than being written around forever.
     """
     db.execute(contract.create_table_sql())
-    existing = {r[1]: (r[2].upper(), r[5] > 0)
-                for r in db.execute(f"PRAGMA table_info({contract.table})")}
+    existing = {
+        r[1]: (r[2].upper(), r[5] > 0) for r in db.execute(f"PRAGMA table_info({contract.table})")
+    }
     undeclared = sorted(set(existing) - set(contract.columns))
     if undeclared:
-        raise ConfigError(f"table {contract.table!r} has columns the contract does not declare: {undeclared}")
+        raise ConfigError(
+            f"table {contract.table!r} has columns the contract does not declare: {undeclared}"
+        )
     for column, typ in contract.columns.items():
         if column not in existing:
             db.execute(f"ALTER TABLE {contract.table} ADD COLUMN {column} {typ}")
@@ -251,7 +293,8 @@ def ensure_table(db: sqlite3.Connection, contract: Contract) -> None:
             raise ConfigError(
                 f"table {contract.table!r} column {column!r} is {actual_type}"
                 f"{' PRIMARY KEY' if is_pk else ''}; contract declares {typ}"
-                f"{' PRIMARY KEY' if column == contract.primary_key else ''}")
+                f"{' PRIMARY KEY' if column == contract.primary_key else ''}"
+            )
     db.commit()
 
 
@@ -264,8 +307,9 @@ def build(contract_path: str, *, env_path: str = _ENV_PATH) -> Collector:
     ensure_table(db, contract)
     # One log file per service: several RotatingFileHandlers on one file
     # rename it out from under each other and strand lines in the rotated copies.
-    log = setup_logger(f"{contract.provider}_collector",
-                       os.path.join(_BASE, f"{contract.provider}_collector.log"))
+    log = setup_logger(
+        f"{contract.provider}_collector", os.path.join(_BASE, f"{contract.provider}_collector.log")
+    )
     return Collector(contract=contract, db=db, log=log)
 
 
@@ -289,10 +333,15 @@ def _utc_day(text: str) -> str:
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Execute one provider capture contract.")
     parser.add_argument("--contract", required=True, help="path to the contract JSON")
-    parser.add_argument("--replay", nargs="+", metavar="DAY", type=_utc_day,
-                        help="re-derive the derived rows whose observation date (the provider's stated date) is one of "
-                             "these days (YYYY-MM-DD), from every retained statement about them, and exit; writes to "
-                             "the database named by SQLITE_PATH -- point it at a scratch file to rebuild aside")
+    parser.add_argument(
+        "--replay",
+        nargs="+",
+        metavar="DAY",
+        type=_utc_day,
+        help="re-derive the derived rows whose observation date (the provider's stated date) is one of "
+        "these days (YYYY-MM-DD), from every retained statement about them, and exit; writes to "
+        "the database named by SQLITE_PATH -- point it at a scratch file to rebuild aside",
+    )
     args = parser.parse_args(argv)
     collector = build(args.contract)
     if args.replay:

@@ -51,21 +51,24 @@ sys.path.insert(0, "/home/pistrommy/projects")
 from shared.config_service import load_env, require
 from shared.db_service import connect, write_row
 from shared.logging_service import setup_logger
+from shared.signal_handler import install_shutdown_handler
+
 from raw_retention import (
-    OutcomeAlreadyRecorded,
-    RetentionWriteError,
-    configure as configure_retention,
     OUTCOME_EMPTY,
     OUTCOME_FETCH_ERROR,
     OUTCOME_MALFORMED,
     OUTCOME_OK,
     OUTCOME_PARTIAL,
     OUTCOME_WRITE_ERROR,
+    OutcomeAlreadyRecorded,
+    RetentionWriteError,
     read_day,
     record_outcome,
     retain,
 )
-from shared.signal_handler import install_shutdown_handler
+from raw_retention import (
+    configure as configure_retention,
+)
 
 PROVIDER = "ambient"
 _BASE = os.path.dirname(os.path.abspath(__file__))
@@ -149,31 +152,29 @@ def row_from_observation(d: dict) -> dict:
     """Map a provider observation to an `outdoor` row. Live and replay both
     call this, so a replayed row is the row live would have written."""
     # dateutc is milliseconds since epoch
-    ts = datetime.fromtimestamp(d["dateutc"] / 1000, tz=timezone.utc).strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
+    ts = datetime.fromtimestamp(d["dateutc"] / 1000, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     return {
-        "ts":             ts,
-        "tempf":          d.get("tempf"),
-        "tempinf":        d.get("tempinf"),
-        "humidity":       d.get("humidity"),
-        "humidityin":     d.get("humidityin"),
-        "baromrelin":     d.get("baromrelin"),
-        "baromabsin":     d.get("baromabsin"),
-        "windspeedmph":   d.get("windspeedmph"),
-        "windgustmph":    d.get("windgustmph"),
-        "winddir":        d.get("winddir"),
-        "maxdailygust":   d.get("maxdailygust"),
+        "ts": ts,
+        "tempf": d.get("tempf"),
+        "tempinf": d.get("tempinf"),
+        "humidity": d.get("humidity"),
+        "humidityin": d.get("humidityin"),
+        "baromrelin": d.get("baromrelin"),
+        "baromabsin": d.get("baromabsin"),
+        "windspeedmph": d.get("windspeedmph"),
+        "windgustmph": d.get("windgustmph"),
+        "winddir": d.get("winddir"),
+        "maxdailygust": d.get("maxdailygust"),
         "solarradiation": d.get("solarradiation"),
-        "uv":             d.get("uv"),
-        "dewpoint":       d.get("dewPoint"),
-        "feelslike":      d.get("feelsLike"),
-        "hourlyrainin":   d.get("hourlyrainin"),
-        "dailyrainin":    d.get("dailyrainin"),
-        "weeklyrainin":   d.get("weeklyrainin"),
-        "monthlyrainin":  d.get("monthlyrainin"),
-        "totalrainin":    d.get("totalrainin"),
-        "lastrain":       d.get("lastRain"),
+        "uv": d.get("uv"),
+        "dewpoint": d.get("dewPoint"),
+        "feelslike": d.get("feelsLike"),
+        "hourlyrainin": d.get("hourlyrainin"),
+        "dailyrainin": d.get("dailyrainin"),
+        "weeklyrainin": d.get("weeklyrainin"),
+        "monthlyrainin": d.get("monthlyrainin"),
+        "totalrainin": d.get("totalrainin"),
+        "lastrain": d.get("lastRain"),
     }
 
 
@@ -223,8 +224,10 @@ def run() -> None:
     configure_retention(os.environ.get("ENVIRO_RAW_ROOT", os.path.join(_BASE, "raw-capture")))
     mac = require("AW_MAC")
     poll_s = int(require("AW_POLL_S"))
-    url = ("https://api.ambientweather.net/v1/devices"
-           f"?apiKey={require('AW_API_KEY')}&applicationKey={require('AW_APP_KEY')}")
+    url = (
+        "https://api.ambientweather.net/v1/devices"
+        f"?apiKey={require('AW_API_KEY')}&applicationKey={require('AW_APP_KEY')}"
+    )
     db = connect(require("SQLITE_PATH"))
     ensure_schema(db)
     is_shutting_down = install_shutdown_handler(logger=log)
@@ -234,9 +237,13 @@ def run() -> None:
         try:
             observation = _fetch(url, mac, log)
             if observation is not None and write(db, observation, "live"):
-                log.info("outdoor row written  ts=%s  temp=%s°F  hum=%s%%  wind=%smph",
-                         row_from_observation(observation)["ts"], observation.get("tempf"),
-                         observation.get("humidity"), observation.get("windspeedmph"))
+                log.info(
+                    "outdoor row written  ts=%s  temp=%s°F  hum=%s%%  wind=%smph",
+                    row_from_observation(observation)["ts"],
+                    observation.get("tempf"),
+                    observation.get("humidity"),
+                    observation.get("windspeedmph"),
+                )
         except RetentionWriteError:
             # The canonical tier is not storing: no row may be derived, and
             # the outcome cannot be recorded. End the process so the unit's
@@ -269,11 +276,16 @@ def _utc_day(text: str) -> str:
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Ambient Weather collector.")
-    parser.add_argument("--replay", nargs="+", metavar="DAY", type=_utc_day,
-                        help="rebuild 'outdoor' rows from responses retained on these UTC capture "
-                             "days and exit; writes to the database named by SQLITE_PATH; "
-                             "include the following day to cover observations captured after "
-                             "midnight UTC")
+    parser.add_argument(
+        "--replay",
+        nargs="+",
+        metavar="DAY",
+        type=_utc_day,
+        help="rebuild 'outdoor' rows from responses retained on these UTC capture "
+        "days and exit; writes to the database named by SQLITE_PATH; "
+        "include the following day to cover observations captured after "
+        "midnight UTC",
+    )
     args = parser.parse_args(argv)
     if not args.replay:
         run()

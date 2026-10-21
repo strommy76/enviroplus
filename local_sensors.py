@@ -43,6 +43,7 @@ from datetime import date, datetime, timedelta, timezone
 sys.path.insert(0, "/home/pistrommy/projects")
 
 from shared.db_service import write_row
+
 from raw_retention import days as retained_days
 from raw_retention import read_day
 
@@ -52,24 +53,38 @@ PROVIDER = "local_sensors"
 # driver checksummed, so particle counts and the atmospheric-environment
 # channels survive alongside the three values readings carries.
 # Standard-particle µg/m³ words, the ones pm_ug_per_m3(size) returns by default.
-_PMS_STANDARD = {"pm1": 0, "pm25": 1, "pm10": 2}   # PMS5003Data.data indices
+_PMS_STANDARD = {"pm1": 0, "pm25": 1, "pm10": 2}  # PMS5003Data.data indices
 
 _COLUMNS = (
     ("ts", "TEXT PRIMARY KEY"),
-    ("temp_f", "REAL"), ("humidity", "REAL"), ("pressure", "REAL"), ("lux", "REAL"),
-    ("oxidising", "REAL"), ("reducing", "REAL"), ("ammonia", "REAL"),
-    ("pm1", "REAL"), ("pm25", "REAL"), ("pm10", "REAL"),
-    ("cpu_temp_c", "REAL"), ("cpu_load", "REAL"), ("mem_free_mb", "REAL"),
+    ("temp_f", "REAL"),
+    ("humidity", "REAL"),
+    ("pressure", "REAL"),
+    ("lux", "REAL"),
+    ("oxidising", "REAL"),
+    ("reducing", "REAL"),
+    ("ammonia", "REAL"),
+    ("pm1", "REAL"),
+    ("pm25", "REAL"),
+    ("pm10", "REAL"),
+    ("cpu_temp_c", "REAL"),
+    ("cpu_load", "REAL"),
+    ("mem_free_mb", "REAL"),
     ("uptime_s", "INTEGER"),
-    ("co2_ppm", "REAL"), ("scd41_temp_c", "REAL"), ("scd41_rh", "REAL"),
+    ("co2_ppm", "REAL"),
+    ("scd41_temp_c", "REAL"),
+    ("scd41_rh", "REAL"),
 )
 
 
 def ensure_schema(db) -> None:
     """Create `readings`, or add any column an older table lacks. Additive only:
     no existing row or column changes."""
-    db.execute("CREATE TABLE IF NOT EXISTS readings ("
-               + ", ".join(f"{name} {typedef}" for name, typedef in _COLUMNS) + ")")
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS readings ("
+        + ", ".join(f"{name} {typedef}" for name, typedef in _COLUMNS)
+        + ")"
+    )
     present = {row[1] for row in db.execute("PRAGMA table_info(readings)")}
     for name, typedef in _COLUMNS:
         if name not in present:
@@ -98,8 +113,10 @@ def c2f(c):
 def correct_humidity(rh, raw_c, actual_c):
     """Correct BME280 RH for chip self-heating with the Magnus formula: the
     same water vapour at the room temperature instead of the warmer chip's."""
+
     def psat(t):
         return math.exp(17.625 * t / (243.04 + t))
+
     return min(rh * psat(raw_c) / psat(actual_c), 100.0)
 
 
@@ -155,7 +172,7 @@ def derive_row(samples: list[dict], calibration: dict, publish_s: int) -> dict:
 def _pms_words(frame_hex: str) -> tuple:
     """The frame's 14 big-endian words, the layout PMS5003Data unpacks."""
     frame = bytes.fromhex(frame_hex)
-    return tuple(int.from_bytes(frame[i:i + 2], "big") for i in range(0, len(frame), 2))
+    return tuple(int.from_bytes(frame[i : i + 2], "big") for i in range(0, len(frame), 2))
 
 
 def write(db, row: dict) -> None:
@@ -215,7 +232,7 @@ def replay(db, days: list[str], cfg: dict) -> dict:
     tally = {"samples": 0, "rows": 0}
     for day in days:
         first = None
-        for sample in _day_samples(day):           # validation pass
+        for sample in _day_samples(day):  # validation pass
             first = first or sample["read_utc"]
         if first is None:
             continue
@@ -250,12 +267,19 @@ def _utc_day(text: str) -> str:
 def main(argv: list[str] | None = None) -> None:
     from shared.config_service import load_env, require
     from shared.db_service import connect
+
     from raw_retention import configure as configure_retention
 
     parser = argparse.ArgumentParser(description="Local sensor lane: Tier 2 replay.")
-    parser.add_argument("--replay", nargs="+", metavar="DAY", type=_utc_day, required=True,
-                        help="rebuild `readings` rows from reads retained on these UTC days, "
-                             "with the calibration in the CONFIG_PATH document, and exit")
+    parser.add_argument(
+        "--replay",
+        nargs="+",
+        metavar="DAY",
+        type=_utc_day,
+        required=True,
+        help="rebuild `readings` rows from reads retained on these UTC days, "
+        "with the calibration in the CONFIG_PATH document, and exit",
+    )
     args = parser.parse_args(argv)
     base = os.path.dirname(os.path.abspath(__file__))
     load_env(os.path.join(base, ".env"), expect_key="SQLITE_PATH")

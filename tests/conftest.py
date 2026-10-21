@@ -25,5 +25,4 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _isolate_retention_root(tmp_path_factory, monkeypatch):
-    monkeypatch.setenv("ENVIRO_RAW_ROOT",
-                       str(tmp_path_factory.mktemp("raw-capture-isolated")))
+    monkeypatch.setenv("ENVIRO_RAW_ROOT", str(tmp_path_factory.mktemp("raw-capture-isolated")))

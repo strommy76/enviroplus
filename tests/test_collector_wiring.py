@@ -36,14 +36,17 @@ def collectors(tmp_path_factory):
     SQLITE_PATH redirects that away from the live database.
     """
     import os
+
     db = tmp_path_factory.mktemp("wiring") / "scratch.db"
     os.environ["SQLITE_PATH"] = str(db)
     import ambient_wx
     import provider_collector
+
     return ambient_wx, provider_collector
 
 
 # ── Importing a collector must not start collecting ───────────────────────────
+
 
 def test_importing_a_collector_does_not_run_it(collectors):
     """The loop is behind run(); import alone must do no collecting."""
@@ -52,6 +55,7 @@ def test_importing_a_collector_does_not_run_it(collectors):
 
 
 # ── Response classification ───────────────────────────────────────────────────
+
 
 def test_ambient_classifies_a_full_response(collectors):
     ambient, _ = collectors
@@ -83,13 +87,17 @@ def test_airnow_classifies_each_shape(collectors):
 
 # ── Outcomes are causes, not severities ───────────────────────────────────────
 
-@pytest.mark.parametrize("exc,expected_attr", [
-    (sqlite3.OperationalError("database is locked"), "OUTCOME_WRITE_ERROR"),
-    (sqlite3.DatabaseError("disk image malformed"), "OUTCOME_WRITE_ERROR"),
-    (urllib.error.URLError("timed out"), "OUTCOME_FETCH_ERROR"),
-    (KeyError("lastData"), "OUTCOME_FETCH_ERROR"),
-    (RuntimeError("something else"), "OUTCOME_FETCH_ERROR"),
-])
+
+@pytest.mark.parametrize(
+    "exc,expected_attr",
+    [
+        (sqlite3.OperationalError("database is locked"), "OUTCOME_WRITE_ERROR"),
+        (sqlite3.DatabaseError("disk image malformed"), "OUTCOME_WRITE_ERROR"),
+        (urllib.error.URLError("timed out"), "OUTCOME_FETCH_ERROR"),
+        (KeyError("lastData"), "OUTCOME_FETCH_ERROR"),
+        (RuntimeError("something else"), "OUTCOME_FETCH_ERROR"),
+    ],
+)
 def test_failure_maps_to_the_subsystem_that_broke(collectors, exc, expected_attr):
     """A failed derived write must not be recorded as a failed fetch.
 
@@ -102,6 +110,7 @@ def test_failure_maps_to_the_subsystem_that_broke(collectors, exc, expected_attr
 
 
 # ── Sensor dropout is a recorded fact, not an inference from nulls ────────────
+
 
 def test_outdoor_dropout_is_detected(collectors):
     """A 13-field console-only payload must be recognisable as a dropout."""
