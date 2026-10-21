@@ -11,7 +11,8 @@
       "2026-04-08 — Add Strategy C (no SIGNAL_A) and Strategy E (trailing stops) to A/B comparison panels",
       "2026-04-08 — Add NWS Wind stat panel to At a Glance row",
       "2026-04-08 — Add EPA PM2.5 stat panel to At a Glance row, reorganize widths to fit 8 panels",
-      "2026-10-21 — Indoor temperature, humidity and the indoor series read the SCD41; add Indoor CO₂ (SCD41) beside Air Quality and Wind & Rain (8/8/8)"
+      "2026-10-21 — Indoor temperature, humidity and the indoor series read the SCD41; add Indoor CO₂ (SCD41) beside Air Quality and Wind & Rain (8/8/8)",
+      "2026-10-21 — Add Rain Today (Ambient dailyrainin, in) to At a Glance after Outdoor Humidity; humidity and rain panels at width 2 so nine panels fit"
     ]
   },
   "uid": "home-combined-dash",
@@ -120,7 +121,7 @@
       },
       "gridPos": {
         "h": 5,
-        "w": 3,
+        "w": 2,
         "x": 3,
         "y": 1
       },
@@ -186,7 +187,7 @@
       "gridPos": {
         "h": 5,
         "w": 3,
-        "x": 6,
+        "x": 5,
         "y": 1
       },
       "fieldConfig": {
@@ -254,8 +255,8 @@
       },
       "gridPos": {
         "h": 5,
-        "w": 3,
-        "x": 9,
+        "w": 2,
+        "x": 8,
         "y": 1
       },
       "fieldConfig": {
@@ -303,6 +304,52 @@
       "targets": [
         {
           "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, humidity AS value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Rain Today",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 2,
+        "x": 10,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "lengthin",
+          "decimals": 2,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, dailyrainin AS value FROM outdoor WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
