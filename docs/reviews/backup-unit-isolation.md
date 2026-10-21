@@ -119,3 +119,31 @@ the focused20-test lifecycle suite. Exact final-head canonical checks and
 revision-qualified violation results are attached as Git notes, not inferred
 from these counts. The CLI/rclone checks use temporary local remotes and real
 source failures; they do not certify Google Drive or deployed service behavior.
+
+## Internal review closeout
+
+Astra high and GLM5.3 high each reviewed the whole paired artifact at
+shared5f1230d/enviroplusd2d9198 for the two named corrective classes. Both
+confirmed closure; Astra executed the20-test lifecycle suite. All five actual
+source violations failed individually at those heads; all four property tests
+passed after restoration. Complete canonical checks passed on those clean
+heads (136/266 plus Ruff); raw results and reports are in Git notes.
+
+GLM's final R1, manifest path nested under staging, is CONFIRMED as a conditional
+shared-resource failure and closed without action, not an outstanding defect
+in source isolation: if the configured manifest destination itself cannot be
+created, write_manifest fails loud rather than reporting a recorded success.
+The direction does not authorize a second manifest store or promise records
+when that store is unavailable. A config move would address a constructed
+staging-path failure but not its other example, filesystem failure; no such
+failure was observed. The live staging and manifest paths were inspected as
+existing operator-owned directories, with staging mode0700. This increment
+preserves the existing manifest failure boundary, while healthy source copying
+no longer depends on database staging. No suppression, fallback, permission
+change or config relocation is justified. PiClaude/operator receive this
+evidence and disposition, not a claim of deployed success.
+
+This closeout changes review records only. The reviewed runtime, tests and
+config are unchanged; no named implementation defect remains to justify a
+further internal round. PiClaude receives the whole resulting paired increment
+before push/landing, with the reviewed revisions explicitly stated.
