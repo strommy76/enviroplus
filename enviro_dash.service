@@ -19,7 +19,9 @@ ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python enviro_dash3.py
 Restart=on-failure
 # PROVISIONAL inherited spacing: settle from observed recovery time/attempt cost.
 RestartSec=30
-# Back off from 30 s to the maximum while a fault lasts. PROVISIONAL maximum:
+# Back off from 30 s to the maximum while a fault lasts. The step count runs
+# from boot or the last manual start, not per fault: after five automatic
+# restarts every later one waits the maximum. PROVISIONAL maximum:
 # settle from observed Tier 1 write-failure recovery times.
 RestartSteps=5
 RestartMaxDelaySec=300

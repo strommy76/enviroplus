@@ -59,7 +59,7 @@ The `47f9dd6` measurement:
 - `write` inserts through `shared.db_service.write_row` and never overwrites an existing row. Replay clears its span first, and a row from before Tier 1 that shares a key is kept.
 - `replay` and the `--replay DAY...` command-line entry point rebuild each named day from Tier 1, on the current `publish_s` grid.
   - Each day is first read through in full, so a corrupt or unverifiable record fails the replay before any row is touched.
-  - Then the day's rows are deleted from the start of its first read's interval onward, and rewritten streaming one interval at a time.
+  - Then the day's rows are deleted from the day's start and rewritten, streaming one interval at a time.
   - Rows from before the first read Tier 1 holds are never deleted, so the cutover interval keeps its live row.
   - They also read the following day's file, only until its reads pass the day, because a read just before midnight is filed under the day it was retained.
   - Memory: a synthetic full day (43,200 records, 46 MB) replayed in 1.2 s at a 19 MB peak RSS.
@@ -73,7 +73,7 @@ The `47f9dd6` measurement:
   - The checksummed PMS5003 frame as bytes, which keeps the particle counts and the atmospheric channels.
   - The SCD41 CO₂, temperature and RH.
   - `/proc` load, memory and uptime.
-  - The LTR559 proximity reads polled between frames. They drive page taps, and the next record carries them.
+  - Page taps: each rising edge of the LTR559 proximity past `display.tap_proximity`, with its reading and threshold. Per the operator at 23:11, "Can we make the proximity Tier 1 but only record events?", the 10 Hz polls themselves are not kept.
 - When a read opens a new publish interval, the finished interval becomes a `readings` row.
 - The display uses the same projection.
 
@@ -129,7 +129,7 @@ The `47f9dd6` measurement:
      - Replay writes both from all their reads.
    - The Grafana panels render.
 
-**Volume:** about 1.1–1.2 kB per record before the proximity list, measured on a representative record (2026-10-20 22:45; the reviewer measured 1169 B). The proximity list adds about 20 small integers per record. Every 2 s that is about 50 MB/day and about 18 GB/year, into a tree the existing backup lane already replicates. 206 GB were free on 2026-10-20.
+**Volume:** about 1.1–1.2 kB per record, measured on a representative record (2026-10-20 22:45; the reviewer measured 1169 B). Taps add a few bytes only when one occurs. Every 2 s that is about 47–50 MB/day and about 17–18 GB/year, into a tree the existing backup lane already replicates. 206 GB were free on 2026-10-20.
 
 ## Research (AGENTS C)
 
@@ -206,7 +206,7 @@ The column list is now generated from the one `_COLUMNS` declaration in `local_s
 | F5 | Failed Tier 1 write still derives | Raised to operator (D): shared code |
 | F6 | README stale and contradicted | Closed |
 | F7 | Cutover date asserted early | Closed: "first local_sensors record" |
-| F8 | Proximity reads not kept | Closed: retained with the next record |
+| F8 | Proximity reads not kept | Closed: taps retained (operator, 23:11) |
 | F9 | SCD41 plain OSError escapes | Closed: lane catches OSError |
 
 Power observed for the round-2 fixes. Each violation was made in the real implementation, and the full suite was run:
@@ -308,7 +308,27 @@ Power for the fixes, with the enviroplus suite at 253 passed against shared `1c3
 | Cutover not protected | 1 failed |
 | No full validation pass | 1 failed |
 
-**Residual:** a SQLite error during a replay's writes leaves that day partly rewritten. Tier 1 is untouched, so rerunning the replay repairs it.
+**Residual:** an error during a replay's writes leaves the rest of that day deleted.
+- A transient SQLite error is repaired by rerunning the replay, because Tier 1 is untouched.
+- A `derive_row` error repeats on every rerun until it is fixed. Live runs the same `derive_row` on the same records, so such a record would already have stopped live.
+
+## Review: shared 1c37dc5 + enviroplus b9acd31 (architecture-reviewer, Anthropic), dispositions
+
+Verdict: NO BLOCK on both.
+
+| # | Finding | Disposition |
+|---|---|---|
+| E-R1 | Old-grid row survived a mid-day start | Closed: delete from the day's start |
+| E-R2 | Backoff step never resets per fault | Comments corrected; residual for operator |
+| E-R3 | `derive_row` error deletes rest of day | Residual reworded above |
+| E-R4 | README replay bound stale | Closed |
+| S-R1, S-R2 | fstat/append race; first-read cost | No defect |
+
+**E-R2:** systemd counts restart steps from boot or the last manual start, not per fault. After five automatic restarts, each later restart waits the full 300 s.
+
+**Proximity:** after the operator's 23:11 ruling, Tier 1 keeps tap events instead of every poll. Removing the tap recording fails 1 test. E-R1: restoring the interval-start bound fails 1 test. The suite gives 254 passed.
+
+No further review round. The remaining classes are wording and operator-weighed residuals.
 
 ## Review
 

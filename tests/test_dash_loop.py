@@ -67,7 +67,8 @@ class Signal:
         self.value = value
 
 
-def _install_drivers(monkeypatch, pms_reads, gas_reads, scd41_reads, scd41_calls, bme_reads):
+def _install_drivers(monkeypatch, pms_reads, gas_reads, scd41_reads, scd41_calls, bme_reads,
+                     proximity_reads):
     class Display:
         width, height = 160, 80
 
@@ -87,15 +88,12 @@ def _install_drivers(monkeypatch, pms_reads, gas_reads, scd41_reads, scd41_calls
         def update_sensor(self):
             self.temperature, self.humidity, self.pressure = next(bme_reads)
 
-    proximity = itertools.count()
-
     class LTR559:
         def get_lux(self):
             return 120.0
 
         def get_proximity(self):
-            # Counts its own calls, so a lost or repeated read shows in Tier 1.
-            return next(proximity)
+            return next(proximity_reads)
 
     class PMS5003:
         def __init__(self, **kwargs):
@@ -176,7 +174,8 @@ class Run:
     """One loop run: what reached Tier 1 and Tier 2, and what was drawn."""
 
     def __init__(self, tmp_path, monkeypatch, rows, pms_reads=None, gas_reads=None,
-                 scd41_reads=None, bme_reads=None, prepare_db=None, publish_s=1):
+                 scd41_reads=None, bme_reads=None, prepare_db=None, publish_s=1,
+                 proximity_reads=None):
         self.scd41_calls, self.states = [], []
         app = tmp_path / "app"
         app.mkdir()
@@ -205,7 +204,8 @@ class Run:
         _install_drivers(monkeypatch, pms_reads or itertools.repeat(GOOD),
                          gas_reads or itertools.repeat(None),
                          scd41_reads or itertools.repeat(None), self.scd41_calls,
-                         bme_reads or itertools.repeat((27.0, 50.0, 1016.0)))
+                         bme_reads or itertools.repeat((27.0, 50.0, 1016.0)),
+                         proximity_reads or itertools.repeat(0))
         monkeypatch.syspath_prepend(str(app))
         for name in ("enviro_screens", "local_sensors"):
             monkeypatch.delitem(sys.modules, name, raising=False)
@@ -277,10 +277,8 @@ def test_tier1_keeps_every_read_as_the_driver_returned_it(tmp_path, monkeypatch)
     assert first["cpu_temp_milli_c"] == 52000
     assert first["scd41"] == {"co2_ppm": 612, "temperature_c": 23.871337, "rh": 47.625732}
     assert "pms5003_frame_hex" not in second and "no frame" in second["pms5003_error"]
-    # The proximity polls between frames are retained with the next record:
-    # every call exactly once, in order, across the records.
-    polled = [p for _, r in records for p in r["ltr559_proximity"]]
-    assert polled and polled == list(range(len(polled)))
+    # No hand near the sensor: no tap is recorded.
+    assert not any("ltr559_taps" in r for _, r in records)
 
 
 def test_readings_are_derived_and_replay_reproduces_them(tmp_path, monkeypatch):
@@ -413,7 +411,7 @@ def test_replay_of_a_day_includes_its_last_reads_filed_after_midnight(tmp_path, 
 
     cfg = json.loads((REPO / "dynamic_config.pi5.json").read_text())
     base = {"bme280": [{"temperature": 27.0, "humidity": 50.0, "pressure": 1016.0}] * 3,
-            "cpu_temp_milli_c": 52000, "ltr559_lux": 120.0, "ltr559_proximity": [],
+            "cpu_temp_milli_c": 52000, "ltr559_lux": 120.0,
             "mics6814_ohms": {"oxidising": 45000.0, "reducing": 105000.0, "nh3": 150000.0},
             "pi": {"loadavg_1m": 0.5, "mem_available_kb": 6000000, "uptime_s": 100.0}}
 
@@ -520,7 +518,7 @@ def _retain_reads(monkeypatch, reads):
     import local_sensors
 
     base = {"bme280": [{"temperature": 27.0, "humidity": 50.0, "pressure": 1016.0}] * 3,
-            "cpu_temp_milli_c": 52000, "ltr559_lux": 120.0, "ltr559_proximity": [],
+            "cpu_temp_milli_c": 52000, "ltr559_lux": 120.0,
             "mics6814_ohms": {"oxidising": 45000.0, "reducing": 105000.0, "nh3": 150000.0},
             "pi": {"loadavg_1m": 0.5, "mem_available_kb": 6000000, "uptime_s": 100.0}}
 
@@ -551,7 +549,9 @@ def test_replay_rewrites_each_days_first_interval_but_not_the_cutover_one(
                                 ("2026-10-22T10:00:02+00:00", 601)])
     db = sqlite3.connect(tmp_path / "r.db")
     local_sensors.ensure_schema(db)
-    for ts in ("2026-10-21 09:00:00", "2026-10-22 10:00:00"):
+    # 09:55:00 stands for a row from an earlier publish_s grid, before the day's
+    # first read.
+    for ts in ("2026-10-21 09:00:00", "2026-10-22 09:55:00", "2026-10-22 10:00:00"):
         db.execute("INSERT INTO readings (ts, co2_ppm) VALUES (?, -1)", (ts,))
     local_sensors.replay(db, ["2026-10-21", "2026-10-22"], cfg)
     assert db.execute("SELECT ts, co2_ppm FROM readings ORDER BY ts").fetchall() == [
@@ -580,3 +580,13 @@ def test_a_day_with_an_unreadable_record_fails_replay_before_any_row_changes(
         local_sensors.replay(db, ["2026-10-22"], cfg)
     assert db.execute("SELECT ts, co2_ppm FROM readings ORDER BY ts").fetchall() == [
         ("2026-10-22 10:00:00", -1), ("2026-10-22 10:01:00", -1)]
+
+
+def test_each_tap_is_retained_once_with_the_reading_that_crossed_the_threshold(
+        tmp_path, monkeypatch):
+    tap = json.loads((REPO / "dynamic_config.pi5.json").read_text())["display"]["tap_proximity"]
+    # Two separate taps: near, held near (not a second tap), away, near again.
+    reads = iter([0, tap + 5, tap + 9, 0, tap + 1] + [0] * 10_000)
+    run = Run(tmp_path, monkeypatch, rows=3, proximity_reads=reads)
+    taps = [t for _, r in run.tier1() for t in r.get("ltr559_taps", [])]
+    assert [(t["proximity"], t["tap_proximity"]) for t in taps] == [(tap + 5, tap), (tap + 1, tap)]

@@ -238,9 +238,11 @@ def read_sample():
     with open(_cpu_temp_path) as f:
         sample["cpu_temp_milli_c"] = int(f.read())
     sample["ltr559_lux"] = ltr559_sensor.get_lux()
-    # Proximity drives page taps only; its reads since the previous record.
-    sample["ltr559_proximity"] = _proximity_reads[:]
-    _proximity_reads.clear()
+    # Proximity drives page taps only, so Tier 1 keeps the taps (operator,
+    # 2026-10-20 23:11): each with the reading that crossed the threshold.
+    if _tap_events:
+        sample["ltr559_taps"] = _tap_events[:]
+        _tap_events.clear()
     g = gas.read_all()
     sample["mics6814_ohms"] = {"oxidising": g.oxidising, "reducing": g.reducing, "nh3": g.nh3}
     sample["pi"] = _pi_raw()
@@ -322,9 +324,9 @@ def read_outdoor():
 PROXIMITY_MEAS_S = 0.1
 
 
-# Proximity reads made while waiting for the next frame; the next Tier 1
-# record carries them, so every read is retained.
-_proximity_reads = []
+# Taps seen while waiting for the next frame; the next Tier 1 record carries
+# them. A tap is a rising edge past display.tap_proximity.
+_tap_events = []
 
 
 def wait_for_next_frame(page, near):
@@ -335,9 +337,10 @@ def wait_for_next_frame(page, near):
     deadline = time.monotonic() + cfg["intervals"]["display_refresh_s"]
     while time.monotonic() < deadline:
         proximity = ltr559_sensor.get_proximity()
-        _proximity_reads.append(proximity)
         now_near = proximity >= d["tap_proximity"]
         if now_near and not near:
+            _tap_events.append({"read_utc": _utc_iso(), "proximity": proximity,
+                                "tap_proximity": d["tap_proximity"]})
             page = (page + 1) % len(screens.PAGES)
             disp.display(screens.render(page, state))
         near = now_near

@@ -202,9 +202,12 @@ def replay(db, days: list[str], cfg: dict) -> dict:
     calibration and publish_s grid.
 
     Each day is read through once first, so a corrupt or unverifiable record
-    fails the replay before any row is touched. Then the day's rows from the
-    start of its first read's interval onward are deleted and rewritten,
-    streaming one interval at a time: rows on a since-changed grid go too.
+    fails the replay before any row is touched. Then the day's rows are
+    deleted and rewritten, streaming one interval at a time: rows on a
+    since-changed grid go too. A derive_row error partway through leaves the
+    rest of that day deleted until it is fixed and replayed; live runs the
+    same derive_row on the same records, so such a record would already have
+    stopped live.
     Rows from before the first read Tier 1 holds are never deleted, so the
     interval that read falls in keeps the row live wrote for it."""
     calibration, publish_s = cfg["calibration"], cfg["intervals"]["publish_s"]
@@ -217,7 +220,9 @@ def replay(db, days: list[str], cfg: dict) -> dict:
         if first is None:
             continue
         following = (date.fromisoformat(day) + timedelta(days=1)).isoformat()
-        lower = max(_ts(interval_start(bucket_of(first, publish_s), publish_s)), cutover)
+        # From the day's start: under Tier 1 nothing but a row on a since-changed
+        # grid can sit before the day's first read.
+        lower = max(f"{day} 00:00:00", cutover)
         db.execute("DELETE FROM readings WHERE ts >= ? AND ts < ?", (lower, following))
         interval, pending = None, []
         for sample in _day_samples(day):
