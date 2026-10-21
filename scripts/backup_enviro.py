@@ -47,6 +47,7 @@ sys.path.insert(0, "/home/pistrommy/projects")
 
 from shared.offsite_replication import (  # noqa: E402
     ReplicationError,
+    ReplicationResult,
     replicate_file,
     replicate_tree,
     write_manifest,
@@ -213,61 +214,89 @@ def run(config_path: Path, *, dry_run: bool = False) -> int:
         source_path = Path(src["source_path"])
         remote_dir = f"{base}/{src['remote_subpath'].strip('/')}"
 
-        if kind == "sqlite_snapshot":
-            if dry_run:
-                # Branch before the snapshot, not after. Creating a ~24 MB file
-                # and leaving it behind is not a dry run, and nothing later in
-                # this function removes it on the dry-run path.
-                log.info("[dry-run] would snapshot %s and replicate -> %s", source_path, remote_dir)
-                continue
-            snap = staging / f"{source_path.stem}_{stamp}.db"
-            snapshot_sqlite(source_path, snap)
-            os.chmod(snap, int(cfg["local_staging"]["file_mode"], 8))
-            try:
-                results.append(
-                    replicate_file(snap, f"{remote_dir}/{snap.name}", config_path=rclone_config)
-                )
-            except Exception:
-                # Keep the snapshot of a failed run: it is the artifact you
-                # inspect to find out why the upload failed. Bound how many
-                # accumulate so a persistently failing remote cannot fill the
-                # disk.
-                dropped = clear_snapshots_through(
-                    staging,
-                    source_path.stem,
-                    snap.name,
-                    include_ceiling=False,
-                    keep_older=max(0, cfg["local_staging"]["failed_run_retention"] - 1),
-                )
-                if dropped:
-                    log.info("pruned %d older failed-run snapshot(s)", len(dropped))
-                raise
-            else:
-                # Verified landed. The staged copy exists only so the uploaded
-                # artifact is the one whose hash was computed, and that is now
-                # done -- nothing reads it again, including the restore check,
-                # which deliberately pulls from the remote.
-                #
-                # Clear the whole pattern rather than this run's file alone. A
-                # snapshot kept to explain a failed run has no purpose once a
-                # later run succeeds, and removing only the current file left
-                # those to accumulate for good.
-                dropped = clear_snapshots_through(
-                    staging, source_path.stem, snap.name, include_ceiling=True
-                )
-                log.info(
-                    "cleared %d staged snapshot(s) after verified upload: %s",
-                    len(dropped),
-                    ", ".join(dropped),
-                )
+        result = None
+        started = datetime.now(timezone.utc).isoformat()
+        try:
+            if kind == "sqlite_snapshot":
+                if dry_run:
+                    # Branch before the snapshot, not after. Creating a ~24 MB file
+                    # and leaving it behind is not a dry run, and nothing later in
+                    # this function removes it on the dry-run path.
+                    log.info(
+                        "[dry-run] would snapshot %s and replicate -> %s", source_path, remote_dir
+                    )
+                    continue
+                snap = staging / f"{source_path.stem}_{stamp}.db"
+                snapshot_sqlite(source_path, snap)
+                os.chmod(snap, int(cfg["local_staging"]["file_mode"], 8))
+                try:
+                    result = replicate_file(
+                        snap, f"{remote_dir}/{snap.name}", config_path=rclone_config
+                    )
+                except Exception:
+                    # Keep the snapshot of a failed run: it is the artifact you
+                    # inspect to find out why the upload failed. Bound how many
+                    # accumulate so a persistently failing remote cannot fill the
+                    # disk.
+                    dropped = clear_snapshots_through(
+                        staging,
+                        source_path.stem,
+                        snap.name,
+                        include_ceiling=False,
+                        keep_older=max(0, cfg["local_staging"]["failed_run_retention"] - 1),
+                    )
+                    if dropped:
+                        log.info("pruned %d older failed-run snapshot(s)", len(dropped))
+                    raise
+                else:
+                    # Verified landed. The staged copy exists only so the uploaded
+                    # artifact is the one whose hash was computed, and that is now
+                    # done -- nothing reads it again, including the restore check,
+                    # which deliberately pulls from the remote.
+                    #
+                    # Clear the whole pattern rather than this run's file alone. A
+                    # snapshot kept to explain a failed run has no purpose once a
+                    # later run succeeds, and removing only the current file left
+                    # those to accumulate for good.
+                    dropped = clear_snapshots_through(
+                        staging, source_path.stem, snap.name, include_ceiling=True
+                    )
+                    log.info(
+                        "cleared %d staged snapshot(s) after verified upload: %s",
+                        len(dropped),
+                        ", ".join(dropped),
+                    )
 
-        elif kind == "tree":
-            if dry_run:
-                log.info("[dry-run] would copy %s -> %s", source_path, remote_dir)
-                continue
-            results.append(replicate_tree(source_path, remote_dir, config_path=rclone_config))
-        else:
-            raise BackupError(f"unknown source kind for {name!r}: {kind}")
+            elif kind == "tree":
+                if dry_run:
+                    log.info("[dry-run] would copy %s -> %s", source_path, remote_dir)
+                    continue
+                result = replicate_tree(source_path, remote_dir, config_path=rclone_config)
+            else:
+                raise BackupError(f"unknown source kind for {name!r}: {kind}")
+
+        except Exception as exc:
+            # A failed source cannot suppress another source's backup. Shared
+            # partial results retain proofs for siblings that did land.
+            if result is None and isinstance(exc, ReplicationError):
+                result = exc.result
+            if result is None:
+                result = ReplicationResult(
+                    kind=kind,
+                    source=str(source_path),
+                    remote_object=remote_dir,
+                    bytes_transferred=None,
+                    local_hash=None,
+                    remote_hash=None,
+                    verified=False,
+                    started_utc=started,
+                    finished_utc=datetime.now(timezone.utc).isoformat(),
+                )
+            result.detail["error"] = f"{type(exc).__name__}: {exc}"
+            log.error("source %s failed: %s", name, result.detail["error"])
+        if not dry_run:
+            result.detail["source_name"] = name
+            results.append(result)
 
     if dry_run:
         log.info("[dry-run] complete; nothing transferred")
@@ -286,7 +315,7 @@ def run(config_path: Path, *, dry_run: bool = False) -> int:
 
     total = sum(r.bytes_transferred or 0 for r in results)
     log.info(
-        "backup verified: %d source(s), %.1f MB, manifest=%s",
+        "backup attempted: %d source(s), %.1f MB verified delivery, manifest=%s",
         len(results),
         total / 1024 / 1024,
         manifest.name,
@@ -298,6 +327,10 @@ def run(config_path: Path, *, dry_run: bool = False) -> int:
             r.remote_object.split("/")[-1] or r.remote_object,
             r.verified,
         )
+    failed = [r for r in results if not r.verified or r.detail.get("error")]
+    if failed:
+        log.error("BACKUP FAILED: %d source(s); manifest=%s", len(failed), manifest)
+        return 1
     return 0
 
 
@@ -423,7 +456,7 @@ def main() -> int:
             return verify_restore(args.config)
         return run(args.config, dry_run=args.dry_run)
     except (BackupError, ReplicationError) as exc:
-        # Fail loud and leave no manifest. A silent or partial backup that
+        # Fail loud on setup/manifest errors as well. A silent or partial backup that
         # reports success is the failure this lane exists to end.
         log.error("BACKUP FAILED: %s", exc)
         return 1

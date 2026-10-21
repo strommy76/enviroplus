@@ -9,9 +9,9 @@ Paired shared increment:fix/backup-unit-isolation,base60a8702.
 ## Plan and C declaration
 
 Durable backup runtime. k fires: false backup assurance/data loss can be
-silent or irreversible. Extract per-source snapshot/replication/staging into
-one cohesive source service, leaving CLI orchestration/restore in the existing
-script. Every configured source is attempted, its actual verified/failed or
+silent or irreversible. Keep the existing per-source lifecycle in place and
+bound each source attempt independently inside the existing loop.
+Every configured source is attempted, its actual verified/failed or
 partial result retained, and the existing manifest written after attempts even
 on failure. Any failure remains nonzero at CLI/systemd. Verified sibling bytes
 must remain accurately recorded. Existing dry-run/retention/restore contracts
@@ -32,7 +32,7 @@ Observed05:23 copy error aborted the source loop and suppressed the manifest.
 | 1 Truth | CONFORMS | Preserve individual verified/failed outcomes |
 | 2 Cognition | CONFORMS | Iterate actual configured sources |
 | 3 Antifragility | CONFORMS | Isolate observed source failure |
-| 4 KISS | CONFORMS | Existing result/manifest, one source owner |
+| 4 KISS | CONFORMS | Existing result/manifest/source loop |
 | 5 Boundaries | CONFORMS | Failure recorded plus nonzero CLI |
 | 6 Maintenance | CONFORMS | Extract existing lifecycle, update consumers |
 | Preamble | CONFORMS | Real skipped source/unrecorded delivery |
@@ -44,11 +44,16 @@ responsibilities kept cohesive? Verify implementation from actual execution.
 
 ## Verification and review obligations
 
-Source-failure order permutations, failed manifest contents, snapshot failure
-still permits raw capture, existing dry-run/retention/source-immutability tests.
+One real first-source failure still permits raw capture, records both outcomes
+and exits nonzero; existing dry-run/retention/source-immutability tests remain.
 Full canonical suite/Ruff with branch shared preloaded via pytest-p shared and
 trace-config provenance, not live shared accidentally imported by hardcoded
 test paths. Observed failing controls in real source at named revision.
 Whole paired delta:independent Astra/OllamaGLM, author adjudication plus
 axiom/adversarial audit, then PiClaude in existing round. No new round without
 named defect class. No PR, merge or live deployment before Bryan verdict.
+
+PiClaude plan reviewdebff661: unnecessary helper extraction and extra source
+order cases CONFIRMED and removed before review freeze. Demand to omit spawned
+independent review REFUTED: author plus external PiClaude does not satisfy k or
+Bryan's explicit in-family/GLM mandate. No repeated review round is added.

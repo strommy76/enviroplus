@@ -9,7 +9,7 @@
       "Verification is by remote hash, never by exit code. rclone exiting 0 is not evidence the bytes arrived.",
       "No enumerated backup target list: sources are declared here as a set, and a new source is a new entry rather than an edit to code.",
       "Timeouts are off-nominal guards sized so a nominal run never reaches them.",
-      "A run that cannot prove what landed fails loud and leaves no manifest."
+      "Each source is attempted independently; the manifest records verified and failed outcomes, and any failure makes the run nonzero."
     ],
     "changelog": [
       "2026-08-06 16:33  Claude  [Feature] Initial implementation.",

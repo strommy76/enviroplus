@@ -97,10 +97,14 @@ def lane(tmp_path):
 
 def _stub_success(monkeypatch):
     monkeypatch.setattr(
-        backup_enviro, "replicate_file", lambda src, obj, **kw: _result("file", src, obj)
+        backup_enviro,
+        "replicate_file",
+        lambda src, obj, **kw: _result("file", src, obj),
     )
     monkeypatch.setattr(
-        backup_enviro, "replicate_tree", lambda src, obj, **kw: _result("tree", src, obj)
+        backup_enviro,
+        "replicate_tree",
+        lambda src, obj, **kw: _result("tree", src, obj),
     )
 
 
@@ -151,8 +155,7 @@ def test_failed_upload_keeps_its_snapshot(lane, monkeypatch):
 
     monkeypatch.setattr(backup_enviro, "replicate_file", boom)
 
-    with pytest.raises(ReplicationError):
-        backup_enviro.run(config)
+    assert backup_enviro.run(config) == 1
 
     assert len(_snapshots(staging)) == 1, (
         "a failed run did not keep the artifact needed to diagnose it"
@@ -176,8 +179,7 @@ def test_repeated_failures_do_not_accumulate_snapshots(lane, monkeypatch):
         raise ReplicationError("remote refused")
 
     monkeypatch.setattr(backup_enviro, "replicate_file", boom)
-    with pytest.raises(ReplicationError):
-        backup_enviro.run(config)
+    assert backup_enviro.run(config) == 1
 
     kept = _snapshots(staging)
     assert len(kept) == 1, f"failed runs accumulated snapshots without bound: {kept}"
@@ -301,8 +303,7 @@ def test_retention_larger_than_the_backlog_deletes_nothing(lane, monkeypatch):
         raise ReplicationError("remote refused")
 
     monkeypatch.setattr(backup_enviro, "replicate_file", boom)
-    with pytest.raises(ReplicationError):
-        backup_enviro.run(config)
+    assert backup_enviro.run(config) == 1
 
     survivors = _snapshots(staging)
     for name in priors:
@@ -361,3 +362,28 @@ def test_a_verified_run_leaves_the_source_tree_untouched(lane, monkeypatch):
 
     after = {p.relative_to(raw).as_posix(): p.stat().st_size for p in raw.rglob("*")}
     assert before == after
+
+
+def test_cli_records_both_sources_despite_first_source_failure(lane, monkeypatch):
+    """Real SQLite/rclone, independent source attempts and an honest exit."""
+    config, staging, root = lane
+    cfg = json.loads(config.read_text())
+    rclone_config = root / "rclone.conf"
+    rclone_config.write_text(f"[test]\ntype = alias\nremote = {root / 'remote'}\n")
+    cfg["remote"]["rclone_config_path"] = str(rclone_config)
+    cfg["sources"]["database"]["source_path"] = str(root / "missing-source")
+    config.write_text(json.dumps(cfg))
+    monkeypatch.setattr(sys, "argv", ["backup_enviro.py", "--config", str(config)])
+
+    assert backup_enviro.main() == 1
+    manifests = list((staging / "manifests").glob("backup_*.json"))
+    assert len(manifests) == 1
+    recorded = json.loads(manifests[0].read_text())["results"]
+    assert [row["detail"]["source_name"] for row in recorded] == ["database", "raw_capture"]
+    by_name = {row["detail"]["source_name"]: row for row in recorded}
+    assert by_name["database"]["verified"] is False
+    assert str(root / "missing-source") in by_name["database"]["detail"]["error"]
+    assert by_name["raw_capture"]["verified"] is True
+    assert (
+        root / "remote/backups/x/raw-capture/ambient/2026-08-07.ndjson"
+    ).read_bytes() == b'{"n":1}\n'
