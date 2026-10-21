@@ -7,18 +7,22 @@ this file ever conflicts with it.
 ## Repository Responsibility
 
 Enviroplus owns local environmental sensor display and collection, external
-weather and air-quality collection, provider-response retention, the SQLite store (authoritative
-`readings`, derived provider tables), and their backup lane.
+weather and air-quality collection, raw retention of local reads and provider responses, the
+derived SQLite store (`readings` and the provider tables), and their backup lane.
 
 ## Authority and Persistence
 
 - Provider response artifacts written through `shared.raw_retention` are the
   canonical source for replayable external observations.
-- The SQLite database holds two kinds of store:
-  - `readings` is authoritative: `enviro_dash3.py` writes each local sensor
-    sample there first and nowhere else. It is append-only; rows are never
-    rewritten or rebuilt. Known-bad spans are annotated (README "Data notes"),
-    not edited.
+- Tier 1 (canonical) is `shared.raw_retention`; every SQLite table is Tier 2 (derived):
+  - Local sensor reads are canonical in `shared.raw_retention` as provider
+    `local_sensors`: `enviro_dash3.py` retains every loop's reads there first,
+    as each driver returned them.
+  - `readings` is derived from them by `local_sensors.derive_row`; live and
+    `local_sensors.py --replay DAY...` use that one projection, so rows rebuild
+    from retention. Rows written before 2026-10-21 have no retained reads:
+    SQLite and its backups are their only copy, so they are never rebuilt or
+    dropped. Known-bad spans are annotated (README "Data notes"), not edited.
   - `outdoor`, `nws_weather` and `epa_air_quality` are derived. Rows captured
     since retention began (2026-08-06) rebuild through each lane's `--replay`
     (`ambient_wx.py`, `nws_wx.py`, `provider_collector.py --contract ...`);
@@ -38,8 +42,9 @@ weather and air-quality collection, provider-response retention, the SQLite stor
 
 ## Service Boundaries
 
-- `enviro_dash3.py` owns the local sensor display and the authoritative
-  `readings` writes.
+- `enviro_dash3.py` owns the local sensors, their display, and the canonical
+  `local_sensors` retention; `local_sensors.py` owns the `readings` projection
+  and its `--replay`.
 - `ambient_wx.py` and `nws_wx.py` independently own their provider collection
   loops and canonical response capture; `--replay DAY...` re-derives their
   table from retention through the same mapping and write path live uses.

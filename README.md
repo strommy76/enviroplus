@@ -170,25 +170,35 @@ All tunable runtime values live here. The running script watches this file and *
 {
   "calibration": {
     "self_heat_offset_c": 6.35,  ← measured BME280 self-heat (see its provenance key)
-    "bme_samples":  3,            ← BME280 readings averaged per loop (reduces noise)
-    "cpu_hist_size": 30           ← CPU temp history (proportional model only)
+    "bme_samples":  3             ← BME280 readings averaged per loop (reduces noise)
   },
   "intervals": {
-    "publish_s":        60,  ← seconds between SQLite writes
+    "publish_s":        60,  ← length of the interval each readings row covers
     "display_refresh_s": 2   ← display update rate
   },
-  "thresholds": { ... },     ← color bands for temperature, humidity and gas
+  "thresholds": { ... },     ← color bands for temperature, humidity, gas and CO₂
   "display":    { ... }      ← proximity tap level, outdoor staleness
 }
 ```
 
-**To recalibrate temperature:** re-measure the offset against a reference over 5-minute means and update `self_heat_offset_c`; its `self_heat_offset_provenance` records how the current value was measured.
+**To recalibrate temperature:** re-measure the offset against a reference over 5-minute means and update `self_heat_offset_c`; its `self_heat_offset_provenance` records how the current value was measured. Then rebuild the affected days with `python local_sensors.py --replay DAY...`.
 
 ---
 
 ## 🌡️ Temperature Compensation
 
-The BME280 sits close to the Pi's CPU and reads high. On this Pi 5 with M.2 spacing the error is a near-constant pedestal, so the dashboard subtracts a measured constant, `calibration.self_heat_offset_c`. `cpu_factor_override` remains only for hardware where the sensor sits directly above the SoC; setting both fails loud. Humidity is corrected for the same self-heating with the Magnus formula.
+The BME280 sits close to the Pi's CPU and reads high. On this Pi 5 with M.2 spacing the error is a near-constant pedestal, so the derived `temp_f` subtracts a measured constant, `calibration.self_heat_offset_c`, and `humidity` is corrected for the same self-heating with the Magnus formula. The SCD41, mounted clear of the Pi, supplies the indoor temperature and humidity on screen; both sensors are recorded.
+
+---
+
+## 🗃️ Data tiers
+
+| Store | Tier | Contents |
+|-------|------|----------|
+| `raw-capture/local_sensors/<day>.ndjson` | 1, canonical | Every loop's reads, each as its driver returned it; a failed read is recorded as that lane's error |
+| `readings` (SQLite) | 2, derived | One row per publish interval, projected by `local_sensors.derive_row` with the config's calibration |
+
+Live and `local_sensors.py --replay DAY...` use the same projection, so a calibration change is applied to past days by replaying them. Rows written before 2026-10-21 have no Tier 1 reads: they are kept as written and never rebuilt or dropped.
 
 ---
 

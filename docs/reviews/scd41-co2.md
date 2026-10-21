@@ -1,4 +1,4 @@
-# SCD41 CO₂ sensor integration
+# SCD41 and Tier 1 retention of local sensor reads
 
 ## Direction
 
@@ -8,105 +8,189 @@ Bryan, 2026-10-20, to pi-claude:
 - 21:56 EDT: "Can we create our own driver if necessary?"
 - 21:59 EDT: "Yes, I agree iwth your plan with the Grafna panel folded in. You can work this while Codex is otherwise engaged"
 - 22:03 EDT: "All changes need to comply with AGENTS.md"
+- 22:07 EDT: "We always temperature and humidity values to be an upgrade over the Enviro+'s BME280 that's being influenced by the Pi heat generation. The SCD41 is located … approximately 7" above and outside the Pi where it should be uninfluenced"
+- 22:11 EDT: "No, I would like all values to be stored. I didn't say that we should stop recording BME280 data. Also, can we refine the BME280 compensation using the SCD41? You can ingest the Enviro+ commits/PRs to understand what has been done in the past"
+- 22:13 EDT: "We should ALWAYS be storing all raw data in a Tier 1 store! Derived (i.e. compensated) data goes in Tier 2"
+- 22:15 EDT: "I approve the plan, and yes keep every read"
 
 Executor: pi-claude, by operator assignment (AGENTS B).
 
-## Plan
+## Plan as approved (pi-claude, 22:14 EDT)
 
-1. Dependency: `sensirion-i2c-scd4x==1.1.0`, the vendor driver.
-2. `enviro_dash3.py`:
-   - Start periodic measurement on the existing I2C bus.
-   - Read a sample only when the sensor reports it ready.
-   - Feed the BME280 pressure to the sensor's pressure compensation.
-3. `readings`:
-   - New columns `co2_ppm`, `scd41_temp_c` and `scd41_rh`, stored as the driver reports them.
-   - A publish interval with no new sample stores NULL, never a repeat.
-4. Display: a new CO₂ page, colored by `thresholds.co2_ppm`.
-5. Grafana: a CO₂ stat panel and a CO₂ time series on the Enviro+ dashboard.
-6. Tests with observed power. Then one review, the supported validation, the operator's landing verdict, and deployment with a live check.
+1. **Tier 1:**
+   - Every loop's reads are retained through the existing `shared.raw_retention` (h) as provider `local_sensors`, each driver's output exactly as returned.
+   - A failed read is recorded as that lane's error.
+2. **Tier 2:** `readings` is derived from Tier 1 by one projection, used both live and by `--replay DAY`.
+3. **Rows from before Tier 1:** kept as written, never rebuilt or dropped.
+4. **SCD41:**
+   - It is stored in both tiers.
+   - It gets a CO₂ page and Grafana CO₂ panels.
+   - Indoor temperature and humidity on the LCD and in Grafana come from the SCD41.
+   - The BME280 keeps being recorded and plotted for comparison.
+5. **Later, a separate change** refines the BME280 compensation:
+   1. Check the SCD41 offset against the AcuRite reference.
+   2. Fit the BME280 model from Tier 1.
+   3. Replay the derived rows.
+6. **Fixes from the 1c2eb9c review are carried in.** See the dispositions below.
 
-Out of scope: calibration changes. The sensor keeps its factory settings: 4 °C temperature offset, automatic self-calibration on, no persisted settings.
+## History ingested (for step 5)
+
+| Commit | Model |
+|---|---|
+| `1f5379a` 2026-03-15 | CPU factor derived at startup |
+| `21a0de1` 2026-03-16 | Magnus RH correction |
+| `47f9dd6` 2026-07-30 | Constant 6.35 °C pedestal |
+
+The `47f9dd6` measurement:
+- It was taken against an offset-corrected AcuRite reference, on 5-minute means.
+- The gap term was 0.57 °F across the natural range, below the BME280's 1.87 °F short-term wander.
+- The proportional form was "structurally wrong for the M.2-spaced mounting".
+
+## What changed
+
+**`local_sensors.py` (new)** holds the Tier 2 projection.
+- `derive_row` builds one row per publish interval from that interval's Tier 1 records.
+  - Every lane takes its newest successful read in the interval.
+  - A lane with no read in the interval is NULL.
+  - It also applies `self_heat_offset_c` and the Magnus correction, both moved from `enviro_dash3.py`.
+- `ensure_schema` creates the table or adds missing columns. It is additive only.
+- `write` is an upsert on `ts` through `shared.db_service.write_row`.
+- `replay` and the `--replay DAY...` command-line entry point rebuild rows.
+
+**`enviro_dash3.py`:**
+- `read_sample()` retains one record per loop, holding:
+  - The BME280 reads, `bme_samples` of them.
+  - The CPU temperature in raw sysfs millidegrees.
+  - LTR559 lux.
+  - MICS6814 resistance in ohms.
+  - The checksummed PMS5003 frame as bytes, which keeps the particle counts and the atmospheric channels.
+  - The SCD41 CO₂, temperature and RH.
+  - `/proc` load, memory and uptime.
+- When a read opens a new publish interval, the finished interval becomes a `readings` row.
+- The display uses the same projection.
+
+**Calibration keys removed (p):** `cal_actual_f`, `cpu_hist_size` and `cpu_factor_override` come out, together with the startup-derived proportional model.
+- That model is inert under `self_heat_offset_c`.
+- Its startup calibration samples are not retained, so a row derived with it could not be rebuilt from Tier 1 (j).
+
+**Other surfaces:**
+- Config: `thresholds.co2_ppm`, from the UBA guide values.
+- Grafana:
+  - The Temperature and Humidity stats now read the SCD41.
+  - The Temperature & Humidity series plots both the SCD41 and the BME280.
+  - CO₂ has a stat panel and a time-series panel.
+- README: a Data tiers section, the sensors, the schema and the compensation text.
+- PROJECT-CONFIG: authority now reads Tier 1 = `raw_retention`, and every SQLite table is Tier 2.
 
 ## C / H declaration
 
-**Lifetime:** permanent runtime code, so it carries full rigor before its second run.
+**Lifetime:** permanent runtime code. k fires.
 
-**Failure could be silent:**
-- A wrong column mapping, a stale sample re-stored, or a wrong pressure unit would write plausible but wrong values into the authoritative, append-only `readings` table.
-- So k fires: this branch and this review artifact, one independent review, and the operator's verdict.
+**Failure could be silent:** a wrong projection writes plausible values into `readings`.
+- Tier 1 now makes `readings` rebuildable, so the projection itself can be corrected by replay.
+- A read that was never retained is lost.
 
 **Where failure surfaces (n):**
-- Any SCD41 I2C error ends the process. The unit's Restart/OnFailure policy reports it, the same policy every non-PMS5003 sensor already follows.
-- A sensor that never reports data ready stores NULL, and the display shows "--" after one publish interval.
+- A BME280, LTR559 or MICS6814 error ends the process, so the unit's Restart/OnFailure policy reports it.
+- A PMS5003 or SCD41 error is recorded in Tier 1 as `partial` with the lane's error. That lane is NULL for the interval, and the dashboard logs a warning.
+- The SCD41 restarts measurement on the next loop after an error.
+- A Tier 1 write OS error is logged by `raw_retention` and does not stop the loop. That is raw_retention's existing contract.
 
-**Revert:**
-- Revert the branch merge and restart `enviro_dash.service`.
-- The three added columns stay in the table. They are NULL on rows written before the change and after a revert.
-- Nothing is rewritten.
+**Revert, forward-only (the 1c2eb9c F1 finding, adopted):**
+- The previous code inserts 15 values by position. Against the widened table every write fails, and the unit ends up failed.
+- So a rollback is forward: keep the named-column write and revert the behaviour instead.
+- The columns stay, NULL where unwritten. No row is rewritten, and no column is dropped (j).
 
-**Irreversible effects:** none. `ALTER TABLE ADD COLUMN` is additive, and no existing row changes.
+**Irreversible effects:**
+- Three columns are added to `readings`.
+- Tier 1 files are appended to and are never edited.
+
+**Deploy order:**
+1. Install `sensirion-i2c-scd4x==1.1.0` into `/home/pistrommy/.virtualenvs/pimoroni`.
+2. Fast-forward the main checkout. The service runs from it, and `CONFIG_PATH` points at its `dynamic_config.pi5.json`.
+3. Restart `enviro_dash.service`.
+4. Check the live result:
+   - The unit is active.
+   - Tier 1 records are arriving under `raw-capture/local_sensors/`.
+   - `readings` rows carry the SCD41 values.
+   - Replaying the day reproduces the live rows.
+   - The Grafana panels render.
+
+**Volume:** about 1.1 kB per record, measured on a representative record (2026-10-20 22:45). Every 2 s that is about 47 MB/day and about 17 GB/year, into a tree the existing backup lane already replicates. 206 GB were free on 2026-10-20.
 
 ## Research (AGENTS C)
 
 | Option | Finding |
 |---|---|
 | Sensirion `sensirion-i2c-scd4x` 1.1.0 | Vendor driver, 2025-07; chosen |
-| Pimoroni `scd4x` 0.0.2 | Bus 1 hard-coded; 2023 |
+| Pimoroni `scd4x` 0.0.2 | Hard-codes `SMBus(1)`; 2023 |
 | Own driver | Would duplicate the vendor implementation (h) |
-| Adafruit CircuitPython SCD4x | Needs the Blinka compatibility layer |
+| Adafruit CircuitPython SCD4x | Needs Blinka |
 
-**Sensirion `sensirion-i2c-scd4x` 1.1.0:**
-- It implements the full SCD4x command set.
-- It takes the I2C device path, so it honors the existing `I2C_BUS` binding.
-- Cost: it pulls in pure-Python transitive packages the dashboard does not use: `sensirion-shdlc-*`, `pyserial` and `intelhex`, about 5.7 MB in total.
-
-**Pimoroni `scd4x` 0.0.2:**
-- `SCD4X.__init__` opens `SMBus(1)` itself, which ignores `I2C_BUS`.
-- Its CRC error message names another part ("ICP10125").
-
-**Live check on this host, 2026-10-20 21:58 EDT** (scratch install, sensor otherwise unused):
-- Serial `0xc6cb55073bf3`, variant SCD41, temperature offset 4.00 °C, automatic self-calibration on.
-- Three samples in 15 s: 442, 450 and 441 ppm, 24.0 °C, 48.6–49.7 % RH.
+**Live check, 2026-10-20 21:58 EDT:**
+- Serial `0xc6cb55073bf3`, variant SCD41, offset 4.00 °C, automatic self-calibration on.
+- Readings: 442, 450 and 441 ppm, 24.0 °C, 48.6–49.7 % RH.
 
 ## Values (AGENTS g)
 
 | Value | Source |
 |---|---|
-| 0x62 | Fixed SCD4x address (datasheet) |
+| 0x62 | Fixed SCD4x address |
 | CRC-8 0x31 / init 0xFF | Sensirion datasheet and driver examples |
-| 500 ms after stop | Datasheet `stop_periodic_measurement` execution time |
 | Pressure × 100 | BME280 reports hPa; the driver takes Pa |
-| CO₂ edges 1000 / 2000 ppm | UBA guide values, Bundesgesundheitsbl. 2008, 51:1358 |
-| NULL after one silent interval | The existing `intervals.publish_s` |
+| CO₂ 1000 / 2000 ppm | UBA guide values, Bundesgesundheitsbl. 2008, 51:1358 |
+| PMS words 0–2 | `PMS5003Data.pm_ug_per_m3(size)` default |
+| Interval length | Existing `intervals.publish_s` |
+| SCD41 temperature offset 4 °C | **PROVISIONAL**, factory default |
 
-The Grafana panels carry no color thresholds. The device's band lives once, in the dashboard config, and is not copied into a second source (Axiom 1).
+The SCD41 offset is settled by step 5's reference comparison, using Sensirion's formula: offset = T_SCD41 − T_ref + previous offset.
 
 ## Test power (AGENTS r)
 
-51 tests in the affected files, observed at the implementation revision. Each real violation below was made in the implementation, run, and then reverted:
+The affected files run 55 tests. The full suite: 242 passed. Each violation below was made in the real implementation, run, and reverted:
 
 | Violation | Result |
 |---|---|
-| Sample not cleared after write | 1 failed |
-| Pressure passed in hPa | 1 failed |
-| SCD41 temperature and RH columns swapped | 1 failed |
-| No stop before start | 1 failed |
-| CO₂ page dropped from `PAGES` | 1 failed |
-| Config green edge 1000→1200 | 1 failed |
+| PMS atmospheric words used | 2 failed |
+| SCD41 gap filled with a value | 3 failed |
+| Pedestal not subtracted | 1 failed |
+| Tier 1 write removed | 3 failed |
+| CO₂ trend gap hidden | 1 failed |
+| Display not cleared after a silent interval | 1 failed |
+| No SCD41 restart after an error | 1 failed |
+| Indoor temperature taken from the BME280 | 1 failed |
+| Migration skips the new columns | 1 failed |
+| `partial` outcome lost | 1 failed |
 
-The full suite: 237 passed.
+**How the tests work:**
+- They replace the hardware with stand-ins that return the drivers' shapes: a PMS frame as bytes, Sensirion `.value` signals, and `IOError`-based `I2cError`.
+- The replay test rebuilds the live rows from Tier 1 and compares them to what live wrote.
+- The humidity expectation is worked by hand from the Magnus formula. It is not copied from the implementation.
 
-These tests replace the hardware with stand-ins that return the driver's own result shape: objects with `.value`. They do not prove I2C behavior. The live check above and the deployed check cover that.
+## Review: 1c2eb9c (architecture-reviewer, Anthropic), dispositions
+
+| # | Finding | Disposition |
+|---|---|---|
+| F1 | Revert path crash-loops | Closed: forward-only revert declared |
+| F2 | SCD41 error stops all lanes | Closed: lane error, restart |
+| F3 | Display and migration untested | Closed: both tested, power observed |
+| F4 | Deploy order undeclared | Closed: declared above |
+| F5 | Extra 500 ms sleep | Closed: removed |
+| F6 | CO₂ trend has no gaps | Closed: one point per interval, None kept |
+| F7 | Suite count | Closed: counts re-measured |
+| F8–F12 | No defect | No action |
+
+The column list is now generated from the one `_COLUMNS` declaration in `local_sensors.py`, which addresses the reviewer's Axiom 2 note.
 
 ## Discovery (AGENTS D, not acted on)
 
-The supported Ruff lane is red on `main` (`d350673`) before this change:
+The supported Ruff lane is red on `main` (`d350673`):
 - `ruff check`: 38 findings.
 - `ruff format --check`: 19 files would be reformatted.
-- Ruff is not installed in the dashboard's interpreter. 0.15.12 was used from the stocks venv.
+- Ruff is not installed in the dashboard interpreter.
 
-This branch adds no new `ruff check` finding in the files it touches. The per-file counts on `main` and on the branch are equal: `enviro_dash3.py` 2/2, `tests/test_dash_loop.py` 1/1, and 0/0 in the other two files.
+This branch removes one pre-existing finding per file in `enviro_dash3.py` (2→1) and `tests/test_dash_loop.py` (1→0). The new `local_sensors.py` is clean.
 
 ## Review
 
-Pending: an Anthropic architecture-reviewer seat on the named revision. pi-claude can provision only Anthropic, so no other provider family is reachable from this seat. That is recorded here as k requires.
+Pending: an Anthropic architecture-reviewer seat on the named revision. pi-claude can provision only Anthropic, so other provider families are unreachable from this seat (k).
