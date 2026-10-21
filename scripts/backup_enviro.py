@@ -203,11 +203,6 @@ def run(config_path: Path, *, dry_run: bool = False) -> int:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     base = f"{remote['rclone_remote_name']}:{remote['rclone_remote_path'].strip('/')}"
 
-    if not dry_run:
-        # A dry run must leave staging as it found it, including not creating it.
-        staging.mkdir(parents=True, exist_ok=True)
-        os.chmod(staging, int(cfg["local_staging"]["dir_mode"], 8))
-
     results = []
     for name, src in cfg["sources"].items():
         kind = src["kind"]
@@ -226,6 +221,9 @@ def run(config_path: Path, *, dry_run: bool = False) -> int:
                         "[dry-run] would snapshot %s and replicate -> %s", source_path, remote_dir
                     )
                     continue
+                # Staging belongs to this source, not independent tree copies.
+                staging.mkdir(parents=True, exist_ok=True)
+                os.chmod(staging, int(cfg["local_staging"]["dir_mode"], 8))
                 snap = staging / f"{source_path.stem}_{stamp}.db"
                 snapshot_sqlite(source_path, snap)
                 os.chmod(snap, int(cfg["local_staging"]["file_mode"], 8))
@@ -294,11 +292,13 @@ def run(config_path: Path, *, dry_run: bool = False) -> int:
                 )
             result.detail["error"] = f"{type(exc).__name__}: {exc}"
             log.error("source %s failed: %s", name, result.detail["error"])
-        if not dry_run:
-            result.detail["source_name"] = name
-            results.append(result)
+        result.detail["source_name"] = name
+        results.append(result)
 
     if dry_run:
+        if results:
+            log.error("[dry-run] %d source(s) failed", len(results))
+            return 1
         log.info("[dry-run] complete; nothing transferred")
         return 0
 

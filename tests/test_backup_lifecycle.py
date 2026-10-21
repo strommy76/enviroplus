@@ -371,7 +371,9 @@ def test_cli_records_both_sources_despite_first_source_failure(lane, monkeypatch
     rclone_config = root / "rclone.conf"
     rclone_config.write_text(f"[test]\ntype = alias\nremote = {root / 'remote'}\n")
     cfg["remote"]["rclone_config_path"] = str(rclone_config)
-    cfg["sources"]["database"]["source_path"] = str(root / "missing-source")
+    blocked = root / "not-a-directory"
+    blocked.write_bytes(b"staging cannot live inside this file")
+    cfg["local_staging"]["staging_dir"] = str(blocked / "staging")
     config.write_text(json.dumps(cfg))
     monkeypatch.setattr(sys, "argv", ["backup_enviro.py", "--config", str(config)])
 
@@ -382,8 +384,21 @@ def test_cli_records_both_sources_despite_first_source_failure(lane, monkeypatch
     assert [row["detail"]["source_name"] for row in recorded] == ["database", "raw_capture"]
     by_name = {row["detail"]["source_name"]: row for row in recorded}
     assert by_name["database"]["verified"] is False
-    assert str(root / "missing-source") in by_name["database"]["detail"]["error"]
+    assert str(blocked) in by_name["database"]["detail"]["error"]
     assert by_name["raw_capture"]["verified"] is True
     assert (
         root / "remote/backups/x/raw-capture/ambient/2026-08-07.ndjson"
     ).read_bytes() == b'{"n":1}\n'
+
+
+def test_invalid_source_kind_dry_run_fails_without_writes(lane, monkeypatch):
+    """Dry-run cannot certify a source configuration the real run rejects."""
+    config, staging, root = lane
+    cfg = json.loads(config.read_text())
+    cfg["sources"]["database"]["kind"] = "sqlite_snapsho"
+    config.write_text(json.dumps(cfg))
+    monkeypatch.setattr(sys, "argv", ["backup_enviro.py", "--config", str(config), "--dry-run"])
+    before = (root / "raw-capture/ambient/2026-08-07.ndjson").read_bytes()
+    assert backup_enviro.main() == 1
+    assert not staging.exists()
+    assert (root / "raw-capture/ambient/2026-08-07.ndjson").read_bytes() == before
