@@ -1,0 +1,598 @@
+# Backup-unit isolation: exact final-head validation
+
+2026-10-21 EDT; author pi-codex. Whole paired increment:
+shared5f1230dde979c11d0fc8e217407dd53961b5909c, base60a8702;
+enviroplusd2d9198eaa9a4e4a850dc63d98b8ffae8b0a090c, baseee81559.
+Both implementation worktrees were clean before and after canonical checks.
+No live repository or provider/remote data was changed. No deployed/cloud
+effect is claimed; landing and deployment still require the operator verdict.
+
+Canonical checks, executed at these exact clean heads:
+* From paired parent, PYTHONPATH=$PWD
+  /home/pistrommy/projects/shared/.venv/bin/python -m pytest -p shared
+  shared/tests -q --junitxml=/tmp/shared-backup-isolation-final.xml
+  =>136passed11.41s, exit0.
+* From enviroplus, PYTHONPATH=<paired parent>
+  /home/pistrommy/.virtualenvs/pimoroni/bin/python -m pytest -p shared
+  --junitxml=/tmp/enviro-backup-isolation-final.xml
+  =>266passed2.83s, exit0.
+* Same enviro interpreter: -m ruff check . =>All checks passed, exit0;
+  -m ruff format --check . =>25files already formatted, exit0.
+* Both base..HEAD diffs: git diff --check, exit0.
+
+Paired parent is /home/pistrommy/projects/.implementation-worktrees/backup-unit-isolation.
+The supported pytest -p shared early-load prevents hardcoded test path inserts
+from importing live shared. --trace-config confirmed that actual worktree's
+shared/__init__.py. No import shim or installed environment was changed.
+
+## Observed source-violation controls (direction r)
+
+Method: git archive each named final HEAD into the existing temporary pair
+/tmp/backup-unit-isolation-controls.z9PH24/{shared,enviroplus}; use apply_patch
+to introduce each following real-implementation violation, one at a time;
+execute the named test with the same pytest -p shared preload but PYTHONPATH
+set to that temporary pair; restore each patch before the next one. This
+changes the implementation under test, not its assertions or substitutes.
+The real rclone and source/staging fixtures operate only in pytest tempdirs.
+
+1. shared _copy_selected: remove --local-no-check-updated.
+   test_growing_partition_is_copied_and_proven =>1failure,0errors,exit1;
+   actual rclone rc6 source-being-updated error, not an import/fixture failure.
+   Evidence /tmp/backup-final-growing-violation.{log,xml}.
+2. shared replicate_tree: replace transfer_error=str(exc) with bare raise.
+   test_copy_error_preserves_proven_siblings_and_failed_files
+   =>1failure,0errors,exit1: failure result/proof was lost.
+   Evidence /tmp/backup-final-postcopy-violation.{log,xml}.
+3. enviro run: move existing staging mkdir/chmod outside the source loop,
+   removing it from the SQLite attempt.
+   test_cli_records_both_sources_despite_first_source_failure
+   =>1failure,0errors,exit1: real staging NotADirectoryError stops the run.
+   Evidence /tmp/backup-final-staging-violation.{log,xml}.
+4. enviro run: add bare raise first in outer source exception handler.
+   Same CLI test =>1failure,0errors,exit1: first source failure aborts siblings.
+   Evidence /tmp/backup-final-source-bail-violation.{log,xml}.
+5. enviro run: remove dry-run results/nonzero check, leaving unconditional0.
+   test_invalid_source_kind_dry_run_fails_without_writes
+   =>1failure,0errors,exit1: actual main returns0 instead of1.
+   Evidence /tmp/backup-final-dry-violation.{log,xml}.
+
+cmp confirmed both restored runtime files equal final clean-head source.
+All four distinct named property tests together =>4passed3.25s,exit0
+(/tmp/backup-final-restored-positive.{log,xml}). These passes evidence only
+the above observed violations; they do not prove arbitrary corruption,
+total network availability, cloud transfer, or running deployment correctness.
+
+The partial-copy test injects a plausible copy exception outside its actual
+property, after an actual healthy-file upload; the prefix/floor/proof logic
+remains real. The separate growing-copy control reproduces actual rclone
+source-changing failure. The CLI tests execute actual main and local rclone.
+
+## Author audit and independent review
+
+Verification-mode axiom-check and complete finding dispositions are committed
+in each existing docs/reviews/backup-unit-isolation.md. The first review was
+sent before that record existed; the omission is confirmed, not erased.
+Adversarial audit at final content found no remaining named changed-boundary
+defect after dry-run and staging fixes. Existing result/error/manifest/transport
+owners are reused; no helper extraction, new store/retry/budget, or unrelated
+capability survives. The paired consumer and config claims follow the change.
+
+Astra high reviewed the whole initial paired revision and the whole final
+revision for the two named remaining classes, actually executing the final
+20-test lifecycle suite. Both confirmed findings are closed in source.
+Raw GLM reports, Astra receipt, actual batch method/result, and JUnit records
+are appended to this note as evidence, with GLM final adjudication separately
+recorded after receipt. Reviewer opinions are inputs, never operator verdicts.
+
+## Review closeout commits and canonical check
+
+Final handoff heads:shared5cafbba3c19a7d52901083dcd0b8b26635e178be and
+enviroplusa841586d510ad46c85bb92e8e8403e16f50b8c64. Only the existing review
+artifacts changed after the independently reviewed heads; git diff --exit-code
+verified all runtime/test/config files identical. No implementation defect
+class remains to justify another internal round for finding dispositions.
+The complete paired heads go to external PiClaude before push or landing.
+
+Canonical checks were repeated on these clean heads with the exact commands
+above, JUnit/log basenames changed from final to landing: shared136passed,
+enviroplus266passed, both exits0, Ruff check/format both exits0.
+Source-violation controls refer to the explicitly named preceding heads;
+unchanged runtime does not expand the observed property claims.
+
+GLM's bounded final review agrees both original defect classes closed. Its R1
+is CONFIRMED only as conditional shared-manifest-destination failure; closed
+without action because the specified manifest write must fail loud when its
+store is unavailable, and isolated source copying does not authorize a fallback
+store or guarantee impossible persistence. A config move only covers one
+constructed path fault, not disk/filesystem failure; no such fault was observed.
+Live staging/manifest are actual existing operator-owned directories, staging
+0700. No residual was silently accepted for the operator and no failure masked.
+This limitation and analysis are explicitly relayed with the whole artifact.
+09:33 EDT · Codex reviewer
+
+F1 and F2 are closed by the final implementation. No remaining behavior-changing
+defect found in the bounded corrective review of shared5f1230d and
+enviroplusd2d9198.
+
+F1 Dry-run failure propagation: CONFIRMED closed. Exit1; no staging.
+F2 Staging failure isolation: CONFIRMED closed. Raw backup still verified.
+
+At backup_enviro.py:295, failed dry-run outcomes now enter results, and the
+dry-run branch returns1. Valid dry-run sources continue before any write.
+At backup_enviro.py:224, staging preparation now runs inside the SQLite source's
+exception boundary. Executed the final lifecycle suite:20 passed, including
+real staging failure, real local rclone delivery of the healthy raw source,
+both manifest outcomes, and nonzero CLI exit. These observations close the
+previously executed failures; they do not establish cloud behavior.
+
+Reapplied axiom-check to the complete paired artifact. S denotes shared
+offsite_replication.py; E denotes enviroplus scripts/backup_enviro.py.
+1 Truth is absolute: CONFORMS, S:492-515; E:276-333.
+2 Cognition is adaptive: CONFORMS, S:440-462; E:207.
+3 Antifragility is doctrine: CONFORMS, S:353,482; E:214-272.
+4 KISS: CONFORMS, E:224-226,295-303.
+5 Boundaries are determinate: CONFORMS, S:509-515; E:298-333.
+6 Maintenance is directional: CONFORMS, paired code/config/tests.
+Preamble admission: CONFORMS, existing mechanisms reused.
+
+The determinate checks were: can a caught failure report success; can curated
+membership replace discovered facts; can append or source-specific staging
+failure suppress healthy work; does added machinery lack a reached need; do
+changed boundaries expose failure; and do both sides of the shared seam preserve
+their contracts? Source inspection and the executed corrective cases support
+the results above. The corrections relocate existing preparation and retain
+existing results; they add no transport, retry, store, or budget.
+
+Final canonical checks and their Git notes remain unverified by this reviewer:
+the enviroplus final commit had no note when checked. I did not independently
+rerun the author's unreadable-file batch experiment, and do not claim
+deployed-effect verification. No source edits or live backup were performed.
+
+Provenance: faithful formatting-normalized transcription of final spawned
+gpt-6-astra high review from /root/backup_unit_isolation_astra, received09:34EDT.
+Source anchors refer to the frozen final revisions above.
+# Independent review — paired backup-unit isolation (shared 1fc4b85 / enviroplus 241e787)
+
+Reviewed from the full files and diffs supplied, against the verbatim direction, both plan artifacts, both PROJECT-CONFIG authorities, the doctrine, and the axiom-check procedure. I had no execution seat: every behavior claim below is a static trace of the actual bytes; I have not treated the 136/265 counts as proof of anything (r, per direction).
+
+## What the delta actually does (verified from bytes)
+
+- `--local-no-check-updated` added only to the tree batch copy (`_copy_selected`), not to `replicate_file` — the staged snapshot is static, so the flag is correctly scoped (shared/offsite_replication.py, `_copy_selected`).
+- `replicate_tree` now contains classify, transfer and post-copy probe failures per file, proves every cleared file independently, computes `verified` from actual failures, and attaches the partial result to `ReplicationError` via the new `result` kwarg. It still raises on any failure — failure is not suppressed.
+- `backup_enviro.run()` keeps the existing per-source loop, bounds each attempt in try/except, writes the manifest after all attempts even on failure, and returns 1 if any source is unverified or carries an error.
+- All three plan-declared test properties are present and exercise real rclone (growing source; partially failed batch with a real landed sibling; first-source-fails/second-copies/manifest/nonzero). The three changed lifecycle tests are exactly the ones the aggregate exit contract required — no other test was bent (q check: none of the changed assertions was copied from implementation output; they pin outcomes).
+
+The prefix-AND-progress proof (`_prove_landed`), `classify`, and the empty-tree/`copy`-never-`sync` safeguards are byte-identical to base. No new retry, budget, transport framework, store, or schedule appears anywhere in either diff. The core direction is correctly implemented in content.
+
+## Findings
+
+### F1 — CONFIRMED (low severity, behavior-changing): dry run now exits 0 over a config it cannot execute
+
+**Anchors.** `scripts/backup_enviro.py`: the `else: raise BackupError(f"unknown source kind for {name!r}: {kind}")` now sits *inside* the per-source `try:`; the new `except Exception` contains it; the result is appended only under `if not dry_run:`; and `if dry_run: log.info("[dry-run] complete; nothing transferred"); return 0` follows the loop.
+
+**Mechanism / reachable input.** In the base, an unknown `kind` propagated out of `run()` to `main()`'s handler and exited 1 in *both* modes. Now, on a dry run the contained error is logged and discarded, and `run()` returns 0 with "[dry-run] complete". The reachable input is the config's own declared extension path — `backup.json` principles: "a new source is a new entry rather than an edit to code" — so a source added with a misspelled `kind` passes `--dry-run` green. On a real run it still fails loud with a manifest, so no false backup assurance results.
+
+**Contract violated.** The dry-run CLI boundary contract (nonzero on unexecutable config), and the enviroplus plan's own claim "Existing dry-run/retention/restore contracts … remain." Doctrine wording failed: A1 "deterministic boundary contracts are inviolable"; n — an error that reads as success at the boundary it crosses. No existing test pins this, which is how it moved silently.
+
+**Smallest proportional correction.** Hoist the dispatch validation above the per-source `try:` (`if kind not in ("sqlite_snapshot", "tree"): raise BackupError(...)`, delete the in-try `else` branch, ~3 lines). This restores the base run-level contract for config errors in both modes and leaves unit isolation untouched. If the author prefers to keep real-run containment of unknown kinds (defensible under the isolation direction), the minimal alternative is one line: re-raise `BackupError` in the handler when `dry_run` (unknown-kind is the only BackupError reachable on the dry-run path, since the snapshot/copy branches `continue` first).
+
+### F2 — CONFIRMED (minor, not behavior-changing): the change left its own changelog conventions stale
+
+**Anchors.** `config/backup.json` `_meta.changelog` ends at 2026-08-07 while the same edit changed the `_meta.principles` line; `scripts/backup_enviro.py` header CHANGELOG ends 2026-08-07; `shared/offsite_replication.py` header CHANGELOG ends 2026-08-07; both test-file CHANGELOGs end 2026-08-07. Every prior behavior fix in these files appended a dated entry; this one, comparable in significance, appended none. Presentation-only; the *current* descriptions in all five files remain accurate (the superseded "leave no manifest" comment in `main()` was correctly updated, so p is satisfied). Fold: one dated entry each, or accept.
+
+### F3 — CONFIRMED as absent from the artifact (unconfirmed whether run): no verification-mode axiom check is recorded
+
+**Anchors.** Both review docs contain only the construction-mode table, each closing with "Implementation verification must answer from the actual bytes." No post-implementation table exists anywhere in the artifact. The plan declares k fires, and the axiom-check skill mandates the verification-mode run on the implementation before it is sent, with its rows as adjudication inputs. The run may have happened unrecorded (l: I cannot establish it from content); its *absence from the record* is confirmed. Fold: commit the verification table to the branch, or accept the omission explicitly.
+
+### F4 — REPORTED AS RESIDUAL, not a defect in the authorized outcome
+
+**Anchor.** `_copy_selected` remains one batch `rclone copy`. A mid-batch per-file transport failure (e.g., one file unreadable at read time after classify cleared it) still aborts the remainder of that tree's batch; the unlanded files are then recorded as failures ("absent from the remote after the copy"), the run is nonzero, and the next run retries them. So within a tree, one file's *transport* failure can still cost its siblings that run's upload — the isolation the direction buys is between sources, and between proof and failure, not per-file transport. The observed 05:23 class (whole-batch abort from the growing file) is fixed at root by the flag; the remaining class is unobserved, and the plan explicitly excludes a per-file transport framework under the minimum-work direction. Naming it so the operator can accept it as residual (o); I do not make that decision.
+
+## Axiom check (reviewer mode, on the received bytes)
+
+| Axiom | Result | Location / construction |
+|---|---|---|
+| 1 Truth | **VIOLATES (narrow — F1)** | Dry-run boundary in `backup_enviro.py` returns 0/"complete" over an unexecutable source kind; base exited 1. Everything else conforms: manifest records only measured outcomes, `verified` is computed from actual failures, the shared raise carries the partial result, no suppression found in either diff. |
+| 2 Cognition | CONFORMS | Per-file `classify` from probed bytes (`offsite_replication.py`); per-source iteration over `cfg["sources"]`; no curated list or name-pattern decision introduced in either diff. |
+| 3 Antifragility | CONFORMS | `--local-no-check-updated` supports the observed ongoing append; source failure isolated in `run()`; growing-file behavior is the designed path, not an exception case. |
+| 4 KISS | CONFORMS | Delta is flag + containment + `result` kwarg + fallback result. Diff inspection confirms no retry, budget, framework, store, or schedule was added; tests limited to the three declared properties. |
+| 5 Boundaries | CONFORMS | `ReplicationError` seam preserved (still raises, now with `result`); failure surfaces through exception, per-file record, manifest, exit 1. F1 is a boundary defect and is recorded under A1/n. |
+| 6 Maintenance | CONFORMS | Paired repos changed together; consumer lifecycle tests changed only where the aggregate exit contract required (verified: exactly 3 tests); superseded comments removed in-change. F2 is a convention omission, not an axiom breach. |
+| Preamble | CONFORMS | Each added mechanism names the observed 05:23 failure (rc6 batch abort; suppressed manifest; unproven siblings); no mechanism without a reached need was found; costs are a few lines each. |
+
+Could not be established from content (l, no execution seat): the trace-config path proof and the recorded suite runs; the worktree-preload mechanism itself is sound — once `shared` is imported by the preloaded config, the later hardcoded `sys.path.insert(0, "/home/pistrommy/projects")` in both the script and the test cannot shadow it for the already-imported module.
+
+## Prior review
+
+The recorded PiClaude plan-review dispositions (helper extraction removed; extra source-order permutations removed) match the frozen heads — no helper module and no order-permutation tests exist in either diff, and the existing source loop was retained as dispositioned. The REFUTED demand to skip the spawned independent review is correctly refuted. F1–F4 were named by nobody prior.
+
+## Verdict
+
+I would **block landing only on F1's disposition** — it is a confirmed contract regression that contradicts the plan's own text, and its fix is ~3 lines; fold it, or have the operator explicitly accept the dry-run regression as residual. F2 and F3 should be folded or explicitly accepted before the verdict records them. F4 is named for the operator's residual call. The core mechanism — unit isolation, honest partial evidence, nonzero failure, growing-file root fix with prefix-and-progress preserved — I would not block; it is correctly implemented in the actual bytes.
+# Bounded corrective review — paired backup-unit isolation, final bytes
+
+**Object:** shared `5f1230dd` (base `60a8702`), enviroplus `d2d9198e` (base `ee81559`) — the whole final files and deltas as supplied, judged against Bryan's 08:53/08:55 EDT direction, both plan artifacts, both PROJECT-CONFIG authorities, the loaded doctrine, and the axiom-check procedure. Prior GLM report used only for provenance/disagreement. I had no execution seat: every claim below is a static trace of the supplied bytes, except where I say an attached executed result is the evidence. The violation-control and suite records retained in Git notes were not supplied to me and are not treated as evidence (l, r); the verdict on the two named classes does not rest on them.
+
+**Internal-consistency check on the attached executed evidence:** the one-use batch-isolation result JSON (`backup-batch-isolation-check.json`) carries `transport_error` beginning `rclone copy source failed rc=1:` — verbatim the format of `_run`'s raise in `offsite_replication.py` with label `rclone copy source` — and the failed-file entry `absent from the remote after the copy`, verbatim `_prove_landed`'s first failure branch. The result is consistent with having been produced by this exact code; I accept it as executed evidence for the F4 disposition only.
+
+---
+
+## The two named remaining classes
+
+### Class 1 — dry-run must reject unknown source kind without writes: **CONFIRMED CORRECTED (class closed)**
+
+**Anchors.** `scripts/backup_enviro.py`, `run()`: the `else: raise BackupError(f"unknown source kind for {name!r}: {kind}")` sits inside the per-source `try:`; the `except Exception` handler constructs a `verified=False` `ReplicationResult`, records `detail["error"]`, and appends it; after the loop, `if dry_run: if results: log.error(...); return 1` returns nonzero. `result.detail["source_name"] = name; results.append(result)` executes on the failure path only.
+
+**Reachable input / mechanism.** A source added with a misspelled `kind` — the config's own declared extension path (`config/backup.json` principles: "a new source is a new entry") — on `--dry-run`: no branch writes (the `sqlite_snapshot` and `tree` dry-run branches `continue` before staging mkdir, snapshot, or any rclone call; the unknown-kind path constructs an in-memory result and logs); `write_manifest` is unreachable on the dry-run path; exit is 1 with the error logged. A real run with unknown kind records the source, continues to other sources, writes the manifest, and exits 1 via the `failed = [r for r in results if not r.verified or r.detail.get("error")]` block.
+
+**Gate.** `test_invalid_source_kind_dry_run_fails_without_writes` pins exit 1, staging absent, source bytes unchanged. The fix is a third mechanism, not GLM's proposed hoist or dry-run re-raise — it satisfies the same contract and additionally records failed dry-run sources uniformly. Cost: the four-line dry-run failure block; nothing further owed.
+
+### Class 2 — staging preparation inside the database attempt so raw replication continues: **CONFIRMED CORRECTED (class closed)**
+
+**Anchors.** `run()`: the old global `if not dry_run: staging.mkdir(...); os.chmod(...)` is gone (enviro-final.diff, removed lines at the top of `run()`); `staging.mkdir(parents=True, exist_ok=True)` and both `os.chmod` calls now sit inside the `if kind == "sqlite_snapshot":` branch, after the dry-run `continue`, inside the per-source `try:`. The `tree` branch never touches staging.
+
+**Reachable input / mechanism.** `staging_dir` uncreatable or un-chmod-able (the gate uses `blocked` as a regular file with the staging path under it): `NotADirectoryError`/`FileExistsError`/`OSError` is caught by the per-source handler, the database source is recorded `verified=False` with the path in the error, and the loop proceeds to `raw_capture`, which replicates through `replicate_tree` with no staging dependency. Manifest is written after attempts; exit 1. This is exactly the direction's "the failure of any single unit should not affect the backup of the others."
+
+**Gate.** `test_cli_records_both_sources_despite_first_source_failure` exercises it with real SQLite and a real rclone alias remote: database `verified=False` with the blocking path in its error, `raw_capture` `verified=True` with the raw bytes proven landed, one manifest recording both, exit 1. (I checked the fixture's coherence: `manifest_dir` is not redirected, so the manifest write succeeds despite the blocked staging path.)
+
+---
+
+## Finding raised in this pass
+
+**R1 — manifest directory nests inside the staging root: a total staging-resource failure loses the record of an otherwise-verified raw replication. CONFIRMED as reachable behavior; named for operator adjudication (o); not a defect in the authorized outcome, no correction proposed in this pass.**
+
+- **Location.** `config/backup.json`: `manifest.manifest_dir = ".../.backup-staging/manifests"` inside `local_staging.staging_dir = ".../.backup-staging"`; `write_manifest` in `offsite_replication.py` (`path.parent.mkdir(parents=True, exist_ok=True)`); `run()`'s manifest write sits outside the per-source handlers; `main()` catches only `(BackupError, ReplicationError)`.
+- **Mechanism / reachable input.** If the staging root itself cannot exist (exists as a file, permission break, unwritable filesystem): the database attempt fails and is contained (class 2 working as designed), raw replication succeeds and is independently proven — then `write_manifest` raises `OSError`, which escapes `run()` uncaught and exits nonzero via traceback. The verified raw bytes are on the remote; the run's manifest record is not written; the failure is loud (nonzero, traceback), never silent.
+- **Cost / smallest proportional correction.** Likelihood is low (staging root is a stable local path); consequence is a missing record for one run, with the alert still firing and the next successful run recording normally. Nothing in the direction or plan requires a further mechanism, and adding one here would exceed "minimum work" (A/Preamble). If the operator ever wants it closed, the smallest correction is config-only: move `manifest_dir` outside the staging root. I leave the weighing to the operator; I would not block on it.
+
+---
+
+## Prior review — concurrence and disputes
+
+- **F1 (GLM/Astra, dry-run regression):** confirmed real at the initial heads; closed in the final bytes as above. I concur with the disposition.
+- **F2 (changelog headers not extended):** concur with closed-without-action. Neither PROJECT-CONFIG requires dated header entries; Axiom 6/p exempts the append-only historical record, and every *live* surface carrying the old contract was updated in-change (the "leave no manifest" principle replaced in `config/backup.json`, the `main()` comment, the `write_manifest` docstring).
+- **F3 (missing verification-mode record):** concur it is closed. Both review docs now carry verification-mode axiom-check tables, and I verified their content answers against the final bytes — enviroplus Q5 ("invalid-dry-run returns1 without writes") and Q3 ("`run` puts staging preparation inside the database try") match the actual code. The record's honesty about the premature initial dispatch is itself correct.
+- **F4 (per-file batch-abort claim):** concur with REFUTED, on the attached executed result rather than by count. One chmod-000 file plus 16 healthy files — more than rclone's four native transfer slots, so siblings were scheduled, not merely already in flight — produced nonzero permission-denied transport, all 16 healthy files landed and proved, and exactly one failed file named in the result. GLM's static extrapolation was reasonable from a no-execution seat; actual execution settles it. The refutation is properly scoped: it covers a per-file source-read failure on this host's rclone and local backend; the artifacts correctly disclaim Google Drive and total-network-failure behavior, and no per-file transport framework is warranted by anything shown.
+- **Nobody previously named** R1 (manifest/staging coupling). No other disagreement with the prior report; nothing GLM named remains undispositioned.
+
+---
+
+## Axiom check (reviewer mode, on the received final bytes)
+
+| Axiom | Result | Content anchor / construction |
+|---|---|---|
+| 1 Truth | CONFORMS | `replicate_tree` computes `verified = not (failures or transfer_error or probe_error)` from recorded facts and raises `ReplicationError(..., result=result)` with partial evidence retained (`offsite_replication.py`, tail of `replicate_tree`); `run()` writes the manifest after attempts and exits 1 on any `not r.verified or r.detail.get("error")`; unknown-kind dry-run returns 1 with the error recorded, no writes. No path found where failure reads as success. |
+| 2 Cognition | CONFORMS | Selection derives from `local_dir.rglob("*")` actual files and probed remote bytes (`replicate_tree`, `classify`); sources iterate `cfg["sources"]` (`run()`); the kind dispatch is a deterministic two-verb boundary contract, not a curated registry standing as fact; no hand-maintained enumeration introduced in either delta. |
+| 3 Antifragility | CONFORMS | `--local-no-check-updated` on the batch copy makes ongoing append the designed path (`_copy_selected`); each source attempt is isolated in its own `try:` (`run()`); the growing file is exercised as nominal behavior, not an exception case (`test_growing_partition_is_copied_and_proven`). |
+| 4 KISS | CONFORMS | The delta is: the flag, per-source containment, the `result` kwarg, the fallback result, the dry-run failure block, and the two gates — each naming the observed 05:23 failure or a confirmed review defect. No retry, budget, store, schedule, or per-file transport framework appears in either final file or diff. |
+| 5 Boundaries | CONFORMS | `ReplicationError` seam preserved (still raised, now carrying the partial result); classify/transfer/probe/proof failures all reach a nonverified result, raised error, manifest entry, and nonzero exit; staging failure crosses only its own source's boundary; dry-run crosses no boundary at all. |
+| 6 Maintenance | CONFORMS | Both repositories changed together; every superseded live text was removed in-change (config principle line, `main()` comment, `write_manifest` docstring); only the one actual runtime consumer was updated; no consumer policy moved into shared. |
+| Preamble | CONFORMS | Each added mechanism names the observed failure it prevents (05:23 growing-file abort, suppressed manifest, confirmed dry-run/staging defects); none lacks a reached need; each costs a few lines. R1 names no new mechanism and proposes none. |
+
+**Execution caveat (l):** these rows are static traces of the supplied bytes. The suite passes, violation-control runs, and revision-qualified Git-note checks are author claims I could not execute and was not given; I do not treat the 136/265 or 20-test counts as evidence. The two named classes are established by content plus gates whose assertions I verified line-by-line against the final code, and the attached one-use check is internally consistent with that code.
+
+---
+
+## Verdict
+
+The two remaining named classes are closed in the actual final bytes — the dry-run unknown-kind rejection and the staging-inside-the-database-attempt containment are both present, gated by tests that pin them, and consistent with the direction's minimum-work boundary. F4's refutation stands on attached executed evidence. **I would not block.** R1 is named for the operator's residual call; no deployed or cloud effect is claimed or certified by this review.
+"""One-use real-rclone check of the review claim that a file error aborts siblings."""
+import json
+import os
+import tempfile
+from pathlib import Path
+from shared import offsite_replication as rep
+
+# One attempt avoids waiting for retries of a deliberately permanent read error;
+# concurrency remains the real service default. No host/daemon env is changed.
+os.environ['RCLONE_RETRIES']='1'
+os.environ['RCLONE_LOW_LEVEL_RETRIES']='1'
+with tempfile.TemporaryDirectory(prefix='backup-batch-isolation-') as directory:
+    root=Path(directory)
+    source=root/'source'
+    source.mkdir()
+    bad=source/'a_unreadable.ndjson'
+    bad.write_bytes(b'cannot read')
+    # More than the native default four transfers: siblings must be scheduled,
+    # not just already in flight when the first file fails.
+    expected={f'z_good_{i:02}.ndjson':f'observation {i}\n'.encode() for i in range(16)}
+    for name,body in expected.items():
+        (source/name).write_bytes(body)
+    bad.chmod(0)
+    try:
+        try:
+            rep.replicate_tree(source,str(root/'remote'),config_path='/dev/null')
+        except rep.ReplicationError as exc:
+            result=exc.result
+            assert result is not None and not result.verified
+            assert len(result.detail['files'])==len(expected)
+            assert [f['path'] for f in result.detail['failures']]==[bad.name]
+            assert all((root/'remote'/name).read_bytes()==body for name,body in expected.items())
+            assert 'permission denied' in result.detail['transfer_error'].lower()
+            print(json.dumps(dict(claim='per-file copy error aborts remaining batch',status='REFUTED',healthy_files_proven=len(expected),failed_files=result.detail['failures'],transport_error=result.detail['transfer_error'])))
+        else:
+            raise AssertionError('unreadable file did not fail; fixture invalid')
+    finally:
+        bad.chmod(0o600)
+{"claim": "per-file copy error aborts remaining batch", "status": "REFUTED", "healthy_files_proven": 16, "failed_files": [{"path": "a_unreadable.ndjson", "error": "a_unreadable.ndjson: absent from the remote after the copy"}], "transport_error": "rclone copy source failed rc=1: 2026/10/21 09:36:59 ERROR : a_unreadable.ndjson: Failed to copy: failed to open source object: open /tmp/backup-batch-isolation-y5b9xfhu/source/a_unreadable.ndjson: permission denied\n2026/10/21 09:36:59 ERROR : Attempt 1/1 failed with 1 errors and: failed to open source object: open /tmp/backup-batch-isolation-y5b9xfhu/source/a_unreadable.ndjson: permission denied\n2026/10/21 09:36:59 Failed to cop"}
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="136" time="11.485" timestamp="2026-10-21T09:39:46.036890-04:00" hostname="BSPiLHX"><testcase classname="tests.test_config_service.TestRequire" name="test_returns_value_when_set" time="0.001" /><testcase classname="tests.test_config_service.TestRequire" name="test_raises_on_missing_key" time="0.001" /><testcase classname="tests.test_config_service.TestRequire" name="test_returns_empty_string_when_set_empty" time="0.000" /><testcase classname="tests.test_config_service.TestGet" name="test_returns_value_when_set" time="0.000" /><testcase classname="tests.test_config_service.TestGet" name="test_returns_default_when_missing" time="0.000" /><testcase classname="tests.test_config_service.TestGet" name="test_returns_none_when_missing_no_default" time="0.000" /><testcase classname="tests.test_config_service.TestLoadEnv" name="test_loads_env_file" time="0.001" /><testcase classname="tests.test_config_service.TestLoadEnv" name="test_raises_on_missing_file" time="0.000" /><testcase classname="tests.test_config_service.TestLoadEnv" name="test_raises_on_failed_expect_key" time="0.001" /><testcase classname="tests.test_db_service.TestConnect" name="test_sets_wal_mode" time="0.001" /><testcase classname="tests.test_db_service.TestWriteRow" name="test_successful_write" time="0.001" /><testcase classname="tests.test_db_service.TestWriteRow" name="test_integrity_error_returns_false" time="0.002" /><testcase classname="tests.test_db_service.TestWriteRow" name="test_or_ignore_suppresses_duplicate" time="0.002" /><testcase classname="tests.test_db_service.TestWriteRow" name="test_schema_error_is_logged_and_raised" time="0.002" /><testcase classname="tests.test_db_service" name="test_upsert_inserts_then_overwrites_on_the_key" time="0.001" /><testcase classname="tests.test_db_service" name="test_upsert_leaves_other_keys_alone" time="0.001" /><testcase classname="tests.test_db_service" name="test_upsert_and_or_ignore_are_mutually_exclusive" time="0.001" /><testcase classname="tests.test_db_service" name="test_upsert_key_must_be_in_the_row" time="0.001" /><testcase classname="tests.test_db_service" name="test_upsert_targets_the_declared_key_not_any_constraint" time="0.001" /><testcase classname="tests.test_db_service" name="test_upsert_with_a_key_only_row_reports_already_present" time="0.001" /><testcase classname="tests.test_env_completeness.TestEnviroplusEnv" name="test_mqtt_credentials" time="0.003" /><testcase classname="tests.test_env_completeness.TestEnviroplusEnv" name="test_hardware_config" time="0.003" /><testcase classname="tests.test_env_completeness.TestEnviroplusEnv" name="test_ambient_weather" time="0.003" /><testcase classname="tests.test_env_completeness.TestEnviroplusEnv" name="test_nws_config" time="0.004" /><testcase classname="tests.test_env_completeness.TestEnviroplusEnv" name="test_airnow_config" time="0.004" /><testcase classname="tests.test_logging_service.TestJSONFormatter" name="test_output_is_valid_json" time="0.000" /><testcase classname="tests.test_logging_service.TestJSONFormatter" name="test_includes_exception_info" time="0.001" /><testcase classname="tests.test_logging_service.TestSetupLogger" name="test_creates_named_logger" time="0.000" /><testcase classname="tests.test_logging_service.TestSetupLogger" name="test_writes_json_to_file" time="0.001" /><testcase classname="tests.test_logging_service.TestSetupLogger" name="test_no_duplicate_handlers" time="0.000" /><testcase classname="tests.test_memory_controller_gate" name="test_ready_envelope_covers_every_configured_node" time="0.003" /><testcase classname="tests.test_memory_controller_gate" name="test_seeded_missing_controller_exposure_blocks" time="0.001" /><testcase classname="tests.test_memory_controller_gate" name="test_seeded_missing_controller_delegation_blocks" time="0.001" /><testcase classname="tests.test_memory_controller_gate" name="test_seeded_missing_required_node_blocks" time="0.001" /><testcase classname="tests.test_memory_controller_gate" name="test_seeded_missing_correlation_blocks" time="0.001" /><testcase classname="tests.test_memory_controller_gate" name="test_unsafe_or_duplicate_required_nodes_are_rejected[required_nodes0]" time="0.001" /><testcase classname="tests.test_memory_controller_gate" name="test_unsafe_or_duplicate_required_nodes_are_rejected[required_nodes1]" time="0.001" /><testcase classname="tests.test_memory_controller_gate" name="test_unsafe_or_duplicate_required_nodes_are_rejected[required_nodes2]" time="0.001" /><testcase classname="tests.test_memory_controller_gate" name="test_unexpected_config_key_is_rejected" time="0.001" /><testcase classname="tests.test_memory_controller_gate" name="test_required_node_symlink_cannot_escape_configured_root" time="0.001" /><testcase classname="tests.test_memory_controller_gate" name="test_boolean_schema_version_is_rejected" time="0.001" /><testcase classname="tests.test_offsite_replication" name="test_growing_partition_is_copied_and_proven" time="2.711" /><testcase classname="tests.test_offsite_replication" name="test_copy_error_preserves_proven_siblings_and_failed_files" time="0.283" /><testcase classname="tests.test_offsite_replication" name="test_removing_a_local_file_does_not_delete_the_remote_copy" time="0.499" /><testcase classname="tests.test_offsite_replication" name="test_emptying_the_local_tree_fails_loud_and_does_not_empty_the_remote" time="0.249" /><testcase classname="tests.test_offsite_replication" name="test_modified_source_file_is_refused_not_propagated" time="0.524" /><testcase classname="tests.test_offsite_replication" name="test_new_files_are_transferred" time="0.482" /><testcase classname="tests.test_offsite_replication" name="test_file_replication_verifies_by_remote_hash" time="0.159" /><testcase classname="tests.test_offsite_replication" name="test_hash_mismatch_is_fatal" time="0.081" /><testcase classname="tests.test_offsite_replication" name="test_unparseable_hash_output_is_rejected[]" time="0.001" /><testcase classname="tests.test_offsite_replication" name="test_unparseable_hash_output_is_rejected[garbage]" time="0.000" /><testcase classname="tests.test_offsite_replication" name="test_unparseable_hash_output_is_rejected[xyz notahash]" time="0.000" /><testcase classname="tests.test_offsite_replication" name="test_unparseable_hash_output_is_rejected[abc123 short]" time="0.000" /><testcase classname="tests.test_offsite_replication" name="test_missing_source_fails_loud" time="0.002" /><testcase classname="tests.test_offsite_replication" name="test_gate1_truncated_file_fails_and_does_not_reach_the_remote" time="0.401" /><testcase classname="tests.test_offsite_replication" name="test_gate2_same_size_mutation_fails_and_does_not_reach_the_remote" time="0.407" /><testcase classname="tests.test_offsite_replication" name="test_gate3_shorter_remote_with_differing_prefix_fails" time="0.399" /><testcase classname="tests.test_offsite_replication" name="test_gate4_growth_replicates_and_does_not_fail" time="0.474" /><testcase classname="tests.test_offsite_replication" name="test_gate5_growth_during_the_run_replicates_and_does_not_fail" time="0.236" /><testcase classname="tests.test_offsite_replication" name="test_gate6_a_transfer_that_moves_nothing_fails" time="0.408" /><testcase classname="tests.test_offsite_replication" name="test_gate7_absent_remote_object_replicates_and_does_not_fail" time="0.241" /><testcase classname="tests.test_offsite_replication" name="test_gate8_reconciled_unchanged_file_still_verifies" time="0.478" /><testcase classname="tests.test_offsite_replication" name="test_gate9_file_appended_after_reconciliation_then_closed_replicates_in_full" time="0.483" /><testcase classname="tests.test_offsite_replication" name="test_gate10_remote_object_without_a_usable_hash_fails" time="0.001" /><testcase classname="tests.test_offsite_replication" name="test_gate10_the_probe_nulls_a_malformed_digest[]" time="0.001" /><testcase classname="tests.test_offsite_replication" name="test_gate10_the_probe_nulls_a_malformed_digest[notahex]" time="0.001" /><testcase classname="tests.test_offsite_replication" name="test_gate10_the_probe_nulls_a_malformed_digest[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]" time="0.001" /><testcase classname="tests.test_offsite_replication" name="test_gate10_the_probe_nulls_a_malformed_digest[zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz]" time="0.001" /><testcase classname="tests.test_offsite_replication" name="test_an_unsized_remote_object_is_red_not_a_crash" time="0.001" /><testcase classname="tests.test_offsite_replication" name="test_names_the_selection_format_would_swallow_still_replicate[#hash.ndjson]" time="0.240" /><testcase classname="tests.test_offsite_replication" name="test_names_the_selection_format_would_swallow_still_replicate[;semi.ndjson]" time="0.242" /><testcase classname="tests.test_offsite_replication" name="test_names_the_selection_format_would_swallow_still_replicate[ space.ndjson]" time="0.240" /><testcase classname="tests.test_offsite_replication" name="test_a_name_containing_a_line_break_is_refused_before_any_transfer" time="0.160" /><testcase classname="tests.test_offsite_replication" name="test_an_unnameable_file_is_withheld_while_healthy_files_still_transfer[a\nb.ndjson]" time="0.239" /><testcase classname="tests.test_offsite_replication" name="test_an_unnameable_file_is_withheld_while_healthy_files_still_transfer[a\rb.ndjson]" time="0.239" /><testcase classname="tests.test_offsite_replication" name="test_a_name_that_is_not_valid_utf8_is_refused_before_any_transfer" time="0.162" /><testcase classname="tests.test_offsite_replication" name="test_a_name_containing_a_carriage_return_is_refused" time="0.165" /><testcase classname="tests.test_offsite_replication" name="test_an_empty_source_tree_is_not_certified" time="0.001" /><testcase classname="tests.test_offsite_replication" name="test_gate11_local_file_deleted_mid_run_fails" time="0.245" /><testcase classname="tests.test_offsite_replication" name="test_gate12_a_red_file_is_withheld_while_cleared_files_still_transfer" time="0.481" /><testcase classname="tests.test_offsite_replication" name="test_gate13_a_run_writes_nothing_under_the_source_tree" time="0.240" /><testcase classname="tests.test_offsite_replication" name="test_prefix_md5_matches_a_full_hash_at_full_length" time="0.001" /><testcase classname="tests.test_offsite_replication" name="test_prefix_md5_is_stable_while_the_tail_grows" time="0.001" /><testcase classname="tests.test_offsite_replication" name="test_prefix_md5_of_zero_bytes_is_the_empty_digest" time="0.001" /><testcase classname="tests.test_offsite_replication" name="test_prefix_md5_fails_loud_when_the_file_is_shorter_than_claimed" time="0.001" /><testcase classname="tests.test_offsite_replication" name="test_probe_of_a_remote_directory_that_does_not_exist_is_empty_not_an_error" time="0.082" /><testcase classname="tests.test_signal_handler.TestInstallShutdownHandler" name="test_returns_callable" time="0.000" /><testcase classname="tests.test_signal_handler.TestInstallShutdownHandler" name="test_initially_false" time="0.000" /><testcase classname="tests.test_signal_handler.TestInstallShutdownHandler" name="test_set_on_signal" time="0.000" /><testcase classname="tests.test_systemd_memory_contract" name="test_seeded_omitted_memory_swap_max_is_rejected" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_explicit_finite_swap_limit_clears_hard_limit_contract" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_seeded_slice_hard_limit_without_swap_limit_is_rejected" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_seeded_scope_hard_limit_without_swap_limit_is_rejected" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_paired_scope_hard_and_swap_limits_clear_contract" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_seeded_divergent_lock_paths_are_rejected" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_identical_absolute_lock_path_clears_shared_contract" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_payload_lock_option_cannot_masquerade_as_wrapper_identity[--lock-path /payload/private]" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_payload_lock_option_cannot_masquerade_as_wrapper_identity[--lock-path=/payload/private]" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_dynamic_execstart_lock_identity_is_rejected[$LOCK_PATH]" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_dynamic_execstart_lock_identity_is_rejected[%i]" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_dynamic_execstart_lock_identity_is_rejected[\\x2d]" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_lock_only_peer_still_receives_hard_swap_validation" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_invalid_physical_continuation_fails_loud" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_repeated_memory_directive_fails_loud" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_lock_contract_failure_paths_are_seeded[None-EXEC_START_MISSING]" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_lock_contract_failure_paths_are_seeded[ExecStart=/usr/bin/wrapper --lock-path &quot;unterminated -- /bin/true-EXEC_START_INVALID]" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_lock_contract_failure_paths_are_seeded[ExecStart=/usr/bin/wrapper --lock-path /run/lock/stocks-batch-PAYLOAD_BOUNDARY_MISSING]" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_lock_contract_failure_paths_are_seeded[ExecStart=/usr/bin/wrapper --lock-path -- /bin/true-LOCK_PATH_VALUE_MISSING]" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_lock_contract_failure_paths_are_seeded[ExecStart=/usr/bin/wrapper -- /bin/true-LOCK_PATH_CARDINALITY_INVALID]" time="0.002" /><testcase classname="tests.test_systemd_memory_contract" name="test_lock_contract_failure_paths_are_seeded[ExecStart=/usr/bin/wrapper --lock-path /run/lock/a --lock-path /run/lock/b -- /bin/true-LOCK_PATH_CARDINALITY_INVALID]" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_lock_contract_failure_paths_are_seeded[ExecStart=/usr/bin/wrapper --lock-path relative/lock -- /bin/true-LOCK_PATH_NOT_ABSOLUTE]" time="0.002" /><testcase classname="tests.test_systemd_memory_contract" name="test_single_lock_peer_is_rejected" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_duplicate_physical_lock_peer_is_rejected" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_lock_peers_require_authoritative_wrapper_identity" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_non_wrapper_cannot_spoof_lock_identity" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_authoritative_wrapper_identity_must_be_absolute" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_lock_peers_require_authoritative_lock_path" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_authoritative_lock_path_must_be_absolute" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_peer_agreement_cannot_replace_authoritative_lock_path" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_public_lock_api_also_validates_hard_swap_pairing" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_lock_identity_without_peer_set_is_rejected[lock_executable0-None]" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_lock_identity_without_peer_set_is_rejected[None-lock_path1]" time="0.002" /><testcase classname="tests.test_systemd_memory_contract" name="test_lock_identity_without_peer_set_is_rejected[lock_executable2-lock_path2]" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_aggregate_entrypoint_rejects_unpaired_plain_unit" time="0.001" /><testcase classname="tests.test_systemd_memory_contract" name="test_cli_returns_nonzero_for_contract_violation" time="0.002" /><testcase classname="tests.test_systemd_memory_contract" name="test_cli_returns_zero_for_clean_contract" time="0.001" /><testcase classname="tests.test_utils.TestF" name="test_float_value" time="0.000" /><testcase classname="tests.test_utils.TestF" name="test_int_value" time="0.000" /><testcase classname="tests.test_utils.TestF" name="test_none_returns_none" time="0.000" /><testcase classname="tests.test_utils.TestF" name="test_nan_returns_none" time="0.000" /><testcase classname="tests.test_utils.TestF" name="test_math_nan_returns_none" time="0.000" /><testcase classname="tests.test_utils.TestF" name="test_string_number" time="0.000" /><testcase classname="tests.test_utils.TestF" name="test_non_numeric_string_returns_none" time="0.000" /><testcase classname="tests.test_utils.TestF" name="test_rounds_to_6_decimals" time="0.000" /><testcase classname="tests.test_utils.TestUtcNow" name="test_format" time="0.000" /><testcase classname="tests.test_utils.TestUtcNow" name="test_is_utc" time="0.005" /></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="266" time="2.879" timestamp="2026-10-21T09:39:47.206087-04:00" hostname="BSPiLHX"><testcase classname="tests.test_backup_lifecycle" name="test_verified_upload_leaves_no_staged_snapshot" time="0.005" /><testcase classname="tests.test_backup_lifecycle" name="test_success_also_clears_a_snapshot_left_by_an_earlier_failure" time="0.003" /><testcase classname="tests.test_backup_lifecycle" name="test_failed_upload_keeps_its_snapshot" time="0.083" /><testcase classname="tests.test_backup_lifecycle" name="test_repeated_failures_do_not_accumulate_snapshots" time="0.084" /><testcase classname="tests.test_backup_lifecycle" name="test_dry_run_creates_no_snapshot" time="0.002" /><testcase classname="tests.test_backup_lifecycle" name="test_dry_run_does_not_create_the_staging_directory" time="0.002" /><testcase classname="tests.test_backup_lifecycle" name="test_a_non_integer_failed_run_retention_fails_at_load[2]" time="0.002" /><testcase classname="tests.test_backup_lifecycle" name="test_a_non_integer_failed_run_retention_fails_at_load[2.5]" time="0.002" /><testcase classname="tests.test_backup_lifecycle" name="test_a_non_integer_failed_run_retention_fails_at_load[-1]" time="0.002" /><testcase classname="tests.test_backup_lifecycle" name="test_a_non_integer_failed_run_retention_fails_at_load[True]" time="0.002" /><testcase classname="tests.test_backup_lifecycle" name="test_a_non_integer_failed_run_retention_fails_at_load[None]" time="0.002" /><testcase classname="tests.test_backup_lifecycle" name="test_a_config_without_failed_run_retention_fails_at_load" time="0.002" /><testcase classname="tests.test_backup_lifecycle" name="test_dry_run_writes_no_manifest" time="0.002" /><testcase classname="tests.test_backup_lifecycle" name="test_dry_run_leaves_the_source_tree_untouched" time="0.002" /><testcase classname="tests.test_backup_lifecycle" name="test_retention_larger_than_the_backlog_deletes_nothing" time="0.086" /><testcase classname="tests.test_backup_lifecycle" name="test_success_does_not_remove_a_concurrent_runs_newer_snapshot" time="0.003" /><testcase classname="tests.test_backup_lifecycle" name="test_success_does_not_remove_a_different_sources_snapshots" time="0.003" /><testcase classname="tests.test_backup_lifecycle" name="test_a_verified_run_leaves_the_source_tree_untouched" time="0.003" /><testcase classname="tests.test_backup_lifecycle" name="test_cli_records_both_sources_despite_first_source_failure" time="0.248" /><testcase classname="tests.test_backup_lifecycle" name="test_invalid_source_kind_dry_run_fails_without_writes" time="0.003" /><testcase classname="tests.test_collector_wiring" name="test_importing_a_collector_does_not_run_it" time="0.001" /><testcase classname="tests.test_collector_wiring" name="test_ambient_classifies_a_full_response" time="0.001" /><testcase classname="tests.test_collector_wiring" name="test_ambient_classifies_an_empty_response" time="0.001" /><testcase classname="tests.test_collector_wiring" name="test_ambient_classifies_a_malformed_response" time="0.001" /><testcase classname="tests.test_collector_wiring" name="test_airnow_classifies_each_shape" time="0.001" /><testcase classname="tests.test_collector_wiring" name="test_failure_maps_to_the_subsystem_that_broke[exc0-OUTCOME_WRITE_ERROR]" time="0.001" /><testcase classname="tests.test_collector_wiring" name="test_failure_maps_to_the_subsystem_that_broke[exc1-OUTCOME_WRITE_ERROR]" time="0.001" /><testcase classname="tests.test_collector_wiring" name="test_failure_maps_to_the_subsystem_that_broke[exc2-OUTCOME_FETCH_ERROR]" time="0.001" /><testcase classname="tests.test_collector_wiring" name="test_failure_maps_to_the_subsystem_that_broke[exc3-OUTCOME_FETCH_ERROR]" time="0.001" /><testcase classname="tests.test_collector_wiring" name="test_failure_maps_to_the_subsystem_that_broke[exc4-OUTCOME_FETCH_ERROR]" time="0.001" /><testcase classname="tests.test_collector_wiring" name="test_outdoor_dropout_is_detected" time="0.001" /><testcase classname="tests.test_collector_wiring" name="test_dropout_predicate_uses_measurements_not_field_count" time="0.001" /><testcase classname="tests.test_collectors" name="test_ambient_row_mapping_hand_values" time="0.001" /><testcase classname="tests.test_collectors" name="test_ambient_classification_never_raises[{&quot;error&quot;: &quot;apiKey invalid&quot;}-malformed]" time="0.001" /><testcase classname="tests.test_collectors" name="test_ambient_classification_never_raises[&lt;html&gt;502&lt;/html&gt;-malformed]" time="0.001" /><testcase classname="tests.test_collectors" name="test_ambient_classification_never_raises[[]-empty]" time="0.001" /><testcase classname="tests.test_collectors" name="test_ambient_classification_never_raises[[{&quot;macAddress&quot;: &quot;11:22:33:44:55:66&quot;, &quot;lastData&quot;: {&quot;dateutc&quot;: 1, &quot;tempf&quot;: 1.0}}]-empty]" time="0.001" /><testcase classname="tests.test_collectors" name="test_ambient_classification_never_raises[[{&quot;macAddress&quot;: &quot;AA:BB:CC:DD:EE:FF&quot;, &quot;lastData&quot;: {&quot;tempinf&quot;: 70.0}}]-empty]" time="0.001" /><testcase classname="tests.test_collectors" name="test_ambient_classification_never_raises[[{&quot;macAddress&quot;: &quot;AA:BB:CC:DD:EE:FF&quot;, &quot;lastData&quot;: {&quot;dateutc&quot;: 1, &quot;tempinf&quot;: 70.0}}]-partial]" time="0.001" /><testcase classname="tests.test_collectors" name="test_ambient_classification_never_raises[[{&quot;macAddress&quot;: &quot;AA:BB:CC:DD:EE:FF&quot;, &quot;lastData&quot;: {&quot;dateutc&quot;: 1, &quot;tempf&quot;: 60.0}}]-ok]" time="0.001" /><testcase classname="tests.test_collectors" name="test_ambient_selects_the_configured_station_not_the_first" time="0.001" /><testcase classname="tests.test_collectors" name="test_ambient_partial_response_is_one_retained_record" time="0.002" /><testcase classname="tests.test_collectors" name="test_ambient_replay_rebuilds_rows_from_retention" time="0.003" /><testcase classname="tests.test_collectors" name="test_nws_unit_conversions_hand_values" time="0.001" /><testcase classname="tests.test_collectors" name="test_nws_classification_never_raises[&lt;html&gt;503&lt;/html&gt;-malformed]" time="0.001" /><testcase classname="tests.test_collectors" name="test_nws_classification_never_raises[[{&quot;features&quot;: []}]-malformed]" time="0.001" /><testcase classname="tests.test_collectors" name="test_nws_classification_never_raises[{&quot;status&quot;: 503}-malformed]" time="0.001" /><testcase classname="tests.test_collectors" name="test_nws_classification_never_raises[{&quot;features&quot;: [{&quot;properties&quot;: {}}]}-malformed]" time="0.001" /><testcase classname="tests.test_collectors" name="test_nws_classification_never_raises[{&quot;features&quot;: []}-empty]" time="0.001" /><testcase classname="tests.test_collectors" name="test_nws_classification_selects_newest" time="0.001" /><testcase classname="tests.test_collectors" name="test_nws_replay_writes_fresh_newest_observation" time="0.003" /><testcase classname="tests.test_collectors" name="test_ambient_response_the_canonical_tier_could_not_store_is_not_returned" time="0.001" /><testcase classname="tests.test_collectors" name="test_nws_response_the_canonical_tier_could_not_store_ends_the_cycle" time="0.002" /><testcase classname="tests.test_dash_loop" name="test_failed_pm_read_is_stored_as_null_not_the_last_good_value" time="0.045" /><testcase classname="tests.test_dash_loop" name="test_sensor_error_ends_the_process" time="0.030" /><testcase classname="tests.test_dash_loop" name="test_tier1_keeps_every_read_as_the_driver_returned_it" time="0.041" /><testcase classname="tests.test_dash_loop" name="test_readings_are_derived_and_replay_reproduces_them" time="0.048" /><testcase classname="tests.test_dash_loop" name="test_scd41_sample_is_stored_once_as_reported_and_a_gap_is_null" time="0.046" /><testcase classname="tests.test_dash_loop" name="test_scd41_gets_bme280_pressure_in_pa_and_restarts_measurement" time="0.042" /><testcase classname="tests.test_dash_loop" name="test_scd41_i2c_error_is_a_failed_read_and_the_lane_restarts[error0]" time="0.044" /><testcase classname="tests.test_dash_loop" name="test_scd41_i2c_error_is_a_failed_read_and_the_lane_restarts[error1]" time="0.048" /><testcase classname="tests.test_dash_loop" name="test_display_clears_co2_after_a_silent_interval_and_the_trend_shows_the_gap" time="0.063" /><testcase classname="tests.test_dash_loop" name="test_an_existing_fifteen_column_table_keeps_its_rows_and_gains_the_new_columns" time="0.046" /><testcase classname="tests.test_dash_loop" name="test_an_interval_takes_each_lanes_newest_read_and_the_mean_bme280_temperature" time="0.060" /><testcase classname="tests.test_dash_loop" name="test_replay_of_a_day_includes_its_last_reads_filed_after_midnight" time="0.005" /><testcase classname="tests.test_dash_loop" name="test_a_hot_reloaded_publish_interval_closes_the_open_interval_on_its_own_grid" time="0.049" /><testcase classname="tests.test_dash_loop" name="test_a_pre_tier1_row_sharing_the_first_intervals_key_is_kept" time="0.040" /><testcase classname="tests.test_dash_loop" name="test_a_read_the_canonical_tier_could_not_store_ends_the_process_underived" time="0.036" /><testcase classname="tests.test_dash_loop" name="test_replay_rewrites_each_days_first_interval_but_not_the_cutover_one" time="0.005" /><testcase classname="tests.test_dash_loop" name="test_a_day_with_an_unreadable_record_fails_replay_before_any_row_changes" time="0.004" /><testcase classname="tests.test_dash_loop" name="test_each_tap_is_retained_once_with_the_reading_that_crossed_the_threshold" time="0.061" /><testcase classname="tests.test_imports" name="test_import_config_service" time="0.001" /><testcase classname="tests.test_imports" name="test_import_db_service" time="0.001" /><testcase classname="tests.test_imports" name="test_import_logging_service" time="0.001" /><testcase classname="tests.test_imports" name="test_import_signal_handler" time="0.001" /><testcase classname="tests.test_imports" name="test_import_utils" time="0.001" /><testcase classname="tests.test_nws_wx" name="test_load_settings_requires_configured_station_list" time="0.002" /><testcase classname="tests.test_nws_wx" name="test_select_observation_skips_stale_station_and_uses_fresh" time="0.001" /><testcase classname="tests.test_nws_wx" name="test_fetch_uses_collection_and_returns_newest_observation" time="0.001" /><testcase classname="tests.test_nws_wx" name="test_select_observation_raises_when_all_configured_stations_are_stale" time="0.001" /><testcase classname="tests.test_nws_wx" name="test_ensure_schema_adds_station_id_to_existing_table" time="0.001" /><testcase classname="tests.test_nws_wx" name="test_write_reports_duplicate_as_not_inserted" time="0.001" /><testcase classname="tests.test_provider_collector" name="test_importing_the_collector_does_not_run_it" time="0.001" /><testcase classname="tests.test_provider_collector" name="test_ok_response_is_retained_and_written_once" time="0.009" /><testcase classname="tests.test_provider_collector" name="test_derived_row_existence_is_not_inferred_from_retention_dedup" time="0.006" /><testcase classname="tests.test_provider_collector" name="test_provider_revision_overwrites_the_derived_row" time="0.004" /><testcase classname="tests.test_provider_collector" name="test_unparseable_body_is_recorded_exactly_once" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_non_list_bodies_are_malformed_not_empty_and_recorded_once[0]" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_non_list_bodies_are_malformed_not_empty_and_recorded_once[false]" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_non_list_bodies_are_malformed_not_empty_and_recorded_once[&quot;&quot;]" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_non_list_bodies_are_malformed_not_empty_and_recorded_once[null]" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_non_list_bodies_are_malformed_not_empty_and_recorded_once[{}]" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_non_list_bodies_are_malformed_not_empty_and_recorded_once[{&quot;error&quot;: &quot;rate limited&quot;}]" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_non_list_bodies_are_malformed_not_empty_and_recorded_once[[1, 2]]" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_out_of_shape_payload_is_logged_at_error" time="0.002" /><testcase classname="tests.test_provider_collector" name="test_write_failure_after_a_partial_arrival_keeps_both_facts" time="0.005" /><testcase classname="tests.test_provider_collector" name="test_empty_list_is_recorded_and_nothing_is_written" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_shape_outside_the_contract_is_malformed_with_no_row" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_absent_parameter_writes_the_row_and_records_partial" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_a_later_statement_that_omits_a_parameter_keeps_the_earlier_value" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_a_later_statement_of_null_overwrites_the_earlier_value" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_write_failure_is_recorded_as_a_write_error" time="0.007" /><testcase classname="tests.test_provider_collector" name="test_fetch_failure_is_recorded_as_a_fetch_error" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_run_stops_promptly_when_shutdown_is_requested" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_ensure_table_adds_declared_columns_to_an_existing_table" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_ensure_table_refuses_a_table_with_undeclared_columns" time="0.002" /><testcase classname="tests.test_provider_collector" name="test_ensure_table_refuses_a_storage_class_or_primary_key_disagreement" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_build_requires_the_env_file_to_carry_sqlite_path" time="0.001" /><testcase classname="tests.test_provider_collector" name="test_replay_reproduces_the_live_table_by_the_same_path" time="0.012" /><testcase classname="tests.test_provider_collector" name="test_replay_is_idempotent_and_the_latest_statement_wins_in_capture_order" time="0.015" /><testcase classname="tests.test_provider_collector" name="test_replay_counts_a_retained_outcome_that_content_no_longer_earns" time="0.012" /><testcase classname="tests.test_provider_collector" name="test_replay_of_a_date_with_no_retention_is_empty_not_an_error" time="0.003" /><testcase classname="tests.test_provider_collector" name="test_cli_replay_prints_one_summary_line_and_exits" time="0.789" /><testcase classname="tests.test_provider_collector" name="test_replay_selects_by_observation_date_so_a_later_capture_day_still_wins" time="0.006" /><testcase classname="tests.test_provider_collector" name="test_replay_leaves_statements_about_other_dates_alone" time="0.008" /><testcase classname="tests.test_provider_collector" name="test_replay_counts_an_empty_arrival_as_empty_not_malformed" time="0.004" /><testcase classname="tests.test_provider_collector" name="test_replay_repairs_a_row_the_live_write_lost" time="0.011" /><testcase classname="tests.test_provider_collector" name="test_cli_replay_refuses_a_day_that_is_not_a_utc_day" time="0.005" /><testcase classname="tests.test_provider_collector" name="test_replay_of_two_observation_days_is_order_independent_when_their_captures_start_on_different_days" time="0.008" /><testcase classname="tests.test_provider_collector" name="test_replay_scans_one_capture_day_before_the_named_day" time="0.004" /><testcase classname="tests.test_provider_collector" name="test_replay_refuses_an_observation_day_after_today" time="0.002" /><testcase classname="tests.test_provider_collector" name="test_an_arrival_the_canonical_tier_could_not_store_derives_nothing_and_ends_the_run" time="0.003" /><testcase classname="tests.test_provider_contract" name="test_loader_resolves_env_names_and_never_embeds_values_in_the_document" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_loader_fails_loud_on_missing_env_key" time="0.001" /><testcase classname="tests.test_provider_contract" name="test_loader_refuses_non_integer_poll" time="0.001" /><testcase classname="tests.test_provider_contract" name="test_loader_refuses_unknown_op" time="0.001" /><testcase classname="tests.test_provider_contract" name="test_loader_refuses_produced_columns_that_are_not_declared" time="0.001" /><testcase classname="tests.test_provider_contract" name="test_loader_refuses_declared_columns_never_produced" time="0.001" /><testcase classname="tests.test_provider_contract" name="test_loader_refuses_time_op_with_undeclared_keys" time="0.001" /><testcase classname="tests.test_provider_contract" name="test_create_table_sql_declares_the_primary_key" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_nominal_payload_projects_the_provider_statement_verbatim" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_both_ozone_spellings_map_to_the_ozone_columns" time="0.001" /><testcase classname="tests.test_provider_contract" name="test_single_digit_hour_is_accepted_and_normalized_to_the_pk_shape" time="0.001" /><testcase classname="tests.test_provider_contract" name="test_absent_declared_parameter_is_left_unstated_and_named" time="0.001" /><testcase classname="tests.test_provider_contract" name="test_null_declared_field_is_a_statement_of_null" time="0.001" /><testcase classname="tests.test_provider_contract" name="test_explicit_null_statements_are_an_observation" time="0.001" /><testcase classname="tests.test_provider_contract" name="test_absent_non_key_field_is_left_unstated_and_named" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-undeclared parameterName value 'NO2']" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-lacks pivot key0]" time="0.013" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-two items resolve to store key 'ozone']" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-lacks declared field 'nowcastAQI']" time="0.003" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-lacks declared field]" time="0.003" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-must both be strings0]" time="0.003" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-must both be strings1]" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-do not match declared formats]" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-must both be strings2]" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-undeclared parameterName value \\['PM2.5'\\]]" time="0.003" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-pm25_aqi: value '11' is not INTEGER]" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-pm25_aqi: value True is not INTEGER]" time="0.003" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-pm25_aqi: value 11.5 is not INTEGER]" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-reporting_area: value \\['Somewhere'\\] is not TEXT]" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-items disagree on 'hourObserved']" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-items disagree on 'reportingAreaName'0]" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-items disagree on 'reportingAreaName'1]" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-lacks pivot key1]" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-not a non-empty list0]" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_payload_outside_the_declared_shape_is_refused[&lt;lambda&gt;-not a non-empty list1]" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_unrelated_fields_are_ignored_not_projected" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_row_fields_do_not_depend_on_item_order" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_loader_refuses_primary_key_that_is_not_a_row_projection" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_loader_refuses_row_column_that_a_pivot_template_also_produces" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_loader_refuses_pivot_template_without_key_placeholder" time="0.001" /><testcase classname="tests.test_provider_contract" name="test_loader_refuses_param_spec_with_extra_keys" time="0.001" /><testcase classname="tests.test_provider_contract" name="test_loader_refuses_empty_env_value" time="0.001" /><testcase classname="tests.test_provider_contract" name="test_loader_refuses_unknown_storage_class" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_loader_refuses_time_projection_into_a_non_text_column" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_loader_refuses_boolean_where_a_positive_integer_is_declared" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_row_field_sent_as_null_is_a_statement_of_null" time="0.002" /><testcase classname="tests.test_provider_contract" name="test_loader_refuses_a_primary_key_that_is_a_field_projection" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_payload_round_trips_byte_identical" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_integrity_failure_is_loud" time="0.003" /><testcase classname="tests.test_raw_retention" name="test_failed_pull_records_outcome_and_no_payload" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_partial_outcome_is_distinguishable_from_absent_value" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_consecutive_identical_payload_is_recorded_not_restored" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_changed_payload_after_duplicate_is_stored" time="0.003" /><testcase classname="tests.test_raw_retention" name="test_no_query_or_fragment_reaches_the_store[https://x.test/v1?apiKey=SUPERSECRET&amp;lat=28]" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_no_query_or_fragment_reaches_the_store[https://x.test/v1?API_KEY=SUPERSECRET]" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_no_query_or_fragment_reaches_the_store[https://x.test/v1?api%5Fkey=SUPERSECRET]" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_no_query_or_fragment_reaches_the_store[https://x.test/v1?a=1;token=SUPERSECRET]" time="0.003" /><testcase classname="tests.test_raw_retention" name="test_no_query_or_fragment_reaches_the_store[https://x.test/v1#token=SUPERSECRET]" time="0.003" /><testcase classname="tests.test_raw_retention" name="test_no_query_or_fragment_reaches_the_store[https://x.test/v1?weird_param_name=SUPERSECRET]" time="0.003" /><testcase classname="tests.test_raw_retention" name="test_redact_keeps_endpoint_identity" time="0.001" /><testcase classname="tests.test_raw_retention" name="test_body_credential_is_scrubbed_from_stored_payload" time="0.003" /><testcase classname="tests.test_raw_retention" name="test_scrub_preserves_every_other_byte" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_scrub_records_lineage" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_payload_without_secrets_records_no_scrub_lineage" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_unsafe_provider_key_is_refused[../evil]" time="0.001" /><testcase classname="tests.test_raw_retention" name="test_unsafe_provider_key_is_refused[nws/../../evil]" time="0.001" /><testcase classname="tests.test_raw_retention" name="test_unsafe_provider_key_is_refused[/etc/evil]" time="0.001" /><testcase classname="tests.test_raw_retention" name="test_unsafe_provider_key_is_refused[nws/../..]" time="0.001" /><testcase classname="tests.test_raw_retention" name="test_unsafe_provider_key_is_refused[..]" time="0.001" /><testcase classname="tests.test_raw_retention" name="test_unsafe_provider_key_is_refused[nws/ev il]" time="0.001" /><testcase classname="tests.test_raw_retention" name="test_hierarchical_provider_key_is_allowed" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_dedup_does_not_rescan_the_day_file" time="0.003" /><testcase classname="tests.test_raw_retention" name="test_repeat_within_the_same_day_is_a_duplicate" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_record_is_flushed_immediately" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_write_row_raises_on_operational_error" time="0.003" /><testcase classname="tests.test_raw_retention" name="test_write_row_returns_false_only_for_ignored_duplicate" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_busy_timeout_is_set" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_os_write_failure_raises_retention_write_error" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_programming_error_still_raises" time="0.001" /><testcase classname="tests.test_raw_retention" name="test_dedup_does_not_span_the_day_boundary" time="0.003" /><testcase classname="tests.test_raw_retention" name="test_every_day_file_is_independently_replayable" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_read_day_refuses_unsafe_provider_key[../evil]" time="0.002" /><testcase classname="tests.test_raw_retention" name="test_read_day_refuses_unsafe_provider_key[/etc/evil]" time="0.001" /><testcase classname="tests.test_raw_retention" name="test_read_day_refuses_unsafe_provider_key[nws/../..]" time="0.001" /><testcase classname="tests.test_raw_retention" name="test_tail_window_exceeds_largest_measured_record" time="0.005" /><testcase classname="tests.test_raw_retention" name="test_unconfigured_write_is_refused" time="0.001" /><testcase classname="tests.test_raw_retention" name="test_configure_declares_the_root" time="0.003" /><testcase classname="tests.test_raw_retention" name="test_dedup_state_does_not_leak_across_roots" time="0.003" /><testcase classname="tests.test_raw_retention_root_key" name="test_fresh_root_starts_without_dedup_memory" time="0.003" /><testcase classname="tests.test_raw_retention_root_key" name="test_same_store_under_another_spelling_still_dedups" time="0.003" /><testcase classname="tests.test_raw_retention_root_key" name="test_relative_root_under_a_cwd_change_is_two_stores" time="0.003" /><testcase classname="tests.test_raw_retention_write_failure" name="test_a_failed_append_raises_and_leaves_no_partial_line" time="0.003" /><testcase classname="tests.test_raw_retention_write_failure" name="test_a_failed_append_is_an_oserror" time="0.002" /><testcase classname="tests.test_raw_retention_write_failure" name="test_a_payload_that_failed_to_store_is_stored_on_the_next_attempt" time="0.004" /><testcase classname="tests.test_raw_retention_write_failure" name="test_an_unsafe_key_is_still_a_value_error" time="0.002" /><testcase classname="tests.test_raw_retention_write_failure" name="test_a_short_write_then_a_full_disk_leaves_no_torn_line" time="0.003" /><testcase classname="tests.test_raw_retention_write_failure" name="test_a_day_file_that_cannot_be_read_for_dedup_is_a_write_error" time="0.002" /><testcase classname="tests.test_raw_retention_write_failure" name="test_days_lists_the_retained_days_oldest_first" time="0.002" /><testcase classname="tests.test_screens" name="test_pm25_aqi_matches_2024_epa_table[0.0-0]" time="0.001" /><testcase classname="tests.test_screens" name="test_pm25_aqi_matches_2024_epa_table[9.0-50]" time="0.001" /><testcase classname="tests.test_screens" name="test_pm25_aqi_matches_2024_epa_table[9.05-50]" time="0.001" /><testcase classname="tests.test_screens" name="test_pm25_aqi_matches_2024_epa_table[9.1-51]" time="0.001" /><testcase classname="tests.test_screens" name="test_pm25_aqi_matches_2024_epa_table[12.0-56]" time="0.001" /><testcase classname="tests.test_screens" name="test_pm25_aqi_matches_2024_epa_table[35.4-100]" time="0.001" /><testcase classname="tests.test_screens" name="test_pm25_aqi_matches_2024_epa_table[55.5-151]" time="0.001" /><testcase classname="tests.test_screens" name="test_pm25_aqi_matches_2024_epa_table[125.4-200]" time="0.001" /><testcase classname="tests.test_screens" name="test_pm25_aqi_matches_2024_epa_table[225.5-301]" time="0.001" /><testcase classname="tests.test_screens" name="test_pm10_aqi_matches_epa_table[54-50]" time="0.001" /><testcase classname="tests.test_screens" name="test_pm10_aqi_matches_epa_table[55-51]" time="0.001" /><testcase classname="tests.test_screens" name="test_pm10_aqi_matches_epa_table[154.9-100]" time="0.001" /><testcase classname="tests.test_screens" name="test_pm10_aqi_matches_epa_table[425-301]" time="0.001" /><testcase classname="tests.test_screens" name="test_pm10_aqi_matches_epa_table[604-500]" time="0.001" /><testcase classname="tests.test_screens" name="test_aqi_is_the_larger_sub_index" time="0.001" /><testcase classname="tests.test_screens" name="test_absent_pm_is_no_aqi_not_zero" time="0.001" /><testcase classname="tests.test_screens" name="test_category_edges[50-GOOD]" time="0.001" /><testcase classname="tests.test_screens" name="test_category_edges[51-MODERATE]" time="0.001" /><testcase classname="tests.test_screens" name="test_category_edges[100-MODERATE]" time="0.001" /><testcase classname="tests.test_screens" name="test_category_edges[101-SENSITIVE]" time="0.001" /><testcase classname="tests.test_screens" name="test_category_edges[150-SENSITIVE]" time="0.001" /><testcase classname="tests.test_screens" name="test_category_edges[151-UNHEALTHY]" time="0.001" /><testcase classname="tests.test_screens" name="test_category_edges[200-UNHEALTHY]" time="0.001" /><testcase classname="tests.test_screens" name="test_category_edges[201-V UNHEALTHY]" time="0.001" /><testcase classname="tests.test_screens" name="test_category_edges[300-V UNHEALTHY]" time="0.001" /><testcase classname="tests.test_screens" name="test_category_edges[301-HAZARDOUS]" time="0.001" /><testcase classname="tests.test_screens" name="test_every_page_renders_full_and_absent_data[0-True]" time="0.017" /><testcase classname="tests.test_screens" name="test_every_page_renders_full_and_absent_data[0-False]" time="0.004" /><testcase classname="tests.test_screens" name="test_every_page_renders_full_and_absent_data[1-True]" time="0.007" /><testcase classname="tests.test_screens" name="test_every_page_renders_full_and_absent_data[1-False]" time="0.003" /><testcase classname="tests.test_screens" name="test_every_page_renders_full_and_absent_data[2-True]" time="0.013" /><testcase classname="tests.test_screens" name="test_every_page_renders_full_and_absent_data[2-False]" time="0.003" /><testcase classname="tests.test_screens" name="test_every_page_renders_full_and_absent_data[3-True]" time="0.006" /><testcase classname="tests.test_screens" name="test_every_page_renders_full_and_absent_data[3-False]" time="0.003" /><testcase classname="tests.test_screens" name="test_every_page_renders_full_and_absent_data[4-True]" time="0.002" /><testcase classname="tests.test_screens" name="test_every_page_renders_full_and_absent_data[4-False]" time="0.002" /><testcase classname="tests.test_screens" name="test_pages_differ_and_mark_the_current_page" time="0.012" /><testcase classname="tests.test_screens" name="test_oxidising_bands_keep_the_calibrated_direction[90.0-color0]" time="0.001" /><testcase classname="tests.test_screens" name="test_oxidising_bands_keep_the_calibrated_direction[50.0-color1]" time="0.001" /><testcase classname="tests.test_screens" name="test_oxidising_bands_keep_the_calibrated_direction[30.0-color2]" time="0.001" /><testcase classname="tests.test_screens" name="test_co2_band_follows_the_uba_guide_values[1000.0-color0]" time="0.001" /><testcase classname="tests.test_screens" name="test_co2_band_follows_the_uba_guide_values[1001.0-color1]" time="0.001" /><testcase classname="tests.test_screens" name="test_co2_band_follows_the_uba_guide_values[2000.0-color2]" time="0.001" /><testcase classname="tests.test_screens" name="test_co2_band_follows_the_uba_guide_values[2001.0-color3]" time="0.001" /><testcase classname="tests.test_screens" name="test_co2_band_follows_the_uba_guide_values[None-color4]" time="0.001" /><testcase classname="tests.test_screens" name="test_co2_reading_is_drawn" time="0.023" /></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="2.374" timestamp="2026-10-21T09:34:26.592084-04:00" hostname="BSPiLHX"><testcase classname="tests.test_offsite_replication" name="test_growing_partition_is_copied_and_proven" time="2.268"><failure message="shared.offsite_replication.ReplicationError: replication failed in source: active.ndjson: active.ndjson: absent from the remote after the copy; rclone copy source failed rc=6: 2026/10/21 09:34:28 NOTICE: active.ndjson: Removing partially written file on error: can't copy - source file is being updated (size changed from 8388608 to 8388624)&#10;2026/10/21 09:34:28 ERROR : active.ndjson: Failed to copy: can't copy - source file is being updated (size changed from 8388608 to 8388624)&#10;2026/10/21 09:34:28 ERROR : Attempt 1/1 failed with 1 errors and: can't copy - source file is">tmp_path = PosixPath('/tmp/pytest-of-pistrommy/pytest-179/test_growing_partition_is_copi0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7ffede07b950&gt;
+
+    def test_growing_partition_is_copied_and_proven(tmp_path, monkeypatch):
+        """Exercise the real local backend while the source keeps appending."""
+        import threading
+
+        source = tmp_path / "source"
+        source.mkdir()
+        growing = source / "active.ndjson"
+        # Two seconds of transfer at 4MiB/s, with several appends during upload.
+        growing.write_bytes(b"x" * (8 * 1024 * 1024))
+        stopped = threading.Event()
+        appended = []
+        real_run = rep._run
+
+        def append():
+            while not stopped.wait(0.25):
+                with growing.open("ab") as stream:
+                    stream.write(b"new observation\n")
+                appended.append(1)
+
+        def during_copy(argv, timeout_s, label):
+            if "copy" not in argv:
+                return real_run(argv, timeout_s, label)
+            writer = threading.Thread(target=append)
+            writer.start()
+            try:
+                return real_run((*argv, "--bwlimit", "4M", "--retries", "1"), timeout_s, label)
+            finally:
+                stopped.set()
+                writer.join()
+
+        monkeypatch.setattr(rep, "_run", during_copy)
+&gt;       result = rep.replicate_tree(source, str(tmp_path / "remote"))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+shared/tests/test_offsite_replication.py:72:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+local_dir = PosixPath('/tmp/pytest-of-pistrommy/pytest-179/test_growing_partition_is_copi0/source')
+remote_dir = '/tmp/pytest-of-pistrommy/pytest-179/test_growing_partition_is_copi0/remote'
+config_path = None
+
+    def replicate_tree(local_dir: Path, remote_dir: str, *,
+                       config_path: str | None = None) -&gt; ReplicationResult:
+        """Copy an append-only tree additively, then prove every local file landed.
+
+        The invariant is prefix AND progress: after the run each remote object must
+        be a prefix of its local file, and no shorter than that file was when the run
+        began. Neither half is the invariant on its own -- integrity without progress
+        certifies a stale remote, progress without integrity certifies corrupt bytes
+        of the right length.
+
+        Both halves are checked per file by comparing bytes, never by classifying a
+        file by its name. Names cannot distinguish a partition still being appended
+        from one that closed an hour ago, and every earlier version of this guard
+        failed by trying.
+
+        Verification of a file being actively written is possible because the tree is
+        append-only: the region already on the remote has stopped changing, so
+        hashing the local file over exactly that region is stable no matter how much
+        the tail grows during the run. This holds on local filesystems, where reads
+        and writes of a regular file are serialised; it would not hold over NFS.
+
+        copy, never sync. sync makes the remote match local, deleting remote objects
+        absent locally, so a truncated or misconfigured source destroys the offsite
+        copy -- and a following check passes because the deletion made both sides
+        agree. copy cannot delete, making that failure impossible rather than guarded.
+
+        An archive is rejected because it re-uploads the whole corpus each run where
+        copy transfers only what is new.
+        """
+        if not local_dir.is_dir():
+            raise ReplicationError(f"source is not a directory: {local_dir}")
+        started = datetime.now(timezone.utc)
+
+        local_files = {p.relative_to(local_dir).as_posix(): p
+                       for p in sorted(local_dir.rglob("*")) if p.is_file()}
+        # An empty source is a misconfigured source. Returning verified=True over
+        # nothing certifies a backup that protects no bytes, and it stays green for
+        # as long as the wrong path is configured -- the shape of false assurance
+        # this module exists to remove.
+        if not local_files:
+            raise ReplicationError(
+                f"source tree holds no files: {local_dir} -- refusing to certify an "
+                "empty replication"
+            )
+        before = probe_remote_tree(remote_dir, config_path=config_path)
+
+        verdicts = []
+        failures = []
+        for rel, path in local_files.items():
+            try:
+                verdicts.append(classify(path, rel, before.get(rel)))
+            except (OSError, ReplicationError) as exc:
+                failures.append({"path": rel, "error": str(exc)})
+        cleared = [v for v in verdicts if v.clear]
+        withheld = [v for v in verdicts if not v.clear]
+        floors = {v.relpath: v.local_size for v in cleared}
+
+        transfer_error = None
+        if cleared:
+            try:
+                _copy_selected(local_dir, remote_dir, [v.relpath for v in cleared], config_path)
+            except (OSError, ReplicationError) as exc:
+                # A batch failure does not undo sibling uploads. Prove each one
+                # independently, retaining the transport error as a failed run.
+                transfer_error = str(exc)
+
+        probe_error = None
+        try:
+            after = probe_remote_tree(remote_dir, config_path=config_path)
+        except (OSError, ReplicationError) as exc:
+            probe_error = f"delivery unproven: the post-copy probe failed: {exc}"
+
+        failures.extend({"path": v.relpath, "error": f"{v.state} -- {v.reason}"}
+                        for v in withheld)
+        landed: list[dict] = []
+        for v in cleared:
+            if probe_error:
+                failures.append({"path": v.relpath, "error": probe_error})
+                continue
+            try:
+                landed.append(_prove_landed(local_files[v.relpath], v,
+                                            after.get(v.relpath), floors[v.relpath]))
+            except (OSError, ReplicationError) as exc:
+                failures.append({"path": v.relpath, "error": str(exc)})
+
+        result = ReplicationResult(
+            kind="tree", source=str(local_dir), remote_object=remote_dir,
+            bytes_transferred=sum(f["delivered_bytes"] for f in landed),
+            local_hash=None, remote_hash=None,
+            verified=not (failures or transfer_error or probe_error),
+            started_utc=started.isoformat(),
+            finished_utc=datetime.now(timezone.utc).isoformat(),
+            detail={
+                "file_count": len(local_files),
+                "full_matches": sum(1 for f in landed if f["match"] == "full"),
+                "prefix_matches": sum(1 for f in landed if f["match"] == "prefix"),
+                "files": landed,
+                "failures": failures,
+                "transfer_error": transfer_error,
+                "probe_error": probe_error,
+            },
+        )
+        if not result.verified:
+            reasons = [f"{f['path']}: {f['error']}" for f in failures]
+            reasons.extend(error for error in (transfer_error, probe_error) if error)
+&gt;           raise ReplicationError(
+                f"replication failed in {local_dir.name}: " + "; ".join(reasons[:10]),
+                result=result,
+            )
+E           shared.offsite_replication.ReplicationError: replication failed in source: active.ndjson: active.ndjson: absent from the remote after the copy; rclone copy source failed rc=6: 2026/10/21 09:34:28 NOTICE: active.ndjson: Removing partially written file on error: can't copy - source file is being updated (size changed from 8388608 to 8388624)
+E           2026/10/21 09:34:28 ERROR : active.ndjson: Failed to copy: can't copy - source file is being updated (size changed from 8388608 to 8388624)
+E           2026/10/21 09:34:28 ERROR : Attempt 1/1 failed with 1 errors and: can't copy - source file is
+
+shared/offsite_replication.py:512: ReplicationError</failure></testcase></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.218" timestamp="2026-10-21T09:34:47.222260-04:00" hostname="BSPiLHX"><testcase classname="tests.test_offsite_replication" name="test_copy_error_preserves_proven_siblings_and_failed_files" time="0.163"><failure message="assert (None is not None)">tmp_path = PosixPath('/tmp/pytest-of-pistrommy/pytest-180/test_copy_error_preserves_prov0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7ffec75cbe10&gt;
+
+    def test_copy_error_preserves_proven_siblings_and_failed_files(tmp_path, monkeypatch):
+        source = tmp_path / "source"
+        source.mkdir()
+        (source / "good.ndjson").write_bytes(b"retained fact\n")
+        (source / "failed.ndjson").write_bytes(b"not delivered\n")
+        remote = tmp_path / "remote"
+        actual_copy = rep._copy_selected
+
+        def partial_copy(local, target, relpaths, config_path):
+            actual_copy(local, target, [name for name in relpaths if name != "failed.ndjson"], config_path)
+            raise rep.ReplicationError("rclone copy failed rc=6: source file is being updated")
+
+        monkeypatch.setattr(rep, "_copy_selected", partial_copy)
+        with pytest.raises(rep.ReplicationError) as caught:
+            rep.replicate_tree(source, str(remote))
+        result = caught.value.result
+&gt;       assert result is not None and result.verified is False
+E       assert (None is not None)
+
+shared/tests/test_offsite_replication.py:96: AssertionError</failure></testcase></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.110" timestamp="2026-10-21T09:34:47.780358-04:00" hostname="BSPiLHX"><testcase classname="tests.test_backup_lifecycle" name="test_cli_records_both_sources_despite_first_source_failure" time="0.005"><failure message="NotADirectoryError: [Errno 20] Not a directory: '/tmp/pytest-of-pistrommy/pytest-181/test_cli_records_both_sources_0/not-a-directory/staging'">lane = (PosixPath('/tmp/pytest-of-pistrommy/pytest-181/test_cli_records_both_sources_0/backup.json'), PosixPath('/tmp/pytest-...rds_both_sources_0/.backup-staging'), PosixPath('/tmp/pytest-of-pistrommy/pytest-181/test_cli_records_both_sources_0'))
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7fff3b1da780&gt;
+
+    def test_cli_records_both_sources_despite_first_source_failure(lane, monkeypatch):
+        """Real SQLite/rclone, independent source attempts and an honest exit."""
+        config, staging, root = lane
+        cfg = json.loads(config.read_text())
+        rclone_config = root / "rclone.conf"
+        rclone_config.write_text(f"[test]\ntype = alias\nremote = {root / 'remote'}\n")
+        cfg["remote"]["rclone_config_path"] = str(rclone_config)
+        blocked = root / "not-a-directory"
+        blocked.write_bytes(b"staging cannot live inside this file")
+        cfg["local_staging"]["staging_dir"] = str(blocked / "staging")
+        config.write_text(json.dumps(cfg))
+        monkeypatch.setattr(sys, "argv", ["backup_enviro.py", "--config", str(config)])
+
+&gt;       assert backup_enviro.main() == 1
+               ^^^^^^^^^^^^^^^^^^^^
+
+tests/test_backup_lifecycle.py:380:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+scripts/backup_enviro.py:457: in main
+    return run(args.config, dry_run=args.dry_run)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+scripts/backup_enviro.py:207: in run
+    staging.mkdir(parents=True, exist_ok=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = PosixPath('/tmp/pytest-of-pistrommy/pytest-181/test_cli_records_both_sources_0/not-a-directory/staging')
+mode = 511, parents = True, exist_ok = True
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+&gt;           os.mkdir(self, mode)
+E           NotADirectoryError: [Errno 20] Not a directory: '/tmp/pytest-of-pistrommy/pytest-181/test_cli_records_both_sources_0/not-a-directory/staging'
+
+/usr/lib/python3.13/pathlib/_local.py:724: NotADirectoryError</failure></testcase></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.088" timestamp="2026-10-21T09:35:13.998352-04:00" hostname="BSPiLHX"><testcase classname="tests.test_backup_lifecycle" name="test_cli_records_both_sources_despite_first_source_failure" time="0.004"><failure message="NotADirectoryError: [Errno 20] Not a directory: '/tmp/pytest-of-pistrommy/pytest-182/test_cli_records_both_sources_0/not-a-directory/staging'">lane = (PosixPath('/tmp/pytest-of-pistrommy/pytest-182/test_cli_records_both_sources_0/backup.json'), PosixPath('/tmp/pytest-...rds_both_sources_0/.backup-staging'), PosixPath('/tmp/pytest-of-pistrommy/pytest-182/test_cli_records_both_sources_0'))
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7ffede35a780&gt;
+
+    def test_cli_records_both_sources_despite_first_source_failure(lane, monkeypatch):
+        """Real SQLite/rclone, independent source attempts and an honest exit."""
+        config, staging, root = lane
+        cfg = json.loads(config.read_text())
+        rclone_config = root / "rclone.conf"
+        rclone_config.write_text(f"[test]\ntype = alias\nremote = {root / 'remote'}\n")
+        cfg["remote"]["rclone_config_path"] = str(rclone_config)
+        blocked = root / "not-a-directory"
+        blocked.write_bytes(b"staging cannot live inside this file")
+        cfg["local_staging"]["staging_dir"] = str(blocked / "staging")
+        config.write_text(json.dumps(cfg))
+        monkeypatch.setattr(sys, "argv", ["backup_enviro.py", "--config", str(config)])
+
+&gt;       assert backup_enviro.main() == 1
+               ^^^^^^^^^^^^^^^^^^^^
+
+tests/test_backup_lifecycle.py:380:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+scripts/backup_enviro.py:458: in main
+    return run(args.config, dry_run=args.dry_run)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+scripts/backup_enviro.py:225: in run
+    staging.mkdir(parents=True, exist_ok=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = PosixPath('/tmp/pytest-of-pistrommy/pytest-182/test_cli_records_both_sources_0/not-a-directory/staging')
+mode = 511, parents = True, exist_ok = True
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+&gt;           os.mkdir(self, mode)
+E           NotADirectoryError: [Errno 20] Not a directory: '/tmp/pytest-of-pistrommy/pytest-182/test_cli_records_both_sources_0/not-a-directory/staging'
+
+/usr/lib/python3.13/pathlib/_local.py:724: NotADirectoryError</failure></testcase></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.054" timestamp="2026-10-21T09:35:14.480604-04:00" hostname="BSPiLHX"><testcase classname="tests.test_backup_lifecycle" name="test_invalid_source_kind_dry_run_fails_without_writes" time="0.005"><failure message="assert 0 == 1&#10; +  where 0 = &lt;function main at 0x7fffa1ac2a20&gt;()&#10; +    where &lt;function main at 0x7fffa1ac2a20&gt; = backup_enviro.main">lane = (PosixPath('/tmp/pytest-of-pistrommy/pytest-183/test_invalid_source_kind_dry_r0/backup.json'), PosixPath('/tmp/pytest-...source_kind_dry_r0/.backup-staging'), PosixPath('/tmp/pytest-of-pistrommy/pytest-183/test_invalid_source_kind_dry_r0'))
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7fffa1a4a520&gt;
+
+    def test_invalid_source_kind_dry_run_fails_without_writes(lane, monkeypatch):
+        """Dry-run cannot certify a source configuration the real run rejects."""
+        config, staging, root = lane
+        cfg = json.loads(config.read_text())
+        cfg["sources"]["database"]["kind"] = "sqlite_snapsho"
+        config.write_text(json.dumps(cfg))
+        monkeypatch.setattr(sys, "argv", ["backup_enviro.py", "--config", str(config), "--dry-run"])
+        before = (root / "raw-capture/ambient/2026-08-07.ndjson").read_bytes()
+&gt;       assert backup_enviro.main() == 1
+E       assert 0 == 1
+E        +  where 0 = &lt;function main at 0x7fffa1ac2a20&gt;()
+E        +    where &lt;function main at 0x7fffa1ac2a20&gt; = backup_enviro.main
+
+tests/test_backup_lifecycle.py:402: AssertionError</failure></testcase></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="4" time="3.251" timestamp="2026-10-21T09:35:14.905339-04:00" hostname="BSPiLHX"><testcase classname="tests.test_offsite_replication" name="test_growing_partition_is_copied_and_proven" time="2.680" /><testcase classname="tests.test_offsite_replication" name="test_copy_error_preserves_proven_siblings_and_failed_files" time="0.237" /><testcase classname="" name="test_cli_records_both_sources_despite_first_source_failure" time="0.242" /><testcase classname="" name="test_invalid_source_kind_dry_run_fails_without_writes" time="0.003" /></testsuite></testsuites>
