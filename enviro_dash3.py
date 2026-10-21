@@ -85,7 +85,6 @@ CHANGELOG:
 """
 
 import json
-import logging
 import math
 import os
 import sqlite3
@@ -103,7 +102,6 @@ import st7735
 from enviroplus import gas
 from ltr559 import LTR559
 from pms5003 import PMS5003, ChecksumMismatchError, ReadTimeoutError, SerialTimeoutError
-
 from shared.config_service import load_env, require
 from shared.db_service import connect
 from shared.logging_service import setup_logger
@@ -112,9 +110,9 @@ from shared.utils import utc_now
 import enviro_screens as screens
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-_BASE       = os.path.dirname(os.path.abspath(__file__))
-_ENV_PATH   = os.path.join(_BASE, ".env")
-LOG_PATH    = os.path.join(_BASE, "enviro_dash.log")
+_BASE = os.path.dirname(os.path.abspath(__file__))
+_ENV_PATH = os.path.join(_BASE, ".env")
+LOG_PATH = os.path.join(_BASE, "enviro_dash.log")
 
 load_env(_ENV_PATH, expect_key="SQLITE_PATH")
 
@@ -142,6 +140,7 @@ def load_config():
 
 cfg = load_config()
 
+
 def _r(x, n):
     """Round only real values; None (absent/failed lane) passes through as NULL."""
     return None if x is None else round(x, n)
@@ -150,11 +149,16 @@ def _r(x, n):
 def _round_readings(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     """Single source of truth for sensor rounding, used by the SQLite write path."""
     return {
-        "temperature": _r(temp_f, 1), "humidity":  _r(hum,    1),
-        "pressure":    _r(pres,   2), "light":     _r(lux,    1),
-        "oxidising":   _r(ox,     1), "reducing":  _r(rd,     1),
-        "ammonia":     _r(nh3,    1), "pm1":       _r(pm1,    1),
-        "pm25":        _r(pm25,   1), "pm10":      _r(pm10,   1),
+        "temperature": _r(temp_f, 1),
+        "humidity": _r(hum, 1),
+        "pressure": _r(pres, 2),
+        "light": _r(lux, 1),
+        "oxidising": _r(ox, 1),
+        "reducing": _r(rd, 1),
+        "ammonia": _r(nh3, 1),
+        "pm1": _r(pm1, 1),
+        "pm25": _r(pm25, 1),
+        "pm10": _r(pm10, 1),
     }
 
 
@@ -173,8 +177,12 @@ _db.execute("""
         cpu_temp_c  REAL, cpu_load REAL, mem_free_mb REAL, uptime_s INTEGER
     )
 """)
-for col, typedef in [("cpu_temp_c", "REAL"), ("cpu_load", "REAL"),
-                     ("mem_free_mb", "REAL"), ("uptime_s", "INTEGER")]:
+for col, typedef in [
+    ("cpu_temp_c", "REAL"),
+    ("cpu_load", "REAL"),
+    ("mem_free_mb", "REAL"),
+    ("uptime_s", "INTEGER"),
+]:
     try:
         _db.execute(f"ALTER TABLE readings ADD COLUMN {col} {typedef}")
     except sqlite3.OperationalError:
@@ -201,11 +209,23 @@ def write_sqlite(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
     cpu_temp, cpu_load, mem_free_mb, uptime_s = _pi_telemetry()
     _db.execute(
         "INSERT INTO readings VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        (utc_now(),
-         r["temperature"], r["humidity"], r["pressure"], r["light"],
-         r["oxidising"],   r["reducing"], r["ammonia"],
-         r["pm1"],         r["pm25"],     r["pm10"],
-         round(cpu_temp, 1), round(cpu_load, 2), round(mem_free_mb, 1), uptime_s)
+        (
+            utc_now(),
+            r["temperature"],
+            r["humidity"],
+            r["pressure"],
+            r["light"],
+            r["oxidising"],
+            r["reducing"],
+            r["ammonia"],
+            r["pm1"],
+            r["pm25"],
+            r["pm10"],
+            round(cpu_temp, 1),
+            round(cpu_load, 2),
+            round(mem_free_mb, 1),
+            uptime_s,
+        ),
     )
     _db.commit()
     log.info("SQLite row written")
@@ -213,31 +233,40 @@ def write_sqlite(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
 
 # ── Display ────────────────────────────────────────────────────────────────────
 _hw = cfg["hardware"]
-disp = st7735.ST7735(port=_hw["spi_port"], cs=_hw["spi_cs"],
-                     dc=_hw["display_dc"], backlight=_hw["display_backlight"],
-                     rotation=_hw["display_rotation"],
-                     spi_speed_hz=_hw["spi_speed_hz"])
+disp = st7735.ST7735(
+    port=_hw["spi_port"],
+    cs=_hw["spi_cs"],
+    dc=_hw["display_dc"],
+    backlight=_hw["display_backlight"],
+    rotation=_hw["display_rotation"],
+    spi_speed_hz=_hw["spi_speed_hz"],
+)
 disp.begin()
 W, H = disp.width, disp.height  # 160 × 80
 
 # ── Sensors ────────────────────────────────────────────────────────────────────
-_i2c_bus       = int(os.environ.get("I2C_BUS", 1))
-_pms_device    = os.environ.get("PMS5003_DEVICE", "/dev/ttyAMA0")
+_i2c_bus = int(os.environ.get("I2C_BUS", 1))
+_pms_device = os.environ.get("PMS5003_DEVICE", "/dev/ttyAMA0")
 _cpu_temp_path = os.environ.get("CPU_TEMP_PATH", "/sys/class/thermal/thermal_zone0/temp")
-_bus           = smbus2.SMBus(_i2c_bus)
-_bme_addr      = _hw["bme280_addr"]
-_bme_sensor    = bme280.BME280(i2c_addr=_bme_addr, i2c_dev=_bus)
-ltr559_sensor  = LTR559()
+_bus = smbus2.SMBus(_i2c_bus)
+_bme_addr = _hw["bme280_addr"]
+_bme_sensor = bme280.BME280(i2c_addr=_bme_addr, i2c_dev=_bus)
+ltr559_sensor = LTR559()
 pms5003_sensor = PMS5003(device=_pms_device)
 
 # ── CPU temp compensation ──────────────────────────────────────────────────────
-_cpu_hist  = deque([45.0] * cfg["calibration"]["cpu_hist_size"],
-                   maxlen=cfg["calibration"]["cpu_hist_size"])
+_cpu_hist = deque(
+    [45.0] * cfg["calibration"]["cpu_hist_size"], maxlen=cfg["calibration"]["cpu_hist_size"]
+)
 CPU_FACTOR = 0.0
 
 
-def c2f(c): return c * 9 / 5 + 32
-def f2c(f): return (f - 32) * 5 / 9
+def c2f(c):
+    return c * 9 / 5 + 32
+
+
+def f2c(f):
+    return (f - 32) * 5 / 9
 
 
 def _cpu_temp():
@@ -247,9 +276,11 @@ def _cpu_temp():
 
 def _bme_sample():
     _bme_sensor.update_sensor()
-    return SimpleNamespace(temperature=_bme_sensor.temperature,
-                           humidity=_bme_sensor.humidity,
-                           pressure=_bme_sensor.pressure)
+    return SimpleNamespace(
+        temperature=_bme_sensor.temperature,
+        humidity=_bme_sensor.humidity,
+        pressure=_bme_sensor.pressure,
+    )
 
 
 def _calibrate(cal_actual_f):
@@ -271,8 +302,7 @@ def _calibrate(cal_actual_f):
                 " Set exactly one."
             )
         CPU_FACTOR = 0.0
-        log.info("compensation: constant offset %.3f C (proportional model inert)",
-                 float(offset_c))
+        log.info("compensation: constant offset %.3f C (proportional model inert)", float(offset_c))
         return
     if override is not None:
         CPU_FACTOR = float(override)
@@ -282,12 +312,17 @@ def _calibrate(cal_actual_f):
         CPU_FACTOR = 0.0
         return
     cal_actual_c = f2c(cal_actual_f)
-    cal_raw_c    = sum(_bme_sample().temperature for _ in range(10)) / 10
-    cal_cpu_c    = sum(_cpu_temp()               for _ in range(10)) / 10
-    denom        = cal_raw_c - cal_actual_c
-    CPU_FACTOR   = (cal_cpu_c - cal_raw_c) / denom if denom else 0.0
-    log.info("CPU_FACTOR=%.2f  raw=%.1f°F  cpu=%.1f°C  actual=%s°F",
-             CPU_FACTOR, c2f(cal_raw_c), cal_cpu_c, cal_actual_f)
+    cal_raw_c = sum(_bme_sample().temperature for _ in range(10)) / 10
+    cal_cpu_c = sum(_cpu_temp() for _ in range(10)) / 10
+    denom = cal_raw_c - cal_actual_c
+    CPU_FACTOR = (cal_cpu_c - cal_raw_c) / denom if denom else 0.0
+    log.info(
+        "CPU_FACTOR=%.2f  raw=%.1f°F  cpu=%.1f°C  actual=%s°F",
+        CPU_FACTOR,
+        c2f(cal_raw_c),
+        cal_cpu_c,
+        cal_actual_f,
+    )
 
 
 _calibrate(cfg["calibration"]["cal_actual_f"])
@@ -329,15 +364,17 @@ def correct_humidity(rh, raw_c, actual_c):
     raw_c   — BME280 chip temperature (°C), elevated by Pi CPU heat
     actual_c — compensated room temperature (°C)
     """
+
     def psat(t):
         return math.exp(17.625 * t / (243.04 + t))
+
     return min(rh * psat(raw_c) / psat(actual_c), 100.0)
 
 
 # ── Trend history ──────────────────────────────────────────────────────────────
 # One sample per pixel of the widest trend line (Air page, 108 px).
 TREND_POINTS = 108
-pm_hist  = {k: deque(maxlen=TREND_POINTS) for k in ("pm1", "pm25", "pm10")}
+pm_hist = {k: deque(maxlen=TREND_POINTS) for k in ("pm1", "pm25", "pm10")}
 gas_hist = {k: deque(maxlen=TREND_POINTS) for k in ("oxidising", "reducing", "ammonia")}
 
 
@@ -351,10 +388,27 @@ def read_outdoor():
     """
     rows = _db.execute(
         "SELECT ts, tempf, humidity, windspeedmph, windgustmph, winddir, uv, dailyrainin"
-        " FROM outdoor ORDER BY ts DESC LIMIT ?", (TREND_POINTS,)
+        " FROM outdoor ORDER BY ts DESC LIMIT ?",
+        (TREND_POINTS,),
     ).fetchall()
-    rows = [dict(zip(("ts", "tempf", "humidity", "windspeedmph", "windgustmph",
-                      "winddir", "uv", "dailyrainin"), r)) for r in reversed(rows)]
+    rows = [
+        dict(
+            zip(
+                (
+                    "ts",
+                    "tempf",
+                    "humidity",
+                    "windspeedmph",
+                    "windgustmph",
+                    "winddir",
+                    "uv",
+                    "dailyrainin",
+                ),
+                r,
+            )
+        )
+        for r in reversed(rows)
+    ]
     latest = rows[-1] if rows else None
     if latest is not None:
         observed = datetime.strptime(latest["ts"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
@@ -390,7 +444,7 @@ def wait_for_next_frame(page, near):
 # Any error outside the PMS5003 lane ends the process: the unit's restart policy
 # retries it, and repeated failure reaches OnFailure. A loop that logged and
 # carried on kept the service "active" while the screen froze on its last frame.
-pm1 = pm25 = pm10 = None   # absent/failed lane => NULL, never a fabricated zero
+pm1 = pm25 = pm10 = None  # absent/failed lane => NULL, never a fabricated zero
 page, near = 0, False
 _last_publish = time.time()
 
@@ -410,18 +464,18 @@ try:
 
         temp_c, raw_c = read_temp_c()
         _sample = _bme_sample()
-        hum     = correct_humidity(_sample.humidity, raw_c, temp_c)
-        pres    = _sample.pressure
-        lux     = ltr559_sensor.get_lux()
+        hum = correct_humidity(_sample.humidity, raw_c, temp_c)
+        pres = _sample.pressure
+        lux = ltr559_sensor.get_lux()
 
-        g   = gas.read_all()
-        ox  = g.oxidising / 1000
-        rd  = g.reducing  / 1000
-        nh3 = g.nh3       / 1000
+        g = gas.read_all()
+        ox = g.oxidising / 1000
+        rd = g.reducing / 1000
+        nh3 = g.nh3 / 1000
 
         try:
-            p    = pms5003_sensor.read()
-            pm1  = float(p.pm_ug_per_m3(1.0))
+            p = pms5003_sensor.read()
+            pm1 = float(p.pm_ug_per_m3(1.0))
             pm25 = float(p.pm_ug_per_m3(2.5))
             pm10 = float(p.pm_ug_per_m3(10))
         except (ReadTimeoutError, SerialTimeoutError, ChecksumMismatchError) as e:

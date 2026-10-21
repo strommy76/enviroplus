@@ -44,7 +44,6 @@ import os
 import sqlite3
 import sys
 from collections import Counter
-from datetime import datetime, timezone
 from pathlib import Path
 
 _BASE = Path(__file__).resolve().parent.parent
@@ -65,6 +64,7 @@ class ImportError_(RuntimeError):
 
 
 # ── ambient ───────────────────────────────────────────────────────────────────
+
 
 def _ambient_rows():
     """Yield outdoor rows from the retained Ambient history.
@@ -89,6 +89,7 @@ def _ambient_rows():
 
 
 # ── nws ───────────────────────────────────────────────────────────────────────
+
 
 def _nws_rows(stations: list[str]):
     """Yield nws_weather rows, one per timestamp, by station priority.
@@ -134,6 +135,7 @@ def _nws_rows(stations: list[str]):
 
 # ── import ────────────────────────────────────────────────────────────────────
 
+
 def _ensure_capture_mode(conn: sqlite3.Connection, table: str) -> None:
     cols = {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
     if "capture_mode" not in cols:
@@ -173,30 +175,34 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--provider", choices=("ambient", "nws"), action="append")
     args = parser.parse_args()
-    logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s %(levelname)-7s %(message)s")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-7s %(message)s")
 
     providers = args.provider or ["ambient", "nws"]
-    stations = [s.strip().upper() for s in
-                os.environ.get("NWS_STATIONS", "").split(",") if s.strip()]
+    stations = [
+        s.strip().upper() for s in os.environ.get("NWS_STATIONS", "").split(",") if s.strip()
+    ]
     if "nws" in providers and not stations:
         # Fall back to the collector's own settings loader rather than guessing.
         import nws_wx
+
         stations = list(nws_wx.load_settings().stations)
 
     conn = connect(SQLITE_PATH)
     try:
         for provider in providers:
             if provider == "ambient":
-                stats = import_table(conn, "outdoor", _ambient_rows(),
-                                     dry_run=args.dry_run)
+                stats = import_table(conn, "outdoor", _ambient_rows(), dry_run=args.dry_run)
             else:
-                stats = import_table(conn, "nws_weather", _nws_rows(stations),
-                                     dry_run=args.dry_run)
-            log.info("%-8s candidates=%d inserted=%d already_present=%d net=%d%s",
-                     provider, stats["candidates"], stats["inserted"],
-                     stats["already_present"], stats["net_rows_added"],
-                     "  [dry-run]" if args.dry_run else "")
+                stats = import_table(conn, "nws_weather", _nws_rows(stations), dry_run=args.dry_run)
+            log.info(
+                "%-8s candidates=%d inserted=%d already_present=%d net=%d%s",
+                provider,
+                stats["candidates"],
+                stats["inserted"],
+                stats["already_present"],
+                stats["net_rows_added"],
+                "  [dry-run]" if args.dry_run else "",
+            )
     finally:
         conn.close()
     return 0

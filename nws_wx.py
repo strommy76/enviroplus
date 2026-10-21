@@ -49,8 +49,8 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from dataclasses import dataclass
 from collections import Counter
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any, Callable
 
@@ -60,16 +60,18 @@ from shared.config_service import load_env, require
 from shared.db_service import connect, write_row
 from shared.logging_service import setup_logger
 from shared.raw_retention import (
-    OutcomeAlreadyRecorded,
-    configure as configure_retention,
     OUTCOME_EMPTY,
     OUTCOME_FETCH_ERROR,
     OUTCOME_MALFORMED,
     OUTCOME_OK,
     OUTCOME_WRITE_ERROR,
+    OutcomeAlreadyRecorded,
     read_day,
     record_outcome,
     retain,
+)
+from shared.raw_retention import (
+    configure as configure_retention,
 )
 from shared.signal_handler import install_shutdown_handler
 
@@ -91,10 +93,11 @@ def outcome_for_exception(exc: BaseException) -> str:
         return OUTCOME_WRITE_ERROR
     return OUTCOME_FETCH_ERROR
 
+
 # ── Paths / config ─────────────────────────────────────────────────────────────
-_BASE       = os.path.dirname(os.path.abspath(__file__))
-_ENV_PATH   = os.path.join(_BASE, ".env")
-LOG_PATH    = os.path.join(_BASE, "nws_wx.log")
+_BASE = os.path.dirname(os.path.abspath(__file__))
+_ENV_PATH = os.path.join(_BASE, ".env")
+LOG_PATH = os.path.join(_BASE, "nws_wx.log")
 # PROVISIONAL: request timeout. Settle from observed NWS response latency
 # (p99 of urlopen duration) once logged.
 REQUEST_TIMEOUT_S = 15
@@ -194,14 +197,18 @@ def _ensure_schema(conn: sqlite3.Connection) -> None:
 def _c_to_f(c):
     return c * 9.0 / 5.0 + 32.0 if c is not None else None
 
+
 def _kmh_to_mph(kmh):
     return kmh * 0.621371 if kmh is not None else None
+
 
 def _pa_to_inhg(pa):
     return pa * 0.00029530 if pa is not None else None
 
+
 def _m_to_miles(m):
     return m / 1609.344 if m is not None else None
+
 
 def _mm_to_in(mm):
     return mm / 25.4 if mm is not None else None
@@ -230,8 +237,9 @@ def classify_response(raw: bytes):
     if not features:
         return None, OUTCOME_EMPTY, "observations collection returned no features"
     try:
-        newest = max((f["properties"] for f in features),
-                     key=lambda p: _parse_observation_ts(p["timestamp"]))
+        newest = max(
+            (f["properties"] for f in features), key=lambda p: _parse_observation_ts(p["timestamp"])
+        )
     except (KeyError, TypeError, ValueError) as exc:
         return None, OUTCOME_MALFORMED, f"feature without a usable timestamp: {exc!r}"
     return newest, OUTCOME_OK, None
@@ -253,8 +261,7 @@ def _fetch(settings: NwsSettings, station: str, now_utc: datetime) -> dict[str, 
     try:
         retain(f"{PROVIDER}/{station}", raw, url=url, outcome=outcome, detail=detail)
     except Exception as exc:
-        log.error("raw retention failed for %s/%s: %s", PROVIDER, station, exc,
-                  exc_info=True)
+        log.error("raw retention failed for %s/%s: %s", PROVIDER, station, exc, exc_info=True)
     if newest is None:
         # Already recorded with its outcome; no second record for this attempt.
         raise OutcomeAlreadyRecorded(f"{station}: {detail}")
@@ -273,27 +280,30 @@ def _parse(p: dict[str, Any], station: str) -> dict[str, Any]:
         amounts = {"CLR": 0, "FEW": 1, "SCT": 2, "BKN": 3, "OVC": 4}
         best = max(cloud_layers, key=lambda x: amounts.get(x.get("amount", ""), 0))
         amount_map = {
-            "CLR": "Clear", "FEW": "Few Clouds", "SCT": "Partly Cloudy",
-            "BKN": "Mostly Cloudy", "OVC": "Overcast"
+            "CLR": "Clear",
+            "FEW": "Few Clouds",
+            "SCT": "Partly Cloudy",
+            "BKN": "Mostly Cloudy",
+            "OVC": "Overcast",
         }
         cloud_cover = amount_map.get(best.get("amount"), best.get("amount"))
 
     return {
-        "ts":               ts,
-        "station_id":       station,
-        "temp_f":           _c_to_f(_val(p.get("temperature"))),
-        "humidity":         _val(p.get("relativeHumidity")),
-        "wind_speed_mph":   _kmh_to_mph(_val(p.get("windSpeed"))),
-        "wind_gust_mph":    _kmh_to_mph(_val(p.get("windGust"))),
-        "wind_direction":   _val(p.get("windDirection")),
-        "barometer_inhg":   _pa_to_inhg(_val(p.get("barometricPressure"))),
+        "ts": ts,
+        "station_id": station,
+        "temp_f": _c_to_f(_val(p.get("temperature"))),
+        "humidity": _val(p.get("relativeHumidity")),
+        "wind_speed_mph": _kmh_to_mph(_val(p.get("windSpeed"))),
+        "wind_gust_mph": _kmh_to_mph(_val(p.get("windGust"))),
+        "wind_direction": _val(p.get("windDirection")),
+        "barometer_inhg": _pa_to_inhg(_val(p.get("barometricPressure"))),
         "visibility_miles": _m_to_miles(_val(p.get("visibility"))),
-        "dewpoint_f":       _c_to_f(_val(p.get("dewpoint"))),
-        "heat_index_f":     _c_to_f(_val(p.get("heatIndex"))),
-        "wind_chill_f":     _c_to_f(_val(p.get("windChill"))),
-        "precip_1h_in":     _mm_to_in(_val(p.get("precipitationLastHour"))),
-        "cloud_cover":      cloud_cover,
-        "conditions":       p.get("textDescription"),
+        "dewpoint_f": _c_to_f(_val(p.get("dewpoint"))),
+        "heat_index_f": _c_to_f(_val(p.get("heatIndex"))),
+        "wind_chill_f": _c_to_f(_val(p.get("windChill"))),
+        "precip_1h_in": _mm_to_in(_val(p.get("precipitationLastHour"))),
+        "cloud_cover": cloud_cover,
+        "conditions": p.get("textDescription"),
     }
 
 
@@ -343,14 +353,12 @@ def _select_observation(
             # The attempt is a fact even when nothing came back. A network
             # failure raises before retain() is reached, so without this the
             # store holds no evidence the poll occurred.
-            record_outcome(f"{PROVIDER}/{station}", OUTCOME_FETCH_ERROR,
-                           detail=str(exc))
+            record_outcome(f"{PROVIDER}/{station}", OUTCOME_FETCH_ERROR, detail=str(exc))
             failures.append(f"{station}: {exc}")
     raise NoFreshObservationError("; ".join(failures))
 
 
-def _write(conn: sqlite3.Connection, logger, d: dict[str, Any],
-           capture_mode: str = "live") -> bool:
+def _write(conn: sqlite3.Connection, logger, d: dict[str, Any], capture_mode: str = "live") -> bool:
     ts = d["ts"]
     d = {**d, "capture_mode": capture_mode}
     if ts is None:
@@ -387,8 +395,7 @@ def run() -> None:
     # Loading config is something non-runtime callers legitimately do, and
     # pointing the canonical root at production from there gives any of them
     # write access to the live tier.
-    configure_retention(os.environ.get(
-        "ENVIRO_RAW_ROOT", os.path.join(_BASE, "raw-capture")))
+    configure_retention(os.environ.get("ENVIRO_RAW_ROOT", os.path.join(_BASE, "raw-capture")))
     log = setup_logger("nws_wx", LOG_PATH)
     is_shutting_down = install_shutdown_handler(logger=log)
     db = connect(settings.sqlite_path)
@@ -404,8 +411,11 @@ def run() -> None:
             # are already recorded; this records the cycle-level outcome, so a
             # whole-lane outage is visible as its own fact rather than only as
             # an absence of rows.
-            record_outcome(PROVIDER, OUTCOME_FETCH_ERROR,
-                           detail=f"no fresh observation from any station: {exc}")
+            record_outcome(
+                PROVIDER,
+                OUTCOME_FETCH_ERROR,
+                detail=f"no fresh observation from any station: {exc}",
+            )
             log.warning("No fresh NWS observation from configured stations: %s", exc)
         except Exception as exc:
             record_outcome(PROVIDER, outcome_for_exception(exc), detail=repr(exc))
@@ -440,7 +450,11 @@ def replay(settings: NwsSettings, conn: sqlite3.Connection, days: list[str]) -> 
         if newest is None:
             continue
         observation = _parse(newest, station)
-        if not 0 <= _observation_age_s(observation["ts"], captured) <= settings.max_observation_age_s:
+        if (
+            not 0
+            <= _observation_age_s(observation["ts"], captured)
+            <= settings.max_observation_age_s
+        ):
             tally["not_fresh_at_capture"] += 1
             continue
         if _write(conn, log, observation, capture_mode="replay"):
@@ -457,11 +471,16 @@ def _utc_day(text: str) -> str:
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="NWS observation collector.")
-    parser.add_argument("--replay", nargs="+", metavar="DAY", type=_utc_day,
-                        help="rebuild 'nws_weather' rows from responses retained on these UTC "
-                             "capture days and exit; writes to the database named by SQLITE_PATH; "
-                             "include the following day to cover observations captured after "
-                             "midnight UTC")
+    parser.add_argument(
+        "--replay",
+        nargs="+",
+        metavar="DAY",
+        type=_utc_day,
+        help="rebuild 'nws_weather' rows from responses retained on these UTC "
+        "capture days and exit; writes to the database named by SQLITE_PATH; "
+        "include the following day to cover observations captured after "
+        "midnight UTC",
+    )
     args = parser.parse_args(argv)
     if not args.replay:
         run()

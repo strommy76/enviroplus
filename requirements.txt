@@ -10,3 +10,4 @@ python-dotenv==1.2.2
 smbus2==0.6.0
 st7735==1.0.0
 pytest==9.0.3
+ruff==0.15.12

@@ -18,39 +18,69 @@ import sqlite3
 
 import pytest
 
-
 from provider_contract import ContractError, ProjectionError, load_contract, project  # noqa: E402
 
 CONTRACT = {
     "provider": "acme",
     "request": {
         "url": "https://api.example.test/current/",
-        "params": {"format": {"literal": "application/json"},
-                   "latitude": {"env": "ACME_LAT"}, "API_KEY": {"env": "ACME_KEY"}},
+        "params": {
+            "format": {"literal": "application/json"},
+            "latitude": {"env": "ACME_LAT"},
+            "API_KEY": {"env": "ACME_KEY"},
+        },
         "timeout_s": 15,
     },
     "poll_s": {"env": "ACME_POLL_S"},
     "response": {
-        "pivot": {"by": "parameterName",
-                  "vocabulary": {"PM2.5": "pm25", "PM10": "pm10", "OZONE": "ozone", "O3": "ozone"},
-                  "columns": {"{key}_aqi": "nowcastAQI", "{key}_category": "aqiCategoryName"}},
-        "row": {"ts": {"time": {"date": "dateObserved", "date_format": "%Y-%m-%d",
-                                "clock": "hourObserved", "clock_format": "%H:%M"}},
-                "local_time_zone": {"field": "localTimeZone"},
-                "reporting_area": {"field": "reportingAreaName"}},
+        "pivot": {
+            "by": "parameterName",
+            "vocabulary": {"PM2.5": "pm25", "PM10": "pm10", "OZONE": "ozone", "O3": "ozone"},
+            "columns": {"{key}_aqi": "nowcastAQI", "{key}_category": "aqiCategoryName"},
+        },
+        "row": {
+            "ts": {
+                "time": {
+                    "date": "dateObserved",
+                    "date_format": "%Y-%m-%d",
+                    "clock": "hourObserved",
+                    "clock_format": "%H:%M",
+                }
+            },
+            "local_time_zone": {"field": "localTimeZone"},
+            "reporting_area": {"field": "reportingAreaName"},
+        },
     },
-    "store": {"table": "aq", "primary_key": "ts",
-              "columns": {"ts": "TEXT", "pm25_aqi": "INTEGER", "pm25_category": "TEXT",
-                          "pm10_aqi": "INTEGER", "pm10_category": "TEXT",
-                          "ozone_aqi": "INTEGER", "ozone_category": "TEXT",
-                          "reporting_area": "TEXT", "local_time_zone": "TEXT"}},
+    "store": {
+        "table": "aq",
+        "primary_key": "ts",
+        "columns": {
+            "ts": "TEXT",
+            "pm25_aqi": "INTEGER",
+            "pm25_category": "TEXT",
+            "pm10_aqi": "INTEGER",
+            "pm10_category": "TEXT",
+            "ozone_aqi": "INTEGER",
+            "ozone_category": "TEXT",
+            "reporting_area": "TEXT",
+            "local_time_zone": "TEXT",
+        },
+    },
 }
 
 
 def _item(name, aqi, date="2026-09-05", hour="14:00", tz="EDT", area="Somewhere"):
-    return {"dateObserved": date, "hourObserved": hour, "localTimeZone": tz,
-            "reportingAreaName": area, "parameterName": name, "nowcastAQI": aqi,
-            "aqiCategoryName": "Good", "siteName": "ignored", "lookupBoundary": "50 Miles"}
+    return {
+        "dateObserved": date,
+        "hourObserved": hour,
+        "localTimeZone": tz,
+        "reportingAreaName": area,
+        "parameterName": name,
+        "nowcastAQI": aqi,
+        "aqiCategoryName": "Good",
+        "siteName": "ignored",
+        "lookupBoundary": "50 Miles",
+    }
 
 
 PAYLOAD = [_item("PM2.5", 11), _item("OZONE", 22), _item("PM10", 3)]
@@ -76,11 +106,14 @@ def contract(tmp_path, env):
 
 # ── Loader ─────────────────────────────────────────────────────────────────────
 
+
 def test_loader_resolves_env_names_and_never_embeds_values_in_the_document(contract):
     assert contract.params["latitude"] == "1.5"
     assert "not-a-real-key" not in json.dumps(CONTRACT)
-    assert contract.request_url() == ("https://api.example.test/current/"
-                                      "?format=application%2Fjson&latitude=1.5&API_KEY=not-a-real-key")
+    assert contract.request_url() == (
+        "https://api.example.test/current/"
+        "?format=application%2Fjson&latitude=1.5&API_KEY=not-a-real-key"
+    )
     assert contract.poll_s == 1800
 
 
@@ -134,14 +167,20 @@ def test_create_table_sql_declares_the_primary_key(contract):
 
 # ── Projection: the nominal row ────────────────────────────────────────────────
 
+
 def test_nominal_payload_projects_the_provider_statement_verbatim(contract):
     row, absent = project(contract, PAYLOAD)
-    assert row == {"ts": "2026-09-05 14:00:00",  # stated wall-clock, not converted
-                   "pm25_aqi": 11, "pm25_category": "Good",
-                   "pm10_aqi": 3, "pm10_category": "Good",
-                   "ozone_aqi": 22, "ozone_category": "Good",
-                   "local_time_zone": "EDT",
-                   "reporting_area": "Somewhere"}
+    assert row == {
+        "ts": "2026-09-05 14:00:00",  # stated wall-clock, not converted
+        "pm25_aqi": 11,
+        "pm25_category": "Good",
+        "pm10_aqi": 3,
+        "pm10_category": "Good",
+        "ozone_aqi": 22,
+        "ozone_category": "Good",
+        "local_time_zone": "EDT",
+        "reporting_area": "Somewhere",
+    }
     assert absent == ()
 
 
@@ -157,15 +196,22 @@ def test_single_digit_hour_is_accepted_and_normalized_to_the_pk_shape(contract):
 
 # ── Projection: true provider states -> NULL + partial ─────────────────────────
 
+
 def test_absent_declared_parameter_is_left_unstated_and_named(contract):
     row, absent = project(contract, [_item("PM2.5", 11), _item("OZONE", 22)])
-    assert "pm10_aqi" not in row and "pm10_category" not in row     # not stated: not written, not NULLed
+    assert (
+        "pm10_aqi" not in row and "pm10_category" not in row
+    )  # not stated: not written, not NULLed
     assert absent == ("pm10_aqi", "pm10_category")
 
 
 def test_null_declared_field_is_a_statement_of_null(contract):
-    row, absent = project(contract, [dict(_item("PM2.5", None), aqiCategoryName=None), _item("OZONE", 2)])
-    assert row["pm25_aqi"] is None and row["pm25_category"] is None   # stated as null: written as NULL
+    row, absent = project(
+        contract, [dict(_item("PM2.5", None), aqiCategoryName=None), _item("OZONE", 2)]
+    )
+    assert (
+        row["pm25_aqi"] is None and row["pm25_category"] is None
+    )  # stated as null: written as NULL
     assert absent == ("pm10_aqi", "pm10_category")
 
 
@@ -174,7 +220,9 @@ def test_explicit_null_statements_are_an_observation(contract):
     for item in payload:
         item["aqiCategoryName"] = None
     row, absent = project(contract, payload)
-    assert row["pm25_aqi"] is None and row["ozone_category"] is None and "ts" in row and absent == ()
+    assert (
+        row["pm25_aqi"] is None and row["ozone_category"] is None and "ts" in row and absent == ()
+    )
 
 
 def test_absent_non_key_field_is_left_unstated_and_named(contract):
@@ -187,41 +235,93 @@ def test_absent_non_key_field_is_left_unstated_and_named(contract):
 
 # ── Projection: outside the declared shape -> ProjectionError ──────────────────
 
-@pytest.mark.parametrize("mutate, match", [
-    (lambda p: [dict(i, parameterName="NO2") if i["parameterName"] == "PM10" else i for i in p],
-     "undeclared parameterName value 'NO2'"),
-    (lambda p: [{k: v for k, v in i.items() if k != "parameterName"} for i in p],
-     "lacks pivot key"),
-    (lambda p: p + [_item("O3", 5)], "two items resolve to store key 'ozone'"),
-    (lambda p: [{("nowCastAQI" if k == "nowcastAQI" else k): v for k, v in i.items()} for i in p],
-     "lacks declared field 'nowcastAQI'"),
-    (lambda p: [{k: v for k, v in i.items() if k not in ("nowcastAQI", "aqiCategoryName")} for i in p],
-     "lacks declared field"),
-    (lambda p: [dict(i, dateObserved=None) for i in p], "must both be strings"),
-    (lambda p: [dict(i, hourObserved=None) for i in p], "must both be strings"),
-    (lambda p: [dict(i, dateObserved="2026-09-05 ") for i in p], "do not match declared formats"),
-    (lambda p: [dict(i, hourObserved=14) for i in p], "must both be strings"),
-    (lambda p: [dict(i, parameterName=["PM2.5"]) if i["parameterName"] == "PM2.5" else i for i in p],
-     "undeclared parameterName value \\['PM2.5'\\]"),
-    (lambda p: [dict(i, nowcastAQI="11") if i["parameterName"] == "PM2.5" else i for i in p],
-     "pm25_aqi: value '11' is not INTEGER"),
-    (lambda p: [dict(i, nowcastAQI=True) if i["parameterName"] == "PM2.5" else i for i in p],
-     "pm25_aqi: value True is not INTEGER"),
-    (lambda p: [dict(i, nowcastAQI=11.5) if i["parameterName"] == "PM2.5" else i for i in p],
-     "pm25_aqi: value 11.5 is not INTEGER"),
-    (lambda p: [dict(i, reportingAreaName=["Somewhere"]) for i in p],
-     "reporting_area: value \\['Somewhere'\\] is not TEXT"),
-    (lambda p: [dict(i, hourObserved="13:00", localTimeZone="EST") if i["parameterName"] == "OZONE" else i for i in p],
-     "items disagree on 'hourObserved'"),
-    (lambda p: [dict(i, reportingAreaName="Elsewhere") if i["parameterName"] == "PM10" else i for i in p],
-     "items disagree on 'reportingAreaName'"),
-    (lambda p: [dict(i, reportingAreaName=None) if i["parameterName"] == "PM10" else
-                {k: v for k, v in i.items() if k != "reportingAreaName"} for i in p],
-     "items disagree on 'reportingAreaName'"),   # omitted vs null are different statements
-    (lambda p: [{"WebServiceError": [{"Message": "Invalid API key"}]}], "lacks pivot key"),
-    (lambda p: [], "not a non-empty list"),
-    (lambda p: {"observations": p}, "not a non-empty list"),
-])
+
+@pytest.mark.parametrize(
+    "mutate, match",
+    [
+        (
+            lambda p: [
+                dict(i, parameterName="NO2") if i["parameterName"] == "PM10" else i for i in p
+            ],
+            "undeclared parameterName value 'NO2'",
+        ),
+        (
+            lambda p: [{k: v for k, v in i.items() if k != "parameterName"} for i in p],
+            "lacks pivot key",
+        ),
+        (lambda p: p + [_item("O3", 5)], "two items resolve to store key 'ozone'"),
+        (
+            lambda p: [
+                {("nowCastAQI" if k == "nowcastAQI" else k): v for k, v in i.items()} for i in p
+            ],
+            "lacks declared field 'nowcastAQI'",
+        ),
+        (
+            lambda p: [
+                {k: v for k, v in i.items() if k not in ("nowcastAQI", "aqiCategoryName")}
+                for i in p
+            ],
+            "lacks declared field",
+        ),
+        (lambda p: [dict(i, dateObserved=None) for i in p], "must both be strings"),
+        (lambda p: [dict(i, hourObserved=None) for i in p], "must both be strings"),
+        (
+            lambda p: [dict(i, dateObserved="2026-09-05 ") for i in p],
+            "do not match declared formats",
+        ),
+        (lambda p: [dict(i, hourObserved=14) for i in p], "must both be strings"),
+        (
+            lambda p: [
+                dict(i, parameterName=["PM2.5"]) if i["parameterName"] == "PM2.5" else i for i in p
+            ],
+            "undeclared parameterName value \\['PM2.5'\\]",
+        ),
+        (
+            lambda p: [dict(i, nowcastAQI="11") if i["parameterName"] == "PM2.5" else i for i in p],
+            "pm25_aqi: value '11' is not INTEGER",
+        ),
+        (
+            lambda p: [dict(i, nowcastAQI=True) if i["parameterName"] == "PM2.5" else i for i in p],
+            "pm25_aqi: value True is not INTEGER",
+        ),
+        (
+            lambda p: [dict(i, nowcastAQI=11.5) if i["parameterName"] == "PM2.5" else i for i in p],
+            "pm25_aqi: value 11.5 is not INTEGER",
+        ),
+        (
+            lambda p: [dict(i, reportingAreaName=["Somewhere"]) for i in p],
+            "reporting_area: value \\['Somewhere'\\] is not TEXT",
+        ),
+        (
+            lambda p: [
+                dict(i, hourObserved="13:00", localTimeZone="EST")
+                if i["parameterName"] == "OZONE"
+                else i
+                for i in p
+            ],
+            "items disagree on 'hourObserved'",
+        ),
+        (
+            lambda p: [
+                dict(i, reportingAreaName="Elsewhere") if i["parameterName"] == "PM10" else i
+                for i in p
+            ],
+            "items disagree on 'reportingAreaName'",
+        ),
+        (
+            lambda p: [
+                dict(i, reportingAreaName=None)
+                if i["parameterName"] == "PM10"
+                else {k: v for k, v in i.items() if k != "reportingAreaName"}
+                for i in p
+            ],
+            "items disagree on 'reportingAreaName'",
+        ),  # omitted vs null are different statements
+        (lambda p: [{"WebServiceError": [{"Message": "Invalid API key"}]}], "lacks pivot key"),
+        (lambda p: [], "not a non-empty list"),
+        (lambda p: {"observations": p}, "not a non-empty list"),
+    ],
+)
 def test_payload_outside_the_declared_shape_is_refused(contract, mutate, match):
     with pytest.raises(ProjectionError, match=match):
         project(contract, mutate(copy.deepcopy(PAYLOAD)))
@@ -239,6 +339,7 @@ def test_row_fields_do_not_depend_on_item_order(contract):
 
 
 # ── Loader checks that mutation testing found untested ─────────────────────────
+
 
 def test_loader_refuses_primary_key_that_is_not_a_row_projection(tmp_path, env):
     doc = copy.deepcopy(CONTRACT)

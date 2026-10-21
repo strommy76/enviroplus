@@ -118,14 +118,14 @@ def snapshot_sqlite(source: Path, target: Path) -> Path:
         status = check.execute("PRAGMA integrity_check").fetchone()[0]
         if status != "ok":
             raise BackupError(f"snapshot failed integrity_check: {status}")
-        tables = [r[0] for r in check.execute(
-            "SELECT name FROM sqlite_master WHERE type='table'")]
+        tables = [r[0] for r in check.execute("SELECT name FROM sqlite_master WHERE type='table'")]
         if not tables:
             raise BackupError("snapshot contains no tables")
     finally:
         check.close()
-    log.info("snapshot ok: %s (%d bytes, %d tables)",
-             target.name, target.stat().st_size, len(tables))
+    log.info(
+        "snapshot ok: %s (%d bytes, %d tables)", target.name, target.stat().st_size, len(tables)
+    )
     return target
 
 
@@ -149,8 +149,9 @@ def staged_snapshots(staging: Path, stem: str) -> list[Path]:
     return sorted(out, key=lambda p: p.name)
 
 
-def clear_snapshots_through(staging: Path, stem: str, ceiling: str, *,
-                            include_ceiling: bool, keep_older: int = 0) -> list[str]:
+def clear_snapshots_through(
+    staging: Path, stem: str, ceiling: str, *, include_ceiling: bool, keep_older: int = 0
+) -> list[str]:
     """Remove this source's snapshots at or below `ceiling`.
 
     Never above it, which protects a backup started after this one. It does not
@@ -174,7 +175,7 @@ def clear_snapshots_through(staging: Path, stem: str, ceiling: str, *,
     # keeping both. The wrap zone is len(older) < keep_older < 2*len(older);
     # past 2x Python clamps to empty and the defect hides, which is why a
     # deliberately extreme mutation could not see it.
-    doomed = older[:max(0, len(older) - keep_older)]
+    doomed = older[: max(0, len(older) - keep_older)]
     if include_ceiling:
         doomed += [p for p in snapshots if p.name == ceiling]
     removed = []
@@ -217,23 +218,27 @@ def run(config_path: Path, *, dry_run: bool = False) -> int:
                 # Branch before the snapshot, not after. Creating a ~24 MB file
                 # and leaving it behind is not a dry run, and nothing later in
                 # this function removes it on the dry-run path.
-                log.info("[dry-run] would snapshot %s and replicate -> %s",
-                         source_path, remote_dir)
+                log.info("[dry-run] would snapshot %s and replicate -> %s", source_path, remote_dir)
                 continue
             snap = staging / f"{source_path.stem}_{stamp}.db"
             snapshot_sqlite(source_path, snap)
             os.chmod(snap, int(cfg["local_staging"]["file_mode"], 8))
             try:
-                results.append(replicate_file(snap, f"{remote_dir}/{snap.name}",
-                                              config_path=rclone_config))
+                results.append(
+                    replicate_file(snap, f"{remote_dir}/{snap.name}", config_path=rclone_config)
+                )
             except Exception:
                 # Keep the snapshot of a failed run: it is the artifact you
                 # inspect to find out why the upload failed. Bound how many
                 # accumulate so a persistently failing remote cannot fill the
                 # disk.
                 dropped = clear_snapshots_through(
-                    staging, source_path.stem, snap.name, include_ceiling=False,
-                    keep_older=max(0, cfg["local_staging"]["failed_run_retention"] - 1))
+                    staging,
+                    source_path.stem,
+                    snap.name,
+                    include_ceiling=False,
+                    keep_older=max(0, cfg["local_staging"]["failed_run_retention"] - 1),
+                )
                 if dropped:
                     log.info("pruned %d older failed-run snapshot(s)", len(dropped))
                 raise
@@ -247,17 +252,20 @@ def run(config_path: Path, *, dry_run: bool = False) -> int:
                 # snapshot kept to explain a failed run has no purpose once a
                 # later run succeeds, and removing only the current file left
                 # those to accumulate for good.
-                dropped = clear_snapshots_through(staging, source_path.stem,
-                                                  snap.name, include_ceiling=True)
-                log.info("cleared %d staged snapshot(s) after verified upload: %s",
-                         len(dropped), ", ".join(dropped))
+                dropped = clear_snapshots_through(
+                    staging, source_path.stem, snap.name, include_ceiling=True
+                )
+                log.info(
+                    "cleared %d staged snapshot(s) after verified upload: %s",
+                    len(dropped),
+                    ", ".join(dropped),
+                )
 
         elif kind == "tree":
             if dry_run:
                 log.info("[dry-run] would copy %s -> %s", source_path, remote_dir)
                 continue
-            results.append(replicate_tree(source_path, remote_dir,
-                                          config_path=rclone_config))
+            results.append(replicate_tree(source_path, remote_dir, config_path=rclone_config))
         else:
             raise BackupError(f"unknown source kind for {name!r}: {kind}")
 
@@ -269,16 +277,27 @@ def run(config_path: Path, *, dry_run: bool = False) -> int:
         raise BackupError("no sources replicated -- refusing to report success")
 
     manifest_dir = Path(cfg["manifest"]["manifest_dir"])
-    manifest = write_manifest(manifest_dir / f"backup_{stamp}.json", results,
-                              extra={"remote_base": base, "config": str(config_path)})
+    manifest = write_manifest(
+        manifest_dir / f"backup_{stamp}.json",
+        results,
+        extra={"remote_base": base, "config": str(config_path)},
+    )
     prune(manifest_dir, "backup_*.json", cfg["manifest"]["retention_count"])
 
     total = sum(r.bytes_transferred or 0 for r in results)
-    log.info("backup verified: %d source(s), %.1f MB, manifest=%s",
-             len(results), total / 1024 / 1024, manifest.name)
+    log.info(
+        "backup verified: %d source(s), %.1f MB, manifest=%s",
+        len(results),
+        total / 1024 / 1024,
+        manifest.name,
+    )
     for r in results:
-        log.info("  %-6s %-40s verified=%s", r.kind,
-                 r.remote_object.split("/")[-1] or r.remote_object, r.verified)
+        log.info(
+            "  %-6s %-40s verified=%s",
+            r.kind,
+            r.remote_object.split("/")[-1] or r.remote_object,
+            r.verified,
+        )
     return 0
 
 
@@ -318,10 +337,12 @@ def verify_restore(config_path: Path) -> int:
             status = conn.execute("PRAGMA integrity_check").fetchone()[0]
             if status != "ok":
                 raise BackupError(f"restored snapshot failed integrity_check: {status}")
-            tables = {r[0] for r in conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table'")}
-            counts = {t: conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
-                      for t in sorted(tables)}
+            tables = {
+                r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            }
+            counts = {
+                t: conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in sorted(tables)
+            }
         finally:
             conn.close()
 
@@ -340,16 +361,18 @@ def verify_restore(config_path: Path) -> int:
         if live.is_file():
             lc = sqlite3.connect(f"file:{live}?mode=ro", uri=True)
             try:
-                live_tables = {r[0] for r in lc.execute(
-                    "SELECT name FROM sqlite_master WHERE type='table'")}
-                live_counts = {t: lc.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
-                               for t in sorted(live_tables)}
+                live_tables = {
+                    r[0] for r in lc.execute("SELECT name FROM sqlite_master WHERE type='table'")
+                }
+                live_counts = {
+                    t: lc.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
+                    for t in sorted(live_tables)
+                }
             finally:
                 lc.close()
             missing = live_tables - tables
             if missing:
-                raise BackupError(
-                    f"restored snapshot is missing live tables: {sorted(missing)}")
+                raise BackupError(f"restored snapshot is missing live tables: {sorted(missing)}")
 
             # The snapshot is older than the live database, so it must have
             # FEWER OR EQUAL rows -- never more. More rows means the restore is
@@ -372,6 +395,7 @@ def verify_restore(config_path: Path) -> int:
 
 def _run_rclone(config_path: str | None, *args: str) -> str:
     import subprocess
+
     argv = ["rclone"] + (["--config", config_path] if config_path else []) + list(args)
     result = subprocess.run(argv, capture_output=True, text=True, timeout=1800)
     if result.returncode != 0:
@@ -383,8 +407,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--verify-restore", action="store_true",
-                        help="pull the newest remote snapshot back and prove it opens")
+    parser.add_argument(
+        "--verify-restore",
+        action="store_true",
+        help="pull the newest remote snapshot back and prove it opens",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(

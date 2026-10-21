@@ -15,7 +15,6 @@ CHANGELOG:
 
 import itertools
 import json
-import os
 import runpy
 import shutil
 import sqlite3
@@ -94,9 +93,13 @@ def _install_drivers(monkeypatch, pms_reads, gas_reads):
     module("smbus2", SMBus=lambda *a, **k: None)
     module("bme280", BME280=BME280)
     module("ltr559", LTR559=LTR559)
-    module("pms5003", PMS5003=PMS5003, ReadTimeoutError=ReadTimeoutError,
-           ChecksumMismatchError=type("ChecksumMismatchError", (Exception,), {}),
-           SerialTimeoutError=type("SerialTimeoutError", (Exception,), {}))
+    module(
+        "pms5003",
+        PMS5003=PMS5003,
+        ReadTimeoutError=ReadTimeoutError,
+        ChecksumMismatchError=type("ChecksumMismatchError", (Exception,), {}),
+        SerialTimeoutError=type("SerialTimeoutError", (Exception,), {}),
+    )
 
     def read_all():
         outcome = next(gas_reads)
@@ -118,16 +121,19 @@ def _run(tmp_path, monkeypatch, pms_reads, gas_reads, loops):
     (app / "config.json").write_text(json.dumps(config))
     db = tmp_path / "enviro.db"
     with sqlite3.connect(db) as conn:
-        conn.execute("CREATE TABLE outdoor (ts TEXT PRIMARY KEY, tempf REAL, humidity REAL,"
-                     " windspeedmph REAL, windgustmph REAL, winddir REAL, uv REAL,"
-                     " dailyrainin REAL)")
+        conn.execute(
+            "CREATE TABLE outdoor (ts TEXT PRIMARY KEY, tempf REAL, humidity REAL,"
+            " windspeedmph REAL, windgustmph REAL, winddir REAL, uv REAL,"
+            " dailyrainin REAL)"
+        )
     cpu = tmp_path / "cpu_temp"
     cpu.write_text("52000")
-    (app / ".env").write_text(f"SQLITE_PATH={db}\nCONFIG_PATH={app / 'config.json'}\n"
-                              f"CPU_TEMP_PATH={cpu}\n")
+    (app / ".env").write_text(
+        f"SQLITE_PATH={db}\nCONFIG_PATH={app / 'config.json'}\nCPU_TEMP_PATH={cpu}\n"
+    )
     for key in ("SQLITE_PATH", "CONFIG_PATH", "CPU_TEMP_PATH"):
-        monkeypatch.setenv(key, "")   # registers the original for restore,
-        monkeypatch.delenv(key)       # then lets the module's .env load set it
+        monkeypatch.setenv(key, "")  # registers the original for restore,
+        monkeypatch.delenv(key)  # then lets the module's .env load set it
 
     _install_drivers(monkeypatch, pms_reads, gas_reads)
     monkeypatch.syspath_prepend(str(app))
@@ -136,6 +142,7 @@ def _run(tmp_path, monkeypatch, pms_reads, gas_reads, loops):
     # readings.ts is second-resolution; give each publish its own second.
     clock = (f"2026-10-11 12:00:{s:02d}" for s in itertools.count())
     import shared.utils
+
     monkeypatch.setattr(shared.utils, "utc_now", lambda: next(clock))
 
     published = []
@@ -144,9 +151,11 @@ def _run(tmp_path, monkeypatch, pms_reads, gas_reads, loops):
     def sleep(_seconds):
         if len(published) >= loops:
             raise _Stop
+
     monkeypatch.setattr(time, "sleep", sleep)
 
     import shared.db_service
+
     real_connect = shared.db_service.connect
 
     def connect(path):
@@ -159,7 +168,9 @@ def _run(tmp_path, monkeypatch, pms_reads, gas_reads, loops):
             def commit(self):
                 real_commit(conn)
                 published.append(True)
+
         return Counting()
+
     monkeypatch.setattr(shared.db_service, "connect", connect)
 
     try:
