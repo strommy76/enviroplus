@@ -276,7 +276,9 @@ def read_sample():
 
 
 def retain_sample(sample):
-    """Write the record to Tier 1. A failed lane makes the record partial."""
+    """Write the record to Tier 1. A failed lane makes the record partial. A
+    record the store could not keep raises RetentionWriteError, which ends the
+    process before anything is derived from it."""
     failed = sorted(k[:-len("_error")] for k in sample if k.endswith("_error"))
     retain(local_sensors.PROVIDER, json.dumps(sample, separators=(",", ":")).encode(),
            outcome=OUTCOME_PARTIAL if failed else OUTCOME_OK,

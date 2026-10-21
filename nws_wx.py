@@ -61,6 +61,7 @@ from shared.db_service import connect, write_row
 from shared.logging_service import setup_logger
 from shared.raw_retention import (
     OutcomeAlreadyRecorded,
+    RetentionWriteError,
     configure as configure_retention,
     OUTCOME_EMPTY,
     OUTCOME_FETCH_ERROR,
@@ -250,11 +251,9 @@ def _fetch(settings: NwsSettings, station: str, now_utc: datetime) -> dict[str, 
     # not the single observation this collector selects from it. The station is
     # part of the provider key so per-station history stays separable.
     newest, outcome, detail = classify_response(raw)
-    try:
-        retain(f"{PROVIDER}/{station}", raw, url=url, outcome=outcome, detail=detail)
-    except Exception as exc:
-        log.error("raw retention failed for %s/%s: %s", PROVIDER, station, exc,
-                  exc_info=True)
+    # A response the canonical tier could not store raises RetentionWriteError
+    # here, before any derived row is written from it.
+    retain(f"{PROVIDER}/{station}", raw, url=url, outcome=outcome, detail=detail)
     if newest is None:
         # Already recorded with its outcome; no second record for this attempt.
         raise OutcomeAlreadyRecorded(f"{station}: {detail}")
@@ -399,6 +398,11 @@ def run() -> None:
         try:
             observation = _select_observation(settings, now_utc=datetime.now(UTC), logger=log)
             _write(db, log, observation)
+        except RetentionWriteError:
+            # The canonical tier is not storing: no row may be derived, and
+            # the outcome cannot be recorded. End the process so the unit's
+            # restart and OnFailure policy surface it.
+            raise
         except NoFreshObservationError as exc:
             # Every configured station failed or went stale. Per-station causes
             # are already recorded; this records the cycle-level outcome, so a

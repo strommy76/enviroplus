@@ -249,25 +249,20 @@ def test_busy_timeout_is_set(tmp_path):
     assert db.execute("PRAGMA busy_timeout").fetchone()[0] == BUSY_TIMEOUT_MS
 
 
-# ── Operational write failure degrades observably; it must not propagate ──────
+# ── A write failure is raised; it never reads as success ─────────────────────
 
-def test_os_write_failure_is_logged_not_raised(raw_root, monkeypatch, caplog):
-    """A full or unwritable disk must not take the collector loop down with it.
-
-    These calls sit inside the collectors' exception handlers, so a raise would
-    exit the while loop and lose the derived write too -- both tiers instead of
-    one.
-    """
-    import logging
-
+def test_os_write_failure_raises_retention_write_error(raw_root, monkeypatch):
+    """A full or unwritable disk raises, so a caller cannot derive a row from a
+    record the canonical tier does not hold. (Replaces the 2026-08-06 rule
+    that logged the failure and let retain() report success.)"""
     def boom(*a, **k):
         raise OSError(28, "No space left on device")
 
     monkeypatch.setattr(rr.Path, "open", boom)
-    with caplog.at_level(logging.ERROR):
+    with pytest.raises(rr.RetentionWriteError):
         rr.record_outcome("acme", rr.OUTCOME_FETCH_ERROR, detail="x")
-        assert rr.retain("acme", b'{"v":1}') == rr.OUTCOME_OK
-    assert "retention write failed" in caplog.text
+    with pytest.raises(rr.RetentionWriteError):
+        rr.retain("acme", b'{"v":1}')
 
 
 def test_programming_error_still_raises(raw_root):

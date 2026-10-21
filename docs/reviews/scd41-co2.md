@@ -12,6 +12,8 @@ Bryan, 2026-10-20, to pi-claude:
 - 22:11 EDT: "No, I would like all values to be stored. I didn't say that we should stop recording BME280 data. Also, can we refine the BME280 compensation using the SCD41? You can ingest the Enviro+ commits/PRs to understand what has been done in the past"
 - 22:13 EDT: "We should ALWAYS be storing all raw data in a Tier 1 store! Derived (i.e. compensated) data goes in Tier 2"
 - 22:15 EDT: "I approve the plan, and yes keep every read"
+- 22:36 EDT, on F5: "Why does a failed write record success? Shouldn't success be determined after all writes are attempted? And shouldn't partial writes log success vs failure accurately? What is the optimal anti-fragile logic? What is generally accepted best practice?"
+- 22:38 EDT, on pi-claude's recommendation: "no, fold it in"
 
 Executor: pi-claude, by operator assignment (AGENTS B).
 
@@ -99,7 +101,7 @@ The `47f9dd6` measurement:
 - A PMS5003 or SCD41 error is recorded in Tier 1 as `partial` with the lane's error. That lane is NULL for the interval, and the dashboard logs a warning.
   - For the SCD41 that covers any `OSError`. `I2cError` subclasses it, and the transceiver's address ioctl raises a plain one.
 - The SCD41 restarts measurement on the next loop after an error.
-- A Tier 1 write OS error is logged by `raw_retention` and does not stop the loop. That is raw_retention's existing contract.
+- A Tier 1 write failure raises `RetentionWriteError` (folded F5, see below). It ends the dashboard, and the weather and AirNow collectors, before anything is derived from the read. systemd restarts the unit, and persistent failure triggers `OnFailure`.
 
 **Revert, forward-only (the 1c2eb9c F1 finding, adopted):**
 - The previous code inserts 15 values by position. Against the widened table every write fails, and the unit ends up failed.
@@ -111,9 +113,10 @@ The `47f9dd6` measurement:
 - Tier 1 files are appended to and are never edited.
 
 **Deploy order:**
-1. Install `sensirion-i2c-scd4x==1.1.0` into `/home/pistrommy/.virtualenvs/pimoroni`.
-2. Fast-forward the main checkout. The service runs from it, and `CONFIG_PATH` points at its `dynamic_config.pi5.json`.
-3. Restart `enviro_dash.service`.
+1. Land `shared` `fix/retention-write-failure-surfaces` and fast-forward `~/projects/shared`. The enviroplus code imports its `RetentionWriteError`.
+2. Install `sensirion-i2c-scd4x==1.1.0` into `/home/pistrommy/.virtualenvs/pimoroni`.
+3. Fast-forward the enviroplus main checkout. The services run from it, and `CONFIG_PATH` points at its `dynamic_config.pi5.json`.
+4. Install the changed `ambient_wx`, `nws_wx` and `airnow_wx` unit files and run `daemon-reload`. Then restart `enviro_dash`, `ambient_wx`, `nws_wx` and `airnow_wx` one at a time, checking each.
 4. Check the live result:
    - The unit is active.
    - Tier 1 records are arriving under `raw-capture/local_sensors/`.
@@ -248,19 +251,38 @@ Power observed. Each violation was made in the real implementation, and the full
 
 Full suite: 247 passed.
 
-## Discovery (AGENTS D, not acted on)
+## F5 folded: a failed Tier 1 write raises (operator, 22:38)
 
-**F5 (round 2):**
-- `shared.raw_retention.retain()` returns its outcome even when the append failed with an OS error. The error is only logged.
-- The dashboard then writes a `readings` row whose reads are not in Tier 1. Under j that row cannot be rebuilt, yet the unit stays healthy.
-- Fixing it means changing `shared`'s write contract, which is outside this plan. It is raised to the operator.
+Shared and consumer changes:
 
-The supported Ruff lane is red on `main` (`d350673`):
+| Repository | Change |
+|---|---|
+| `shared` | `retain()`/`record_outcome()` raise `RetentionWriteError`, partial line truncated |
+| enviroplus collectors | `retain()` no longer wrapped; loops re-raise |
+| enviroplus dashboard | Its Tier 1 write raises before derivation |
+| Collector units | `OnFailure` and a start limit (`100s`/2) |
+
+**The start limit is PROVISIONAL.** It is the startup timeout of 90 s plus `RestartSec` 10 s, the same rule as `enviro_dash.service`.
+
+**Practice adopted:** write-ahead, then derive only from what is stored, report the write's own outcome, and alert through a watched channel. The `shared` review artifact `docs/retention-write-failure-review.md` has the reasoning and why no retry buffer was added.
+
+**Power observed,** with the enviroplus suite run against the `shared` branch (251 passed):
+
+| Violation | Result |
+|---|---|
+| Ambient swallows the failure at `retain()` | 1 failed |
+| NWS swallows the failure at `retain()` | 1 failed |
+| Provider loop swallows the error | 1 failed |
+| Dashboard swallows its Tier 1 failure | 1 failed |
+
+The ambient and NWS loop-level re-raises have no test.
+
+**The supported Ruff lane was red on `main` before this change** (AGENTS D, not acted on):
 - `ruff check`: 38 findings.
-- `ruff format --check`: 19 files would be reformatted.
-- Ruff is not installed in the dashboard interpreter.
+- `ruff format --check`: 19 files.
+- Ruff is not in the dashboard interpreter.
 
-This branch removes one pre-existing finding per file in `enviro_dash3.py` (2→1) and `tests/test_dash_loop.py` (1→0). The new `local_sensors.py` is clean.
+This branch removes one pre-existing finding in each of `enviro_dash3.py` and `tests/test_dash_loop.py`, and its new files are clean.
 
 ## Review
 

@@ -53,6 +53,7 @@ from shared.db_service import connect, write_row
 from shared.logging_service import setup_logger
 from shared.raw_retention import (
     OutcomeAlreadyRecorded,
+    RetentionWriteError,
     configure as configure_retention,
     OUTCOME_EMPTY,
     OUTCOME_FETCH_ERROR,
@@ -205,11 +206,9 @@ def _fetch(url: str, mac: str, log):
     observation (None when the response carried none)."""
     raw = urllib.request.urlopen(url, timeout=REQUEST_TIMEOUT_S).read()
     observation, outcome, detail = classify_response(raw, mac)
-    try:
-        retain(PROVIDER, raw, url=url, outcome=outcome, detail=detail)
-    except Exception as exc:
-        # Losing the canonical copy must not also lose the derived row.
-        log.error("raw retention failed for %s: %s", PROVIDER, exc, exc_info=True)
+    # A response the canonical tier could not store raises RetentionWriteError
+    # here, before any derived row is written from it.
+    retain(PROVIDER, raw, url=url, outcome=outcome, detail=detail)
     if outcome == OUTCOME_MALFORMED:
         # Recorded above; the loop must not record a second outcome for it.
         raise OutcomeAlreadyRecorded(f"unparseable Ambient response: {detail}")
@@ -238,6 +237,11 @@ def run() -> None:
                 log.info("outdoor row written  ts=%s  temp=%s°F  hum=%s%%  wind=%smph",
                          row_from_observation(observation)["ts"], observation.get("tempf"),
                          observation.get("humidity"), observation.get("windspeedmph"))
+        except RetentionWriteError:
+            # The canonical tier is not storing: no row may be derived, and
+            # the outcome cannot be recorded. End the process so the unit's
+            # restart and OnFailure policy surface it.
+            raise
         except OutcomeAlreadyRecorded as e:
             log.warning("%s", e)
         except urllib.error.URLError as e:

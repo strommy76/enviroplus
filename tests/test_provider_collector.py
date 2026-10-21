@@ -392,3 +392,23 @@ def test_replay_scans_one_capture_day_before_the_named_day(collector):
 def test_replay_refuses_an_observation_day_after_today(collector):
     with pytest.raises(Exception, match="after today"):
         collector.replay(["2999-01-01"])
+
+
+def test_an_arrival_the_canonical_tier_could_not_store_derives_nothing_and_ends_the_run(
+        collector, monkeypatch):
+    """A failed Tier 1 append ends the collector (restart/OnFailure surface it);
+    no derived row is written from bytes the canonical tier does not hold."""
+    monkeypatch.setattr(collector, "fetch", lambda: json.dumps(PAYLOAD).encode())
+
+    real_fsync, failures = rr.os.fsync, [OSError(28, "No space left on device")]
+
+    def fsync(fd):
+        # Fails once: the arrival is lost, but recording an outcome afterwards
+        # would succeed, so only the explicit re-raise ends the run.
+        if failures:
+            raise failures.pop()
+        real_fsync(fd)
+    monkeypatch.setattr(rr.os, "fsync", fsync)
+    with pytest.raises(rr.RetentionWriteError):
+        collector.run(_stop_after_first_attempt(), sleep=lambda s: None)
+    assert collector.db.execute("SELECT count(*) FROM aq").fetchone() == (0,)

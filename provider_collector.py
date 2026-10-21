@@ -45,6 +45,7 @@ from shared.raw_retention import (
     OUTCOME_OK,
     OUTCOME_PARTIAL,
     OUTCOME_WRITE_ERROR,
+    RetentionWriteError,
     configure as configure_retention,
     read_day,
     record_outcome,
@@ -130,10 +131,9 @@ class Collector:
         url = self.contract.request_url()
         raw = self.fetch()
         arrival = project_arrival(self.contract, raw)
-        try:
-            retain(provider, raw, url=url, outcome=arrival.outcome, detail=arrival.detail)
-        except Exception as exc:  # retention failure must not lose the derived row too
-            self.log.error("raw retention failed for %s: %s", provider, exc, exc_info=True)
+        # An arrival the canonical tier could not store raises
+        # RetentionWriteError here, before its derived row is written.
+        retain(provider, raw, url=url, outcome=arrival.outcome, detail=arrival.detail)
         return self.write(arrival)
 
     def write(self, arrival: Arrival) -> bool:
@@ -211,6 +211,11 @@ class Collector:
         while not is_shutting_down():
             try:
                 self.attempt()
+            except RetentionWriteError:
+                # The canonical tier is not storing: no row may be derived, and
+                # the outcome cannot be recorded. End the process so the unit's
+                # restart and OnFailure policy surface it.
+                raise
             except Exception as exc:
                 record_outcome(provider, outcome_for_exception(exc), detail=repr(exc),
                                url=self.contract.request_url())

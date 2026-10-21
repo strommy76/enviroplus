@@ -2,6 +2,15 @@
 Description=AirNow (EPA) Air Quality Poller (provider capture contract)
 After=network-online.target
 Wants=network-online.target
+# A Tier 1 (raw retention) write failure ends the collector rather than letting
+# it derive rows the canonical tier does not hold; persistent failure alerts.
+OnFailure=stocks_ops_alert@%n.service
+# Admit an initial start and one recovery attempt; repeated rapid failure stops.
+# 100s = effective native startup timeout 90s + existing restart spacing 10s,
+# the rule enviro_dash.service uses. PROVISIONAL horizon: measure
+# failed-start/recovery intervals across boots.
+StartLimitIntervalSec=100s
+StartLimitBurst=2
 
 [Service]
 Type=simple

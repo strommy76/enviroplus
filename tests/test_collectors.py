@@ -152,3 +152,43 @@ def test_nws_replay_writes_fresh_newest_observation(tmp_path):
     assert tally["written"] == 1 and tally["not_fresh_at_capture"] == 1
     temp, mode = db.execute("SELECT temp_f, capture_mode FROM nws_weather").fetchone()
     assert temp == pytest.approx(68.0) and mode == "replay"   # 20 C = 68 F
+
+
+def test_ambient_response_the_canonical_tier_could_not_store_is_not_returned(
+        monkeypatch, tmp_path):
+    raw_retention.configure(tmp_path)
+    body = _ambient_body({"dateutc": 1, "tempf": 70.0})
+
+    class Response:
+        def read(self):
+            return body
+    monkeypatch.setattr(ambient_wx.urllib.request, "urlopen", lambda url, timeout: Response())
+
+    def fsync(_fd):
+        raise OSError(28, "No space left on device")
+    monkeypatch.setattr(raw_retention.os, "fsync", fsync)
+    with pytest.raises(raw_retention.RetentionWriteError):
+        ambient_wx._fetch("https://example.invalid/devices", MAC, ambient_wx.setup_logger(
+            "ambient_test", str(tmp_path / "t.log"), console=False))
+
+
+def test_nws_response_the_canonical_tier_could_not_store_ends_the_cycle(monkeypatch, tmp_path):
+    raw_retention.configure(tmp_path / "raw")
+    body = _nws_body(datetime.now(UTC).isoformat(timespec="seconds"), temp_c=20.0)
+
+    class Response:
+        def read(self):
+            return body
+    monkeypatch.setattr(nws_wx.urllib.request, "urlopen", lambda req, timeout: Response())
+
+    def fsync(_fd):
+        raise OSError(28, "No space left on device")
+    monkeypatch.setattr(raw_retention.os, "fsync", fsync)
+    settings = nws_wx.NwsSettings(
+        api_base_url="https://api.weather.gov", stations=("KMLB",), user_agent="t",
+        poll_s=600, shutdown_check_s=1, max_observation_age_s=7200,
+        collection_lookback_s=21600, sqlite_path=str(tmp_path / "n.db"))
+    log = nws_wx.setup_logger("nws_test", str(tmp_path / "n.log"), console=False)
+    # Not swallowed as a station failure, so the loop cannot derive from it.
+    with pytest.raises(raw_retention.RetentionWriteError):
+        nws_wx._select_observation(settings, now_utc=datetime.now(UTC), logger=log)

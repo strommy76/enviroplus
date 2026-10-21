@@ -485,3 +485,28 @@ def test_a_pre_tier1_row_sharing_the_first_intervals_key_is_kept(tmp_path, monke
     run = Run(tmp_path, monkeypatch, rows=2, prepare_db=prepare)
     assert run.start == start   # the run began in the same minute
     assert run.readings("ts, temp_f")[0] == (legacy_ts, 99.9)
+
+
+def test_a_read_the_canonical_tier_could_not_store_ends_the_process_underived(
+        tmp_path, monkeypatch):
+    """The third read's Tier 1 append fails: the process ends (restart and
+    OnFailure surface it), and no readings row is derived from that read."""
+    from shared import raw_retention
+
+    real_fsync, appends = raw_retention.os.fsync, itertools.count()
+
+    def fsync(fd):
+        if next(appends) == 2:
+            raise OSError(28, "No space left on device")
+        real_fsync(fd)
+    monkeypatch.setattr(raw_retention.os, "fsync", fsync)
+    run = None
+    with pytest.raises(raw_retention.RetentionWriteError):
+        run = Run(tmp_path, monkeypatch, rows=99, scd41_reads=iter([(600, 23.0, 45.0),
+                                                                    (601, 23.0, 45.0),
+                                                                    (602, 23.0, 45.0)]))
+    assert run is None
+    with sqlite3.connect(tmp_path / "enviro.db") as conn:
+        # Read 1's interval was closed by read 2; read 2's would have been
+        # closed by read 3, which never reached Tier 1.
+        assert conn.execute("SELECT co2_ppm FROM readings").fetchall() == [(600,)]
