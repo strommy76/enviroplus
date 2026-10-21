@@ -36,7 +36,7 @@ A missing or failed reading shows `--` and leaves a gap in its trend; it is neve
 | PM2.5 | PMS5003 | µg/m³ | Fine particles — primary AQI metric |
 | PM10 | PMS5003 | µg/m³ | Coarse particles |
 | CO₂ | SCD41 | ppm | Adafruit breakout, I2C 0x62; photoacoustic NDIR, one sample per 5 s, BME280 pressure compensation |
-| Temperature, humidity | SCD41 | °C, % RH | Stored as the sensor reports them (factory 4 °C offset); the display uses the BME280 |
+| Temperature, humidity | SCD41 | °C, % RH | Stored as the sensor reports them (factory 4 °C offset); the indoor temperature and humidity on screen and in Grafana |
 
 ---
 
@@ -198,7 +198,7 @@ The BME280 sits close to the Pi's CPU and reads high. On this Pi 5 with M.2 spac
 | `raw-capture/local_sensors/<day>.ndjson` | 1, canonical | Every loop's reads, each as its driver returned it; a failed read is recorded as that lane's error |
 | `readings` (SQLite) | 2, derived | One row per publish interval, projected by `local_sensors.derive_row` with the config's calibration |
 
-Live and `local_sensors.py --replay DAY...` use the same projection, so a calibration change is applied to past days by replaying them. Rows written before 2026-10-21 have no Tier 1 reads: they are kept as written and never rebuilt or dropped.
+Live and `local_sensors.py --replay DAY...` use the same projection, so a calibration change is applied to past days by replaying them. A row is keyed by its interval, so a replay replaces it in place. Rows from before the first `local_sensors` record have no Tier 1 reads: they are kept as written and never rebuilt or dropped. One live/replay difference: an interval cut short by a process restart holds only the post-restart reads live, and all of its reads on replay.
 
 ---
 
@@ -270,12 +270,13 @@ ORDER BY ts;
 ## 📋 Roadmap
 
 - [x] 10-sensor dashboard on ST7735 display
-- [x] CPU temperature compensation with auto-derived factor
+- [x] CPU temperature compensation (constant self-heat offset since 2026-07-30)
 - [x] SQLite logging with UTC timestamps + Pi telemetry
 - [x] Rotating log file
 - [x] systemd service with auto-restart
 - [x] Hot-reloadable dashboard config, single source of truth
-- [x] BME280 averaging + CPU history smoothing for noise reduction
+- [x] BME280 averaging for noise reduction
+- [x] Every local sensor read retained in Tier 1; `readings` derived and replayable
 - [ ] Ruff linting with pre-commit hook (referee not installed)
 - [x] Adafruit SCD-41 CO₂ sensor integration
 - [ ] Grafana dashboard on AI host via Tailscale

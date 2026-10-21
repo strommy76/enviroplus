@@ -28,6 +28,7 @@ import struct
 import sys
 import time
 import types
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -65,7 +66,7 @@ class Signal:
         self.value = value
 
 
-def _install_drivers(monkeypatch, pms_reads, gas_reads, scd41_reads, scd41_calls):
+def _install_drivers(monkeypatch, pms_reads, gas_reads, scd41_reads, scd41_calls, bme_reads):
     class Display:
         width, height = 160, 80
 
@@ -83,7 +84,7 @@ def _install_drivers(monkeypatch, pms_reads, gas_reads, scd41_reads, scd41_calls
             pass
 
         def update_sensor(self):
-            self.temperature, self.humidity, self.pressure = 27.0, 50.0, 1016.0
+            self.temperature, self.humidity, self.pressure = next(bme_reads)
 
     class LTR559:
         def get_lux(self):
@@ -171,16 +172,16 @@ class Run:
     """One loop run: what reached Tier 1 and Tier 2, and what was drawn."""
 
     def __init__(self, tmp_path, monkeypatch, rows, pms_reads=None, gas_reads=None,
-                 scd41_reads=None, prepare_db=None):
+                 scd41_reads=None, bme_reads=None, prepare_db=None, publish_s=1):
         self.scd41_calls, self.states = [], []
         app = tmp_path / "app"
         app.mkdir()
         for name in ("enviro_dash3.py", "enviro_screens.py", "local_sensors.py"):
             shutil.copy(REPO / name, app / name)
         self.config = json.loads((REPO / "dynamic_config.pi5.json").read_text())
-        # One-second publish intervals and a clock that advances a second per
-        # read: every read closes the previous read's interval.
-        self.config["intervals"] = {"publish_s": 1, "display_refresh_s": 0.001}
+        # A clock that advances a second per read: with one-second intervals
+        # every read closes the previous read's interval.
+        self.config["intervals"] = {"publish_s": publish_s, "display_refresh_s": 0.001}
         (app / "config.json").write_text(json.dumps(self.config))
         self.db = tmp_path / "enviro.db"
         with sqlite3.connect(self.db) as conn:
@@ -199,7 +200,8 @@ class Run:
 
         _install_drivers(monkeypatch, pms_reads or itertools.repeat(GOOD),
                          gas_reads or itertools.repeat(None),
-                         scd41_reads or itertools.repeat(None), self.scd41_calls)
+                         scd41_reads or itertools.repeat(None), self.scd41_calls,
+                         bme_reads or itertools.repeat((27.0, 50.0, 1016.0)))
         monkeypatch.syspath_prepend(str(app))
         for name in ("enviro_screens", "local_sensors"):
             monkeypatch.delitem(sys.modules, name, raising=False)
@@ -211,15 +213,21 @@ class Run:
                                  "indoor": dict(state["indoor"])})
                             or real_render(page, state))
 
-        clock = itertools.count(1_792_540_800)   # 2026-10-21 00:00:00 UTC
+        # Starts at the real time, aligned to an interval: raw_retention files
+        # each record under the real UTC day, so the test reads that day.
+        start = int(time.time()) // 60 * 60
+        self.start = datetime.fromtimestamp(start, timezone.utc)
+        self.day = datetime.now(timezone.utc).date().isoformat()
+        clock = itertools.count(start)
         monkeypatch.setattr(time, "time", lambda: float(next(clock)))
+        since = self.start.strftime("%Y-%m-%d %H:%M:%S")
 
         def sleep(_seconds):
             with sqlite3.connect(self.db) as conn:
                 have = conn.execute("SELECT count(*) FROM sqlite_master"
                                     " WHERE name='readings'").fetchone()[0] and \
-                    conn.execute("SELECT count(*) FROM readings"
-                                 " WHERE ts >= '2026-10-21'").fetchone()[0]
+                    conn.execute("SELECT count(*) FROM readings WHERE ts >= ?",
+                                 (since,)).fetchone()[0]
             if have >= rows:
                 raise _Stop
         monkeypatch.setattr(time, "sleep", sleep)
@@ -236,7 +244,7 @@ class Run:
     def tier1(self):
         from shared.raw_retention import read_day
         return [(outcome, json.loads(blob)) for _c, outcome, blob in
-                read_day("local_sensors", "2026-10-21") if blob is not None]
+                read_day("local_sensors", self.day) if blob is not None]
 
 
 def test_failed_pm_read_is_stored_as_null_not_the_last_good_value(tmp_path, monkeypatch):
@@ -265,6 +273,8 @@ def test_tier1_keeps_every_read_as_the_driver_returned_it(tmp_path, monkeypatch)
     assert first["cpu_temp_milli_c"] == 52000
     assert first["scd41"] == {"co2_ppm": 612, "temperature_c": 23.871337, "rh": 47.625732}
     assert "pms5003_frame_hex" not in second and "no frame" in second["pms5003_error"]
+    # The proximity polling between frames is retained with the next record.
+    assert second["ltr559_proximity"] and set(second["ltr559_proximity"]) == {0}
 
 
 def test_readings_are_derived_and_replay_reproduces_them(tmp_path, monkeypatch):
@@ -281,10 +291,16 @@ def test_readings_are_derived_and_replay_reproduces_them(tmp_path, monkeypatch):
     import local_sensors
     with sqlite3.connect(run.db) as conn:
         conn.execute("DELETE FROM readings")
-        assert local_sensors.replay(conn, ["2026-10-21"], run.config)["rows"] == 4
+        assert local_sensors.replay(conn, [run.start.date().isoformat()],
+                                    run.config)["rows"] == 4
         replayed = conn.execute(f"SELECT {READINGS} FROM readings ORDER BY ts").fetchall()
     # Replay also closes the interval live had not closed when it stopped.
     assert replayed[:3] == live
+
+    # Replaying over the live rows replaces them in place: no second row.
+    with sqlite3.connect(run.db) as conn:
+        local_sensors.replay(conn, [run.start.date().isoformat()], run.config)
+        assert conn.execute("SELECT count(*) FROM readings").fetchone()[0] == 4
 
 
 def test_scd41_sample_is_stored_once_as_reported_and_a_gap_is_null(tmp_path, monkeypatch):
@@ -338,3 +354,67 @@ def test_an_existing_fifteen_column_table_keeps_its_rows_and_gains_the_new_colum
     rows = run.readings()
     assert rows[0] == legacy + (None, None, None)
     assert rows[1][15:] == (612, 23.9, 47.6)
+
+
+def test_an_interval_takes_each_lanes_newest_read_and_the_mean_bme280_temperature(
+        tmp_path, monkeypatch):
+    # Three-second intervals of three reads each (one read per second).
+    n = json.loads((REPO / "dynamic_config.pi5.json").read_text())["calibration"]["bme_samples"]
+    temps = itertools.cycle([26.0, 27.0, 28.0])
+    rh = itertools.count(40.0)
+    bme = ((next(temps), next(rh), 1016.0) for _ in itertools.count())
+    pms = iter([frame(1, 2, 3), frame(4, 5, 6), ReadTimeoutError("no frame")] * 3)
+    scd = iter([(600, 23.0, 45.0), (610, 23.5, 46.0), None] * 3)
+    run = Run(tmp_path, monkeypatch, rows=2, pms_reads=pms, scd41_reads=scd,
+              bme_reads=bme, publish_s=3)
+    rows = run.readings("ts, temp_f, humidity, pm1, pm25, pm10, co2_ppm, scd41_temp_c")
+    # Keyed by the interval's start, not by its last read two seconds later.
+    assert rows[0][0] == run.start.strftime("%Y-%m-%d %H:%M:%S")
+    row = rows[0][1:]
+    # Newest successful PMS and SCD41 reads in the interval, not the first or
+    # the failed last one.
+    assert row[2:] == (4.0, 5.0, 6.0, 610, 23.5)
+    # Temperature: the mean of the interval's last read's three BME280 samples
+    # (26, 27, 28 -> 27.0 °C; the first alone would be 26.0), less the 6.35 °C
+    # pedestal: 20.65 °C = 69.2 °F.
+    assert n == 3 and row[0] == 69.2
+    # Humidity: that read's newest BME280 sample, RH 48 (the ninth of the
+    # interval), Magnus-corrected by e^0.38197 = 1.46516 (worked in the test
+    # above).
+    assert row[1] == round(48.0 * 1.46516, 1)
+
+
+def test_replay_of_a_day_includes_its_last_reads_filed_after_midnight(tmp_path, monkeypatch):
+    """raw_retention files a record under the day it was retained; a read just
+    before midnight retained just after is in the next day's file."""
+    from shared import raw_retention
+
+    import local_sensors
+
+    cfg = json.loads((REPO / "dynamic_config.pi5.json").read_text())
+    base = {"bme280": [{"temperature": 27.0, "humidity": 50.0, "pressure": 1016.0}] * 3,
+            "cpu_temp_milli_c": 52000, "ltr559_lux": 120.0, "ltr559_proximity": [],
+            "mics6814_ohms": {"oxidising": 45000.0, "reducing": 105000.0, "nh3": 150000.0},
+            "pi": {"loadavg_1m": 0.5, "mem_available_kb": 6000000, "uptime_s": 100.0}}
+
+    class Clock(datetime):
+        at = None
+
+        @classmethod
+        def now(cls, tz=None):
+            return cls.at
+
+    monkeypatch.setattr(raw_retention, "datetime", Clock)
+    for read, filed, co2 in (("2026-10-21T23:59:58+00:00", "2026-10-21T23:59:58+00:00", 600),
+                             ("2026-10-21T23:59:59.900+00:00", "2026-10-22T00:00:00.100+00:00", 610),
+                             ("2026-10-22T00:00:01+00:00", "2026-10-22T00:00:01+00:00", 620)):
+        Clock.at = datetime.fromisoformat(filed)
+        sample = {**base, "read_utc": read,
+                  "scd41": {"co2_ppm": co2, "temperature_c": 23.0, "rh": 45.0}}
+        raw_retention.retain(local_sensors.PROVIDER, json.dumps(sample).encode())
+
+    db = sqlite3.connect(tmp_path / "replay.db")
+    local_sensors.ensure_schema(db)
+    assert local_sensors.replay(db, ["2026-10-21"], cfg) == {"samples": 2, "rows": 1}
+    assert db.execute("SELECT ts, co2_ppm FROM readings").fetchall() == [
+        ("2026-10-21 23:59:00", 610)]

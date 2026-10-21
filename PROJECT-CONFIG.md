@@ -20,7 +20,7 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
     as each driver returned them.
   - `readings` is derived from them by `local_sensors.derive_row`; live and
     `local_sensors.py --replay DAY...` use that one projection, so rows rebuild
-    from retention. Rows written before 2026-10-21 have no retained reads:
+    from retention. Rows from before the first `local_sensors` record have no retained reads:
     SQLite and its backups are their only copy, so they are never rebuilt or
     dropped. Known-bad spans are annotated (README "Data notes"), not edited.
   - `outdoor`, `nws_weather` and `epa_air_quality` are derived. Rows captured

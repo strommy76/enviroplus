@@ -115,7 +115,6 @@ from ltr559 import LTR559
 from pms5003 import PMS5003, ChecksumMismatchError, ReadTimeoutError, SerialTimeoutError
 from sensirion_driver_adapters.i2c_adapter.i2c_channel import I2cChannel
 from sensirion_i2c_driver import CrcCalculator, I2cConnection, LinuxI2cTransceiver
-from sensirion_i2c_driver.errors import I2cError
 from sensirion_i2c_scd4x.device import Scd4xDevice
 
 from shared.config_service import load_env, require
@@ -239,6 +238,9 @@ def read_sample():
     with open(_cpu_temp_path) as f:
         sample["cpu_temp_milli_c"] = int(f.read())
     sample["ltr559_lux"] = ltr559_sensor.get_lux()
+    # Proximity drives page taps only; its reads since the previous record.
+    sample["ltr559_proximity"] = _proximity_reads[:]
+    _proximity_reads.clear()
     g = gas.read_all()
     sample["mics6814_ohms"] = {"oxidising": g.oxidising, "reducing": g.reducing, "nh3": g.nh3}
     sample["pi"] = _pi_raw()
@@ -264,7 +266,9 @@ def read_sample():
             co2, scd_t, scd_rh = scd41_sensor.read_measurement()
             sample["scd41"] = {"co2_ppm": co2.value, "temperature_c": scd_t.value,
                                "rh": scd_rh.value}
-    except I2cError as e:
+    except OSError as e:
+        # I2cError subclasses OSError; the transceiver's own address ioctl
+        # raises a plain OSError. Either is this lane's failed read.
         _scd41_measuring = False
         sample["scd41_error"] = repr(e)
         log.warning("SCD41 read failed: %s", e)
@@ -316,6 +320,11 @@ def read_outdoor():
 PROXIMITY_MEAS_S = 0.1
 
 
+# Proximity reads made while waiting for the next frame; the next Tier 1
+# record carries them, so every read is retained.
+_proximity_reads = []
+
+
 def wait_for_next_frame(page, near):
     """Sleep until the next display refresh, watching the LTR559 proximity
     channel. A hand moving close (rising edge past display.tap_proximity)
@@ -323,7 +332,9 @@ def wait_for_next_frame(page, near):
     d = cfg["display"]
     deadline = time.monotonic() + cfg["intervals"]["display_refresh_s"]
     while time.monotonic() < deadline:
-        now_near = ltr559_sensor.get_proximity() >= d["tap_proximity"]
+        proximity = ltr559_sensor.get_proximity()
+        _proximity_reads.append(proximity)
+        now_near = proximity >= d["tap_proximity"]
         if now_near and not near:
             page = (page + 1) % len(screens.PAGES)
             disp.display(screens.render(page, state))
@@ -356,7 +367,7 @@ try:
 
         b = local_sensors.bucket_of(sample["read_utc"], cfg["intervals"]["publish_s"])
         if pending and b != interval:
-            row = local_sensors.derive_row(pending, cfg["calibration"])
+            row = local_sensors.derive_row(pending, cfg)
             local_sensors.write(_db, row)
             log.info("readings row written  ts=%s", row["ts"])
             co2_hist.append(row["co2_ppm"])
@@ -366,7 +377,7 @@ try:
         interval = b
         pending.append(sample)
 
-        now = local_sensors.derive_row([sample], cfg["calibration"])
+        now = local_sensors.derive_row([sample], cfg)
         if "scd41" in sample:
             scd41_shown = sample["scd41"]
         for key in ("pm1", "pm25", "pm10"):

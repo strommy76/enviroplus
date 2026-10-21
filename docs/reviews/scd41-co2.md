@@ -49,13 +49,14 @@ The `47f9dd6` measurement:
 ## What changed
 
 **`local_sensors.py` (new)** holds the Tier 2 projection.
-- `derive_row` builds one row per publish interval from that interval's Tier 1 records.
+- `derive_row` builds one row per publish interval from that interval's Tier 1 records. The row is keyed by the interval's start time, in UTC.
   - Every lane takes its newest successful read in the interval.
   - A lane with no read in the interval is NULL.
   - It also applies `self_heat_offset_c` and the Magnus correction, both moved from `enviro_dash3.py`.
 - `ensure_schema` creates the table or adds missing columns. It is additive only.
 - `write` is an upsert on `ts` through `shared.db_service.write_row`.
-- `replay` and the `--replay DAY...` command-line entry point rebuild rows.
+- `replay` and the `--replay DAY...` command-line entry point rebuild every interval that starts on the named days, in place.
+  - They also read the following day's file, because a read just before midnight is filed under the day it was retained.
 
 **`enviro_dash3.py`:**
 - `read_sample()` retains one record per loop, holding:
@@ -66,6 +67,7 @@ The `47f9dd6` measurement:
   - The checksummed PMS5003 frame as bytes, which keeps the particle counts and the atmospheric channels.
   - The SCD41 CO₂, temperature and RH.
   - `/proc` load, memory and uptime.
+  - The LTR559 proximity reads polled between frames. They drive page taps, and the next record carries them.
 - When a read opens a new publish interval, the finished interval becomes a `readings` row.
 - The display uses the same projection.
 
@@ -93,6 +95,7 @@ The `47f9dd6` measurement:
 **Where failure surfaces (n):**
 - A BME280, LTR559 or MICS6814 error ends the process, so the unit's Restart/OnFailure policy reports it.
 - A PMS5003 or SCD41 error is recorded in Tier 1 as `partial` with the lane's error. That lane is NULL for the interval, and the dashboard logs a warning.
+  - For the SCD41 that covers any `OSError`. `I2cError` subclasses it, and the transceiver's address ioctl raises a plain one.
 - The SCD41 restarts measurement on the next loop after an error.
 - A Tier 1 write OS error is logged by `raw_retention` and does not stop the loop. That is raw_retention's existing contract.
 
@@ -113,10 +116,10 @@ The `47f9dd6` measurement:
    - The unit is active.
    - Tier 1 records are arriving under `raw-capture/local_sensors/`.
    - `readings` rows carry the SCD41 values.
-   - Replaying the day reproduces the live rows.
+   - Replaying the day reproduces the live rows, except an interval a restart cut short. Live holds only that interval's post-restart reads; replay holds all of them.
    - The Grafana panels render.
 
-**Volume:** about 1.1 kB per record, measured on a representative record (2026-10-20 22:45). Every 2 s that is about 47 MB/day and about 17 GB/year, into a tree the existing backup lane already replicates. 206 GB were free on 2026-10-20.
+**Volume:** about 1.1–1.2 kB per record before the proximity list, measured on a representative record (2026-10-20 22:45; the reviewer measured 1169 B). The proximity list adds about 20 small integers per record. Every 2 s that is about 50 MB/day and about 18 GB/year, into a tree the existing backup lane already replicates. 206 GB were free on 2026-10-20.
 
 ## Research (AGENTS C)
 
@@ -182,7 +185,43 @@ The affected files run 55 tests. The full suite: 242 passed. Each violation belo
 
 The column list is now generated from the one `_COLUMNS` declaration in `local_sensors.py`, which addresses the reviewer's Axiom 2 note.
 
+## Review: a522210 (architecture-reviewer, Anthropic), dispositions
+
+| # | Finding | Disposition |
+|---|---|---|
+| F1 | Single-day replay ≠ live | Closed: interval key, next-day file read |
+| F2 | Tests depend on wall clock | Closed: test clock starts at real time |
+| F3 | Interval logic had no power | Closed: multi-read interval test |
+| F4 | Restart mid-interval differs | Declared above; replay holds more reads |
+| F5 | Failed Tier 1 write still derives | Raised to operator (D): shared code |
+| F6 | README stale and contradicted | Closed |
+| F7 | Cutover date asserted early | Closed: "first local_sensors record" |
+| F8 | Proximity reads not kept | Closed: retained with the next record |
+| F9 | SCD41 plain OSError escapes | Closed: lane catches OSError |
+
+Power observed for the round-2 fixes. Each violation was made in the real implementation, and the full suite was run:
+
+| Violation | Result |
+|---|---|
+| HAT lanes from the interval's first read | 1 failed |
+| `last_with` picks the oldest read | 1 failed |
+| BME280 not averaged | 1 failed |
+| Humidity from the first BME280 sample | 1 failed |
+| `ts` from read time | 2 failed |
+| Next day's file not read | 1 failed |
+| Next day's intervals included | 1 failed |
+| Proximity not retained | 1 failed |
+
+Full suite: 244 passed.
+
+The test clock starts at the real time, because `raw_retention` files each record under the real UTC day. A test run that crosses UTC midnight mid-test could still split across two files. That window is a few seconds a day and is not guarded.
+
 ## Discovery (AGENTS D, not acted on)
+
+**F5 (round 2):**
+- `shared.raw_retention.retain()` returns its outcome even when the append failed with an OS error. The error is only logged.
+- The dashboard then writes a `readings` row whose reads are not in Tier 1. Under j that row cannot be rebuilt, yet the unit stays healthy.
+- Fixing it means changing `shared`'s write contract, which is outside this plan. It is raised to the operator.
 
 The supported Ruff lane is red on `main` (`d350673`):
 - `ruff check`: 38 findings.
