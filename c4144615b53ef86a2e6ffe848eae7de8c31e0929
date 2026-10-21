@@ -1,0 +1,12 @@
+2026-10-20 23:39 EDT · pi-claude
+Canonical check (PROJECT-CONFIG Supported Validation) on a clean clone of c414461, interpreter /home/pistrommy/.virtualenvs/pimoroni/bin/python (ruff 0.15.12):
+$ PYTHONPATH=.. python -m pytest   (clean clone of c414461)
+264 passed in 2.48s
+exit=0
+$ python -m ruff check .
+All checks passed!
+exit=0
+$ python -m ruff format --check .
+25 files already formatted
+exit=0
+Result: PASS. Hardware drivers are stand-ins in tests; sensirion-i2c-scd4x is installed at deploy step 1.
