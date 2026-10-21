@@ -29,7 +29,7 @@ The 2026-08-06 rationale was "losing an observation in both tiers to protect one
 | Report failure, never success | `RetentionWriteError` (an `OSError`) |
 | Leave the log readable | Unbuffered `os.write`, then `ftruncate` on failure |
 | Retry only what was not stored | Dedup digest advances only on success |
-| Surface failure where it is watched | Consumers exit; systemd restarts with backoff, `OnFailure` alerts each failure |
+| Surface failure where it is watched | Consumers exit; systemd restarts flat with no stop limit, `OnFailure` alerts each failure |
 
 **Not adopted: an in-memory retry buffer.**
 - No retention write failure has been observed on this host. It had 206 GB free on 2026-10-20 and NVMe storage.
@@ -55,8 +55,8 @@ The 2026-08-06 rationale was "losing an observation in both tiers to protect one
 |---|---|
 | `ambient_wx.py`, `nws_wx.py`, `provider_collector.py` | `retain()` no longer wrapped in a log-only catch; the loop re-raises `RetentionWriteError` |
 | `enviro_dash3.py` | Its Tier 1 write raises, ending the process before deriving |
-| `ambient_wx`, `nws_wx`, `airnow_wx` units | Gain `OnFailure` and restart backoff, no stop limit |
-| `enviro_dash` unit | Its 120 s/2 start limit is replaced by the same backoff |
+| `ambient_wx`, `nws_wx`, `airnow_wx` units | Gain `OnFailure`; flat restart, no stop limit |
+| `enviro_dash` unit | Its 120 s/2 start limit removed; flat restart |
 | `scripts/capture_ambient_history.py` | Unaffected: it uses `scrub_body` only |
 
 `rg raw_retention` across `~/projects` on 2026-10-20 finds no consumer outside enviroplus.
@@ -105,7 +105,7 @@ The ambient and NWS loop-level re-raises have no test. Their `run()` loops need 
 | S1 | Torn line survived a buffered failure | Closed: unbuffered write and `ftruncate` |
 | S2 | Partial-line tests could not fail | Closed: short-write test |
 | S3 | Dedup read raised a plain `OSError` | Closed: translated |
-| E3 | Start limit stopped collection | Closed: backoff, no stop limit |
+| E3 | Start limit stopped collection | Closed: no stop limit (backoff later dropped, operator 23:29) |
 | E4 | 100 s derivation wrong | Closed: the limit is removed |
 | E5 | Ambient/NWS loop re-raise untested | Disclosed; unchanged |
 
@@ -119,4 +119,4 @@ Power for the fixes, with the shared suite at 144 passed:
 
 ## Review
 
-Pending: an Anthropic architecture-reviewer seat on the named revisions of both repositories. Other provider families are unreachable from pi-claude (k).
+Reviewed in Anthropic rounds 4–6. See `docs/reviews/scd41-co2.md`, including its note on provider families (k).

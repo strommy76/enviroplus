@@ -697,8 +697,9 @@ def test_each_tap_is_retained_once_with_the_reading_that_crossed_the_threshold(
     tmp_path, monkeypatch
 ):
     tap = json.loads((REPO / "dynamic_config.pi5.json").read_text())["display"]["tap_proximity"]
-    # Two separate taps: near, held near (not a second tap), away, near again.
-    reads = iter([0, tap + 5, tap + 9, 0, tap + 1] + [0] * 10_000)
+    # Two separate taps: near, held near (not a second tap), away, then a
+    # reading exactly at the threshold, which counts as near.
+    reads = iter([0, tap + 5, tap + 9, 0, tap] + [0] * 10_000)
     run = Run(tmp_path, monkeypatch, rows=3, proximity_reads=reads)
     taps = [t for _, r in run.tier1() for t in r.get("ltr559_taps", [])]
-    assert [(t["proximity"], t["tap_proximity"]) for t in taps] == [(tap + 5, tap), (tap + 1, tap)]
+    assert [(t["proximity"], t["tap_proximity"]) for t in taps] == [(tap + 5, tap), (tap, tap)]

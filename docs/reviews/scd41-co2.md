@@ -121,7 +121,9 @@ The `47f9dd6` measurement:
 **Deploy order:**
 1. Install `sensirion-i2c-scd4x==1.1.0` into `/home/pistrommy/.virtualenvs/pimoroni`.
 2. Fast-forward the enviroplus main checkout. The services run from it, and `CONFIG_PATH` points at its `dynamic_config.pi5.json`.
-3. Install the changed `ambient_wx`, `nws_wx` and `airnow_wx` unit files and run `daemon-reload`. Then restart `enviro_dash`, `ambient_wx`, `nws_wx` and `airnow_wx` one at a time, checking each.
+3. Run `systemctl daemon-reload` and restart `enviro_dash`, `ambient_wx`, `nws_wx` and `airnow_wx` one at a time, checking each.
+   - All four `/etc/systemd/system/*.service` files are symlinks into the main checkout, so step 2 already installs their new content. That includes `enviro_dash`'s removed start limit.
+   - The reload is what loads that content.
 4. Check the live result:
    - The unit is active.
    - Tier 1 records are arriving under `raw-capture/local_sensors/`.
@@ -288,7 +290,7 @@ Shared and consumer changes:
 - Neither restart nor backoff finds or fixes a root cause. The cause is in the journal, as the raised OS error. Correcting it is manual.
 - **Change to a prior decision:** this replaces `enviro_dash.service`'s 120 s/2 start limit, set PROVISIONAL in the 2026-10-11 display repair. Under it, one full-disk event would have stopped the dashboard for good.
 
-**Practice adopted:** write-ahead, then derive only from what is stored, report the write's own outcome, and alert through a watched channel. The `shared` review artifact `docs/retention-write-failure-review.md` has the reasoning and why no retry buffer was added.
+**Practice adopted:** write-ahead, then derive only from what is stored, report the write's own outcome, and alert through a watched channel. `docs/reviews/raw-retention-write-failure.md` has the reasoning and why no retry buffer was added. It moved here from `shared` with the module.
 
 **Power observed,** with the enviroplus suite run against the `shared` branch (251 passed):
 
@@ -351,4 +353,20 @@ No further review round. The remaining classes are wording and operator-weighed 
 
 ## Review
 
-Pending: an Anthropic architecture-reviewer seat on the named revision. pi-claude can provision only Anthropic, so other provider families are unreachable from this seat (k).
+Six Anthropic architecture-reviewer rounds were run, the last on 1478c15: NO BLOCK.
+
+**Provider families (k):** pi-claude itself can dispatch only Anthropic seats. An OpenAI-family seat was reachable through pi-codex, but was not requested: the operator assigned this work to pi-claude "while Codex is otherwise engaged". Whether to add it before landing is the operator's call.
+
+**Round 6 (1478c15), dispositions:**
+
+| # | Finding | Disposition |
+|---|---|---|
+| 1–4 | Move, reformat, taps, units | No defect |
+| 5 | Deploy step 3 omitted `enviro_dash` and the symlinks | Closed |
+| D1 | Write-failure record still described the backoff | Closed |
+| D2 | Stale artifact path | Closed |
+| P1 | Tests cannot tell which `raw_retention` copy is used | Residual until `shared` removes its copy |
+
+**Also in round 6:**
+- A reading exactly equal to `tap_proximity` is now in the tap test, which fails if `>=` becomes `>`.
+- The deployed-effect review (d) follows landing.
