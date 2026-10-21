@@ -4,11 +4,10 @@ After=network-online.target
 Wants=network-online.target
 # Serial sensors are optional lanes; no UART device binds dashboard lifetime.
 OnFailure=stocks_ops_alert@%n.service
-# Admit an initial start and one recovery attempt; repeated rapid failure stops.
-# 120s = effective native startup timeout 90s + existing restart spacing 30s.
-# PROVISIONAL horizon: measure failed-start/recovery intervals across boots.
-StartLimitIntervalSec=120s
-StartLimitBurst=2
+# No start limit beyond the systemd default (5 starts / 10 s), which the 30 s
+# spacing never reaches: a Tier 1 write failure (e.g. a full disk) ends the
+# process, and recovery must resume by itself once the fault clears rather
+# than stop the unit for good. Every failed exit alerts through OnFailure.
 
 [Service]
 Type=simple
@@ -20,6 +19,10 @@ ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python enviro_dash3.py
 Restart=on-failure
 # PROVISIONAL inherited spacing: settle from observed recovery time/attempt cost.
 RestartSec=30
+# Back off from 30 s to the maximum while a fault lasts. PROVISIONAL maximum:
+# settle from observed Tier 1 write-failure recovery times.
+RestartSteps=5
+RestartMaxDelaySec=300
 
 [Install]
 WantedBy=multi-user.target

@@ -3,14 +3,9 @@ Description=Ambient Weather Poller
 After=network-online.target
 Wants=network-online.target
 # A Tier 1 (raw retention) write failure ends the collector rather than letting
-# it derive rows the canonical tier does not hold; persistent failure alerts.
+# it derive rows the canonical tier does not hold. Every failed exit alerts
+# (systemd 257 triggers OnFailure= on each one, restart or not).
 OnFailure=stocks_ops_alert@%n.service
-# Admit an initial start and one recovery attempt; repeated rapid failure stops.
-# 100s = effective native startup timeout 90s + existing restart spacing 10s,
-# the rule enviro_dash.service uses. PROVISIONAL horizon: measure
-# failed-start/recovery intervals across boots.
-StartLimitIntervalSec=100s
-StartLimitBurst=2
 
 [Service]
 Type=simple
@@ -20,6 +15,13 @@ Environment=PYTHONPATH=/home/pistrommy/projects
 ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python ambient_wx.py
 Restart=always
 RestartSec=10
+# Back off instead of stopping: a fault such as a full disk retries for as long
+# as it lasts, from the existing 10 s spacing up to the maximum, so collection
+# resumes by itself and the per-failure alerts thin out. The start limit stays
+# the systemd default (5 starts / 10 s), which spacing >= 10 s never reaches.
+# PROVISIONAL maximum: settle from observed Tier 1 write-failure recovery times.
+RestartSteps=5
+RestartMaxDelaySec=300
 
 [Install]
 WantedBy=multi-user.target

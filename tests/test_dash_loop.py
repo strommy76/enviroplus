@@ -510,3 +510,73 @@ def test_a_read_the_canonical_tier_could_not_store_ends_the_process_underived(
         # Read 1's interval was closed by read 2; read 2's would have been
         # closed by read 3, which never reached Tier 1.
         assert conn.execute("SELECT co2_ppm FROM readings").fetchall() == [(600,)]
+
+
+def _retain_reads(monkeypatch, reads):
+    """Retain local_sensors records with the given read times (and file them
+    at those times), each carrying its co2 as a marker."""
+    from shared import raw_retention
+
+    import local_sensors
+
+    base = {"bme280": [{"temperature": 27.0, "humidity": 50.0, "pressure": 1016.0}] * 3,
+            "cpu_temp_milli_c": 52000, "ltr559_lux": 120.0, "ltr559_proximity": [],
+            "mics6814_ohms": {"oxidising": 45000.0, "reducing": 105000.0, "nh3": 150000.0},
+            "pi": {"loadavg_1m": 0.5, "mem_available_kb": 6000000, "uptime_s": 100.0}}
+
+    class Clock(datetime):
+        at = None
+
+        @classmethod
+        def now(cls, tz=None):
+            return cls.at
+
+    with monkeypatch.context() as m:
+        m.setattr(raw_retention, "datetime", Clock)
+        for read, co2 in reads:
+            Clock.at = datetime.fromisoformat(read)
+            raw_retention.retain(local_sensors.PROVIDER, json.dumps(
+                {**base, "read_utc": read,
+                 "scd41": {"co2_ppm": co2, "temperature_c": 23.0, "rh": 45.0}}).encode())
+
+
+def test_replay_rewrites_each_days_first_interval_but_not_the_cutover_one(
+        tmp_path, monkeypatch):
+    import local_sensors
+
+    cfg = json.loads((REPO / "dynamic_config.pi5.json").read_text())
+    # Tier 1 begins 2026-10-21 09:00:30; the next day's first read is mid-interval.
+    _retain_reads(monkeypatch, [("2026-10-21T09:00:30+00:00", 500),
+                                ("2026-10-22T10:00:01+00:00", 600),
+                                ("2026-10-22T10:00:02+00:00", 601)])
+    db = sqlite3.connect(tmp_path / "r.db")
+    local_sensors.ensure_schema(db)
+    for ts in ("2026-10-21 09:00:00", "2026-10-22 10:00:00"):
+        db.execute("INSERT INTO readings (ts, co2_ppm) VALUES (?, -1)", (ts,))
+    local_sensors.replay(db, ["2026-10-21", "2026-10-22"], cfg)
+    assert db.execute("SELECT ts, co2_ppm FROM readings ORDER BY ts").fetchall() == [
+        # Starts before the first Tier 1 read: kept as written.
+        ("2026-10-21 09:00:00", -1),
+        # Starts before that day's first read, but after Tier 1 began: rebuilt.
+        ("2026-10-22 10:00:00", 601)]
+
+
+def test_a_day_with_an_unreadable_record_fails_replay_before_any_row_changes(
+        tmp_path, monkeypatch):
+    import local_sensors
+
+    cfg = json.loads((REPO / "dynamic_config.pi5.json").read_text())
+    _retain_reads(monkeypatch, [("2026-10-22T10:00:01+00:00", 600),
+                                ("2026-10-22T10:01:01+00:00", 601)])
+    day_file = Path(os.environ["ENVIRO_RAW_ROOT"]) / "local_sensors" / "2026-10-22.ndjson"
+    with day_file.open("a") as fh:
+        fh.write('{"captured_utc": "2026-10-22T10:02:01+00:00", "outcome": "ok", "payl\n')
+    db = sqlite3.connect(tmp_path / "r.db")
+    local_sensors.ensure_schema(db)
+    for ts in ("2026-10-22 10:00:00", "2026-10-22 10:01:00"):
+        db.execute("INSERT INTO readings (ts, co2_ppm) VALUES (?, -1)", (ts,))
+    db.commit()
+    with pytest.raises(ValueError):
+        local_sensors.replay(db, ["2026-10-22"], cfg)
+    assert db.execute("SELECT ts, co2_ppm FROM readings ORDER BY ts").fetchall() == [
+        ("2026-10-22 10:00:00", -1), ("2026-10-22 10:01:00", -1)]

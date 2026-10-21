@@ -58,7 +58,9 @@ The `47f9dd6` measurement:
 - `ensure_schema` creates the table or adds missing columns. It is additive only.
 - `write` inserts through `shared.db_service.write_row` and never overwrites an existing row. Replay clears its span first, and a row from before Tier 1 that shares a key is kept.
 - `replay` and the `--replay DAY...` command-line entry point rebuild each named day from Tier 1, on the current `publish_s` grid.
-  - They delete that day's rows from its first retained read onward, then stream one interval at a time.
+  - Each day is first read through in full, so a corrupt or unverifiable record fails the replay before any row is touched.
+  - Then the day's rows are deleted from the start of its first read's interval onward, and rewritten streaming one interval at a time.
+  - Rows from before the first read Tier 1 holds are never deleted, so the cutover interval keeps its live row.
   - They also read the following day's file, only until its reads pass the day, because a read just before midnight is filed under the day it was retained.
   - Memory: a synthetic full day (43,200 records, 46 MB) replayed in 1.2 s at a 19 MB peak RSS.
 
@@ -260,9 +262,12 @@ Shared and consumer changes:
 | `shared` | `retain()`/`record_outcome()` raise `RetentionWriteError`, partial line truncated |
 | enviroplus collectors | `retain()` no longer wrapped; loops re-raise |
 | enviroplus dashboard | Its Tier 1 write raises before derivation |
-| Collector units | `OnFailure` and a start limit (`100s`/2) |
+| Collector and dashboard units | `OnFailure` on every failed exit; restart backoff, no stop limit |
 
-**The start limit is PROVISIONAL.** It is the startup timeout of 90 s plus `RestartSec` 10 s, the same rule as `enviro_dash.service`.
+**Units:** each unit restarts from its existing spacing (10 s for the collectors, 30 s for the dashboard) and backs off over 5 steps to 300 s.
+- That maximum is PROVISIONAL. Settle it from observed recovery times.
+- No start limit beyond the systemd default, which this spacing never reaches. So a fault such as a full disk retries for as long as it lasts, and collection resumes by itself.
+- **Change to a prior decision:** this replaces `enviro_dash.service`'s 120 s/2 start limit, set PROVISIONAL in the 2026-10-11 display repair. Under it, one full-disk event would have stopped the dashboard for good.
 
 **Practice adopted:** write-ahead, then derive only from what is stored, report the write's own outcome, and alert through a watched channel. The `shared` review artifact `docs/retention-write-failure-review.md` has the reasoning and why no retry buffer was added.
 
@@ -283,6 +288,27 @@ The ambient and NWS loop-level re-raises have no test.
 - Ruff is not in the dashboard interpreter.
 
 This branch removes one pre-existing finding in each of `enviro_dash3.py` and `tests/test_dash_loop.py`, and its new files are clean.
+
+## Review: 8617150 + shared 1cdf41b (architecture-reviewer, Anthropic), dispositions
+
+| # | Finding | Disposition |
+|---|---|---|
+| E1 | Replay never rebuilt the first interval | Closed: delete from interval start |
+| E2 | Failed replay deleted rows | Closed: full validation pass first |
+| E3 | Start limit stopped collection | Closed: backoff, no stop limit |
+| E4 | 100 s derivation wrong | Closed: limit removed |
+| E5 | Ambient/NWS loop re-raise untested | Disclosed; unchanged |
+| S1–S3 | shared torn line, tests, dedup read | Closed in shared `1c37dc5` |
+
+Power for the fixes, with the enviroplus suite at 253 passed against shared `1c37dc5`:
+
+| Violation | Result |
+|---|---|
+| Delete bound at the first read | 1 failed |
+| Cutover not protected | 1 failed |
+| No full validation pass | 1 failed |
+
+**Residual:** a SQLite error during a replay's writes leaves that day partly rewritten. Tier 1 is untouched, so rerunning the replay repairs it.
 
 ## Review
 

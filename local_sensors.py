@@ -43,6 +43,7 @@ from datetime import date, datetime, timedelta, timezone
 sys.path.insert(0, "/home/pistrommy/projects")
 
 from shared.db_service import write_row
+from shared.raw_retention import days as retained_days
 from shared.raw_retention import read_day
 
 PROVIDER = "local_sensors"
@@ -127,7 +128,7 @@ def derive_row(samples: list[dict], calibration: dict, publish_s: int) -> dict:
     gas = last["mics6814_ohms"]
     pi = last["pi"]
     row = {
-        "ts": start.strftime("%Y-%m-%d %H:%M:%S"),
+        "ts": _ts(start),
         "temp_f": _r(c2f(room_c), 1),
         "humidity": _r(correct_humidity(bme["humidity"], chip_c, room_c), 1),
         "pressure": _r(bme["pressure"], 2),
@@ -183,23 +184,43 @@ def _day_samples(day: str):
                 break
 
 
+def _first_retained_read() -> str | None:
+    """`ts`-form time of the first read Tier 1 holds: rows before it predate
+    Tier 1 and have nothing to be rebuilt from."""
+    for day in retained_days(PROVIDER):
+        for sample in _day_samples(day):
+            return _ts(datetime.fromisoformat(sample["read_utc"]))
+    return None
+
+
+def _ts(moment: datetime) -> str:
+    return moment.strftime("%Y-%m-%d %H:%M:%S")
+
+
 def replay(db, days: list[str], cfg: dict) -> dict:
     """Rebuild `readings` for the named UTC days from Tier 1, with the current
-    calibration and publish_s grid. For each day, the rows from its first
-    retained read onward are replaced: rows on another grid (publish_s since
-    changed) go, and rows from before the first local_sensors record, which
-    have no reads, are never reached. Streams one interval at a time. Replay a
-    day once it has ended: on the current day, live's still-open interval is
-    written from the reads so far, and live's later write of it is ignored."""
+    calibration and publish_s grid.
+
+    Each day is read through once first, so a corrupt or unverifiable record
+    fails the replay before any row is touched. Then the day's rows from the
+    start of its first read's interval onward are deleted and rewritten,
+    streaming one interval at a time: rows on a since-changed grid go too.
+    Rows from before the first read Tier 1 holds are never deleted, so the
+    interval that read falls in keeps the row live wrote for it."""
     calibration, publish_s = cfg["calibration"], cfg["intervals"]["publish_s"]
+    cutover = _first_retained_read()
     tally = {"samples": 0, "rows": 0}
     for day in days:
+        first = None
+        for sample in _day_samples(day):           # validation pass
+            first = first or sample["read_utc"]
+        if first is None:
+            continue
         following = (date.fromisoformat(day) + timedelta(days=1)).isoformat()
+        lower = max(_ts(interval_start(bucket_of(first, publish_s), publish_s)), cutover)
+        db.execute("DELETE FROM readings WHERE ts >= ? AND ts < ?", (lower, following))
         interval, pending = None, []
         for sample in _day_samples(day):
-            if interval is None:   # the day's first retained read
-                first = datetime.fromisoformat(sample["read_utc"]).strftime("%Y-%m-%d %H:%M:%S")
-                db.execute("DELETE FROM readings WHERE ts >= ? AND ts < ?", (first, following))
             b = bucket_of(sample["read_utc"], publish_s)
             if pending and b != interval:
                 write(db, derive_row(pending, calibration, publish_s))

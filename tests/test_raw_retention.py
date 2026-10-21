@@ -258,7 +258,7 @@ def test_os_write_failure_raises_retention_write_error(raw_root, monkeypatch):
     def boom(*a, **k):
         raise OSError(28, "No space left on device")
 
-    monkeypatch.setattr(rr.Path, "open", boom)
+    monkeypatch.setattr(rr.os, "open", boom)
     with pytest.raises(rr.RetentionWriteError):
         rr.record_outcome("acme", rr.OUTCOME_FETCH_ERROR, detail="x")
     with pytest.raises(rr.RetentionWriteError):
