@@ -624,3 +624,6056 @@ action for the rationale already committed; no new finding or defect class.
 Implementation is ready for the operator verdict, not yet deployed. Manifest
 always-written statements apply only while its configured store is available;
 the explicitly disclosed store-error boundary remains fail-loud.
+
+# Backup isolation: deployed effect
+
+Bryan verbatim09:47EDT via PiClaudemessageb52c9341-312a-4e82-9305-f476b71dffce:
+"I approve. let's deploy it then validate it". Scope land shared5cafbba first,
+enviroplusa841586 second, FF live trees, check hot-reload, one actual backup.
+
+Both default branches pushed and live trees fast-forwarded in that order,
+clean; clean exact-head canonical passes and notes pushed with each. Running
+dashboard config is dynamic_config.pi5.json, not the changed backup.json;
+only backup CLI imports changed shared transport. No collectors/dashboard
+restart and no .env or provider/remote content edits outside the normal backup.
+
+2026-10-21T09:54:36-04:00 sudo systemctl start --no-block enviro_backup.service
+started invocationd7e350f97f9d4fe58e00c3acea5e1628,PID327633. This is the single
+directed real pass, not a test double. Finished09:55:30EDT with Result=success,
+ExecMainStatus=0,inactive/dead (normal for oneshot). Database snapshot93806592B
+remote/local md5 equal; existing success cleanup removed only its staged copy.
+Tree copied with --local-no-check-updated; postcopy probe and proofs complete.
+Manifestbackup_20261021T135436Z.json records both named sources verifiedTrue,
+662raw files:661fullmatches,1prefix; no failures/transfer/probe errors.
+Source bytes were not deleted or truncated. Verification evidence means actual
+remote state/proofs, not merely the systemctl start command returning0.
+
+Independent PiClaude deployed-effect receipt4efd74ae-3c80-4656-b451-fd081fefd6a5,
+broker sent2026-10-21T13:55:58.765378Z, bodylabels09:57EDT:
+PASS exit0/Resultsuccess, nofailedunits/OnFailure not triggered; actual journal
+flag, actual manifest2sources/662files/no failures. local_sensors/2026-10-21.ndjson
+prior_stateabsent, matchprefix, remote19341947B, md5
+91e0aa0d55149c5c25a27b3980100439. Independently recomputed first19341947 local
+bytes equals that hash while localfile had grown to19352889B. This confirms the
+specific deployed growing-file root correction without freezing collection.
+
+New observation p/E: source AND installed enviro_backup.service retained stale
+comment "writes no manifest". Earlier claim all superseded current text was
+removed was incomplete; raised in5c2b8dcb, PiClaudeconfirmed4efd74ae. Required
+minimum correction is comment-only c2209a0 on same enviroplanbranch, canonical
+check separately noted. No new runtime logic/reviewround/backup rerun warranted.
+
+Raw actual journal and manifest follow this report in Git notes. The manifest
+is historical verification evidence, not canonical provider truth or a source
+for reconstruction. No broader cloud permanence/restore claim is made here.
+Oct 21 09:54:37 BSPiLHX python[327633]: 2026-10-21 09:54:37,831 INFO    snapshot ok: enviro_20261021T135436Z.db (93806592 bytes, 4 tables)
+Oct 21 09:54:37 BSPiLHX python[327633]: 2026-10-21 09:54:37,831 INFO    rclone copyto enviro_20261021T135436Z.db: rclone --config /home/pistrommy/.config/rclone/rclone.conf copyto /home/pistrommy/projects/enviroplus/.backup-staging/enviro_20261021T135436Z.db stocks_gdrive:backups/enviropi/database/enviro_20261021T135436Z.db
+Oct 21 09:54:46 BSPiLHX python[327633]: 2026-10-21 09:54:46,263 INFO    rclone md5sum: rclone --config /home/pistrommy/.config/rclone/rclone.conf md5sum stocks_gdrive:backups/enviropi/database/enviro_20261021T135436Z.db
+Oct 21 09:54:50 BSPiLHX python[327633]: 2026-10-21 09:54:50,118 INFO    cleared 1 staged snapshot(s) after verified upload: enviro_20261021T135436Z.db
+Oct 21 09:54:50 BSPiLHX python[327633]: 2026-10-21 09:54:50,146 INFO    rclone lsjson: rclone --config /home/pistrommy/.config/rclone/rclone.conf lsjson --hash -R --files-only stocks_gdrive:backups/enviropi/raw-capture
+Oct 21 09:55:20 BSPiLHX python[327633]: 2026-10-21 09:55:20,630 INFO    rclone copy raw-capture: rclone --config /home/pistrommy/.config/rclone/rclone.conf copy --local-no-check-updated --files-from-raw /tmp/tmptvx8m1dm.files-from /home/pistrommy/projects/enviroplus/raw-capture stocks_gdrive:backups/enviropi/raw-capture
+Oct 21 09:55:25 BSPiLHX python[327633]: 2026-10-21 09:55:25,573 INFO    rclone lsjson: rclone --config /home/pistrommy/.config/rclone/rclone.conf lsjson --hash -R --files-only stocks_gdrive:backups/enviropi/raw-capture
+Oct 21 09:55:30 BSPiLHX python[327633]: 2026-10-21 09:55:30,129 INFO    backup attempted: 2 source(s), 109.0 MB verified delivery, manifest=backup_20261021T135436Z.json
+Oct 21 09:55:30 BSPiLHX python[327633]: 2026-10-21 09:55:30,129 INFO      file   enviro_20261021T135436Z.db               verified=True
+Oct 21 09:55:30 BSPiLHX python[327633]: 2026-10-21 09:55:30,129 INFO      tree   raw-capture                              verified=True
+{
+ "generated_utc": "2026-10-21T13:55:30.124046+00:00",
+ "results": [
+  {
+   "kind": "file",
+   "source": "/home/pistrommy/projects/enviroplus/.backup-staging/enviro_20261021T135436Z.db",
+   "remote_object": "stocks_gdrive:backups/enviropi/database/enviro_20261021T135436Z.db",
+   "bytes_transferred": 93806592,
+   "local_hash": "6ed02431473b9c1b4006c945bedbb932",
+   "remote_hash": "6ed02431473b9c1b4006c945bedbb932",
+   "verified": true,
+   "started_utc": "2026-10-21T13:54:37.831767+00:00",
+   "finished_utc": "2026-10-21T13:54:50.114582+00:00",
+   "detail": {
+    "source_name": "database"
+   }
+  },
+  {
+   "kind": "tree",
+   "source": "/home/pistrommy/projects/enviroplus/raw-capture",
+   "remote_object": "stocks_gdrive:backups/enviropi/raw-capture",
+   "bytes_transferred": 20445497,
+   "local_hash": null,
+   "remote_hash": null,
+   "verified": true,
+   "started_utc": "2026-10-21T13:54:50.118341+00:00",
+   "finished_utc": "2026-10-21T13:55:30.122884+00:00",
+   "detail": {
+    "file_count": 662,
+    "full_matches": 661,
+    "prefix_matches": 1,
+    "files": [
+     {
+      "path": "airnow/2026-07-14.json",
+      "local_size": 679,
+      "remote_size": 679,
+      "remote_md5": "80206af0b5dff905e8990a6dc2522a0b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-15.json",
+      "local_size": 679,
+      "remote_size": 679,
+      "remote_md5": "d119dc10ae764802132d24c8359d20fe",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-16.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "f16822bc6fdd42a8ada8baf7ba160369",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-17.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "d56a776dd4a5aa46277599f64664a4f6",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-18.json",
+      "local_size": 679,
+      "remote_size": 679,
+      "remote_md5": "1fded2617b9edf4553ebed975412864e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-19.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "46bc1f9712c3ecb6b3e79a3a4c100b8e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-20.json",
+      "local_size": 679,
+      "remote_size": 679,
+      "remote_md5": "f04861ac6d69b25c1ece51298325810c",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-21.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "5c9854bb5f91ed900caf5bc669e7550a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-22.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "22f5c6055ca660f692616461ede83654",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-23.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "61a29e419ce158de9387ed6ef157afd2",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-24.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "9e805714f58ab099dc7d7da02df457e4",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-25.json",
+      "local_size": 674,
+      "remote_size": 674,
+      "remote_md5": "36702d06654bdc3a6f9dfc21c6ee11e2",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-26.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "d55f2bd26c888405785c58b7a6873a70",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-27.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "59e177c3ef92da05cb375d12e3afc593",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-28.json",
+      "local_size": 679,
+      "remote_size": 679,
+      "remote_md5": "b3e908cd986713b9a67475e01828bd1c",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-29.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "f34ddcbc5651d41925e8062cbdb87cd7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-30.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "b17b22e6b6babc34bce1561df2b06687",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-07-31.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "bd03888aec95f38532346eb279617d4b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-01.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "17805ed0b90821cf58d33b746b976726",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-02.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "ed1ce1e3fbddc402591092cc2771baa2",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-03.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "bdca2879196f56ebb40df4c6d754b873",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-04.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "8db9accaaef2d23118dae0e322c897c0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-05.json",
+      "local_size": 675,
+      "remote_size": 675,
+      "remote_md5": "7b4524e01d79c74c734f63f6a989c268",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-06.ndjson",
+      "local_size": 4140,
+      "remote_size": 4140,
+      "remote_md5": "30741efb1bdc8c29c596ac4af06620b1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-07.ndjson",
+      "local_size": 33970,
+      "remote_size": 33970,
+      "remote_md5": "77420fb51c79b88f172600b12b5e9ec7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-08.ndjson",
+      "local_size": 33970,
+      "remote_size": 33970,
+      "remote_md5": "12216694c72a81da6c727a663b7fbe96",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-09.ndjson",
+      "local_size": 34878,
+      "remote_size": 34878,
+      "remote_md5": "30e52ef259e9f1cbca840d99b0bd556f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-10.ndjson",
+      "local_size": 33944,
+      "remote_size": 33944,
+      "remote_md5": "b61db9302fe4805dcaeccac2e90da1ac",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-11.ndjson",
+      "local_size": 33970,
+      "remote_size": 33970,
+      "remote_md5": "b4f3f0be455a867d32d7186135d80c39",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-12.ndjson",
+      "local_size": 31894,
+      "remote_size": 31894,
+      "remote_md5": "a0b09446ece2ef50e80eba7bf65cb71f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-13.ndjson",
+      "local_size": 33958,
+      "remote_size": 33958,
+      "remote_md5": "12b467993100a6955a5a67c20b4cebee",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-14.ndjson",
+      "local_size": 34890,
+      "remote_size": 34890,
+      "remote_md5": "86628d56b1198989342401696125b7d5",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-15.ndjson",
+      "local_size": 33984,
+      "remote_size": 33984,
+      "remote_md5": "eeb28126ec7ec1ff26aee2571c2f34df",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-16.ndjson",
+      "local_size": 35026,
+      "remote_size": 35026,
+      "remote_md5": "1d36a87d0be8336e730b4ccba401f34b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-17.ndjson",
+      "local_size": 31760,
+      "remote_size": 31760,
+      "remote_md5": "311efa8248f16d72f35184dfb39a40c0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-18.ndjson",
+      "local_size": 14578,
+      "remote_size": 14578,
+      "remote_md5": "7a7534611dd172a1ca6b76fbd97a2ace",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-19.ndjson",
+      "local_size": 40506,
+      "remote_size": 40506,
+      "remote_md5": "f32466f74c6e4cc78acc36f484d32e88",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-20.ndjson",
+      "local_size": 53389,
+      "remote_size": 53389,
+      "remote_md5": "c5259886e615960849a4bdfca2a41997",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-21.ndjson",
+      "local_size": 42714,
+      "remote_size": 42714,
+      "remote_md5": "3f01717668870f426b3857fe377e28f1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-22.ndjson",
+      "local_size": 10880,
+      "remote_size": 10880,
+      "remote_md5": "9e80f813fe327ee646bfa3caf4dea819",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-23.ndjson",
+      "local_size": 19848,
+      "remote_size": 19848,
+      "remote_md5": "47f899d76ae4f567a45ec23d143aed14",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-24.ndjson",
+      "local_size": 34960,
+      "remote_size": 34960,
+      "remote_md5": "867e36beb14251a5a47e48ddc5daaab7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-25.ndjson",
+      "local_size": 34896,
+      "remote_size": 34896,
+      "remote_md5": "442182e70b93890bc0ec347d5f3e3294",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-26.ndjson",
+      "local_size": 34868,
+      "remote_size": 34868,
+      "remote_md5": "73e08c3e2a1ae656540975276df88c9c",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-27.ndjson",
+      "local_size": 34830,
+      "remote_size": 34830,
+      "remote_md5": "7c582c8be31e7ccf03267b54ee3c0a17",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-28.ndjson",
+      "local_size": 34348,
+      "remote_size": 34348,
+      "remote_md5": "a49f72c12cea28c77e4e920dc1f503b8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-29.ndjson",
+      "local_size": 10880,
+      "remote_size": 10880,
+      "remote_md5": "bf267994949c15be156d5a5a9a6c5023",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-30.ndjson",
+      "local_size": 21066,
+      "remote_size": 21066,
+      "remote_md5": "4338dec87c5fa8d7575564074a3fa55c",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-08-31.ndjson",
+      "local_size": 33944,
+      "remote_size": 33944,
+      "remote_md5": "184e2cfc6018dec02da20ffc5eb8da2e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-01.ndjson",
+      "local_size": 35970,
+      "remote_size": 35970,
+      "remote_md5": "efa38dbdad80f6080942c4633c9f6aaf",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-02.ndjson",
+      "local_size": 33038,
+      "remote_size": 33038,
+      "remote_md5": "500dfe9590427b3ee3027c1b0853d18a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-03.ndjson",
+      "local_size": 34920,
+      "remote_size": 34920,
+      "remote_md5": "bdf73dbad2e52de07a8b418560894025",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-04.ndjson",
+      "local_size": 33958,
+      "remote_size": 33958,
+      "remote_md5": "afa3ad523ff298975a89e6291954c77f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-05.ndjson",
+      "local_size": 33970,
+      "remote_size": 33970,
+      "remote_md5": "1d9bee309a4325d0c1263c9190216ee0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-06.ndjson",
+      "local_size": 39813,
+      "remote_size": 39813,
+      "remote_md5": "1152ff7187c461ad4aa90a6c96f17dfd",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-07.ndjson",
+      "local_size": 52929,
+      "remote_size": 52929,
+      "remote_md5": "788d93a08361517c230c9432b35758fe",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-08.ndjson",
+      "local_size": 51322,
+      "remote_size": 51322,
+      "remote_md5": "1ee4fe291144ba8c1ef14eb63ea5ac51",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-09.ndjson",
+      "local_size": 51344,
+      "remote_size": 51344,
+      "remote_md5": "f978ae50aed4790cbaf528b52c0dd882",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-10.ndjson",
+      "local_size": 51344,
+      "remote_size": 51344,
+      "remote_md5": "148ca0acbce3db6b4ae76e08cf60fc98",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-11.ndjson",
+      "local_size": 51353,
+      "remote_size": 51353,
+      "remote_md5": "518497c6f6c96c764727417a10876afb",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-12.ndjson",
+      "local_size": 42491,
+      "remote_size": 42491,
+      "remote_md5": "92f092e085ac4dd4189083ece4ac2abf",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-13.ndjson",
+      "local_size": 51304,
+      "remote_size": 51304,
+      "remote_md5": "6e95fa8129207be790dc1b7973d82638",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-14.ndjson",
+      "local_size": 51282,
+      "remote_size": 51282,
+      "remote_md5": "80c9b4c466e14e3b3e7187bd226d2ba1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-15.ndjson",
+      "local_size": 54418,
+      "remote_size": 54418,
+      "remote_md5": "c285fc51589b8840c7f4900d2b46fa41",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-16.ndjson",
+      "local_size": 49774,
+      "remote_size": 49774,
+      "remote_md5": "e9ac6dba851ae98e75e28d9d95a5dd27",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-17.ndjson",
+      "local_size": 84084,
+      "remote_size": 84084,
+      "remote_md5": "623357b10be64c417d5e293578edfd75",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-18.ndjson",
+      "local_size": 79208,
+      "remote_size": 79208,
+      "remote_md5": "83f30ade1f92d80dca4b8d6eddfb1f0b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-19.ndjson",
+      "local_size": 79217,
+      "remote_size": 79217,
+      "remote_md5": "2e4484fdf3f3b0549173f23c2d3088d8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-20.ndjson",
+      "local_size": 77660,
+      "remote_size": 77660,
+      "remote_md5": "364ca3f74edb81e6ad6edf5786bc722b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-21.ndjson",
+      "local_size": 82313,
+      "remote_size": 82313,
+      "remote_md5": "35c4bebe957f904b5bdff8b5d4db682f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-22.ndjson",
+      "local_size": 80765,
+      "remote_size": 80765,
+      "remote_md5": "a1569757bf4f20ca1e954a24a78b7f89",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-23.ndjson",
+      "local_size": 72753,
+      "remote_size": 72753,
+      "remote_md5": "a41d622d49c9644043cca875ee57fd13",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-24.ndjson",
+      "local_size": 47924,
+      "remote_size": 47924,
+      "remote_md5": "9929e3682995bc3bb7a54e690284411e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-25.ndjson",
+      "local_size": 52988,
+      "remote_size": 52988,
+      "remote_md5": "5685e34b97b333ef75f48eb41ab34555",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-26.ndjson",
+      "local_size": 51304,
+      "remote_size": 51304,
+      "remote_md5": "21cb06b1b22ca14efb310896b0519381",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-27.ndjson",
+      "local_size": 52818,
+      "remote_size": 52818,
+      "remote_md5": "4dcb723bc521dd206bf3ce66c9d78ead",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-28.ndjson",
+      "local_size": 51328,
+      "remote_size": 51328,
+      "remote_md5": "aca7a3547640f36189bc59f6675bee24",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-29.ndjson",
+      "local_size": 51333,
+      "remote_size": 51333,
+      "remote_md5": "47f0032165c027556d5f05a55b68c7c6",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-09-30.ndjson",
+      "local_size": 51304,
+      "remote_size": 51304,
+      "remote_md5": "326409eee91c8ccb955a0fda39ef1e35",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-01.ndjson",
+      "local_size": 52870,
+      "remote_size": 52870,
+      "remote_md5": "6fb85130d818fb731496e42072650056",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-02.ndjson",
+      "local_size": 49765,
+      "remote_size": 49765,
+      "remote_md5": "4d265a0bc4af319dfb5b6ead5948d6e9",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-03.ndjson",
+      "local_size": 49743,
+      "remote_size": 49743,
+      "remote_md5": "bcf350ea34ffff3c5eb4c2612938afad",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-04.ndjson",
+      "local_size": 51313,
+      "remote_size": 51313,
+      "remote_md5": "30aa56efc96e634a945d689545250fc3",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-05.ndjson",
+      "local_size": 49734,
+      "remote_size": 49734,
+      "remote_md5": "76ca4212c5b7eb6c23786164b6639326",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-06.ndjson",
+      "local_size": 49756,
+      "remote_size": 49756,
+      "remote_md5": "c5ee089c8a146b494f95c8e3207c4484",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-07.ndjson",
+      "local_size": 79217,
+      "remote_size": 79217,
+      "remote_md5": "59f6c6c627bab8d557efad1b34f17788",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-08.ndjson",
+      "local_size": 75408,
+      "remote_size": 75408,
+      "remote_md5": "b9262cc792702030e8f1bb1590e2073a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-09.ndjson",
+      "local_size": 79132,
+      "remote_size": 79132,
+      "remote_md5": "d98072ef4ef3869065718491ee2043dc",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-10.ndjson",
+      "local_size": 83892,
+      "remote_size": 83892,
+      "remote_md5": "c179ddc5996b9e2e6b53d4e305307bd9",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-11.ndjson",
+      "local_size": 72985,
+      "remote_size": 72985,
+      "remote_md5": "12934bdbd1e4c443cb285c749719b8fd",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-12.ndjson",
+      "local_size": 53119,
+      "remote_size": 53119,
+      "remote_md5": "a0d9f1e867c729ed885d10b1eec00f09",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-13.ndjson",
+      "local_size": 82304,
+      "remote_size": 82304,
+      "remote_md5": "e43840fcd39ca58f838182700747061f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-14.ndjson",
+      "local_size": 80765,
+      "remote_size": 80765,
+      "remote_md5": "b5d3f93f923460d7eb4dcb69c97c0b7d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-15.ndjson",
+      "local_size": 77689,
+      "remote_size": 77689,
+      "remote_md5": "a81faec091ac36a18c301545297abff3",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-16.ndjson",
+      "local_size": 82313,
+      "remote_size": 82313,
+      "remote_md5": "217454cc252c0d84c106e014bcbf6790",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-17.ndjson",
+      "local_size": 82313,
+      "remote_size": 82313,
+      "remote_md5": "8f0cf5aa9ecd9658e3794f98c03c0c36",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-18.ndjson",
+      "local_size": 80765,
+      "remote_size": 80765,
+      "remote_md5": "b7d116038fffdc5645c074a7b2b22c71",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-19.ndjson",
+      "local_size": 69559,
+      "remote_size": 69559,
+      "remote_md5": "005a37935bbf8122683180fcd0238251",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-20.ndjson",
+      "local_size": 47169,
+      "remote_size": 47169,
+      "remote_md5": "5360a9815e0678b080c56e47425a7329",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "airnow/2026-10-21.ndjson",
+      "local_size": 43840,
+      "remote_size": 43840,
+      "remote_md5": "1f41d392512eb50c284c84ebe05364ef",
+      "match": "full",
+      "delivered_bytes": 17800,
+      "prior_state": "growth"
+     },
+     {
+      "path": "airnow/MANIFEST.json",
+      "local_size": 5064,
+      "remote_size": 5064,
+      "remote_md5": "7b29062fd5033e1b0d0c762b1a90f4c4",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-05.json",
+      "local_size": 168719,
+      "remote_size": 168719,
+      "remote_md5": "638af2e85b6b055a8c3f18469752ffc6",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-06.json",
+      "local_size": 166265,
+      "remote_size": 166265,
+      "remote_md5": "85cc4b08f8652bb2ff00e9540d3fdeee",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-07.json",
+      "local_size": 162360,
+      "remote_size": 162360,
+      "remote_md5": "217bb15ad1efc0b770f795493949f802",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-08.json",
+      "local_size": 168336,
+      "remote_size": 168336,
+      "remote_md5": "fd3c145b0ee134e99b7b21fd3c906bcc",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-09.json",
+      "local_size": 168571,
+      "remote_size": 168571,
+      "remote_md5": "6c57ec0502bc911cacd684f589926e17",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-10.json",
+      "local_size": 168583,
+      "remote_size": 168583,
+      "remote_md5": "7d5deed2353faa416873147ccedcd750",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-11.json",
+      "local_size": 168393,
+      "remote_size": 168393,
+      "remote_md5": "0b982ae42c3f2a21847c43b2ad56145c",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-12.json",
+      "local_size": 168640,
+      "remote_size": 168640,
+      "remote_md5": "b4ca0f9a71fc766f5e0ded9710f1c68c",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-13.json",
+      "local_size": 164238,
+      "remote_size": 164238,
+      "remote_md5": "04e6c2b3f2ee16994f8e30f59c7ad1c4",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-14.json",
+      "local_size": 163036,
+      "remote_size": 163036,
+      "remote_md5": "c5b6ef3720fe3b0f492cfc896edd6f43",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-15.json",
+      "local_size": 168653,
+      "remote_size": 168653,
+      "remote_md5": "99316eb77d5f5d55f01505c87fe9ccb0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-16.json",
+      "local_size": 168555,
+      "remote_size": 168555,
+      "remote_md5": "dfa97e19fa56a5186c27946ae257b897",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-17.json",
+      "local_size": 141342,
+      "remote_size": 141342,
+      "remote_md5": "78d0f0179bf432a05e61a47bede1f4ef",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-18.json",
+      "local_size": 168643,
+      "remote_size": 168643,
+      "remote_md5": "27504a753e315bfbd156050eba66ef17",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-19.json",
+      "local_size": 134794,
+      "remote_size": 134794,
+      "remote_md5": "6b8c27e28d9f50a504f9775d17bc1820",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-20.json",
+      "local_size": 121903,
+      "remote_size": 121903,
+      "remote_md5": "64e1fbde7dc2b14aa6b048fd5a1456c3",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-21.json",
+      "local_size": 140367,
+      "remote_size": 140367,
+      "remote_md5": "5cc41bc95cabe94dfea4cc1757220c3a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-22.json",
+      "local_size": 152353,
+      "remote_size": 152353,
+      "remote_md5": "073cf4cf29ae701a2d67d468cee69125",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-23.json",
+      "local_size": 131949,
+      "remote_size": 131949,
+      "remote_md5": "b72f6e276fe4be937b0b71e9a10603e8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-24.json",
+      "local_size": 158232,
+      "remote_size": 158232,
+      "remote_md5": "16c9e79ba1fc85c3c04228b52ee40b34",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-25.json",
+      "local_size": 107920,
+      "remote_size": 107920,
+      "remote_md5": "3bec5390157bc889b38fae52b0685aa8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-26.json",
+      "local_size": 138269,
+      "remote_size": 138269,
+      "remote_md5": "34a879648b614b5e286c338adab4fb64",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-27.json",
+      "local_size": 160711,
+      "remote_size": 160711,
+      "remote_md5": "e763915d94d319ea39d5e64ffc4b2c18",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-28.json",
+      "local_size": 123045,
+      "remote_size": 123045,
+      "remote_md5": "b2e8c9200e16dab8a4dc09526ded350e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-29.json",
+      "local_size": 134270,
+      "remote_size": 134270,
+      "remote_md5": "09d1c1f59b1d3cd95a371c1a9c989a12",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-30.json",
+      "local_size": 145195,
+      "remote_size": 145195,
+      "remote_md5": "87a7e12c53c4d4d948c0ecfe40e3996b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-10-31.json",
+      "local_size": 94829,
+      "remote_size": 94829,
+      "remote_md5": "5b623ad62d944fcd0a8e7eff6dc513b8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-01.json",
+      "local_size": 102904,
+      "remote_size": 102904,
+      "remote_md5": "8cb1154d47d1079be18fa3197c4958d6",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-02.json",
+      "local_size": 157029,
+      "remote_size": 157029,
+      "remote_md5": "de80c14f4c0d4a7947d4591d469e72d7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-03.json",
+      "local_size": 114540,
+      "remote_size": 114540,
+      "remote_md5": "e80e87f1390187aba9af76556418f321",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-04.json",
+      "local_size": 102071,
+      "remote_size": 102071,
+      "remote_md5": "faa3cb0313263c58fcf3ab0ef81976b8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-05.json",
+      "local_size": 120426,
+      "remote_size": 120426,
+      "remote_md5": "c8b4d7322bd080673445a51b0646b24f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-06.json",
+      "local_size": 145260,
+      "remote_size": 145260,
+      "remote_md5": "ada4504ec4fc27bcfc8a948a5b696f4b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-07.json",
+      "local_size": 160452,
+      "remote_size": 160452,
+      "remote_md5": "5ba21c5004fec2ecdbc7564ad10e502f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-08.json",
+      "local_size": 134489,
+      "remote_size": 134489,
+      "remote_md5": "c0b43ad45b3a68fa6b7e79f84c6ac491",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-09.json",
+      "local_size": 111320,
+      "remote_size": 111320,
+      "remote_md5": "3c5bea29911b1e00fef531481c38b577",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-10.json",
+      "local_size": 165269,
+      "remote_size": 165269,
+      "remote_md5": "be12736283f5a717b01616d117ca27e0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-11.json",
+      "local_size": 145018,
+      "remote_size": 145018,
+      "remote_md5": "12801939c27a835562fd0002f40d6583",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-12.json",
+      "local_size": 154394,
+      "remote_size": 154394,
+      "remote_md5": "c0f5297a6547be8b7e9f6be1b8224e51",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-13.json",
+      "local_size": 118940,
+      "remote_size": 118940,
+      "remote_md5": "5e07b8f308352bfe70f8032ca9c864a7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-14.json",
+      "local_size": 119508,
+      "remote_size": 119508,
+      "remote_md5": "455d3feae65b9c472580e6a75b5a61cb",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-15.json",
+      "local_size": 167214,
+      "remote_size": 167214,
+      "remote_md5": "88cb7e08c6df4f42325486ff118a7c29",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-16.json",
+      "local_size": 141883,
+      "remote_size": 141883,
+      "remote_md5": "47f9223a4a9176924c2304ccd1e6e665",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-17.json",
+      "local_size": 168425,
+      "remote_size": 168425,
+      "remote_md5": "c648b77d6829e9e737e3e91d511dc702",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-18.json",
+      "local_size": 157218,
+      "remote_size": 157218,
+      "remote_md5": "955cbd6011689e9bf91140a4313e7c36",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-19.json",
+      "local_size": 168426,
+      "remote_size": 168426,
+      "remote_md5": "d56d3b5c6fe1a1f3fd1cd304ceef2899",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-20.json",
+      "local_size": 168346,
+      "remote_size": 168346,
+      "remote_md5": "69a925bffac6b7354f2c3beb7d6d4d5e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-21.json",
+      "local_size": 168456,
+      "remote_size": 168456,
+      "remote_md5": "003140a2f0224e61e68c9fb6f08c967f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-22.json",
+      "local_size": 168509,
+      "remote_size": 168509,
+      "remote_md5": "cfe2dab76eb38ee6007f4aa49264602e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-23.json",
+      "local_size": 168457,
+      "remote_size": 168457,
+      "remote_md5": "1014a380fa6e9d99ca7489ef5dcefa58",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-24.json",
+      "local_size": 168504,
+      "remote_size": 168504,
+      "remote_md5": "381c1ff21e38632d5d3fc8deec331c8f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-25.json",
+      "local_size": 168538,
+      "remote_size": 168538,
+      "remote_md5": "2052789502ab7f974cfe280a34545f34",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-26.json",
+      "local_size": 161448,
+      "remote_size": 161448,
+      "remote_md5": "c37dc2059ceb0c5360e6f618ef5b3600",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-27.json",
+      "local_size": 166009,
+      "remote_size": 166009,
+      "remote_md5": "9220a19a317d7b06268d978594ce2f67",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-28.json",
+      "local_size": 168203,
+      "remote_size": 168203,
+      "remote_md5": "549bb38eae2b911b8b1e22186a3740a0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-11-30.json",
+      "local_size": 168646,
+      "remote_size": 168646,
+      "remote_md5": "0389958af297251570404d7e60b6ac09",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-01.json",
+      "local_size": 121822,
+      "remote_size": 121822,
+      "remote_md5": "df58353ad182a38f006f9623eb11b6e9",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-02.json",
+      "local_size": 108203,
+      "remote_size": 108203,
+      "remote_md5": "ef87164290d08a859e5e78626a95ee72",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-03.json",
+      "local_size": 101672,
+      "remote_size": 101672,
+      "remote_md5": "f900387000167730835fa98da81d7592",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-04.json",
+      "local_size": 101223,
+      "remote_size": 101223,
+      "remote_md5": "3a266e1e405efca96299cea3485304e2",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-05.json",
+      "local_size": 131109,
+      "remote_size": 131109,
+      "remote_md5": "e3a05a1c81080d84ef439d6f95103c7e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-06.json",
+      "local_size": 155696,
+      "remote_size": 155696,
+      "remote_md5": "4929927badadc890ea10ee0f4818d896",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-07.json",
+      "local_size": 155387,
+      "remote_size": 155387,
+      "remote_md5": "79ce2f6a984aa6e9f69caf8059624f05",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-08.json",
+      "local_size": 122831,
+      "remote_size": 122831,
+      "remote_md5": "f1868fa6c498ec23005b300d08d2c1b4",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-09.json",
+      "local_size": 156681,
+      "remote_size": 156681,
+      "remote_md5": "6b6435e18d040f642569d56943636602",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-10.json",
+      "local_size": 127605,
+      "remote_size": 127605,
+      "remote_md5": "78354d47bd34900b628b657e9c5ae199",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-11.json",
+      "local_size": 95945,
+      "remote_size": 95945,
+      "remote_md5": "1d62d305cea1d4090f8b31166f550490",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-12.json",
+      "local_size": 98928,
+      "remote_size": 98928,
+      "remote_md5": "ac8c3f22964eec0cd4d091876f4f14b6",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-13.json",
+      "local_size": 94536,
+      "remote_size": 94536,
+      "remote_md5": "73bf10fc68f766ac15a5ed7cc805e54d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-14.json",
+      "local_size": 94604,
+      "remote_size": 94604,
+      "remote_md5": "f9a03701fa8a128197362fcf9e66b18a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-15.json",
+      "local_size": 128813,
+      "remote_size": 128813,
+      "remote_md5": "43f9d769d2d6c641e17809efdc3269f0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-16.json",
+      "local_size": 114238,
+      "remote_size": 114238,
+      "remote_md5": "be50334e3a846b498ef68f2ce2088e46",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-17.json",
+      "local_size": 143082,
+      "remote_size": 143082,
+      "remote_md5": "ca2d14c85ec049f86f722bd77b88cb16",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-18.json",
+      "local_size": 104642,
+      "remote_size": 104642,
+      "remote_md5": "be9669ddc2877f02227468015505ee05",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-19.json",
+      "local_size": 97906,
+      "remote_size": 97906,
+      "remote_md5": "e802c75f4862fe952f3a5c22a604b5be",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-20.json",
+      "local_size": 100975,
+      "remote_size": 100975,
+      "remote_md5": "f8fa171b5fa9d44d72297b3951b1bc86",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-21.json",
+      "local_size": 104463,
+      "remote_size": 104463,
+      "remote_md5": "34b769e8b708cf9936d8857efa03abc9",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-22.json",
+      "local_size": 168479,
+      "remote_size": 168479,
+      "remote_md5": "2dec23b701dbb449d9ca6476e6c82c58",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-23.json",
+      "local_size": 168538,
+      "remote_size": 168538,
+      "remote_md5": "3bd67d002894527956e9e1e7930947b3",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-24.json",
+      "local_size": 168384,
+      "remote_size": 168384,
+      "remote_md5": "2e6e18e118d86120ffabc4e8f8b4e74d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-25.json",
+      "local_size": 168440,
+      "remote_size": 168440,
+      "remote_md5": "7085dad4a20a963645198cde5fe1b032",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-26.json",
+      "local_size": 168442,
+      "remote_size": 168442,
+      "remote_md5": "90350b89e2942aa44af9e1ebde1017ce",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-27.json",
+      "local_size": 168393,
+      "remote_size": 168393,
+      "remote_md5": "53a76503c58a38f9e4909bb2aac72222",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-28.json",
+      "local_size": 168392,
+      "remote_size": 168392,
+      "remote_md5": "8b74b043b626d1a2dce8de9a1b43582b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-29.json",
+      "local_size": 168315,
+      "remote_size": 168315,
+      "remote_md5": "5d5bfe084b4bed4834522fde88a398e5",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2025-12-31.json",
+      "local_size": 162883,
+      "remote_size": 162883,
+      "remote_md5": "2852cf728bf3d5f95b5b03cbe032326d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-01.json",
+      "local_size": 146750,
+      "remote_size": 146750,
+      "remote_md5": "91dc6f2d6f993fbc89225c007928ac51",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-02.json",
+      "local_size": 121976,
+      "remote_size": 121976,
+      "remote_md5": "db678749868ab455d45a8686390e1477",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-03.json",
+      "local_size": 168381,
+      "remote_size": 168381,
+      "remote_md5": "0a7094b0fb8ad82a626302ac0f32a2fe",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-04.json",
+      "local_size": 168353,
+      "remote_size": 168353,
+      "remote_md5": "867f13bcd9a5a0acf502330d68d10c42",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-05.json",
+      "local_size": 165444,
+      "remote_size": 165444,
+      "remote_md5": "1b9e787dba6d52215125386fcc773220",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-06.json",
+      "local_size": 157473,
+      "remote_size": 157473,
+      "remote_md5": "c0f63ab52bbbee2a9bbd9ef34cbf9f30",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-07.json",
+      "local_size": 168355,
+      "remote_size": 168355,
+      "remote_md5": "65d6b306525c1d2f1f7cf231e69791c9",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-08.json",
+      "local_size": 168466,
+      "remote_size": 168466,
+      "remote_md5": "2065d00daff0d599720a4fd5a75118e9",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-09.json",
+      "local_size": 168447,
+      "remote_size": 168447,
+      "remote_md5": "8ee2a896a4148e5454e243b60de33eef",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-10.json",
+      "local_size": 168568,
+      "remote_size": 168568,
+      "remote_md5": "03b27fb157536dfa7b6782cd4d4e702c",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-11.json",
+      "local_size": 168602,
+      "remote_size": 168602,
+      "remote_md5": "078566e825d237d17f7acca54ea87af4",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-12.json",
+      "local_size": 168318,
+      "remote_size": 168318,
+      "remote_md5": "59af2c3c2b8c6ab26243f54cc42d8025",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-13.json",
+      "local_size": 168445,
+      "remote_size": 168445,
+      "remote_md5": "e25c3c599a0595a0c05aff076625191d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-14.json",
+      "local_size": 168384,
+      "remote_size": 168384,
+      "remote_md5": "1f323cb53a1f8e54d38bbff44f925d85",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-15.json",
+      "local_size": 168304,
+      "remote_size": 168304,
+      "remote_md5": "1b5cd2123d58b6411d755099b3218876",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-16.json",
+      "local_size": 168337,
+      "remote_size": 168337,
+      "remote_md5": "657351462dfb5888bbedecce40be306c",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-17.json",
+      "local_size": 168322,
+      "remote_size": 168322,
+      "remote_md5": "125713f1be8725077290840b73491017",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-18.json",
+      "local_size": 168660,
+      "remote_size": 168660,
+      "remote_md5": "31c849a1a012a9bbc2ddf8089809d404",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-19.json",
+      "local_size": 168574,
+      "remote_size": 168574,
+      "remote_md5": "ecdff51b6cd32903a1c281c4c8034763",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-20.json",
+      "local_size": 168530,
+      "remote_size": 168530,
+      "remote_md5": "44971c34319f7d775f4d490ced42e066",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-21.json",
+      "local_size": 168528,
+      "remote_size": 168528,
+      "remote_md5": "8bfdb7d3c2816324af5de3ebd44acdd0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-22.json",
+      "local_size": 168587,
+      "remote_size": 168587,
+      "remote_md5": "240b4b9ac598aa9f50562d0cddda7c3f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-23.json",
+      "local_size": 168719,
+      "remote_size": 168719,
+      "remote_md5": "94b91f43cfab71070c347fec420a93d4",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-24.json",
+      "local_size": 168683,
+      "remote_size": 168683,
+      "remote_md5": "2767431b9a9cdd5036baa77a50cdf617",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-25.json",
+      "local_size": 168752,
+      "remote_size": 168752,
+      "remote_md5": "1625b0759ec38bfce4de9ca06e427736",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-26.json",
+      "local_size": 168949,
+      "remote_size": 168949,
+      "remote_md5": "8101d8d125e88f7f42e578660c6b4454",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-27.json",
+      "local_size": 168402,
+      "remote_size": 168402,
+      "remote_md5": "2b180af01a282461fc5e92bf4cb2d7eb",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-28.json",
+      "local_size": 168239,
+      "remote_size": 168239,
+      "remote_md5": "e5d924f0e4b6522028b39db68daf8b2e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-29.json",
+      "local_size": 168537,
+      "remote_size": 168537,
+      "remote_md5": "0b0a8d555b8ee31f33a444063d3b309b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-01-31.json",
+      "local_size": 168506,
+      "remote_size": 168506,
+      "remote_md5": "e22fd39299b06c93c5a4711de5efff9a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-01.json",
+      "local_size": 168596,
+      "remote_size": 168596,
+      "remote_md5": "e30b6defcc677c4a59ac44b8eeb5b5b6",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-02.json",
+      "local_size": 168942,
+      "remote_size": 168942,
+      "remote_md5": "8f02b8bd1938232ba4985b3d86bdb0e3",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-03.json",
+      "local_size": 168577,
+      "remote_size": 168577,
+      "remote_md5": "a6c762476c72ca2ceda46f35f2e4452b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-04.json",
+      "local_size": 168594,
+      "remote_size": 168594,
+      "remote_md5": "9b4d6ef495c4f465294731286a766999",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-05.json",
+      "local_size": 166394,
+      "remote_size": 166394,
+      "remote_md5": "8d87e0b3231fc9495e6825cc97854cd5",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-06.json",
+      "local_size": 120680,
+      "remote_size": 120680,
+      "remote_md5": "a1588b671a9e750b62874d00fe78ada7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-07.json",
+      "local_size": 163931,
+      "remote_size": 163931,
+      "remote_md5": "414c7f3c58e7d4b7d08138226a12cbf2",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-08.json",
+      "local_size": 117068,
+      "remote_size": 117068,
+      "remote_md5": "0ff4b00ec6a0ed933d0277656f72a0ad",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-09.json",
+      "local_size": 166683,
+      "remote_size": 166683,
+      "remote_md5": "9070595e1582f19c0f49d71afb0a2ca1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-10.json",
+      "local_size": 169348,
+      "remote_size": 169348,
+      "remote_md5": "8c2b7d813de3499a8b532b7e9e94e223",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-11.json",
+      "local_size": 169496,
+      "remote_size": 169496,
+      "remote_md5": "fabf467641aed5a9939516c88632e7bc",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-12.json",
+      "local_size": 169230,
+      "remote_size": 169230,
+      "remote_md5": "8a6ced20185d0a9a4fd25d552c6354c8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-13.json",
+      "local_size": 168814,
+      "remote_size": 168814,
+      "remote_md5": "ffd96f2aeffe30f5085a3e16c19f06c8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-14.json",
+      "local_size": 154493,
+      "remote_size": 154493,
+      "remote_md5": "175bacb84aa65fe56526882f791acc45",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-15.json",
+      "local_size": 169598,
+      "remote_size": 169598,
+      "remote_md5": "dd68471623618d5b7f94f115702e838b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-16.json",
+      "local_size": 169561,
+      "remote_size": 169561,
+      "remote_md5": "e9ecd3da33aaea3026ae118849ac9fd5",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-17.json",
+      "local_size": 168532,
+      "remote_size": 168532,
+      "remote_md5": "9a1d2a8b6822a097e0e1a19be1ba3253",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-18.json",
+      "local_size": 170510,
+      "remote_size": 170510,
+      "remote_md5": "30a45fadd40ee29508238d1b30f08b30",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-19.json",
+      "local_size": 170435,
+      "remote_size": 170435,
+      "remote_md5": "9e535d29b3e7150ef6ba3fa9faed32df",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-20.json",
+      "local_size": 170561,
+      "remote_size": 170561,
+      "remote_md5": "b8e8c0d8d22ad986b63808255ee101f8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-21.json",
+      "local_size": 169781,
+      "remote_size": 169781,
+      "remote_md5": "2d7524b9c902bc1e9eb2097a3ede8882",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-22.json",
+      "local_size": 158374,
+      "remote_size": 158374,
+      "remote_md5": "9913816acd28e4dabe54e389e117859d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-23.json",
+      "local_size": 159305,
+      "remote_size": 159305,
+      "remote_md5": "cf21ebf7a9bc6255cafa1f73e60b8dce",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-24.json",
+      "local_size": 125191,
+      "remote_size": 125191,
+      "remote_md5": "475afa5d10464e8acf935014dc17258a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-25.json",
+      "local_size": 100654,
+      "remote_size": 100654,
+      "remote_md5": "38b42745764e458b46b4b2d73d3825fb",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-26.json",
+      "local_size": 102428,
+      "remote_size": 102428,
+      "remote_md5": "956cd88ea19f2c49d6ed3333f79d00c4",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-27.json",
+      "local_size": 157902,
+      "remote_size": 157902,
+      "remote_md5": "e83ed35edeba3b835027914fbfecb38c",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-02-28.json",
+      "local_size": 130109,
+      "remote_size": 130109,
+      "remote_md5": "c41d465b87fd2e0149fc8a35edb3985a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-01.json",
+      "local_size": 142482,
+      "remote_size": 142482,
+      "remote_md5": "00eb3bfd426b6e1201ad022c063a41fa",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-03.json",
+      "local_size": 168107,
+      "remote_size": 168107,
+      "remote_md5": "ab3cc9684402c30cd68fc05328d250a2",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-04.json",
+      "local_size": 168810,
+      "remote_size": 168810,
+      "remote_md5": "64ea04481fe1afcf0a1eb85b629068f0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-05.json",
+      "local_size": 168958,
+      "remote_size": 168958,
+      "remote_md5": "97c369aa4bc09802ba05e0d41d356cae",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-06.json",
+      "local_size": 168981,
+      "remote_size": 168981,
+      "remote_md5": "3b969c6bee8e604f6326f82ecc1e1451",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-07.json",
+      "local_size": 168971,
+      "remote_size": 168971,
+      "remote_md5": "cc81f32ff291852a4f9a977e5522b9f7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-08.json",
+      "local_size": 135414,
+      "remote_size": 135414,
+      "remote_md5": "46545ccf8055d8a1cf43d8a9ee64c2bf",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-09.json",
+      "local_size": 161611,
+      "remote_size": 161611,
+      "remote_md5": "43f5dbbf619f5a946a59df42158a6dfe",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-10.json",
+      "local_size": 120198,
+      "remote_size": 120198,
+      "remote_md5": "1737fa02fdd46a6ca32d2403a2fc4e4d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-11.json",
+      "local_size": 168865,
+      "remote_size": 168865,
+      "remote_md5": "4df4aa5271f7ed8d622e82005545a56e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-12.json",
+      "local_size": 150423,
+      "remote_size": 150423,
+      "remote_md5": "3b1d5f1108ef229cb0ab967dad7dde26",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-13.json",
+      "local_size": 159440,
+      "remote_size": 159440,
+      "remote_md5": "1f142bfa061c24637bd1506274d61aa2",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-14.json",
+      "local_size": 161001,
+      "remote_size": 161001,
+      "remote_md5": "3a7f4453c016067ea18576c9b7728773",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-15.json",
+      "local_size": 160949,
+      "remote_size": 160949,
+      "remote_md5": "35cfa2f780b43a01ee31f9a4ea2292ab",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-16.json",
+      "local_size": 165491,
+      "remote_size": 165491,
+      "remote_md5": "66605d54b032ac58515daa26c62acddb",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-17.json",
+      "local_size": 168653,
+      "remote_size": 168653,
+      "remote_md5": "48ef03e5e03cdfd3b5d9cbc985133786",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-18.json",
+      "local_size": 168598,
+      "remote_size": 168598,
+      "remote_md5": "a23f76581c9c34a2976f271caff6cbf3",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-19.json",
+      "local_size": 134640,
+      "remote_size": 134640,
+      "remote_md5": "fcbf22498c38752297d6f664a420c5ac",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-20.json",
+      "local_size": 167851,
+      "remote_size": 167851,
+      "remote_md5": "c308709ef4ca5f9e17a680e8a637131b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-21.json",
+      "local_size": 168778,
+      "remote_size": 168778,
+      "remote_md5": "4ee3eaf4f5b34ad82696461467b53609",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-22.json",
+      "local_size": 168643,
+      "remote_size": 168643,
+      "remote_md5": "0d852d6b19ab534279e319632ee3d147",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-23.json",
+      "local_size": 168861,
+      "remote_size": 168861,
+      "remote_md5": "993af0187051311868a9e0eaa858f8be",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-24.json",
+      "local_size": 168909,
+      "remote_size": 168909,
+      "remote_md5": "17ef99c56c08d41040f135697fe4bd16",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-25.json",
+      "local_size": 152616,
+      "remote_size": 152616,
+      "remote_md5": "6246fa5286ad7300fd618cdcf36626b9",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-26.json",
+      "local_size": 158740,
+      "remote_size": 158740,
+      "remote_md5": "f102f39df3f5d2cf6f5ec90647638d79",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-27.json",
+      "local_size": 158351,
+      "remote_size": 158351,
+      "remote_md5": "0d871bc4a7d83d6b7751df496da15db1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-28.json",
+      "local_size": 170163,
+      "remote_size": 170163,
+      "remote_md5": "a923176022950d916013801eb55620b9",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-29.json",
+      "local_size": 168095,
+      "remote_size": 168095,
+      "remote_md5": "5775f1e59acb8d3592556e41d4d07e0e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-30.json",
+      "local_size": 165996,
+      "remote_size": 165996,
+      "remote_md5": "4a916b11d1c368f0e164e5a2930dd62d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-03-31.json",
+      "local_size": 155456,
+      "remote_size": 155456,
+      "remote_md5": "3a1ffd7195da0fdf920c4a75b7498ff1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-01.json",
+      "local_size": 169528,
+      "remote_size": 169528,
+      "remote_md5": "ed4e118b91d0fd26124574e21bd11f3a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-02.json",
+      "local_size": 169275,
+      "remote_size": 169275,
+      "remote_md5": "a1e6ce5007d99aca090a3e7d07930846",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-03.json",
+      "local_size": 168263,
+      "remote_size": 168263,
+      "remote_md5": "4c1bebded57a2741ce7d06b170b46575",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-04.json",
+      "local_size": 169062,
+      "remote_size": 169062,
+      "remote_md5": "0f647bc9fccbfcee9ca468b678d67b9a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-05.json",
+      "local_size": 118005,
+      "remote_size": 118005,
+      "remote_md5": "cebddc97d8483666b0434bc158e8c9b1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-06.json",
+      "local_size": 169068,
+      "remote_size": 169068,
+      "remote_md5": "f2655e23c7e001ef8b12657cb691f499",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-07.json",
+      "local_size": 171245,
+      "remote_size": 171245,
+      "remote_md5": "786bc32210e5eb547918aaba79a2ab92",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-08.json",
+      "local_size": 170561,
+      "remote_size": 170561,
+      "remote_md5": "6a08d84ab09c27b3be1edec06cc0d576",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-09.json",
+      "local_size": 171978,
+      "remote_size": 171978,
+      "remote_md5": "0aa00a852ecf47819dddc2b825ab8c28",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-10.json",
+      "local_size": 171899,
+      "remote_size": 171899,
+      "remote_md5": "abd0324d292e0dcadc0adb3f0e2937a3",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-11.json",
+      "local_size": 170756,
+      "remote_size": 170756,
+      "remote_md5": "e1fa527a6ea34a9b11bf888386c3fa40",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-12.json",
+      "local_size": 170186,
+      "remote_size": 170186,
+      "remote_md5": "fca201273edaae6d89ca4cc240640974",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-13.json",
+      "local_size": 167112,
+      "remote_size": 167112,
+      "remote_md5": "057ac80bea204cac107346efb21e5224",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-14.json",
+      "local_size": 145433,
+      "remote_size": 145433,
+      "remote_md5": "892f1ad4284233cac680e46d15605a7f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-15.json",
+      "local_size": 167090,
+      "remote_size": 167090,
+      "remote_md5": "e95ec1569ea64d1e90916c9b1f1fbfd5",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-16.json",
+      "local_size": 164697,
+      "remote_size": 164697,
+      "remote_md5": "da135e5ff95583a243295451f7d4673e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-17.json",
+      "local_size": 127943,
+      "remote_size": 127943,
+      "remote_md5": "4080dda11c40027b0d3faf8a222b2132",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-18.json",
+      "local_size": 164808,
+      "remote_size": 164808,
+      "remote_md5": "f71d850e0391abf55f63fd893ed26dd8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-19.json",
+      "local_size": 142065,
+      "remote_size": 142065,
+      "remote_md5": "af0344bdb29e0bb5e3677eaf4030a3b7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-20.json",
+      "local_size": 145570,
+      "remote_size": 145570,
+      "remote_md5": "2017171e3b2fbabf186adaff4fd8c0e8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-21.json",
+      "local_size": 169896,
+      "remote_size": 169896,
+      "remote_md5": "c9807ec863660ac52ffc85694a86dd70",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-22.json",
+      "local_size": 169881,
+      "remote_size": 169881,
+      "remote_md5": "cae2e34259bc70554eb53155fbd5249a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-23.json",
+      "local_size": 169545,
+      "remote_size": 169545,
+      "remote_md5": "bd507b7d2c1460ad8ebd3597576ac4fe",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-24.json",
+      "local_size": 169253,
+      "remote_size": 169253,
+      "remote_md5": "7dd946278d45a1d17bea07a4d4dfb194",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-25.json",
+      "local_size": 169346,
+      "remote_size": 169346,
+      "remote_md5": "226373298b50ee37606fada3192d9e8f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-26.json",
+      "local_size": 151171,
+      "remote_size": 151171,
+      "remote_md5": "9214426be11eed6bf98125bdbc097191",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-27.json",
+      "local_size": 160269,
+      "remote_size": 160269,
+      "remote_md5": "f5315549bae46aa2486a0803734ef3fa",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-28.json",
+      "local_size": 171537,
+      "remote_size": 171537,
+      "remote_md5": "21c087f286e62589bd38cb38767749da",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-29.json",
+      "local_size": 169734,
+      "remote_size": 169734,
+      "remote_md5": "11cee49273f9f0a56519da156ee1dedf",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-04-30.json",
+      "local_size": 170851,
+      "remote_size": 170851,
+      "remote_md5": "a90eeb5818847cd5fd6cbb151cfc3fdd",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-01.json",
+      "local_size": 170878,
+      "remote_size": 170878,
+      "remote_md5": "52c3baf3250032e38730bdb738d0c6d5",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-02.json",
+      "local_size": 169908,
+      "remote_size": 169908,
+      "remote_md5": "890251d33e25c9669ac24c99a1b30c08",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-03.json",
+      "local_size": 170523,
+      "remote_size": 170523,
+      "remote_md5": "258c8c2cc794240bf866bc44a987ae78",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-04.json",
+      "local_size": 171122,
+      "remote_size": 171122,
+      "remote_md5": "44cdbe952f6b0293b16a137ec003da87",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-05.json",
+      "local_size": 171073,
+      "remote_size": 171073,
+      "remote_md5": "0228b25d1ded1d2c41e0bf997cbac073",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-06.json",
+      "local_size": 170509,
+      "remote_size": 170509,
+      "remote_md5": "1a9c5c4047115427d359690f4c887928",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-07.json",
+      "local_size": 170234,
+      "remote_size": 170234,
+      "remote_md5": "9c5a88177f7b9d8f593b6ded325c250a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-08.json",
+      "local_size": 170297,
+      "remote_size": 170297,
+      "remote_md5": "b90f15628f5582044b942012da256e3a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-09.json",
+      "local_size": 170347,
+      "remote_size": 170347,
+      "remote_md5": "d01abfa9e922944b859426b7bc90606b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-10.json",
+      "local_size": 170429,
+      "remote_size": 170429,
+      "remote_md5": "cfafec3993f74c732bbdf89b32194b16",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-11.json",
+      "local_size": 171925,
+      "remote_size": 171925,
+      "remote_md5": "c24d8f3c684f43107e3b090c2f7a2c31",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-12.json",
+      "local_size": 171634,
+      "remote_size": 171634,
+      "remote_md5": "82385d34160173006e20bfbfc6086858",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-13.json",
+      "local_size": 171998,
+      "remote_size": 171998,
+      "remote_md5": "3c3daab966d6173baf685cc8bf79e4ec",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-14.json",
+      "local_size": 172030,
+      "remote_size": 172030,
+      "remote_md5": "b0313e1665f194a6656b6aad1b1238ec",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-15.json",
+      "local_size": 171786,
+      "remote_size": 171786,
+      "remote_md5": "9d40638a6b56cd974f4ee6ee01667ba6",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-16.json",
+      "local_size": 171718,
+      "remote_size": 171718,
+      "remote_md5": "434f1108f2c91d07d5103af02302226c",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-17.json",
+      "local_size": 171066,
+      "remote_size": 171066,
+      "remote_md5": "e35e7a94d4d33d0e7b2a3d4996c05eb4",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-18.json",
+      "local_size": 171331,
+      "remote_size": 171331,
+      "remote_md5": "5ddc67d68b4e9b8b1510e1090a30e8eb",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-19.json",
+      "local_size": 171801,
+      "remote_size": 171801,
+      "remote_md5": "668bcfbd918d028953d002c890f5cdd2",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-20.json",
+      "local_size": 172121,
+      "remote_size": 172121,
+      "remote_md5": "b019bf43f42458b881a00bcdc1ae038c",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-21.json",
+      "local_size": 171927,
+      "remote_size": 171927,
+      "remote_md5": "e1b487337de2bd52673e5b4d83df9bac",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-22.json",
+      "local_size": 171119,
+      "remote_size": 171119,
+      "remote_md5": "86bd67f277a9e4fa1d1e13224100d4f5",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-23.json",
+      "local_size": 171887,
+      "remote_size": 171887,
+      "remote_md5": "1eddbf67a2bf85a83c372a86e618fe22",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-24.json",
+      "local_size": 171474,
+      "remote_size": 171474,
+      "remote_md5": "1b8f281488f447771b0cf36e46a311cc",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-25.json",
+      "local_size": 171746,
+      "remote_size": 171746,
+      "remote_md5": "cd159ef766f6ee04b64b4044b3b2bb90",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-26.json",
+      "local_size": 172030,
+      "remote_size": 172030,
+      "remote_md5": "3019d2b575530b84fd1e62f68adc8c3d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-27.json",
+      "local_size": 171719,
+      "remote_size": 171719,
+      "remote_md5": "4e2fd698756b596f902caf9a36f546fc",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-28.json",
+      "local_size": 171779,
+      "remote_size": 171779,
+      "remote_md5": "61df23eade35348c3ecaf2ee8b44ecbd",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-29.json",
+      "local_size": 172199,
+      "remote_size": 172199,
+      "remote_md5": "a9caf4a3c926f36117b259c8f095d62e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-30.json",
+      "local_size": 172070,
+      "remote_size": 172070,
+      "remote_md5": "bf74ae01cdf6be1599c640b8f523ee89",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-05-31.json",
+      "local_size": 162967,
+      "remote_size": 162967,
+      "remote_md5": "b651ae868ea7780fd64151b24e012475",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-01.json",
+      "local_size": 167197,
+      "remote_size": 167197,
+      "remote_md5": "613309e7af38689adffd31743e350295",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-02.json",
+      "local_size": 148826,
+      "remote_size": 148826,
+      "remote_md5": "2c616ab9de1fb8552bd35812bb6996de",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-03.json",
+      "local_size": 144957,
+      "remote_size": 144957,
+      "remote_md5": "c8a60157cd6bb1ef0e6b3da4fde11bc1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-04.json",
+      "local_size": 167294,
+      "remote_size": 167294,
+      "remote_md5": "ea984322a2dbf1dbd1c8b3ec215a450a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-05.json",
+      "local_size": 170807,
+      "remote_size": 170807,
+      "remote_md5": "4de2771b24224cc0af5d6c5bcb0fe75d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-06.json",
+      "local_size": 171624,
+      "remote_size": 171624,
+      "remote_md5": "76b18a0096db7ec84491ae1051bd4342",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-07.json",
+      "local_size": 171131,
+      "remote_size": 171131,
+      "remote_md5": "5d68dfe4e6a55683f62e287034e75846",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-08.json",
+      "local_size": 169938,
+      "remote_size": 169938,
+      "remote_md5": "73bcf33497d524634bb47db2ab178e24",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-09.json",
+      "local_size": 169924,
+      "remote_size": 169924,
+      "remote_md5": "33143978078abce00df69417bf26a4eb",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-10.json",
+      "local_size": 170988,
+      "remote_size": 170988,
+      "remote_md5": "49561b326346286cf7fe3207f4c8c01f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-11.json",
+      "local_size": 171390,
+      "remote_size": 171390,
+      "remote_md5": "3b4c09f7ea3edd73dffcb4d4b2b5ca08",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-12.json",
+      "local_size": 170492,
+      "remote_size": 170492,
+      "remote_md5": "6aee433baebd49ff13fd78f6c5e9e1d4",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-13.json",
+      "local_size": 170517,
+      "remote_size": 170517,
+      "remote_md5": "f2aacfa53cf71841b58f71ac69a75860",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-14.json",
+      "local_size": 170081,
+      "remote_size": 170081,
+      "remote_md5": "ab644e87a1eb1d3a739f8457a821c7c4",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-15.json",
+      "local_size": 171280,
+      "remote_size": 171280,
+      "remote_md5": "119758aae12fff1309d9b6dffa9aad3d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-16.json",
+      "local_size": 170532,
+      "remote_size": 170532,
+      "remote_md5": "66ab17b1a8cb4e99b593c7366d7a0624",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-17.json",
+      "local_size": 135034,
+      "remote_size": 135034,
+      "remote_md5": "bf5e057ef7e835b2ea5155cc54643fae",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-18.json",
+      "local_size": 171755,
+      "remote_size": 171755,
+      "remote_md5": "9c05f4d5b1fd0a972e77b4f1ea049f90",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-19.json",
+      "local_size": 170909,
+      "remote_size": 170909,
+      "remote_md5": "c381c6a71e1e5757d59946e5eb1cea35",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-20.json",
+      "local_size": 171547,
+      "remote_size": 171547,
+      "remote_md5": "e5df2b3c9d4ef5d1918b978eb05d9b4e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-21.json",
+      "local_size": 171514,
+      "remote_size": 171514,
+      "remote_md5": "431dae247a4380c9cf8b962dc708ef9a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-22.json",
+      "local_size": 172151,
+      "remote_size": 172151,
+      "remote_md5": "52524e087f428643e5087d96fb754c06",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-23.json",
+      "local_size": 171374,
+      "remote_size": 171374,
+      "remote_md5": "3b854baeb7eb79f344257491031a5792",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-24.json",
+      "local_size": 168548,
+      "remote_size": 168548,
+      "remote_md5": "0fc1781e175279beac788ee31bbb812b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-25.json",
+      "local_size": 165833,
+      "remote_size": 165833,
+      "remote_md5": "b4b76d411ecad2249471085b7db269f7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-26.json",
+      "local_size": 170925,
+      "remote_size": 170925,
+      "remote_md5": "0d3402d9c3c7298c27258b1cc6d50113",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-27.json",
+      "local_size": 170734,
+      "remote_size": 170734,
+      "remote_md5": "0ba0708772f40dfefa8c25a3d22efbbd",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-28.json",
+      "local_size": 170347,
+      "remote_size": 170347,
+      "remote_md5": "30f64ee9a9c46b0c711a8fc8d0922afe",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-29.json",
+      "local_size": 170082,
+      "remote_size": 170082,
+      "remote_md5": "c4e616c7938d4f38f40544fd2c94f997",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-06-30.json",
+      "local_size": 170023,
+      "remote_size": 170023,
+      "remote_md5": "eaccb5c3906a2ec85536daaa8e6ff128",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-01.json",
+      "local_size": 171713,
+      "remote_size": 171713,
+      "remote_md5": "9a9358a4ccaaf030b65db5dc9c3c6ba8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-02.json",
+      "local_size": 171724,
+      "remote_size": 171724,
+      "remote_md5": "9e69f9e1c5bf1df009e1d96875fc4df3",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-03.json",
+      "local_size": 170579,
+      "remote_size": 170579,
+      "remote_md5": "c1c8d7e140ed1ba49338af3e754b121d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-04.json",
+      "local_size": 170033,
+      "remote_size": 170033,
+      "remote_md5": "33c386599304904dedf0677a587a1e5d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-05.json",
+      "local_size": 170474,
+      "remote_size": 170474,
+      "remote_md5": "decf153a3a197eaef327c11c0ac47c65",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-06.json",
+      "local_size": 170790,
+      "remote_size": 170790,
+      "remote_md5": "c92b3cd788ec9ccd24dca73a1f17616d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-07.json",
+      "local_size": 171196,
+      "remote_size": 171196,
+      "remote_md5": "0f0f7c5f0569982ea3e2cfacce1ccc8d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-08.json",
+      "local_size": 155872,
+      "remote_size": 155872,
+      "remote_md5": "866b43dda2b9ad492162ccb88eace8df",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-09.json",
+      "local_size": 164700,
+      "remote_size": 164700,
+      "remote_md5": "c431bf64b7a2509574ee81e88ee3fedd",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-10.json",
+      "local_size": 170942,
+      "remote_size": 170942,
+      "remote_md5": "9eff07247be9a7f9407f7b974e329255",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-11.json",
+      "local_size": 167128,
+      "remote_size": 167128,
+      "remote_md5": "086a6d21ebcf461974859cc2b0703c94",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-12.json",
+      "local_size": 167938,
+      "remote_size": 167938,
+      "remote_md5": "46c91403490939036dcd59f297350ad0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-13.json",
+      "local_size": 171487,
+      "remote_size": 171487,
+      "remote_md5": "550c837b175127b6863dd04781368724",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-14.json",
+      "local_size": 170871,
+      "remote_size": 170871,
+      "remote_md5": "0b6689ef0d184794aee0ed5528fcd354",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-15.json",
+      "local_size": 171650,
+      "remote_size": 171650,
+      "remote_md5": "16f559700b5cc44e7df879f1076ca5a9",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-16.json",
+      "local_size": 171347,
+      "remote_size": 171347,
+      "remote_md5": "29c895742a7b6e188de3d4405c7781a6",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-17.json",
+      "local_size": 171856,
+      "remote_size": 171856,
+      "remote_md5": "37429138ff12a10663c9b47a9b3dab33",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-18.json",
+      "local_size": 172403,
+      "remote_size": 172403,
+      "remote_md5": "864112debfcd574f493c7bac3b2ed9c8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-19.json",
+      "local_size": 170962,
+      "remote_size": 170962,
+      "remote_md5": "58b8f28bfdb1427e92b48a9e03628a0f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-20.json",
+      "local_size": 171455,
+      "remote_size": 171455,
+      "remote_md5": "a35dfa871be01a55f7843d946866e303",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-21.json",
+      "local_size": 171659,
+      "remote_size": 171659,
+      "remote_md5": "daf6bda5e9b45f900e8e96db81634dac",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-22.json",
+      "local_size": 171636,
+      "remote_size": 171636,
+      "remote_md5": "e115f734685ca86f05fe017e2e8be2df",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-23.json",
+      "local_size": 171419,
+      "remote_size": 171419,
+      "remote_md5": "23eaed48030f0a8895ff9b69f254daca",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-24.json",
+      "local_size": 170626,
+      "remote_size": 170626,
+      "remote_md5": "0cbf76e475ee992f67cf5aaed60d599b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-25.json",
+      "local_size": 171639,
+      "remote_size": 171639,
+      "remote_md5": "92e9c894070e151cf6a597f139703e6d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-26.json",
+      "local_size": 171089,
+      "remote_size": 171089,
+      "remote_md5": "b9cf772c27a80f6e37f6be1eb91c9132",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-27.json",
+      "local_size": 169903,
+      "remote_size": 169903,
+      "remote_md5": "248533850a30f37a575bbb4cef153e1f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-28.json",
+      "local_size": 169945,
+      "remote_size": 169945,
+      "remote_md5": "64bb61c29b3f22e7df80425f2e275fc2",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-29.json",
+      "local_size": 169972,
+      "remote_size": 169972,
+      "remote_md5": "5555a3da7d741f0e84f8f49938db5611",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-30.json",
+      "local_size": 170020,
+      "remote_size": 170020,
+      "remote_md5": "7ca28a95e0be77b43b2567a751904e01",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-07-31.json",
+      "local_size": 172013,
+      "remote_size": 172013,
+      "remote_md5": "3ba4dab6d205973e37a81825a9e72786",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-01.json",
+      "local_size": 171029,
+      "remote_size": 171029,
+      "remote_md5": "68d8edc61abf796b22b932df3a96c202",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-02.json",
+      "local_size": 170472,
+      "remote_size": 170472,
+      "remote_md5": "b201a7f6170532e3197f4f3e4155f6dc",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-03.json",
+      "local_size": 171470,
+      "remote_size": 171470,
+      "remote_md5": "2ef7cf11cb55b4af36cd5c854b7fcdb6",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-04.json",
+      "local_size": 146605,
+      "remote_size": 146605,
+      "remote_md5": "89005a3bb3e407c96db2f846b5d02359",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-05.json",
+      "local_size": 139984,
+      "remote_size": 139984,
+      "remote_md5": "a3703bc2c30a08b5d9e665f12ad67292",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-06.json",
+      "local_size": 140018,
+      "remote_size": 140018,
+      "remote_md5": "9adb6bfc29671b316d31dd875915b23f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-06.ndjson",
+      "local_size": 373638,
+      "remote_size": 373638,
+      "remote_md5": "d2f7fe5c024029f255726faf168dae50",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-07.ndjson",
+      "local_size": 3343560,
+      "remote_size": 3343560,
+      "remote_md5": "a3c4b238c2d4a2158adf27c1824147bb",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-08.ndjson",
+      "local_size": 3393541,
+      "remote_size": 3393541,
+      "remote_md5": "bdaedb503b052ced56e83508f5034a52",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-09.ndjson",
+      "local_size": 3370874,
+      "remote_size": 3370874,
+      "remote_md5": "189c996025c3d9256bf5c59b95e4d7f0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-10.ndjson",
+      "local_size": 3378673,
+      "remote_size": 3378673,
+      "remote_md5": "622f1b4f41e771803c4e3e0b9d9f9283",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-11.ndjson",
+      "local_size": 3255845,
+      "remote_size": 3255845,
+      "remote_md5": "58e7866a6eca06f3165f76a79fe5171f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-12.ndjson",
+      "local_size": 3386482,
+      "remote_size": 3386482,
+      "remote_md5": "29862cc92d9f249a566983c95a0787bc",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-13.ndjson",
+      "local_size": 3376851,
+      "remote_size": 3376851,
+      "remote_md5": "57f3be432f0e90bff268b899b786db11",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-14.ndjson",
+      "local_size": 3375647,
+      "remote_size": 3375647,
+      "remote_md5": "4b81b0886acb7828032307a32a53d05a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-15.ndjson",
+      "local_size": 3389042,
+      "remote_size": 3389042,
+      "remote_md5": "9cf3601a1b612859b9586b5d96b4c3d7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-16.ndjson",
+      "local_size": 3375221,
+      "remote_size": 3375221,
+      "remote_md5": "2baa6ddafff2235145d5cb259df0565f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-17.ndjson",
+      "local_size": 3371873,
+      "remote_size": 3371873,
+      "remote_md5": "b481ff14d141cf01fb64673c0d4b0ea7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-18.ndjson",
+      "local_size": 3330533,
+      "remote_size": 3330533,
+      "remote_md5": "eb64a5fece35363c0718945b137ed333",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-19.ndjson",
+      "local_size": 3358676,
+      "remote_size": 3358676,
+      "remote_md5": "8d4e49c4457721d6174fade07c92f55a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-20.ndjson",
+      "local_size": 3368100,
+      "remote_size": 3368100,
+      "remote_md5": "e04d9489945021190f3526f9cec88143",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-21.ndjson",
+      "local_size": 3362677,
+      "remote_size": 3362677,
+      "remote_md5": "70aa4a5f4876f63e2c42280a96b626b0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-22.ndjson",
+      "local_size": 3359472,
+      "remote_size": 3359472,
+      "remote_md5": "af0b50752383abadf0848c6aa977147f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-23.ndjson",
+      "local_size": 3135340,
+      "remote_size": 3135340,
+      "remote_md5": "94af9c46448f719dddcf2d3d6f1c46a3",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-24.ndjson",
+      "local_size": 3318205,
+      "remote_size": 3318205,
+      "remote_md5": "6a7a26e6d01df1ce33a09e6b34e72baf",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-25.ndjson",
+      "local_size": 3359245,
+      "remote_size": 3359245,
+      "remote_md5": "52ba9c9a456e64b2c6c996703132b84a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-26.ndjson",
+      "local_size": 3308288,
+      "remote_size": 3308288,
+      "remote_md5": "cbe9c8024f45721ffddfd34cf13b75c5",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-27.ndjson",
+      "local_size": 3345805,
+      "remote_size": 3345805,
+      "remote_md5": "4783f18e9860eafe440b51330f98d724",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-28.ndjson",
+      "local_size": 3307965,
+      "remote_size": 3307965,
+      "remote_md5": "44ed43934c13b061ac89f2e989f3a165",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-29.ndjson",
+      "local_size": 3387792,
+      "remote_size": 3387792,
+      "remote_md5": "04cd6702ca610925cf115cfa866870ad",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-30.ndjson",
+      "local_size": 3376104,
+      "remote_size": 3376104,
+      "remote_md5": "16e7be5252e220682341547ae620f182",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-08-31.ndjson",
+      "local_size": 3280551,
+      "remote_size": 3280551,
+      "remote_md5": "40a2122ced539afa01011af5e5ec141f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-01.ndjson",
+      "local_size": 3180029,
+      "remote_size": 3180029,
+      "remote_md5": "1055691084e970d94df7f12bc7b8c237",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-02.ndjson",
+      "local_size": 3266921,
+      "remote_size": 3266921,
+      "remote_md5": "d4e8be30a55a424bac427de83ba32aac",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-03.ndjson",
+      "local_size": 3269935,
+      "remote_size": 3269935,
+      "remote_md5": "74da0c90e9847070f1ac2c648b738f3e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-04.ndjson",
+      "local_size": 3203478,
+      "remote_size": 3203478,
+      "remote_md5": "96292b798a25e9829c6f4d62b3d9a9bd",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-05.ndjson",
+      "local_size": 3041709,
+      "remote_size": 3041709,
+      "remote_md5": "55548b8430e4b2f9ad4ec485fcf77492",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-06.ndjson",
+      "local_size": 3081775,
+      "remote_size": 3081775,
+      "remote_md5": "4179b82e534e13abc0cbc45c51eb48c3",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-07.ndjson",
+      "local_size": 3168034,
+      "remote_size": 3168034,
+      "remote_md5": "2f80d8371a2ea8af364bb64fbb01edf7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-08.ndjson",
+      "local_size": 3202032,
+      "remote_size": 3202032,
+      "remote_md5": "ca46cd48d621dd9c7f4fec107a5c451e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-09.ndjson",
+      "local_size": 3157920,
+      "remote_size": 3157920,
+      "remote_md5": "775b0797a9cc81a722a7be0d7686bf77",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-10.ndjson",
+      "local_size": 3100352,
+      "remote_size": 3100352,
+      "remote_md5": "dd43d4c9c89a832dfeb908c6d5b7bcd1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-11.ndjson",
+      "local_size": 2973805,
+      "remote_size": 2973805,
+      "remote_md5": "2dae968d72bc6a8af43293deb268f930",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-12.ndjson",
+      "local_size": 3101602,
+      "remote_size": 3101602,
+      "remote_md5": "fb9fda5b1e33ba9ef551e7a9dc997ffb",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-13.ndjson",
+      "local_size": 3167960,
+      "remote_size": 3167960,
+      "remote_md5": "6326d0ffc89f0b26472feb0fe3e2bb4e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-14.ndjson",
+      "local_size": 3154821,
+      "remote_size": 3154821,
+      "remote_md5": "6e82a9d025a8838f9a2d30ff25996f33",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-15.ndjson",
+      "local_size": 3170134,
+      "remote_size": 3170134,
+      "remote_md5": "420020f39ce20233e269304caad64074",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-16.ndjson",
+      "local_size": 3224991,
+      "remote_size": 3224991,
+      "remote_md5": "fea598c6748af6cdd5fe697f6e429881",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-17.ndjson",
+      "local_size": 3178090,
+      "remote_size": 3178090,
+      "remote_md5": "6ed523f264dc487fe337738b6967a83b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-18.ndjson",
+      "local_size": 3170272,
+      "remote_size": 3170272,
+      "remote_md5": "f213ff153a27177f02ccc14ad74a5bc5",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-19.ndjson",
+      "local_size": 3196061,
+      "remote_size": 3196061,
+      "remote_md5": "3cd0319854680ec33a3dffc800fa6ed2",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-20.ndjson",
+      "local_size": 3193777,
+      "remote_size": 3193777,
+      "remote_md5": "a2bbcbf6f478154dcda105d4c3f65c5b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-21.ndjson",
+      "local_size": 3191365,
+      "remote_size": 3191365,
+      "remote_md5": "c77f4c6aa5b97dbe0b841f1bb3726e2b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-22.ndjson",
+      "local_size": 3171626,
+      "remote_size": 3171626,
+      "remote_md5": "c9fa4c3f0951bb005fecaa06e4b44be1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-23.ndjson",
+      "local_size": 3162004,
+      "remote_size": 3162004,
+      "remote_md5": "cea596c39ccd4ac42192d28a4a4540a0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-24.ndjson",
+      "local_size": 3154356,
+      "remote_size": 3154356,
+      "remote_md5": "38d3b907016d7568984c2faf8a10b12f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-25.ndjson",
+      "local_size": 3159133,
+      "remote_size": 3159133,
+      "remote_md5": "9a92fd45acf8d8f56be6bdc18638a10b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-26.ndjson",
+      "local_size": 3200046,
+      "remote_size": 3200046,
+      "remote_md5": "2dccf881a0aaf0bc053df49971418add",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-27.ndjson",
+      "local_size": 3192963,
+      "remote_size": 3192963,
+      "remote_md5": "d00f4c236aa339ca41e4afc9176780d9",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-28.ndjson",
+      "local_size": 3199981,
+      "remote_size": 3199981,
+      "remote_md5": "f647531425d1dc49d0ba97e612acdbe1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-29.ndjson",
+      "local_size": 3173117,
+      "remote_size": 3173117,
+      "remote_md5": "e9fbc4e0118af0ddd8ca1db8dd7ad579",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-09-30.ndjson",
+      "local_size": 3164638,
+      "remote_size": 3164638,
+      "remote_md5": "3db0455b5f8ba3e60b68d522452cbe29",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-01.ndjson",
+      "local_size": 3173593,
+      "remote_size": 3173593,
+      "remote_md5": "10b6afd9b75875f56624b044237a1604",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-02.ndjson",
+      "local_size": 3181327,
+      "remote_size": 3181327,
+      "remote_md5": "248bdb0b66a6404ceb381f16c1660154",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-03.ndjson",
+      "local_size": 3181977,
+      "remote_size": 3181977,
+      "remote_md5": "0c125ad58743a8fc8bd350ba1e47a559",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-04.ndjson",
+      "local_size": 3192109,
+      "remote_size": 3192109,
+      "remote_md5": "017aec5dab59e4b89b87e1a497851e6c",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-05.ndjson",
+      "local_size": 3199981,
+      "remote_size": 3199981,
+      "remote_md5": "123b6cbbdbe08f9309a6fbb70b4c6d4a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-06.ndjson",
+      "local_size": 3173298,
+      "remote_size": 3173298,
+      "remote_md5": "c9b9c932946f8547f78b75c0370fa7c3",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-07.ndjson",
+      "local_size": 3179221,
+      "remote_size": 3179221,
+      "remote_md5": "99f2db5b315dce979830c598e03b7e66",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-08.ndjson",
+      "local_size": 3217397,
+      "remote_size": 3217397,
+      "remote_md5": "771af53f0e47c1b25391d2267dab07df",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-09.ndjson",
+      "local_size": 3197845,
+      "remote_size": 3197845,
+      "remote_md5": "34290a591ddbc4c1cecc5d409d0acf58",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-10.ndjson",
+      "local_size": 3171501,
+      "remote_size": 3171501,
+      "remote_md5": "d1a1fbc31260b874a48d3744f4b5490e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-11.ndjson",
+      "local_size": 2974547,
+      "remote_size": 2974547,
+      "remote_md5": "1a3ee2b7f60ec06135fa2f7fb711ff55",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-12.ndjson",
+      "local_size": 3217370,
+      "remote_size": 3217370,
+      "remote_md5": "7051af17b4ea68fd164b03b67b32370a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-13.ndjson",
+      "local_size": 3190414,
+      "remote_size": 3190414,
+      "remote_md5": "7e7a6a6b53b459133882e3a53bc20eb1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-14.ndjson",
+      "local_size": 3220149,
+      "remote_size": 3220149,
+      "remote_md5": "7e645fec74a0db3c4a7706d5337ee551",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-15.ndjson",
+      "local_size": 3205145,
+      "remote_size": 3205145,
+      "remote_md5": "5e553f6f8f036e63135d0129d9947ad5",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-16.ndjson",
+      "local_size": 3224829,
+      "remote_size": 3224829,
+      "remote_md5": "32b79b795f40a30bc7cfa9775769a3bf",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-17.ndjson",
+      "local_size": 3252174,
+      "remote_size": 3252174,
+      "remote_md5": "431a9d8d4676378bd4137bbb6297a52e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-18.ndjson",
+      "local_size": 3277082,
+      "remote_size": 3277082,
+      "remote_md5": "8ae22998baa5670f5f3495dfa5880602",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-19.ndjson",
+      "local_size": 3292421,
+      "remote_size": 3292421,
+      "remote_md5": "d751426856a81c8e670ff00c3e3acd33",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-20.ndjson",
+      "local_size": 3272632,
+      "remote_size": 3272632,
+      "remote_md5": "9e6295848d9a9f4b46e9b9d662b26d76",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "ambient/2026-10-21.ndjson",
+      "local_size": 1852930,
+      "remote_size": 1852930,
+      "remote_md5": "10c320a5ba67cab9aad8d4d915e7e290",
+      "match": "full",
+      "delivered_bytes": 589097,
+      "prior_state": "growth"
+     },
+     {
+      "path": "ambient/manifest.jsonl",
+      "local_size": 181319,
+      "remote_size": 181319,
+      "remote_md5": "50685a8e59636fb668651ff26dd3f2db",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "local_sensors/2026-10-21.ndjson",
+      "local_size": 19346263,
+      "remote_size": 19341947,
+      "remote_md5": "91e0aa0d55149c5c25a27b3980100439",
+      "match": "prefix",
+      "delivered_bytes": 19341947,
+      "prior_state": "absent"
+     },
+     {
+      "path": "nws/2026-08-10.ndjson",
+      "local_size": 491,
+      "remote_size": 491,
+      "remote_md5": "ee56cfe3e9297763acd7e08da0080525",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/2026-08-25.ndjson",
+      "local_size": 438,
+      "remote_size": 438,
+      "remote_md5": "a050af01ca643b8dd67d519769763ba1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/2026-08-29.ndjson",
+      "local_size": 311,
+      "remote_size": 311,
+      "remote_md5": "c0d023433a17bffab8b67c43a9096959",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/2026-08-31.ndjson",
+      "local_size": 143,
+      "remote_size": 143,
+      "remote_md5": "f6d5586e56908fb9b07508ecbcdbb830",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/2026-09-30.ndjson",
+      "local_size": 351,
+      "remote_size": 351,
+      "remote_md5": "a084002ec2fff728eccf144813169458",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/2026-10-07.ndjson",
+      "local_size": 3074,
+      "remote_size": 3074,
+      "remote_md5": "a7d3278b2239181088f5b04fa50c419d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/2026-10-19.ndjson",
+      "local_size": 2613,
+      "remote_size": 2613,
+      "remote_md5": "1de0b4bb5d3c6439d09ed325757ea279",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/2026-10-20.ndjson",
+      "local_size": 5381,
+      "remote_size": 5381,
+      "remote_md5": "89b56fae19f67f6663d53da35ae93902",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-06.ndjson",
+      "local_size": 1035643,
+      "remote_size": 1035643,
+      "remote_md5": "d2277fe7c070535500e1956c1d2b26af",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-07.ndjson",
+      "local_size": 3820760,
+      "remote_size": 3820760,
+      "remote_md5": "e330c24792f3c9a0f7c42209e34c821b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-08.ndjson",
+      "local_size": 2451243,
+      "remote_size": 2451243,
+      "remote_md5": "a19559a07e522f751d2e7bc537e51faf",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-09.ndjson",
+      "local_size": 1894244,
+      "remote_size": 1894244,
+      "remote_md5": "fb9b69e5e84f1b8811967575c2351bc5",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-10.ndjson",
+      "local_size": 2122412,
+      "remote_size": 2122412,
+      "remote_md5": "d9bb830712954729cb8859e1161928a2",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-11.ndjson",
+      "local_size": 2196360,
+      "remote_size": 2196360,
+      "remote_md5": "0458b8fd627ce21bc049c084d4ecc542",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-12.ndjson",
+      "local_size": 2161069,
+      "remote_size": 2161069,
+      "remote_md5": "bc49b34a7d133399cb10a4477e5ee3b3",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-13.ndjson",
+      "local_size": 1846551,
+      "remote_size": 1846551,
+      "remote_md5": "d77e8d4a0b43e411efd0dab2ae8ebe6c",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-14.ndjson",
+      "local_size": 2015009,
+      "remote_size": 2015009,
+      "remote_md5": "c8c452a850526d760974665f54b8aad9",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-15.ndjson",
+      "local_size": 2001680,
+      "remote_size": 2001680,
+      "remote_md5": "46fdea593980ce98baf346d23146f4fa",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-16.ndjson",
+      "local_size": 2318376,
+      "remote_size": 2318376,
+      "remote_md5": "95898612cc74cdc6130a97d53520d4d7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-17.ndjson",
+      "local_size": 2496384,
+      "remote_size": 2496384,
+      "remote_md5": "98deaa1b06073e8636da06040086e3c6",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-18.ndjson",
+      "local_size": 2180580,
+      "remote_size": 2180580,
+      "remote_md5": "1897b0510a637085b7df1b0106d6c0da",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-19.ndjson",
+      "local_size": 2140740,
+      "remote_size": 2140740,
+      "remote_md5": "6c9361b2a3901dc0fb1e858d5d8c62d5",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-20.ndjson",
+      "local_size": 2999331,
+      "remote_size": 2999331,
+      "remote_md5": "7e672548699f4f22e47632606ea0598e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-21.ndjson",
+      "local_size": 2405548,
+      "remote_size": 2405548,
+      "remote_md5": "69d5d01e1cd68c5902227fe260921e45",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-22.ndjson",
+      "local_size": 3309200,
+      "remote_size": 3309200,
+      "remote_md5": "ae20bb973ac09af40579fc53270fbe95",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-23.ndjson",
+      "local_size": 3116099,
+      "remote_size": 3116099,
+      "remote_md5": "dc1f47f809e062734b01fb244bc29f04",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-24.ndjson",
+      "local_size": 2059280,
+      "remote_size": 2059280,
+      "remote_md5": "599ac607f33ae916736a36f812b80307",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-25.ndjson",
+      "local_size": 1902100,
+      "remote_size": 1902100,
+      "remote_md5": "b6fe5c8bd5b124012ce3ef7aef61d36a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-26.ndjson",
+      "local_size": 4472782,
+      "remote_size": 4472782,
+      "remote_md5": "22bd1ae0405ca835f17138f50245328a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-27.ndjson",
+      "local_size": 3958994,
+      "remote_size": 3958994,
+      "remote_md5": "95da021bcc630a112356b2ed5649f5b2",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-28.ndjson",
+      "local_size": 2515241,
+      "remote_size": 2515241,
+      "remote_md5": "45785882a226605eded438eb72e47bdb",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-29.ndjson",
+      "local_size": 3601991,
+      "remote_size": 3601991,
+      "remote_md5": "0fc6c23157cea3053a9c030a539f2464",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-30.ndjson",
+      "local_size": 2841867,
+      "remote_size": 2841867,
+      "remote_md5": "75bc4627dc24faa0814661755e7f76ab",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-08-31.ndjson",
+      "local_size": 2391963,
+      "remote_size": 2391963,
+      "remote_md5": "6ed870dd1c4f167b8e67593f415bc309",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-01.ndjson",
+      "local_size": 2245952,
+      "remote_size": 2245952,
+      "remote_md5": "5e57025b100c8095ad0944e658b9c2cb",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-02.ndjson",
+      "local_size": 2479624,
+      "remote_size": 2479624,
+      "remote_md5": "b581760f5c1ea5da37bae2baacda3a11",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-03.ndjson",
+      "local_size": 2270440,
+      "remote_size": 2270440,
+      "remote_md5": "4713c35a4ddae2ea5baf7213aab26ed5",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-04.ndjson",
+      "local_size": 2214632,
+      "remote_size": 2214632,
+      "remote_md5": "5fe1a6b900ae9e7ab875f22ed286db7f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-05.ndjson",
+      "local_size": 3242152,
+      "remote_size": 3242152,
+      "remote_md5": "00f7070f64632dbc6a682213e5983d2f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-06.ndjson",
+      "local_size": 3648511,
+      "remote_size": 3648511,
+      "remote_md5": "4c487f20dc406f1135ff7bb1c9018b6e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-07.ndjson",
+      "local_size": 4293055,
+      "remote_size": 4293055,
+      "remote_md5": "ade1f037c1d7526e00ae3b62822e6d58",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-08.ndjson",
+      "local_size": 3196196,
+      "remote_size": 3196196,
+      "remote_md5": "644e435bee66347a27816335f778d041",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-09.ndjson",
+      "local_size": 2572932,
+      "remote_size": 2572932,
+      "remote_md5": "585cb40f0f6408dc7f0c270c4e772ef0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-10.ndjson",
+      "local_size": 2120076,
+      "remote_size": 2120076,
+      "remote_md5": "cb7021d7aebc183798b28611d02c22ca",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-11.ndjson",
+      "local_size": 2610436,
+      "remote_size": 2610436,
+      "remote_md5": "e0659d5294913fbbbc694cb078c7db80",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-12.ndjson",
+      "local_size": 2508184,
+      "remote_size": 2508184,
+      "remote_md5": "805f34cc573abf88d4cb7af3fdc2a8d1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-13.ndjson",
+      "local_size": 3806208,
+      "remote_size": 3806208,
+      "remote_md5": "9cda15f592587d1a06d58fffba84ed27",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-14.ndjson",
+      "local_size": 2049776,
+      "remote_size": 2049776,
+      "remote_md5": "0c30e6bf6a27e18ce178667ba3c1d427",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-15.ndjson",
+      "local_size": 2045360,
+      "remote_size": 2045360,
+      "remote_md5": "abf7b82342949a801e4b03b0f88b6de5",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-16.ndjson",
+      "local_size": 2900741,
+      "remote_size": 2900741,
+      "remote_md5": "4f026ffe480bf988c8b8eeb0a416897d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-17.ndjson",
+      "local_size": 2941703,
+      "remote_size": 2941703,
+      "remote_md5": "8970fc2e9efcc77505522c015433c47a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-18.ndjson",
+      "local_size": 3560238,
+      "remote_size": 3560238,
+      "remote_md5": "13d085814da1ab11d210704395fd4b05",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-19.ndjson",
+      "local_size": 2365404,
+      "remote_size": 2365404,
+      "remote_md5": "d6dd0c0630064e82258a5a0b77c2e564",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-20.ndjson",
+      "local_size": 4924995,
+      "remote_size": 4924995,
+      "remote_md5": "85715d870c92291f9dda6a844812d3e3",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-21.ndjson",
+      "local_size": 3224652,
+      "remote_size": 3224652,
+      "remote_md5": "36f2b26f3c12b95286467189b424923f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-22.ndjson",
+      "local_size": 2282456,
+      "remote_size": 2282456,
+      "remote_md5": "14484100c3a5a4a5931ec5d21324044d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-23.ndjson",
+      "local_size": 3179190,
+      "remote_size": 3179190,
+      "remote_md5": "9cc5d5bdbc189628312e7c947ecb90ed",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-24.ndjson",
+      "local_size": 4514348,
+      "remote_size": 4514348,
+      "remote_md5": "f992c8e074b88aa3bd62661dd44d387b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-25.ndjson",
+      "local_size": 4316028,
+      "remote_size": 4316028,
+      "remote_md5": "3fcee53cfc36af3c159667f91dbcc8a7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-26.ndjson",
+      "local_size": 1959680,
+      "remote_size": 1959680,
+      "remote_md5": "818cda176727255fa9ba6c223b7250ec",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-27.ndjson",
+      "local_size": 2235588,
+      "remote_size": 2235588,
+      "remote_md5": "dbfa090c0f391a70d2bffe9bcc782cf0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-28.ndjson",
+      "local_size": 2085912,
+      "remote_size": 2085912,
+      "remote_md5": "f6185b4be542fa10951708a0b40787e0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-29.ndjson",
+      "local_size": 1888188,
+      "remote_size": 1888188,
+      "remote_md5": "718cdd4a25818c3644898b98f95dbbe8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-09-30.ndjson",
+      "local_size": 1843282,
+      "remote_size": 1843282,
+      "remote_md5": "4cde5d46b6c02681c28f8905e59943f2",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-01.ndjson",
+      "local_size": 3625472,
+      "remote_size": 3625472,
+      "remote_md5": "f3f02e0b477aff5c506709dae79c889f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-02.ndjson",
+      "local_size": 3384996,
+      "remote_size": 3384996,
+      "remote_md5": "73608233c78344e79ec1e5f7474c2f12",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-03.ndjson",
+      "local_size": 6062144,
+      "remote_size": 6062144,
+      "remote_md5": "7b15bb1357414dfcdd81a848f011a3e2",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-04.ndjson",
+      "local_size": 2450552,
+      "remote_size": 2450552,
+      "remote_md5": "451a7467834822f85dc7e3a6b6681043",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-05.ndjson",
+      "local_size": 2497096,
+      "remote_size": 2497096,
+      "remote_md5": "71fb7b147829947f66f08ec104033d8b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-06.ndjson",
+      "local_size": 4631184,
+      "remote_size": 4631184,
+      "remote_md5": "a94239f4d7d0c5fa53901e334cdc30e0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-07.ndjson",
+      "local_size": 4822509,
+      "remote_size": 4822509,
+      "remote_md5": "9aca18b2445a0d8f2c45d40361d92a84",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-08.ndjson",
+      "local_size": 5717669,
+      "remote_size": 5717669,
+      "remote_md5": "53204b61343cdfd12de6d71086fbb6cf",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-09.ndjson",
+      "local_size": 5975529,
+      "remote_size": 5975529,
+      "remote_md5": "63fb4b2b7ee36a771af12c46ef29a160",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-10.ndjson",
+      "local_size": 2472885,
+      "remote_size": 2472885,
+      "remote_md5": "01520b38202010896f76e6cf9c3f20d0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-11.ndjson",
+      "local_size": 4139730,
+      "remote_size": 4139730,
+      "remote_md5": "70557a0602e1da0660237d43d1697f9f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-12.ndjson",
+      "local_size": 2715188,
+      "remote_size": 2715188,
+      "remote_md5": "eab8a3081e90ce4552862c3b06f9ab0a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-13.ndjson",
+      "local_size": 2447893,
+      "remote_size": 2447893,
+      "remote_md5": "914f3bb7126fc630f6134dfedbd084b9",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-14.ndjson",
+      "local_size": 2310472,
+      "remote_size": 2310472,
+      "remote_md5": "317703328a62b3d900c3a3136f5c1eae",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-15.ndjson",
+      "local_size": 2264526,
+      "remote_size": 2264526,
+      "remote_md5": "69c3f33afd32dd079e64409b5a83e6bf",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-16.ndjson",
+      "local_size": 3925550,
+      "remote_size": 3925550,
+      "remote_md5": "a3e834cf3041a89ec1df4ed9943e19cc",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-17.ndjson",
+      "local_size": 2418780,
+      "remote_size": 2418780,
+      "remote_md5": "f9faa1953dc22a8b4d4858ea74762ac8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-18.ndjson",
+      "local_size": 2526304,
+      "remote_size": 2526304,
+      "remote_md5": "47cdf99f9ce19d00b29e48bdbef76be9",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-19.ndjson",
+      "local_size": 2657887,
+      "remote_size": 2657887,
+      "remote_md5": "26ec31f5c1b89cfbecf8a74ba512788a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-20.ndjson",
+      "local_size": 1627156,
+      "remote_size": 1627156,
+      "remote_md5": "d410e1346b1560e2a1528420d3580a64",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF/2026-10-21.ndjson",
+      "local_size": 1463782,
+      "remote_size": 1463782,
+      "remote_md5": "a1d7f9c8384e8e48580bb47ebca94ec8",
+      "match": "full",
+      "delivered_bytes": 496653,
+      "prior_state": "growth"
+     },
+     {
+      "path": "nws/KCOF_2026-07-30.json",
+      "local_size": 58877,
+      "remote_size": 58877,
+      "remote_md5": "346e5330066e693f1f11202cbe43c522",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF_2026-07-31.json",
+      "local_size": 118626,
+      "remote_size": 118626,
+      "remote_md5": "f2e407a3f457669b28b7a74743ab86fb",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF_2026-08-01.json",
+      "local_size": 122487,
+      "remote_size": 122487,
+      "remote_md5": "82299ffd03720f38f150047aedf9e010",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF_2026-08-02.json",
+      "local_size": 125180,
+      "remote_size": 125180,
+      "remote_md5": "e376850a36219ab43900654b828c2d6d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF_2026-08-03.json",
+      "local_size": 129776,
+      "remote_size": 129776,
+      "remote_md5": "69fed2701540472e99d5591385f260fa",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF_2026-08-04.json",
+      "local_size": 118710,
+      "remote_size": 118710,
+      "remote_md5": "891559c319ec478ecc007233e1c06f42",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF_2026-08-05.json",
+      "local_size": 98124,
+      "remote_size": 98124,
+      "remote_md5": "727dda112235d874e159b60799ae7e47",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KCOF_2026-08-06.json",
+      "local_size": 73832,
+      "remote_size": 73832,
+      "remote_md5": "3ee91b2187e4fff41e00354f36a377b6",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-07.ndjson",
+      "local_size": 409172,
+      "remote_size": 409172,
+      "remote_md5": "94a9f4e149403cf48653d160251185a6",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-08.ndjson",
+      "local_size": 15225532,
+      "remote_size": 15225532,
+      "remote_md5": "bea9553ae0b759fb359d56c68779872e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-09.ndjson",
+      "local_size": 766440,
+      "remote_size": 766440,
+      "remote_md5": "d64c5838cafa89ed93333af0dd3e0952",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-10.ndjson",
+      "local_size": 378298,
+      "remote_size": 378298,
+      "remote_md5": "3918014c7cf776f3d0a7ca9342b69b1d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-11.ndjson",
+      "local_size": 1518160,
+      "remote_size": 1518160,
+      "remote_md5": "b1210aa598f9cd1aafa365f3fa18abd6",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-12.ndjson",
+      "local_size": 6626128,
+      "remote_size": 6626128,
+      "remote_md5": "a26bd6eae6f584f262b414f1c6578120",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-13.ndjson",
+      "local_size": 12871328,
+      "remote_size": 12871328,
+      "remote_md5": "e21d8228d94296d0b669f4a9cd2fdd7c",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-19.ndjson",
+      "local_size": 766480,
+      "remote_size": 766480,
+      "remote_md5": "641a958b46ce91ccda4492204580690a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-20.ndjson",
+      "local_size": 756502,
+      "remote_size": 756502,
+      "remote_md5": "408e48d1ebc97423a7a82d41f036ff7c",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-21.ndjson",
+      "local_size": 6865544,
+      "remote_size": 6865544,
+      "remote_md5": "6ed630625275d72d6110df91531399cd",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-23.ndjson",
+      "local_size": 3857496,
+      "remote_size": 3857496,
+      "remote_md5": "3ee02f98eb13b73bc4d9233ef301a9a8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-24.ndjson",
+      "local_size": 1550916,
+      "remote_size": 1550916,
+      "remote_md5": "a2dff2572bcbbd3171b7f8c8dcf6bbd1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-25.ndjson",
+      "local_size": 4256736,
+      "remote_size": 4256736,
+      "remote_md5": "b727c85c1a143a09f5e02bf97821817a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-26.ndjson",
+      "local_size": 388192,
+      "remote_size": 388192,
+      "remote_md5": "e305f995197ff92e45e2972ef244bc3f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-27.ndjson",
+      "local_size": 942352,
+      "remote_size": 942352,
+      "remote_md5": "19fe3792add90d56e3e4cfd43e2603f4",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-29.ndjson",
+      "local_size": 126,
+      "remote_size": 126,
+      "remote_md5": "54de4fdf9d70af2067db68691606702e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-08-31.ndjson",
+      "local_size": 391316,
+      "remote_size": 391316,
+      "remote_md5": "d20fd53ff6339213754688aec89d6f06",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-09-07.ndjson",
+      "local_size": 386196,
+      "remote_size": 386196,
+      "remote_md5": "8293338507523a17aebb01adfee10193",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-09-10.ndjson",
+      "local_size": 1629596,
+      "remote_size": 1629596,
+      "remote_md5": "ae52c25ea412fcecba29b40588a897d1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-09-11.ndjson",
+      "local_size": 1144152,
+      "remote_size": 1144152,
+      "remote_md5": "e0f63bdf879778293687dde12aec6836",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-09-13.ndjson",
+      "local_size": 388840,
+      "remote_size": 388840,
+      "remote_md5": "f905c5af6b4571be92aa22e7771f7a1d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-09-14.ndjson",
+      "local_size": 1487756,
+      "remote_size": 1487756,
+      "remote_md5": "46ba9c83d4fced4a423d584250ab0bcd",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-09-18.ndjson",
+      "local_size": 436932,
+      "remote_size": 436932,
+      "remote_md5": "269c0afe16ae0349a651511ecf9d81bd",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-09-20.ndjson",
+      "local_size": 389364,
+      "remote_size": 389364,
+      "remote_md5": "a53a26943bd9f0ccda4e2690d6c17979",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-09-21.ndjson",
+      "local_size": 374140,
+      "remote_size": 374140,
+      "remote_md5": "cf83291658fd339c430f264431dd3971",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-09-22.ndjson",
+      "local_size": 2343856,
+      "remote_size": 2343856,
+      "remote_md5": "647a62ab861380076d6ce26ad16a32da",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-09-23.ndjson",
+      "local_size": 6717096,
+      "remote_size": 6717096,
+      "remote_md5": "2ebdd4c0810e8dbaf2519f7a832bddcd",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-09-30.ndjson",
+      "local_size": 1520558,
+      "remote_size": 1520558,
+      "remote_md5": "b77bc1bd8a2e155e6b1f8153d660f6f8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-10-07.ndjson",
+      "local_size": 6986392,
+      "remote_size": 6986392,
+      "remote_md5": "d33730a7f462d155acb510169cd80ff7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-10-09.ndjson",
+      "local_size": 47679,
+      "remote_size": 47679,
+      "remote_md5": "5739e9f545eda7b797c6d216a49bffae",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-10-10.ndjson",
+      "local_size": 136,
+      "remote_size": 136,
+      "remote_md5": "80382b174bf09fc906ac72805744c2cf",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-10-11.ndjson",
+      "local_size": 1382176,
+      "remote_size": 1382176,
+      "remote_md5": "a9bca1d97eaf3d0a8dfd3b8be7adce25",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-10-12.ndjson",
+      "local_size": 395328,
+      "remote_size": 395328,
+      "remote_md5": "0239493c3767f9f5c168ab67e14c1ef0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-10-15.ndjson",
+      "local_size": 381416,
+      "remote_size": 381416,
+      "remote_md5": "4cb56ecfbd4b4a099049376e45d50b31",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-10-16.ndjson",
+      "local_size": 427536,
+      "remote_size": 427536,
+      "remote_md5": "97e0b82ec425dcd80365d3ab8ccd4215",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-10-17.ndjson",
+      "local_size": 348004,
+      "remote_size": 348004,
+      "remote_md5": "1b2e958ed6de97a07ae0b65e9e1a9780",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-10-19.ndjson",
+      "local_size": 7364832,
+      "remote_size": 7364832,
+      "remote_md5": "e37ab3279175b4aff1d09752abc496e2",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB/2026-10-20.ndjson",
+      "local_size": 3794918,
+      "remote_size": 3794918,
+      "remote_md5": "26189d5de01f9cfb5fc445a4eab210e8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB_2026-07-30.json",
+      "local_size": 355198,
+      "remote_size": 355198,
+      "remote_md5": "6c0d4e0e9d4da428445d4359414ab70d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB_2026-07-31.json",
+      "local_size": 1220532,
+      "remote_size": 1220532,
+      "remote_md5": "0ac520bfd40a28faa44b0a03ce58f6ef",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB_2026-08-01.json",
+      "local_size": 1248051,
+      "remote_size": 1248051,
+      "remote_md5": "ef9ce1f649dc8cace845a950ebaf9c9a",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB_2026-08-02.json",
+      "local_size": 1250088,
+      "remote_size": 1250088,
+      "remote_md5": "1c38c583b0ce4e037afc149679fed5e4",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB_2026-08-03.json",
+      "local_size": 1242841,
+      "remote_size": 1242841,
+      "remote_md5": "da124d87660a5561d04a4948be0bf3b5",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB_2026-08-04.json",
+      "local_size": 1233742,
+      "remote_size": 1233742,
+      "remote_md5": "e6ef557f646a4a1cb13204fc1e017550",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB_2026-08-05.json",
+      "local_size": 1207948,
+      "remote_size": 1207948,
+      "remote_md5": "665b2bb4c2509d6be714518ff33de659",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KMLB_2026-08-06.json",
+      "local_size": 948158,
+      "remote_size": 948158,
+      "remote_md5": "197beceaad7a6cfb969522c8d71b700b",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KVRB/2026-08-10.ndjson",
+      "local_size": 162,
+      "remote_size": 162,
+      "remote_md5": "3e8cdd84b583f6a3d44168f087e57544",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KVRB/2026-08-25.ndjson",
+      "local_size": 230292,
+      "remote_size": 230292,
+      "remote_md5": "a6374f76d886da42ce258b1b99588ca8",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KVRB/2026-08-29.ndjson",
+      "local_size": 126,
+      "remote_size": 126,
+      "remote_md5": "dfc2041621fcb028b5e24e36de5da3a7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KVRB/2026-09-30.ndjson",
+      "local_size": 134,
+      "remote_size": 134,
+      "remote_md5": "6ba087031f3510f7766b4c56996d1ef9",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KVRB/2026-10-07.ndjson",
+      "local_size": 1630892,
+      "remote_size": 1630892,
+      "remote_md5": "336afd703d9ed3fa6fdc2b7b89b971d1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KVRB/2026-10-19.ndjson",
+      "local_size": 1536648,
+      "remote_size": 1536648,
+      "remote_md5": "43dfea8d397ec41146c9be3c38f535a3",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KVRB/2026-10-20.ndjson",
+      "local_size": 1512298,
+      "remote_size": 1512298,
+      "remote_md5": "249cf930b9ce4972ea580f080ac9da92",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KVRB_2026-07-30.json",
+      "local_size": 357715,
+      "remote_size": 357715,
+      "remote_md5": "d73ec23e40fc9ce7c4b1dd2aae8c60c9",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KVRB_2026-07-31.json",
+      "local_size": 1227925,
+      "remote_size": 1227925,
+      "remote_md5": "c139ee46a9cedad2c25bf4d8bc11c978",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KVRB_2026-08-01.json",
+      "local_size": 1236295,
+      "remote_size": 1236295,
+      "remote_md5": "0661c8d48ecb583d5c21c98eb64ab120",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KVRB_2026-08-02.json",
+      "local_size": 1231786,
+      "remote_size": 1231786,
+      "remote_md5": "0dacda43af604d05fb081837a8235e0e",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KVRB_2026-08-03.json",
+      "local_size": 1222208,
+      "remote_size": 1222208,
+      "remote_md5": "51a068942d6e00d11fe8db1600c379fe",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KVRB_2026-08-04.json",
+      "local_size": 1298895,
+      "remote_size": 1298895,
+      "remote_md5": "92438c9c581e041344f55f366d680f49",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KVRB_2026-08-05.json",
+      "local_size": 1273968,
+      "remote_size": 1273968,
+      "remote_md5": "355cc3c4e3f3b825d15b7429f7c70e68",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KVRB_2026-08-06.json",
+      "local_size": 960204,
+      "remote_size": 960204,
+      "remote_md5": "54ac6dfaf3f76d956b250c294739c4d4",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KX21/2026-08-10.ndjson",
+      "local_size": 162,
+      "remote_size": 162,
+      "remote_md5": "1f51685d2af0068a2465608ffc2c3169",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KX21/2026-08-25.ndjson",
+      "local_size": 220688,
+      "remote_size": 220688,
+      "remote_md5": "3715011bf714fb11b9f3262904ddeb96",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KX21/2026-08-29.ndjson",
+      "local_size": 126,
+      "remote_size": 126,
+      "remote_md5": "46bd283584d7462e4c1815c1055e62a7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KX21/2026-09-30.ndjson",
+      "local_size": 134,
+      "remote_size": 134,
+      "remote_md5": "b62fbf433c74c39156082688150941c7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KX21/2026-10-07.ndjson",
+      "local_size": 221321,
+      "remote_size": 221321,
+      "remote_md5": "81b7585cdd03df567b186f9649ad92fe",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KX21/2026-10-19.ndjson",
+      "local_size": 153162,
+      "remote_size": 153162,
+      "remote_md5": "6e1aa37d06debd809df616d50fa0d463",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KX21/2026-10-20.ndjson",
+      "local_size": 16788,
+      "remote_size": 16788,
+      "remote_md5": "b1e85525a5ce77fab894ee67bddee171",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KX21_2026-07-30.json",
+      "local_size": 82577,
+      "remote_size": 82577,
+      "remote_md5": "95e792ae6a75509f01054ef5176c6e09",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KX21_2026-07-31.json",
+      "local_size": 302022,
+      "remote_size": 302022,
+      "remote_md5": "55040bf17275351db1610d39752b61e1",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KX21_2026-08-01.json",
+      "local_size": 296165,
+      "remote_size": 296165,
+      "remote_md5": "812532b0fed426d3249ab59758e54936",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KX21_2026-08-02.json",
+      "local_size": 297461,
+      "remote_size": 297461,
+      "remote_md5": "791a7f87b1c1cc9a8d77577df324d6ab",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KX21_2026-08-03.json",
+      "local_size": 300206,
+      "remote_size": 300206,
+      "remote_md5": "57396db73800f8411437d245a7bb972d",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KX21_2026-08-04.json",
+      "local_size": 302311,
+      "remote_size": 302311,
+      "remote_md5": "bede046f354edf3549777492eb1f9564",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KX21_2026-08-05.json",
+      "local_size": 300745,
+      "remote_size": 300745,
+      "remote_md5": "d33e990bf99fcaee8f2474c464911983",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KX21_2026-08-06.json",
+      "local_size": 225326,
+      "remote_size": 225326,
+      "remote_md5": "1474c08e14ad858e90d9f5402ebc0089",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KXMR/2026-08-10.ndjson",
+      "local_size": 162,
+      "remote_size": 162,
+      "remote_md5": "fd0ad67f4db5f0612ddda7bcb7a2904f",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KXMR/2026-08-20.ndjson",
+      "local_size": 24503,
+      "remote_size": 24503,
+      "remote_md5": "87304698a35a0c540721c5b9eed2ee79",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KXMR/2026-08-25.ndjson",
+      "local_size": 40236,
+      "remote_size": 40236,
+      "remote_md5": "c8ec4e911ceabc85625c2fa7f76749c7",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KXMR/2026-08-29.ndjson",
+      "local_size": 126,
+      "remote_size": 126,
+      "remote_md5": "f18ab1ce2b24ebe3748d4139dc26c8c0",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KXMR/2026-09-30.ndjson",
+      "local_size": 134,
+      "remote_size": 134,
+      "remote_md5": "21b3da0608c5a311b3a38f2f92be8bef",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KXMR/2026-10-07.ndjson",
+      "local_size": 8842,
+      "remote_size": 8842,
+      "remote_md5": "d8ce863e66da22a27a543dbf35b5d090",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KXMR/2026-10-10.ndjson",
+      "local_size": 35283,
+      "remote_size": 35283,
+      "remote_md5": "9db2750b7013394d3f1704a60b44d4de",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KXMR/2026-10-19.ndjson",
+      "local_size": 27507,
+      "remote_size": 27507,
+      "remote_md5": "f2d9999c41aacaa02b5e73e73ac4fb87",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KXMR/2026-10-20.ndjson",
+      "local_size": 3086,
+      "remote_size": 3086,
+      "remote_md5": "8ab6e5792d9d658d7c60a076fe155799",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/KXMR_2026-07-31.json",
+      "local_size": 23486,
+      "remote_size": 23486,
+      "remote_md5": "a9e1ec8a708c4167e563320f606da817",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     },
+     {
+      "path": "nws/MANIFEST.json",
+      "local_size": 6820,
+      "remote_size": 6820,
+      "remote_md5": "c30652a01d5dd0e4f84df73d33028335",
+      "match": "full",
+      "delivered_bytes": 0,
+      "prior_state": "reconciled"
+     }
+    ],
+    "failures": [],
+    "transfer_error": null,
+    "probe_error": null,
+    "source_name": "raw_capture"
+   }
+  }
+ ],
+ "remote_base": "stocks_gdrive:backups/enviropi",
+ "config": "/home/pistrommy/projects/enviroplus/config/backup.json"
+}
