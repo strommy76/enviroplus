@@ -25,8 +25,8 @@ ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python scripts/backup_enviro
 # in ~2.5 minutes. This trips on a hung transfer, never on a normal one.
 TimeoutStartSec=3600
 
-# The script exits non-zero and writes no manifest when it cannot prove what
-# landed. Do not retry into a failing remote -- the timer's next firing is the
+# The manifest records each source's verified or failed outcome; any failure
+# exits non-zero. Do not retry into a failing remote -- the timer's next firing is the
 # retry, and a failed unit stays visible in systemctl --failed rather than being
 # churned away.
 Restart=no
