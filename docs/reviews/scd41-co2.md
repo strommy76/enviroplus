@@ -14,13 +14,15 @@ Bryan, 2026-10-20, to pi-claude:
 - 22:15 EDT: "I approve the plan, and yes keep every read"
 - 22:36 EDT, on F5: "Why does a failed write record success? Shouldn't success be determined after all writes are attempted? And shouldn't partial writes log success vs failure accurately? What is the optimal anti-fragile logic? What is generally accepted best practice?"
 - 22:38 EDT, on pi-claude's recommendation: "no, fold it in"
+- 23:21 EDT: "Why do we need it? Why are we putting any project code or logic outside the project?"
+- 23:23 EDT, on moving `raw_retention` into enviroplus: "Yes, move it"
 
 Executor: pi-claude, by operator assignment (AGENTS B).
 
 ## Plan as approved (pi-claude, 22:14 EDT)
 
 1. **Tier 1:**
-   - Every loop's reads are retained through the existing `shared.raw_retention` (h) as provider `local_sensors`, each driver's output exactly as returned.
+   - Every loop's reads are retained through the existing `raw_retention` (h; moved into enviroplus at 23:23, see below) as provider `local_sensors`, each driver's output exactly as returned.
    - A failed read is recorded as that lane's error.
 2. **Tier 2:** `readings` is derived from Tier 1 by one projection, used both live and by `--replay DAY`.
 3. **Rows from before Tier 1:** kept as written, never rebuilt or dropped.
@@ -115,10 +117,9 @@ The `47f9dd6` measurement:
 - Tier 1 files are appended to and are never edited.
 
 **Deploy order:**
-1. Land `shared` `fix/retention-write-failure-surfaces` and fast-forward `~/projects/shared`. The enviroplus code imports its `RetentionWriteError`.
-2. Install `sensirion-i2c-scd4x==1.1.0` into `/home/pistrommy/.virtualenvs/pimoroni`.
-3. Fast-forward the enviroplus main checkout. The services run from it, and `CONFIG_PATH` points at its `dynamic_config.pi5.json`.
-4. Install the changed `ambient_wx`, `nws_wx` and `airnow_wx` unit files and run `daemon-reload`. Then restart `enviro_dash`, `ambient_wx`, `nws_wx` and `airnow_wx` one at a time, checking each.
+1. Install `sensirion-i2c-scd4x==1.1.0` into `/home/pistrommy/.virtualenvs/pimoroni`.
+2. Fast-forward the enviroplus main checkout. The services run from it, and `CONFIG_PATH` points at its `dynamic_config.pi5.json`.
+3. Install the changed `ambient_wx`, `nws_wx` and `airnow_wx` unit files and run `daemon-reload`. Then restart `enviro_dash`, `ambient_wx`, `nws_wx` and `airnow_wx` one at a time, checking each.
 4. Check the live result:
    - The unit is active.
    - Tier 1 records are arriving under `raw-capture/local_sensors/`.
@@ -253,13 +254,27 @@ Power observed. Each violation was made in the real implementation, and the full
 
 Full suite: 247 passed.
 
+## `raw_retention` moved into enviroplus (operator, 23:23)
+
+**What moved:**
+- A search of `~/projects` found every consumer of `shared.raw_retention` in enviroplus: three collectors, the dashboard, `local_sensors.py` and the backfill script.
+- `shared`'s own PROJECT-CONFIG forbids moving consumer-specific code there. It already listed the module's `ENVIRO_RAW_ROOT` read as coupling to remove.
+- So `raw_retention.py`, with the F5 fix, `days()` and its tests (`test_raw_retention_write_failure.py`, `test_raw_retention_root_key.py`), now lives in enviroplus. Every import is repointed.
+
+**The removal:**
+- `shared` branch `fix/retention-write-failure-surfaces` becomes the removal of the module and its tests (p).
+- It lands after this branch. Nothing then imports it.
+- This branch no longer depends on any `shared` change. The suite passes against the unchanged `~/projects/shared`: 264 passed.
+
+**Power after the move:** dropping the `ftruncate` fails 3 tests.
+
 ## F5 folded: a failed Tier 1 write raises (operator, 22:38)
 
 Shared and consumer changes:
 
 | Repository | Change |
 |---|---|
-| `shared` | `retain()`/`record_outcome()` raise `RetentionWriteError`, partial line truncated |
+| `raw_retention.py` | `retain()`/`record_outcome()` raise `RetentionWriteError`; torn line truncated |
 | enviroplus collectors | `retain()` no longer wrapped; loops re-raise |
 | enviroplus dashboard | Its Tier 1 write raises before derivation |
 | Collector and dashboard units | `OnFailure` on every failed exit; restart backoff, no stop limit |

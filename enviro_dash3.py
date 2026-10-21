@@ -120,8 +120,8 @@ from sensirion_i2c_scd4x.device import Scd4xDevice
 from shared.config_service import load_env, require
 from shared.db_service import connect
 from shared.logging_service import setup_logger
-from shared.raw_retention import OUTCOME_OK, OUTCOME_PARTIAL, retain
-from shared.raw_retention import configure as configure_retention
+from raw_retention import OUTCOME_OK, OUTCOME_PARTIAL, retain
+from raw_retention import configure as configure_retention
 
 import enviro_screens as screens
 import local_sensors

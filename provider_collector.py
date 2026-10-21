@@ -38,7 +38,7 @@ from provider_contract import Contract, ProjectionError, load_contract, project
 from shared.config_service import ConfigError, load_env, require
 from shared.db_service import connect, write_row
 from shared.logging_service import setup_logger
-from shared.raw_retention import (
+from raw_retention import (
     OUTCOME_EMPTY,
     OUTCOME_FETCH_ERROR,
     OUTCOME_MALFORMED,

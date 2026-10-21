@@ -51,7 +51,7 @@ sys.path.insert(0, "/home/pistrommy/projects")
 from shared.config_service import load_env, require
 from shared.db_service import connect, write_row
 from shared.logging_service import setup_logger
-from shared.raw_retention import (
+from raw_retention import (
     OutcomeAlreadyRecorded,
     RetentionWriteError,
     configure as configure_retention,

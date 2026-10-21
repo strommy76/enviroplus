@@ -246,7 +246,7 @@ class Run:
             return conn.execute(f"SELECT {columns} FROM readings ORDER BY ts").fetchall()
 
     def tier1(self):
-        from shared.raw_retention import read_day
+        from raw_retention import read_day
         return [(outcome, json.loads(blob)) for _c, outcome, blob in
                 read_day("local_sensors", self.day) if blob is not None]
 
@@ -405,7 +405,7 @@ def test_an_interval_takes_each_lanes_newest_read_and_the_mean_bme280_temperatur
 def test_replay_of_a_day_includes_its_last_reads_filed_after_midnight(tmp_path, monkeypatch):
     """raw_retention files a record under the day it was retained; a read just
     before midnight retained just after is in the next day's file."""
-    from shared import raw_retention
+    import raw_retention
 
     import local_sensors
 
@@ -489,7 +489,7 @@ def test_a_read_the_canonical_tier_could_not_store_ends_the_process_underived(
         tmp_path, monkeypatch):
     """The third read's Tier 1 append fails: the process ends (restart and
     OnFailure surface it), and no readings row is derived from that read."""
-    from shared import raw_retention
+    import raw_retention
 
     real_fsync, appends = raw_retention.os.fsync, itertools.count()
 
@@ -513,7 +513,7 @@ def test_a_read_the_canonical_tier_could_not_store_ends_the_process_underived(
 def _retain_reads(monkeypatch, reads):
     """Retain local_sensors records with the given read times (and file them
     at those times), each carrying its co2 as a marker."""
-    from shared import raw_retention
+    import raw_retention
 
     import local_sensors
 

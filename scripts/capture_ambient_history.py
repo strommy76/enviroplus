@@ -5,7 +5,8 @@ import json,time,hashlib,urllib.request,urllib.error,sys
 from datetime import datetime,timedelta,timezone
 from pathlib import Path
 sys.path.insert(0,"/home/pistrommy/projects")
-from shared.raw_retention import scrub_body
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+from raw_retention import scrub_body
 OUT=Path.home()/"projects/enviroplus/raw-capture/ambient"; MAN=OUT/"manifest.jsonl"
 from shared.config_service import load_env, require
 load_env(str(Path(__file__).resolve().parents[1]/".env"), expect_key="AW_API_KEY")

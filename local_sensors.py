@@ -7,7 +7,7 @@ DESCRIPTION: The two tiers of the local sensor lane, and the projection from
              one to the other.
 
              Tier 1 (canonical): every sensor read enviro_dash3.py makes is
-             retained through shared.raw_retention as provider "local_sensors",
+             retained through raw_retention as provider "local_sensors",
              one record per loop, holding each driver's output exactly as
              returned. A failed read is recorded as that lane's error in the
              record, never as a value.
@@ -43,8 +43,8 @@ from datetime import date, datetime, timedelta, timezone
 sys.path.insert(0, "/home/pistrommy/projects")
 
 from shared.db_service import write_row
-from shared.raw_retention import days as retained_days
-from shared.raw_retention import read_day
+from raw_retention import days as retained_days
+from raw_retention import read_day
 
 PROVIDER = "local_sensors"
 
@@ -250,7 +250,7 @@ def _utc_day(text: str) -> str:
 def main(argv: list[str] | None = None) -> None:
     from shared.config_service import load_env, require
     from shared.db_service import connect
-    from shared.raw_retention import configure as configure_retention
+    from raw_retention import configure as configure_retention
 
     parser = argparse.ArgumentParser(description="Local sensor lane: Tier 2 replay.")
     parser.add_argument("--replay", nargs="+", metavar="DAY", type=_utc_day, required=True,

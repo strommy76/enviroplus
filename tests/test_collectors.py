@@ -20,7 +20,7 @@ import pytest
 
 import ambient_wx
 import nws_wx
-from shared import raw_retention
+import raw_retention
 
 MAC = "AA:BB:CC:DD:EE:FF"
 

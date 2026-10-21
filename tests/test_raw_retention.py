@@ -21,7 +21,7 @@ import pytest
 
 sys.path.insert(0, "/home/pistrommy/projects")
 
-from shared import raw_retention as rr
+import raw_retention as rr
 from shared.db_service import connect, write_row
 
 

@@ -21,7 +21,7 @@ import pytest
 
 import provider_collector as pc  # noqa: E402
 from provider_contract import load_contract  # noqa: E402
-from shared import raw_retention as rr  # noqa: E402
+import raw_retention as rr  # noqa: E402
 from tests.test_provider_contract import CONTRACT, PAYLOAD, _item  # noqa: E402
 
 

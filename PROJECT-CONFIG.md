@@ -12,10 +12,10 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
 
 ## Authority and Persistence
 
-- Provider response artifacts written through `shared.raw_retention` are the
+- Provider response artifacts written through `raw_retention.py` are the
   canonical source for replayable external observations.
-- Tier 1 (canonical) is `shared.raw_retention`; every SQLite table is Tier 2 (derived):
-  - Local sensor reads are canonical in `shared.raw_retention` as provider
+- Tier 1 (canonical) is `raw_retention.py`; every SQLite table is Tier 2 (derived):
+  - Local sensor reads are canonical in `raw_retention.py` as provider
     `local_sensors`: `enviro_dash3.py` retains every loop's reads there first,
     as each driver returned them.
   - `readings` is derived from them by `local_sensors.derive_row`; live and
