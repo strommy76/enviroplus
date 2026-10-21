@@ -10,7 +10,8 @@
       "2026-04-08 — Add paper trading row: portfolio stats, value chart, recent trades",
       "2026-04-08 — Add Strategy C (no SIGNAL_A) and Strategy E (trailing stops) to A/B comparison panels",
       "2026-04-08 — Add NWS Wind stat panel to At a Glance row",
-      "2026-04-08 — Add EPA PM2.5 stat panel to At a Glance row, reorganize widths to fit 8 panels"
+      "2026-04-08 — Add EPA PM2.5 stat panel to At a Glance row, reorganize widths to fit 8 panels",
+      "2026-10-21 — Indoor temperature, humidity and the indoor series read the SCD41; add Indoor CO₂ (SCD41) beside Air Quality and Wind & Rain (8/8/8)"
     ]
   },
   "uid": "home-combined-dash",
@@ -102,7 +103,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, temp_f AS value FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, scd41_temp_c * 9 / 5 + 32 AS value FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -167,7 +168,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, humidity AS value FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, scd41_rh AS value FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -1018,7 +1019,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, temp_f AS \"Indoor Temp\" FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, scd41_temp_c * 9 / 5 + 32 AS \"Indoor Temp\" FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -1055,7 +1056,7 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 12,
+        "w": 8,
         "x": 0,
         "y": 21
       },
@@ -1140,6 +1141,55 @@
     },
     {
       "type": "timeseries",
+      "title": "Indoor CO₂ (SCD41)",
+      "datasource": {
+        "uid": "cfhpdda09qq68e",
+        "type": "frser-sqlite-datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 21
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ppm",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, co2_ppm AS \"CO₂\" FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
+          "queryType": "time series",
+          "timeColumns": [
+            "time"
+          ],
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, co2_ppm AS \"CO₂\" FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
       "title": "Wind & Rain",
       "datasource": {
         "uid": "cfhpdda09qq68e",
@@ -1147,8 +1197,8 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 12,
-        "x": 12,
+        "w": 8,
+        "x": 16,
         "y": 21
       },
       "fieldConfig": {
