@@ -21,6 +21,7 @@ CHANGELOG:
 
 import itertools
 import json
+import os
 import runpy
 import shutil
 import sqlite3
@@ -28,7 +29,7 @@ import struct
 import sys
 import time
 import types
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -86,12 +87,15 @@ def _install_drivers(monkeypatch, pms_reads, gas_reads, scd41_reads, scd41_calls
         def update_sensor(self):
             self.temperature, self.humidity, self.pressure = next(bme_reads)
 
+    proximity = itertools.count()
+
     class LTR559:
         def get_lux(self):
             return 120.0
 
         def get_proximity(self):
-            return 0
+            # Counts its own calls, so a lost or repeated read shows in Tier 1.
+            return next(proximity)
 
     class PMS5003:
         def __init__(self, **kwargs):
@@ -273,8 +277,10 @@ def test_tier1_keeps_every_read_as_the_driver_returned_it(tmp_path, monkeypatch)
     assert first["cpu_temp_milli_c"] == 52000
     assert first["scd41"] == {"co2_ppm": 612, "temperature_c": 23.871337, "rh": 47.625732}
     assert "pms5003_frame_hex" not in second and "no frame" in second["pms5003_error"]
-    # The proximity polling between frames is retained with the next record.
-    assert second["ltr559_proximity"] and set(second["ltr559_proximity"]) == {0}
+    # The proximity polls between frames are retained with the next record:
+    # every call exactly once, in order, across the records.
+    polled = [p for _, r in records for p in r["ltr559_proximity"]]
+    assert polled and polled == list(range(len(polled)))
 
 
 def test_readings_are_derived_and_replay_reproduces_them(tmp_path, monkeypatch):
@@ -297,10 +303,22 @@ def test_readings_are_derived_and_replay_reproduces_them(tmp_path, monkeypatch):
     # Replay also closes the interval live had not closed when it stopped.
     assert replayed[:3] == live
 
-    # Replaying over the live rows replaces them in place: no second row.
+    # Replaying under a new calibration replaces the rows in place: the same
+    # four rows, each 1.0 °C (1.8 °F) cooler.
+    recalibrated = {**run.config,
+                    "calibration": {**run.config["calibration"], "self_heat_offset_c": 7.35}}
     with sqlite3.connect(run.db) as conn:
-        local_sensors.replay(conn, [run.start.date().isoformat()], run.config)
-        assert conn.execute("SELECT count(*) FROM readings").fetchone()[0] == 4
+        local_sensors.replay(conn, [run.start.date().isoformat()], recalibrated)
+        assert conn.execute("SELECT ts, temp_f FROM readings ORDER BY ts").fetchall() == [
+            (ts, round(t - 1.8, 1)) for ts, t, *_ in replayed]
+
+    # Replaying on a coarser grid replaces the one-second rows; none is left
+    # behind on the old grid.
+    coarser = {**run.config, "intervals": {**run.config["intervals"], "publish_s": 60}}
+    with sqlite3.connect(run.db) as conn:
+        assert local_sensors.replay(conn, [run.start.date().isoformat()], coarser)["rows"] == 1
+        assert conn.execute("SELECT ts FROM readings").fetchall() == [
+            (run.start.strftime("%Y-%m-%d %H:%M:%S"),)]
 
 
 def test_scd41_sample_is_stored_once_as_reported_and_a_gap_is_null(tmp_path, monkeypatch):
@@ -318,8 +336,10 @@ def test_scd41_gets_bme280_pressure_in_pa_and_restarts_measurement(tmp_path, mon
     assert run.scd41_calls == [("stop",), ("start",), ("pressure", 101600.0)]
 
 
-def test_scd41_i2c_error_is_a_failed_read_and_the_lane_restarts(tmp_path, monkeypatch):
-    scd = iter([(612, 23.9, 47.6), I2cError("nack"), (640, 24.0, 48.0), None])
+@pytest.mark.parametrize("error", [I2cError("nack"), OSError("nack: address ioctl")])
+def test_scd41_i2c_error_is_a_failed_read_and_the_lane_restarts(tmp_path, monkeypatch, error):
+    # The transceiver's address ioctl raises a plain OSError, not an I2cError.
+    scd = iter([(612, 23.9, 47.6), error, (640, 24.0, 48.0), None])
     run = Run(tmp_path, monkeypatch, rows=3, scd41_reads=scd)
     assert run.readings("pm1, co2_ppm") == [(1.0, 612), (1.0, None), (1.0, 640)]
     assert [c[0] for c in run.scd41_calls if c[0] != "pressure"] == ["stop", "start"] * 2
@@ -418,3 +438,50 @@ def test_replay_of_a_day_includes_its_last_reads_filed_after_midnight(tmp_path, 
     assert local_sensors.replay(db, ["2026-10-21"], cfg) == {"samples": 2, "rows": 1}
     assert db.execute("SELECT ts, co2_ppm FROM readings").fetchall() == [
         ("2026-10-21 23:59:00", 610)]
+
+
+def test_a_hot_reloaded_publish_interval_closes_the_open_interval_on_its_own_grid(
+        tmp_path, monkeypatch):
+    """publish_s 1 -> 3 mid-run: the open one-second interval is written under
+    its own key, not the coarser grid's (which would land on an earlier row)."""
+    config_path = []
+    calls = itertools.count()
+
+    def bme():
+        while True:
+            # The third read's first BME sample rewrites the config.
+            if next(calls) == 6:
+                cfg = json.loads(config_path[0].read_text())
+                cfg["intervals"]["publish_s"] = 3
+                config_path[0].write_text(json.dumps(cfg))
+                os.utime(config_path[0], (time.monotonic() + 1e6, time.monotonic() + 1e6))
+            yield (27.0, 50.0, 1016.0)
+
+    original = Run.__init__
+
+    def capture(self, *a, **k):
+        app = a[0] / "app"
+        config_path.append(app / "config.json")
+        original(self, *a, **k)
+    monkeypatch.setattr(Run, "__init__", capture)
+    scd = iter([(600, 23.0, 45.0), (601, 23.0, 45.0), (602, 23.0, 45.0)] + [None] * 20)
+    run = Run(tmp_path, monkeypatch, rows=3, scd41_reads=scd, bme_reads=bme())
+    rows = run.readings("ts, co2_ppm")
+    second = (run.start + timedelta(seconds=1)).strftime("%Y-%m-%d %H:%M:%S")
+    # Each one-second interval keeps its own row and its own read.
+    assert rows[:2] == [(run.start.strftime("%Y-%m-%d %H:%M:%S"), 600), (second, 601)]
+
+
+def test_a_pre_tier1_row_sharing_the_first_intervals_key_is_kept(tmp_path, monkeypatch):
+    """A row from before Tier 1 has no reads to rebuild it from, so a derived
+    row landing on the same ts never overwrites it."""
+    start = datetime.fromtimestamp(int(time.time()) // 60 * 60, timezone.utc)
+    legacy_ts = start.strftime("%Y-%m-%d %H:%M:%S")
+
+    def prepare(conn):
+        conn.execute("CREATE TABLE readings (ts TEXT PRIMARY KEY, temp_f REAL)")
+        conn.execute("INSERT INTO readings VALUES (?, 99.9)", (legacy_ts,))
+
+    run = Run(tmp_path, monkeypatch, rows=2, prepare_db=prepare)
+    assert run.start == start   # the run began in the same minute
+    assert run.readings("ts, temp_f")[0] == (legacy_ts, 99.9)

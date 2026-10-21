@@ -16,11 +16,12 @@ DESCRIPTION: The two tiers of the local sensor lane, and the projection from
              interval, projected from that interval's Tier 1 records by
              derive_row() with the calibration in the dashboard config.
              Live (enviro_dash3.py) and `--replay DAY...` (here) both call it,
-             and a row is keyed by its interval, so replaying a day replaces
-             that day's rows in place; a changed calibration is applied to
-             history by replaying. The one difference: an interval a process
-             restart cut short holds only the reads after the restart live,
-             and all of that interval's reads on replay.
+             and a row is keyed by its interval's start, so replaying a day
+             rewrites that day's rows; a changed calibration or publish_s is
+             applied to history by replaying. Where live and replay differ, a
+             process restart is the cause: live never writes the interval open
+             at shutdown, and writes the interval open at restart from its
+             post-restart reads only; replay writes both from all their reads.
 
              Rows from before the first local_sensors record have no retained
              reads. They are kept as written and never rebuilt or dropped.
@@ -114,12 +115,11 @@ def last_with(samples: list[dict], key: str):
     return next((s for s in reversed(samples) if key in s), None)
 
 
-def derive_row(samples: list[dict], cfg: dict) -> dict:
+def derive_row(samples: list[dict], calibration: dict, publish_s: int) -> dict:
     """The `readings` row for one publish interval's Tier 1 records, oldest
-    first, keyed by the interval's start (UTC). Every lane takes its newest
-    successful read in the interval; a lane with none is NULL, never a value
-    from another interval."""
-    calibration, publish_s = cfg["calibration"], cfg["intervals"]["publish_s"]
+    first, keyed by the interval's start (UTC) on the publish_s grid that
+    grouped them. Every lane takes its newest successful read in the interval;
+    a lane with none is NULL, never a value from another interval."""
     last = samples[-1]
     start = interval_start(bucket_of(last["read_utc"], publish_s), publish_s)
     room_c, chip_c = compensate(last, calibration)
@@ -158,39 +158,59 @@ def _pms_words(frame_hex: str) -> tuple:
 
 
 def write(db, row: dict) -> None:
-    """Upsert on ts: a replay under a new calibration replaces the row."""
-    write_row(db, "readings", row, upsert_on="ts")
+    """Insert; an existing row at the same ts is never overwritten. Replay
+    clears its span first, so it rewrites; live writes each interval once, and
+    a row from before Tier 1 that happens to share a key is kept."""
+    write_row(db, "readings", row, or_ignore=True)
 
 
-def samples_for_days(days: list[str]):
-    """Yield every sample retained in the named UTC day files, in order.
-    Each record carries its own read_utc, so the store never folds one into a
+def _day_samples(day: str):
+    """Every sample read on UTC `day`, in retention order. A record is filed
+    under the day it was retained, so a read just before midnight can be in
+    the next day's file; that file is read only until its reads pass `day`.
+    Each record carries its own read_utc, so none is ever folded into a
     byte-identical duplicate."""
-    for day in days:
-        for _captured, _outcome, blob in read_day(PROVIDER, day):
-            if blob is not None:
-                yield json.loads(blob)
+    following = (date.fromisoformat(day) + timedelta(days=1)).isoformat()
+    for file_day in (day, following):
+        for _captured, _outcome, blob in read_day(PROVIDER, file_day):
+            if blob is None:
+                continue
+            sample = json.loads(blob)
+            read_day_ = sample["read_utc"][:10]
+            if read_day_ == day:
+                yield sample
+            elif file_day == following and read_day_ > day:
+                break
 
 
 def replay(db, days: list[str], cfg: dict) -> dict:
-    """Rebuild the `readings` rows of every interval starting on the named UTC
-    days from Tier 1. A record is filed under the day it was retained, which
-    for a read just before midnight is the next day, so that file is read too."""
-    publish_s = cfg["intervals"]["publish_s"]
-    wanted = set(days)
-    files = sorted(wanted | {(date.fromisoformat(d) + timedelta(days=1)).isoformat()
-                             for d in days})
-    intervals: dict[int, list[dict]] = {}
+    """Rebuild `readings` for the named UTC days from Tier 1, with the current
+    calibration and publish_s grid. For each day, the rows from its first
+    retained read onward are replaced: rows on another grid (publish_s since
+    changed) go, and rows from before the first local_sensors record, which
+    have no reads, are never reached. Streams one interval at a time. Replay a
+    day once it has ended: on the current day, live's still-open interval is
+    written from the reads so far, and live's later write of it is ignored."""
+    calibration, publish_s = cfg["calibration"], cfg["intervals"]["publish_s"]
     tally = {"samples": 0, "rows": 0}
-    for sample in samples_for_days(files):
-        b = bucket_of(sample["read_utc"], publish_s)
-        if interval_start(b, publish_s).date().isoformat() in wanted:
-            intervals.setdefault(b, []).append(sample)
+    for day in days:
+        following = (date.fromisoformat(day) + timedelta(days=1)).isoformat()
+        interval, pending = None, []
+        for sample in _day_samples(day):
+            if interval is None:   # the day's first retained read
+                first = datetime.fromisoformat(sample["read_utc"]).strftime("%Y-%m-%d %H:%M:%S")
+                db.execute("DELETE FROM readings WHERE ts >= ? AND ts < ?", (first, following))
+            b = bucket_of(sample["read_utc"], publish_s)
+            if pending and b != interval:
+                write(db, derive_row(pending, calibration, publish_s))
+                tally["rows"] += 1
+                pending = []
+            interval = b
+            pending.append(sample)
             tally["samples"] += 1
-    for b in sorted(intervals):
-        group = sorted(intervals[b], key=lambda s: s["read_utc"])
-        write(db, derive_row(group, cfg))
-        tally["rows"] += 1
+        if pending:
+            write(db, derive_row(pending, calibration, publish_s))
+            tally["rows"] += 1
     return tally
 
 

@@ -54,9 +54,11 @@ The `47f9dd6` measurement:
   - A lane with no read in the interval is NULL.
   - It also applies `self_heat_offset_c` and the Magnus correction, both moved from `enviro_dash3.py`.
 - `ensure_schema` creates the table or adds missing columns. It is additive only.
-- `write` is an upsert on `ts` through `shared.db_service.write_row`.
-- `replay` and the `--replay DAY...` command-line entry point rebuild every interval that starts on the named days, in place.
-  - They also read the following day's file, because a read just before midnight is filed under the day it was retained.
+- `write` inserts through `shared.db_service.write_row` and never overwrites an existing row. Replay clears its span first, and a row from before Tier 1 that shares a key is kept.
+- `replay` and the `--replay DAY...` command-line entry point rebuild each named day from Tier 1, on the current `publish_s` grid.
+  - They delete that day's rows from its first retained read onward, then stream one interval at a time.
+  - They also read the following day's file, only until its reads pass the day, because a read just before midnight is filed under the day it was retained.
+  - Memory: a synthetic full day (43,200 records, 46 MB) replayed in 1.2 s at a 19 MB peak RSS.
 
 **`enviro_dash3.py`:**
 - `read_sample()` retains one record per loop, holding:
@@ -116,7 +118,10 @@ The `47f9dd6` measurement:
    - The unit is active.
    - Tier 1 records are arriving under `raw-capture/local_sensors/`.
    - `readings` rows carry the SCD41 values.
-   - Replaying the day reproduces the live rows, except an interval a restart cut short. Live holds only that interval's post-restart reads; replay holds all of them.
+   - Replaying a finished day reproduces the live rows, except around a process restart:
+     - Live never writes the interval that was open at shutdown.
+     - Live writes the interval open at restart from its post-restart reads only.
+     - Replay writes both from all their reads.
    - The Grafana panels render.
 
 **Volume:** about 1.1–1.2 kB per record before the proximity list, measured on a representative record (2026-10-20 22:45; the reviewer measured 1169 B). The proximity list adds about 20 small integers per record. Every 2 s that is about 50 MB/day and about 18 GB/year, into a tree the existing backup lane already replicates. 206 GB were free on 2026-10-20.
@@ -215,6 +220,33 @@ Power observed for the round-2 fixes. Each violation was made in the real implem
 Full suite: 244 passed.
 
 The test clock starts at the real time, because `raw_retention` files each record under the real UTC day. A test run that crosses UTC midnight mid-test could still split across two files. That window is a few seconds a day and is not guarded.
+
+## Review: 6bee698 (architecture-reviewer, Anthropic), dispositions
+
+| # | Finding | Disposition |
+|---|---|---|
+| R1 | publish_s reload overwrote a live row | Closed: open interval keyed on its own grid |
+| R2 | Replay left old-grid/old-calibration rows | Closed: replay clears its span |
+| R3 | Replay memory grew with days | Closed: streamed, 19 MB/day measured |
+| R4 | In-place test could not fail | Closed: recalibration and grid replays |
+| R5 | Restart statement incomplete | Closed: corrected in the docs |
+| R6 | F8/F9 had no test power | Closed: call-counting and plain-OSError tests |
+| R7 | `ts` meaning changes at cutover | Closed: documented; a colliding legacy row is kept |
+| R8–R10 | No defect | No action |
+
+**R1 simplification:** the reviewer offered "close when publish_s changes" as an alternative fix. It is not needed: a new grid renumbers the buckets, so the open interval closes anyway. A test of that alternative left the suite green (246 passed), so the extra check protected nothing.
+
+Power observed. Each violation was made in the real implementation, and the full suite was run:
+
+| Violation | Result |
+|---|---|
+| Open interval keyed on the new grid | 1 failed |
+| Replay without the span delete | 1 failed |
+| Proximity list not cleared | 1 failed |
+| SCD41 lane catches only `I2cError` | 1 failed |
+| Upsert, which overwrites a legacy row | 1 failed |
+
+Full suite: 247 passed.
 
 ## Discovery (AGENTS D, not acted on)
 

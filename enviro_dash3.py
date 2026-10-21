@@ -349,7 +349,10 @@ def wait_for_next_frame(page, near):
 # projection --replay uses. Any error outside the cabled lanes ends the process:
 # the unit's restart policy retries it, and repeated failure reaches OnFailure.
 page, near = 0, False
-interval, pending = None, []
+# pending: the open interval's records; pending_s: the publish_s grid that
+# opened it. A hot-reloaded publish_s changes the bucket numbering, so the open
+# interval closes, and it is keyed on its own grid.
+interval, pending, pending_s = None, [], None
 # The SCD41 values on screen: the newest sample, cleared when a whole publish
 # interval passes without one.
 scd41_shown = None
@@ -365,19 +368,20 @@ try:
         sample = read_sample()
         retain_sample(sample)
 
-        b = local_sensors.bucket_of(sample["read_utc"], cfg["intervals"]["publish_s"])
+        publish_s = cfg["intervals"]["publish_s"]
+        b = local_sensors.bucket_of(sample["read_utc"], publish_s)
         if pending and b != interval:
-            row = local_sensors.derive_row(pending, cfg)
+            row = local_sensors.derive_row(pending, cfg["calibration"], pending_s)
             local_sensors.write(_db, row)
             log.info("readings row written  ts=%s", row["ts"])
             co2_hist.append(row["co2_ppm"])
             if row["co2_ppm"] is None:
                 scd41_shown = None
             pending = []
-        interval = b
+        interval, pending_s = b, publish_s
         pending.append(sample)
 
-        now = local_sensors.derive_row([sample], cfg)
+        now = local_sensors.derive_row([sample], cfg["calibration"], publish_s)
         if "scd41" in sample:
             scd41_shown = sample["scd41"]
         for key in ("pm1", "pm25", "pm10"):
