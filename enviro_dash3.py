@@ -4,11 +4,20 @@
 FILE:        enviro_dash3.py
 PATH:        ~/projects/enviroplus/enviro_dash3.py
 DESCRIPTION: Enviro+ sensor loop and its 160x80 ST7735 display. Reads the
-             BME280, LTR559, MICS6814 and PMS5003, writes one readings row per
-             publish interval, and shows one of the enviro_screens pages.
-             A hand over the LTR559 proximity sensor changes page.
+             BME280, LTR559, MICS6814, PMS5003 and SCD41, writes one readings
+             row per publish interval, and shows one of the enviro_screens
+             pages. A hand over the LTR559 proximity sensor changes page.
 
 CHANGELOG:
+2026-10-20 22:10      Claude      [Feature] SCD41 CO2 sensor (Adafruit
+                                      breakout, I2C 0x62) through Sensirion's
+                                      own driver. Its CO2, temperature and RH
+                                      are stored as the driver reports them in
+                                      co2_ppm, scd41_temp_c and scd41_rh; a
+                                      publish interval with no new sample
+                                      stores NULL. BME280 pressure feeds the
+                                      sensor's pressure compensation. New CO2
+                                      display page.
 2026-10-11 15:10      Claude      [Feature] Four-page display drawn by
                                       enviro_screens (Glance, Air, Outside,
                                       Gas), changed by proximity tap. Removes
@@ -103,6 +112,9 @@ import st7735
 from enviroplus import gas
 from ltr559 import LTR559
 from pms5003 import PMS5003, ChecksumMismatchError, ReadTimeoutError, SerialTimeoutError
+from sensirion_driver_adapters.i2c_adapter.i2c_channel import I2cChannel
+from sensirion_i2c_driver import CrcCalculator, I2cConnection, LinuxI2cTransceiver
+from sensirion_i2c_scd4x.device import Scd4xDevice
 
 from shared.config_service import load_env, require
 from shared.db_service import connect
@@ -170,11 +182,13 @@ _db.execute("""
         temp_f      REAL, humidity REAL, pressure REAL, lux REAL,
         oxidising   REAL, reducing REAL, ammonia  REAL,
         pm1         REAL, pm25     REAL, pm10     REAL,
-        cpu_temp_c  REAL, cpu_load REAL, mem_free_mb REAL, uptime_s INTEGER
+        cpu_temp_c  REAL, cpu_load REAL, mem_free_mb REAL, uptime_s INTEGER,
+        co2_ppm     REAL, scd41_temp_c REAL, scd41_rh REAL
     )
 """)
 for col, typedef in [("cpu_temp_c", "REAL"), ("cpu_load", "REAL"),
-                     ("mem_free_mb", "REAL"), ("uptime_s", "INTEGER")]:
+                     ("mem_free_mb", "REAL"), ("uptime_s", "INTEGER"),
+                     ("co2_ppm", "REAL"), ("scd41_temp_c", "REAL"), ("scd41_rh", "REAL")]:
     try:
         _db.execute(f"ALTER TABLE readings ADD COLUMN {col} {typedef}")
     except sqlite3.OperationalError:
@@ -196,16 +210,25 @@ def _pi_telemetry():
     return cpu_temp, cpu_load, mem_free_mb, uptime_s
 
 
-def write_sqlite(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10):
+def write_sqlite(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10, scd41):
+    """`scd41` is the (co2_ppm, temp_c, rh) sample not yet written, stored as the
+    driver reports it; None (no new sample this interval) stores NULL."""
     r = _round_readings(temp_f, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
     cpu_temp, cpu_load, mem_free_mb, uptime_s = _pi_telemetry()
+    co2_ppm, scd41_temp_c, scd41_rh = scd41 if scd41 is not None else (None, None, None)
+    # Columns named: ALTER TABLE appends, so position is not a contract.
     _db.execute(
-        "INSERT INTO readings VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO readings (ts, temp_f, humidity, pressure, lux,"
+        " oxidising, reducing, ammonia, pm1, pm25, pm10,"
+        " cpu_temp_c, cpu_load, mem_free_mb, uptime_s,"
+        " co2_ppm, scd41_temp_c, scd41_rh)"
+        " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         (utc_now(),
          r["temperature"], r["humidity"], r["pressure"], r["light"],
          r["oxidising"],   r["reducing"], r["ammonia"],
          r["pm1"],         r["pm25"],     r["pm10"],
-         round(cpu_temp, 1), round(cpu_load, 2), round(mem_free_mb, 1), uptime_s)
+         round(cpu_temp, 1), round(cpu_load, 2), round(mem_free_mb, 1), uptime_s,
+         co2_ppm, scd41_temp_c, scd41_rh)
     )
     _db.commit()
     log.info("SQLite row written")
@@ -229,6 +252,18 @@ _bme_addr      = _hw["bme280_addr"]
 _bme_sensor    = bme280.BME280(i2c_addr=_bme_addr, i2c_dev=_bus)
 ltr559_sensor  = LTR559()
 pms5003_sensor = PMS5003(device=_pms_device)
+
+# SCD41 shares the I2C bus; 0x62 is fixed in the part. Sensirion's CRC-8
+# parameters (poly 0x31, init 0xFF) are from its datasheet and driver examples.
+SCD41_ADDR = 0x62
+scd41_sensor = Scd4xDevice(I2cChannel(
+    I2cConnection(LinuxI2cTransceiver(f"/dev/i2c-{_i2c_bus}")),
+    slave_address=SCD41_ADDR, crc=CrcCalculator(8, 0x31, 0xFF, 0x0)))
+# A previous process may have left periodic measurement running, and the part
+# takes no other command until it stops; the datasheet requires 500 ms after stop.
+scd41_sensor.stop_periodic_measurement()
+time.sleep(0.5)
+scd41_sensor.start_periodic_measurement()   # one sample per 5 s
 
 # ── CPU temp compensation ──────────────────────────────────────────────────────
 _cpu_hist  = deque([45.0] * cfg["calibration"]["cpu_hist_size"],
@@ -339,6 +374,7 @@ def correct_humidity(rh, raw_c, actual_c):
 TREND_POINTS = 108
 pm_hist  = {k: deque(maxlen=TREND_POINTS) for k in ("pm1", "pm25", "pm10")}
 gas_hist = {k: deque(maxlen=TREND_POINTS) for k in ("oxidising", "reducing", "ammonia")}
+co2_hist = deque(maxlen=TREND_POINTS)   # one point per SCD41 sample
 
 
 # ── Outdoor (Ambient station rows written by ambient_wx.py) ────────────────────
@@ -391,6 +427,9 @@ def wait_for_next_frame(page, near):
 # retries it, and repeated failure reaches OnFailure. A loop that logged and
 # carried on kept the service "active" while the screen froze on its last frame.
 pm1 = pm25 = pm10 = None   # absent/failed lane => NULL, never a fabricated zero
+# scd41_unwritten: newest sample not yet in readings. scd41_shown: what the CO2
+# page draws; a whole publish interval without a sample clears it to "--".
+scd41_unwritten = scd41_shown = None
 page, near = 0, False
 _last_publish = time.time()
 
@@ -413,6 +452,14 @@ try:
         hum     = correct_humidity(_sample.humidity, raw_c, temp_c)
         pres    = _sample.pressure
         lux     = ltr559_sensor.get_lux()
+
+        if scd41_sensor.get_data_ready_status():
+            # Sensirion recommends continuous pressure compensation; it applies
+            # to the next sample. BME280 reports hPa, the driver takes Pa.
+            scd41_sensor.set_ambient_pressure(pres * 100)
+            co2, scd_t, scd_rh = scd41_sensor.read_measurement()
+            scd41_unwritten = scd41_shown = (co2.value, scd_t.value, scd_rh.value)
+            co2_hist.append(co2.value)
 
         g   = gas.read_all()
         ox  = g.oxidising / 1000
@@ -446,6 +493,8 @@ try:
             "pm_hist": pm_hist,
             "gas": {"oxidising": ox, "reducing": rd, "ammonia": nh3},
             "gas_hist": gas_hist,
+            "co2": None if scd41_shown is None else scd41_shown[0],
+            "co2_hist": co2_hist,
             "outdoor": outdoor,
             "outdoor_temp_hist": outdoor_temps,
             "wind_hist": winds,
@@ -455,7 +504,10 @@ try:
 
         now = time.time()
         if now - _last_publish >= cfg["intervals"]["publish_s"]:
-            write_sqlite(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10)
+            write_sqlite(tf, hum, pres, lux, ox, rd, nh3, pm1, pm25, pm10, scd41_unwritten)
+            if scd41_unwritten is None:
+                scd41_shown = None
+            scd41_unwritten = None
             _last_publish = now
 
         page, near = wait_for_next_frame(page, near)

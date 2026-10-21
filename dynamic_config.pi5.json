@@ -9,7 +9,8 @@
       "2026-03-16 00:00:00 EDT  Add hardware section for Pi 5 port — SPI, GPIO pins, I2C addr. Values here match Pi 3 B+ / Pi 5 wiring (Enviro+ HAT pinout is identical).",
       "2026-03-16 00:00:00 EDT  Add cpu_factor_override=1.8488. Pi 5 runs hotter so BME280 is at 34.7°C steady-state vs 22.7°C at cold startup, making the computed CPU_FACTOR wrong. Override bypasses startup calibration with a steady-state-measured value. Null = revert to computed.",
       "2026-03-18 00:00:00 EDT  Split from dynamic_config.json into Pi 5-specific file. Pi 3 B+ uses dynamic_config.json; Pi 5 selects this file via CONFIG_PATH in .env.",
-      "2026-10-11 15:10:00 EDT  display: replace bar/plot scaling keys with tap_proximity and outdoor_stale_s (four-page LCD, PR #22); thresholds: drop unused pm1/pm25/pm10/aq_pm25 (AQI uses the EPA table in enviro_screens.py)."
+      "2026-10-11 15:10:00 EDT  display: replace bar/plot scaling keys with tap_proximity and outdoor_stale_s (four-page LCD, PR #22); thresholds: drop unused pm1/pm25/pm10/aq_pm25 (AQI uses the EPA table in enviro_screens.py).",
+      "2026-10-20 22:10:00 EDT  thresholds: add co2_ppm for the SCD41 page. Edges are the German Federal Environment Agency (UBA) indoor CO2 guide values (Bundesgesundheitsblatt 2008, 51:1358): up to 1000 ppm harmless, 1000-2000 elevated, above 2000 unacceptable."
     ]
   },
   "calibration": {
@@ -29,7 +30,8 @@
     "humidity":    {"green_min": 30, "green_max": 70, "yellow_min": 20, "yellow_max": 80},
     "oxidising_k": {"green_max": 40, "yellow_max": 60},
     "reducing_k":  {"yellow_min": 60,  "green_min": 90},
-    "ammonia_k":   {"yellow_min": 80,  "green_min": 140}
+    "ammonia_k":   {"yellow_min": 80,  "green_min": 140},
+    "co2_ppm":     {"green_min": 0, "green_max": 1000, "yellow_min": 0, "yellow_max": 2000}
   },
   "display": {
     "tap_proximity":    1500,

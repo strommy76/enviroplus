@@ -9,12 +9,15 @@ DESCRIPTION: Pages for the Enviro+ 160x80 ST7735 LCD, drawn from a plain state
              way under test as on the device.
 
              Pages: Glance (AQI gauge, indoor, outdoor), Air (PM1/PM2.5/PM10),
-             Outside (Ambient station wind, UV, rain), Gas (MICS6814 channels).
+             Outside (Ambient station wind, UV, rain), Gas (MICS6814 channels),
+             CO2 (SCD41).
 
              A value of None means the lane is absent or failed. It is drawn as
              "--" and leaves a gap in its trend line; it is never drawn as zero.
 
 CHANGELOG:
+2026-10-20 22:10      Claude      [Feature] CO2 page for the SCD41, colored by
+                                      the thresholds.co2_ppm band.
 2026-10-11 15:10      Claude      [Feature] Initial four-page layout; EPA AQI
                                       on the 2024 PM2.5 breakpoints.
 --------------------------------------------------------------------------------
@@ -282,7 +285,14 @@ def _gas(d, s):
         sparkline(d, hist[key], 62, y, 92, 18, color)
 
 
-PAGES = (_glance, _air, _outside, _gas)
+def _co2(d, s):
+    ppm, color = s["co2"], band_color(s["co2"], s["thresholds"]["co2_ppm"])
+    _text(d, (3, 2), "CO₂  ppm", 8, DIM)
+    _text(d, (3, 12), _fmt(ppm, ".0f"), 26, color)
+    sparkline(d, s["co2_hist"], 3, 46, 150, 26, color)
+
+
+PAGES = (_glance, _air, _outside, _gas, _co2)
 
 
 def render(page, state):

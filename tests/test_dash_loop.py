@@ -8,6 +8,9 @@ DESCRIPTION: Runs the real enviro_dash3.py loop against a temporary database
              what reaches the readings table.
 
 CHANGELOG:
+2026-10-20 22:10      Claude      [Feature] SCD41 samples stored as the driver
+                                      reports them, once each; an interval with
+                                      no new sample stores NULL.
 2026-10-11 15:20      Claude      [Feature] Failed PM read stored as NULL;
                                       loop errors end the process.
 --------------------------------------------------------------------------------
@@ -37,7 +40,15 @@ class ReadTimeoutError(Exception):
     pass
 
 
-def _install_drivers(monkeypatch, pms_reads, gas_reads):
+class Signal:
+    """What the Sensirion driver's read_measurement returns: objects whose
+    .value is the converted reading."""
+
+    def __init__(self, value):
+        self.value = value
+
+
+def _install_drivers(monkeypatch, pms_reads, gas_reads, scd41_reads, scd41_calls):
     class Display:
         width, height = 160, 80
 
@@ -90,6 +101,40 @@ def _install_drivers(monkeypatch, pms_reads, gas_reads):
         monkeypatch.setitem(sys.modules, name, mod)
         return mod
 
+    class Scd4xDevice:
+        """Each loop asks get_data_ready_status once; `scd41_reads` yields None
+        (not ready) or a (co2, temp_c, rh) sample, or raises what the driver raises."""
+
+        def __init__(self, channel):
+            self._sample = None
+
+        def stop_periodic_measurement(self):
+            scd41_calls.append(("stop",))
+
+        def start_periodic_measurement(self):
+            scd41_calls.append(("start",))
+
+        def get_data_ready_status(self):
+            outcome = next(scd41_reads)
+            if isinstance(outcome, Exception):
+                raise outcome
+            self._sample = outcome
+            return outcome is not None
+
+        def set_ambient_pressure(self, pa):
+            scd41_calls.append(("pressure", pa))
+
+        def read_measurement(self):
+            return tuple(Signal(v) for v in self._sample)
+
+    module("sensirion_i2c_scd4x")
+    module("sensirion_i2c_scd4x.device", Scd4xDevice=Scd4xDevice)
+    module("sensirion_i2c_driver", CrcCalculator=lambda *a: None,
+           I2cConnection=lambda t: None, LinuxI2cTransceiver=lambda path: None)
+    module("sensirion_driver_adapters")
+    module("sensirion_driver_adapters.i2c_adapter")
+    module("sensirion_driver_adapters.i2c_adapter.i2c_channel",
+           I2cChannel=lambda *a, **k: None)
     module("st7735", ST7735=Display)
     module("smbus2", SMBus=lambda *a, **k: None)
     module("bme280", BME280=BME280)
@@ -108,7 +153,12 @@ def _install_drivers(monkeypatch, pms_reads, gas_reads):
     enviroplus.gas = module("enviroplus.gas", read_all=read_all)
 
 
-def _run(tmp_path, monkeypatch, pms_reads, gas_reads, loops):
+def _run(tmp_path, monkeypatch, pms_reads, gas_reads, loops,
+         scd41_reads=None, scd41_calls=None, columns="pm1, pm25, pm10"):
+    if scd41_reads is None:
+        scd41_reads = itertools.repeat(None)
+    if scd41_calls is None:
+        scd41_calls = []
     app = tmp_path / "app"
     app.mkdir()
     for name in ("enviro_dash3.py", "enviro_screens.py"):
@@ -129,7 +179,7 @@ def _run(tmp_path, monkeypatch, pms_reads, gas_reads, loops):
         monkeypatch.setenv(key, "")   # registers the original for restore,
         monkeypatch.delenv(key)       # then lets the module's .env load set it
 
-    _install_drivers(monkeypatch, pms_reads, gas_reads)
+    _install_drivers(monkeypatch, pms_reads, gas_reads, scd41_reads, scd41_calls)
     monkeypatch.syspath_prepend(str(app))
     monkeypatch.delitem(sys.modules, "enviro_screens", raising=False)
 
@@ -167,7 +217,7 @@ def _run(tmp_path, monkeypatch, pms_reads, gas_reads, loops):
     except _Stop:
         pass
     with sqlite3.connect(db) as conn:
-        return conn.execute("SELECT pm1, pm25, pm10 FROM readings ORDER BY ts").fetchall()
+        return conn.execute(f"SELECT {columns} FROM readings ORDER BY ts").fetchall()
 
 
 def test_failed_pm_read_is_stored_as_null_not_the_last_good_value(tmp_path, monkeypatch):
@@ -184,3 +234,33 @@ def test_sensor_error_ends_the_process(tmp_path, monkeypatch):
     gas = iter([None, OSError("i2c read failed")])
     with pytest.raises(OSError, match="i2c read failed"):
         _run(tmp_path, monkeypatch, pms, gas, loops=99)
+
+
+SCD41_COLUMNS = "co2_ppm, scd41_temp_c, scd41_rh"
+
+
+def test_scd41_sample_is_stored_once_as_reported_and_a_gap_is_null(tmp_path, monkeypatch):
+    sample = (612, 23.871337, 47.625732)
+    scd = iter([sample, None, (640, 24.0, 48.0)])
+    pms = itertools.repeat({1.0: 0.4, 2.5: 1.2, 10: 2.0})
+    rows = _run(tmp_path, monkeypatch, pms, itertools.repeat(None), loops=4,
+                scd41_reads=scd, columns=SCD41_COLUMNS)
+    # The interval after a sample, with none of its own, is NULL, not a repeat.
+    assert rows == [sample, (None, None, None), (640, 24.0, 48.0)]
+
+
+def test_scd41_gets_bme280_pressure_in_pa_and_restarts_measurement(tmp_path, monkeypatch):
+    calls = []
+    scd = iter([(612, 23.9, 47.6), None])
+    pms = itertools.repeat({1.0: 0.4, 2.5: 1.2, 10: 2.0})
+    _run(tmp_path, monkeypatch, pms, itertools.repeat(None), loops=3,
+         scd41_reads=scd, scd41_calls=calls)
+    # BME280 stand-in reports 1016.0 hPa; the driver takes Pa.
+    assert calls == [("stop",), ("start",), ("pressure", 101600.0)]
+
+
+def test_scd41_error_ends_the_process(tmp_path, monkeypatch):
+    scd = iter([(612, 23.9, 47.6), OSError("scd41 nack")])
+    pms = itertools.repeat({1.0: 0.4, 2.5: 1.2, 10: 2.0})
+    with pytest.raises(OSError, match="scd41 nack"):
+        _run(tmp_path, monkeypatch, pms, itertools.repeat(None), loops=99, scd41_reads=scd)

@@ -10,6 +10,9 @@ CHANGELOG:
 --------------------------------------------------------------------------------
 """
 
+import json
+from pathlib import Path
+
 import pytest
 
 import enviro_screens as screens
@@ -20,6 +23,7 @@ THRESHOLDS = {
     "oxidising_k": {"green_max": 40, "yellow_max": 60},
     "reducing_k": {"yellow_min": 60, "green_min": 90},
     "ammonia_k": {"yellow_min": 80, "green_min": 140},
+    "co2_ppm": {"green_min": 0, "green_max": 1000, "yellow_min": 0, "yellow_max": 2000},
 }
 
 
@@ -72,6 +76,8 @@ def _state(present):
         "pm_hist": {k: hist for k in ("pm1", "pm25", "pm10")},
         "gas": {"oxidising": v(40.0), "reducing": v(100.0), "ammonia": v(150.0)},
         "gas_hist": {k: hist for k in ("oxidising", "reducing", "ammonia")},
+        "co2": v(612.0),
+        "co2_hist": [v(600.0), v(612.0), None, v(640.0)],
         "outdoor": {"tempf": 68.0, "humidity": 60.0, "windspeedmph": 4.0, "windgustmph": 9.0,
                     "winddir": 270, "uv": 3, "dailyrainin": 0.1} if present else None,
         "outdoor_temp_hist": hist,
@@ -97,3 +103,24 @@ def test_oxidising_bands_keep_the_calibrated_direction(kohm, color):
     # Operator-calibrated bands (2026-03-16): the indoor baseline, about 90 kOhm,
     # is green; resistance at or below oxidising_k.green_max is red.
     assert screens.gas_color("oxidising", kohm, THRESHOLDS) == color
+
+
+# Edges from the committed dashboard config, not a copy, so the test sees the
+# values the device runs with.
+CO2_BAND = json.loads((Path(__file__).resolve().parents[1] / "dynamic_config.pi5.json")
+                      .read_text())["thresholds"]["co2_ppm"]
+
+
+@pytest.mark.parametrize("ppm, color", [(1000.0, screens.GREEN), (1001.0, screens.YELLOW),
+                                        (2000.0, screens.YELLOW), (2001.0, screens.ORANGE),
+                                        (None, screens.DIM)])
+def test_co2_band_follows_the_uba_guide_values(ppm, color):
+    assert screens.band_color(ppm, CO2_BAND) == color
+
+
+def test_co2_reading_is_drawn():
+    with_co2, without = _state(True), _state(True)
+    without["co2"], without["co2_hist"] = None, [None] * 4
+    frames = [(screens.render(p, with_co2).tobytes(), screens.render(p, without).tobytes())
+              for p in range(len(screens.PAGES))]
+    assert any(a != b for a, b in frames)

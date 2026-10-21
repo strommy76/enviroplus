@@ -1,6 +1,6 @@
 # 🌡️ Enviro+ Dashboard
 
-A high-density, real-time air quality and environment monitor running on a Raspberry Pi with a [Pimoroni Enviro+](https://github.com/pimoroni/enviroplus-python) HAT. Four pages on the 160×80 ST7735 screen (indoor air, particulates, outdoor weather, gas), changed by a wave over the proximity sensor, with persistent SQLite logging.
+A high-density, real-time air quality and environment monitor running on a Raspberry Pi with a [Pimoroni Enviro+](https://github.com/pimoroni/enviroplus-python) HAT. Five pages on the 160×80 ST7735 screen (indoor air, particulates, outdoor weather, gas, CO₂), changed by a wave over the proximity sensor, with persistent SQLite logging.
 
 ---
 
@@ -35,8 +35,8 @@ A missing or failed reading shows `--` and leaves a gap in its trend; it is neve
 | PM1.0 | PMS5003 | µg/m³ | External particulate sensor |
 | PM2.5 | PMS5003 | µg/m³ | Fine particles — primary AQI metric |
 | PM10 | PMS5003 | µg/m³ | Coarse particles |
-
-> 🔬 **Planned:** Adafruit SCD-41 breakout (CO₂, I2C 0x62) — no address conflict with existing sensors
+| CO₂ | SCD41 | ppm | Adafruit breakout, I2C 0x62; photoacoustic NDIR, one sample per 5 s, BME280 pressure compensation |
+| Temperature, humidity | SCD41 | °C, % RH | Stored as the sensor reports them (factory 4 °C offset); the display uses the BME280 |
 
 ---
 
@@ -49,6 +49,7 @@ flowchart LR
         LTR559 -->|I2C| PI
         MICS6814 -->|I2C/ADC| PI
         PMS5003 -->|UART| PI
+        SCD41 -->|I2C| PI
     end
 
     subgraph PI["Raspberry Pi"]
@@ -92,7 +93,7 @@ flowchart LR
 | [Pimoroni Enviro+](https://shop.pimoroni.com/products/enviro-plus) | Pimoroni |
 | [PMS5003 Particulate Sensor](https://shop.pimoroni.com/products/pms5003-particulate-matter-sensor-with-cable) | Pimoroni |
 | Raspberry Pi (3 B+, 4, 5, or Zero 2 W) | Various |
-| [Adafruit SCD-41 CO₂ Sensor](https://www.adafruit.com/product/5190) | Adafruit *(planned)* |
+| [Adafruit SCD-41 CO₂ Sensor](https://www.adafruit.com/product/5190) | Adafruit |
 
 ---
 
@@ -220,7 +221,10 @@ CREATE TABLE readings (
     cpu_temp_c  REAL,               -- Pi CPU temperature (°C)
     cpu_load    REAL,               -- 1-minute load average
     mem_free_mb REAL,               -- available memory (MB)
-    uptime_s    INTEGER             -- system uptime (seconds)
+    uptime_s    INTEGER,            -- system uptime (seconds)
+    co2_ppm     REAL,               -- SCD41 CO2 (ppm); NULL when no sample that interval
+    scd41_temp_c REAL,              -- SCD41 temperature (°C), as reported
+    scd41_rh    REAL                -- SCD41 relative humidity (%), as reported
 );
 ```
 
@@ -248,6 +252,8 @@ ORDER BY ts;
 | MICS6814 datasheet | https://www.sgxsensortech.com/content/uploads/2015/02/1143_Datasheet-MiCS-6814-rev-8.pdf |
 | PMS5003 datasheet | https://www.aqmd.gov/docs/default-source/aq-spec/resources-page/plantower-pms5003-manual_v2-3.pdf |
 | Adafruit SCD-41 guide | https://learn.adafruit.com/adafruit-scd-40-and-scd-41 |
+| Sensirion SCD4x Python driver | https://github.com/Sensirion/python-i2c-scd4x |
+| UBA indoor CO₂ guide values (CO₂ display bands) | Bundesgesundheitsblatt 2008, 51:1358–1369 |
 
 ---
 
@@ -261,6 +267,6 @@ ORDER BY ts;
 - [x] Hot-reloadable dashboard config, single source of truth
 - [x] BME280 averaging + CPU history smoothing for noise reduction
 - [ ] Ruff linting with pre-commit hook (referee not installed)
-- [ ] Adafruit SCD-41 CO₂ sensor integration
+- [x] Adafruit SCD-41 CO₂ sensor integration
 - [ ] Grafana dashboard on AI host via Tailscale
 - [ ] Migrate to Raspberry Pi 5
