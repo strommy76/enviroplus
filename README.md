@@ -37,7 +37,7 @@ A missing or failed reading shows `--` and leaves a gap in its trend; it is neve
 | PM2.5 | PMS5003 | µg/m³ | Fine particles — primary AQI metric |
 | PM10 | PMS5003 | µg/m³ | Coarse particles |
 | CO₂ | SCD41 | ppm | Adafruit breakout, I2C 0x62; photoacoustic NDIR, one sample per 5 s, BME280 pressure compensation |
-| Temperature, humidity | SCD41 | °C, % RH | Stored as the sensor reports them (factory 4 °C offset); the indoor temperature and humidity on screen and in Grafana |
+| Diagnostic temperature, humidity | SCD41 | °C, % RH | Retained as reported; installed temperature offset is unknown. Humidity supplies the room display; temperature remains diagnostic |
 
 ---
 
@@ -51,6 +51,7 @@ flowchart LR
         MICS6814 -->|I2C/ADC| PI
         PMS5003 -->|UART| PI
         SCD41 -->|I2C| PI
+        TMP119 -->|I2C| PI
     end
 
     subgraph PI["Raspberry Pi"]
@@ -139,7 +140,7 @@ cp .env.example .env   # add credentials — secrets only, no tuning values here
 | `NWS_MAX_OBSERVATION_AGE_S` | Maximum accepted NWS latest-observation age in seconds |
 | `NWS_COLLECTION_LOOKBACK_S` | Bounded NWS observations query window in seconds |
 
-All tuning values (calibration, thresholds, intervals, display) live in the CONFIG_PATH document — see below.
+All tuning values (hardware addresses, thresholds, intervals, display) live in the CONFIG_PATH document — see below.
 
 ### 5. Run as a systemd service
 
@@ -287,12 +288,11 @@ ORDER BY ts;
 ## 📋 Roadmap
 
 - [x] 10-sensor dashboard on ST7735 display
-- [x] CPU temperature compensation (constant self-heat offset since 2026-07-30)
+- [x] TMP119 room temperature and reported SCD41 humidity
 - [x] SQLite logging with UTC timestamps + Pi telemetry
 - [x] Rotating log file
 - [x] systemd service with auto-restart
 - [x] Hot-reloadable dashboard config, single source of truth
-- [x] BME280 averaging for noise reduction
 - [x] Every local sensor read retained in Tier 1; `readings` derived and replayable
 - [ ] Ruff linting with pre-commit hook (referee not installed)
 - [x] Adafruit SCD-41 CO₂ sensor integration

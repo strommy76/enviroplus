@@ -115,7 +115,7 @@
           "refId": "A"
         }
       ],
-      "title": "Humidity (SCD41)",
+      "title": "Room Humidity",
       "type": "stat"
     },
     {
@@ -369,6 +369,7 @@
         }
       ],
       "title": "Temperature & Humidity",
+      "description": "Room history before the TMP119 rollout contains BME280-derived temperature and humidity estimates. Later rows use TMP119 temperature and reported SCD41 humidity. Rollout preserves historical rows.",
       "type": "timeseries"
     },
     {
