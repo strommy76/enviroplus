@@ -988,7 +988,6 @@
     {
       "type": "row",
       "title": "Indoor vs Outdoor Temperature",
-      "description": "Indoor history before the TMP119 rollout contains BME280-derived temperature estimates. Later rows use TMP119 temperature. Rollout preserves historical rows; outdoor sources are unchanged.",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1000,6 +999,7 @@
     {
       "type": "timeseries",
       "title": "Indoor vs Outdoor Temperature",
+      "description": "Indoor history before the TMP119 rollout contains BME280-derived temperature estimates. Later rows use TMP119 temperature. Rollout preserves historical rows; outdoor sources are unchanged.",
       "datasource": {
         "uid": "cfhpdda09qq68e",
         "type": "frser-sqlite-datasource"
