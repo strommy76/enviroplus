@@ -756,21 +756,23 @@ def test_tmp119_init_failure_is_retained_and_other_lanes_continue(tmp_path, monk
 def test_tmp119_failed_interval_has_no_other_sensor_or_previous_value_fallback(
     tmp_path, monkeypatch
 ):
+    # A valid SCD41 16-bit RH word converted per its published interface.
+    reported_rh = 32768 * 100 / 65535
     run = Run(
         tmp_path,
         monkeypatch,
         rows=3,
         tmp119_reads=iter([24.5, OSError("read nack"), 0.0, 10.0]),
-        scd41_reads=itertools.repeat((600, 30.0, 45.125)),
+        scd41_reads=itertools.repeat((600, 30.0, reported_rh)),
     )
     assert run.readings("temp_f, humidity, pressure") == [
-        (76.1, 45.125, 1016.0),
-        (None, 45.125, 1016.0),
-        (32.0, 45.125, 1016.0),
+        (76.1, reported_rh, 1016.0),
+        (None, reported_rh, 1016.0),
+        (32.0, reported_rh, 1016.0),
     ]
     assert run.states[1]["indoor"]["temp_f"] is None
-    assert run.states[1]["indoor"]["humidity"] == 45.125  # reported RH, no Magnus
-    assert run.tier1()[0][1]["scd41"]["rh"] == 45.125
+    assert run.states[1]["indoor"]["humidity"] == reported_rh  # reported RH, no Magnus
+    assert run.tier1()[0][1]["scd41"]["rh"] == reported_rh
     assert run.tier1()[1][0] == "partial"
     assert run.tmp119_calls == [("init", 0x48), ("init", 0x48)]
 
