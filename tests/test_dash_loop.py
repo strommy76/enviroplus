@@ -71,7 +71,16 @@ class Signal:
 
 
 def _install_drivers(
-    monkeypatch, pms_reads, gas_reads, scd41_reads, scd41_calls, bme_reads, proximity_reads
+    monkeypatch,
+    pms_reads,
+    gas_reads,
+    scd41_reads,
+    scd41_calls,
+    bme_reads,
+    proximity_reads,
+    tmp119_reads,
+    tmp119_init,
+    tmp119_calls,
 ):
     class Display:
         width, height = 160, 80
@@ -138,6 +147,20 @@ def _install_drivers(
         def read_measurement(self):
             return tuple(Signal(v) for v in self._sample)
 
+    class TMP117:
+        def __init__(self, bus, address):
+            tmp119_calls.append(("init", address))
+            outcome = next(tmp119_init)
+            if isinstance(outcome, Exception):
+                raise outcome
+
+        @property
+        def temperature(self):
+            outcome = next(tmp119_reads)
+            if isinstance(outcome, Exception):
+                raise outcome
+            return outcome
+
     def module(name, **attrs):
         mod = types.ModuleType(name)
         mod.__dict__.update(attrs)
@@ -156,6 +179,8 @@ def _install_drivers(
     module("sensirion_driver_adapters")
     module("sensirion_driver_adapters.i2c_adapter")
     module("sensirion_driver_adapters.i2c_adapter.i2c_channel", I2cChannel=lambda *a, **k: None)
+    module("adafruit_tmp117", TMP117=TMP117)
+    module("adafruit_extended_bus", ExtendedI2C=lambda bus: None)
     module("st7735", ST7735=Display)
     module("smbus2", SMBus=lambda *a, **k: None)
     module("bme280", BME280=BME280)
@@ -196,8 +221,10 @@ class Run:
         prepare_db=None,
         publish_s=1,
         proximity_reads=None,
+        tmp119_reads=None,
+        tmp119_init=None,
     ):
-        self.scd41_calls, self.states = [], []
+        self.scd41_calls, self.states, self.tmp119_calls = [], [], []
         app = tmp_path / "app"
         app.mkdir()
         for name in ("enviro_dash3.py", "enviro_screens.py", "local_sensors.py"):
@@ -233,6 +260,9 @@ class Run:
             self.scd41_calls,
             bme_reads or itertools.repeat((27.0, 50.0, 1016.0)),
             proximity_reads or itertools.repeat(0),
+            tmp119_reads or itertools.repeat(24.5),
+            tmp119_init or itertools.repeat(None),
+            self.tmp119_calls,
         )
         monkeypatch.syspath_prepend(str(app))
         for name in ("enviro_screens", "local_sensors"):
@@ -317,8 +347,8 @@ def test_tier1_keeps_every_read_as_the_driver_returned_it(tmp_path, monkeypatch)
     records = run.tier1()
     assert [outcome for outcome, _ in records] == ["ok", "partial", "ok"]
     first, second = records[0][1], records[1][1]
-    n = run.config["calibration"]["bme_samples"]
-    assert first["bme280"] == [{"temperature": 27.0, "humidity": 50.0, "pressure": 1016.0}] * n
+    assert first["bme280"] == [{"temperature": 27.0, "humidity": 50.0, "pressure": 1016.0}]
+    assert first["tmp119"] == {"temperature_c": 24.5}
     assert first["pms5003_frame_hex"] == GOOD.hex()
     assert first["mics6814_ohms"] == {"oxidising": 45000.0, "reducing": 105000.0, "nh3": 150000.0}
     assert first["cpu_temp_milli_c"] == 52000
@@ -332,12 +362,8 @@ def test_readings_are_derived_and_replay_reproduces_them(tmp_path, monkeypatch):
     scd = iter([(612, 23.9, 47.6), None, (640, 24.0, 48.0), None])
     run = Run(tmp_path, monkeypatch, rows=3, scd41_reads=scd)
     live = run.readings()
-    # Worked by hand for the committed 6.35 °C pedestal: room 27.0 - 6.35 =
-    # 20.65 °C = 69.2 °F. RH: 50 % at the 27.0 °C chip is the same vapour as
-    # 50 * exp(17.625*27/270.04 - 17.625*20.65/263.69) = 50 * e^0.38197
-    # = 73.3 % at the cooler room.
-    assert run.config["calibration"]["self_heat_offset_c"] == 6.35
-    assert live[0][1:3] == (69.2, 73.3)
+    # Unit definition: 24.5 C * 9/5 + 32 = 76.1 F; RH is reported SCD41 RH.
+    assert live[0][1:3] == (76.1, 47.6)
 
     import local_sensors
 
@@ -347,18 +373,6 @@ def test_readings_are_derived_and_replay_reproduces_them(tmp_path, monkeypatch):
         replayed = conn.execute(f"SELECT {READINGS} FROM readings ORDER BY ts").fetchall()
     # Replay also closes the interval live had not closed when it stopped.
     assert replayed[:3] == live
-
-    # Replaying under a new calibration replaces the rows in place: the same
-    # four rows, each 1.0 °C (1.8 °F) cooler.
-    recalibrated = {
-        **run.config,
-        "calibration": {**run.config["calibration"], "self_heat_offset_c": 7.35},
-    }
-    with sqlite3.connect(run.db) as conn:
-        local_sensors.replay(conn, [run.start.date().isoformat()], recalibrated)
-        assert conn.execute("SELECT ts, temp_f FROM readings ORDER BY ts").fetchall() == [
-            (ts, round(t - 1.8, 1)) for ts, t, *_ in replayed
-        ]
 
     # Replaying on a coarser grid replaces the one-second rows; none is left
     # behind on the old grid.
@@ -405,8 +419,8 @@ def test_display_clears_co2_after_a_silent_interval_and_the_trend_shows_the_gap(
     run = Run(tmp_path, monkeypatch, rows=3, scd41_reads=scd)
     assert [s["co2"] for s in run.states] == [612, 612, None, None]
     assert run.states[-1]["co2_hist"] == [612, None, None]
-    # Indoor temperature and RH on screen come from the SCD41.
-    assert run.states[0]["indoor"]["temp_f"] == pytest.approx(23.9 * 9 / 5 + 32)
+    # Room temperature is TMP119; reported SCD RH keeps its existing display rule.
+    assert run.states[0]["indoor"]["temp_f"] == 76.1
     assert run.states[0]["indoor"]["humidity"] == 47.6
 
 
@@ -452,34 +466,35 @@ def test_an_existing_fifteen_column_table_keeps_its_rows_and_gains_the_new_colum
     assert rows[1][15:] == (612, 23.9, 47.6)
 
 
-def test_an_interval_takes_each_lanes_newest_read_and_the_mean_bme280_temperature(
-    tmp_path, monkeypatch
-):
-    # Three-second intervals of three reads each (one read per second).
-    n = json.loads((REPO / "dynamic_config.pi5.json").read_text())["calibration"]["bme_samples"]
-    temps = itertools.cycle([26.0, 27.0, 28.0])
-    rh = itertools.count(40.0)
-    bme = ((next(temps), next(rh), 1016.0) for _ in itertools.count())
+def test_an_interval_takes_each_lanes_newest_successful_read(tmp_path, monkeypatch):
+    bme = itertools.cycle([(26.0, 40.0, 1015.0), (27.0, 41.0, 1016.0), (28.0, 42.0, 1017.0)])
     pms = iter([frame(1, 2, 3), frame(4, 5, 6), ReadTimeoutError("no frame")] * 3)
     scd = iter([(600, 23.0, 45.0), (610, 23.5, 46.0), None] * 3)
+    tmp = iter([0.0, 5.0, OSError("TMP119 read nack")] * 3)
     run = Run(
-        tmp_path, monkeypatch, rows=2, pms_reads=pms, scd41_reads=scd, bme_reads=bme, publish_s=3
+        tmp_path,
+        monkeypatch,
+        rows=2,
+        pms_reads=pms,
+        scd41_reads=scd,
+        tmp119_reads=tmp,
+        bme_reads=bme,
+        publish_s=3,
     )
-    rows = run.readings("ts, temp_f, humidity, pm1, pm25, pm10, co2_ppm, scd41_temp_c")
-    # Keyed by the interval's start, not by its last read two seconds later.
-    assert rows[0][0] == run.start.strftime("%Y-%m-%d %H:%M:%S")
-    row = rows[0][1:]
-    # Newest successful PMS and SCD41 reads in the interval, not the first or
-    # the failed last one.
-    assert row[2:] == (4.0, 5.0, 6.0, 610, 23.5)
-    # Temperature: the mean of the interval's last read's three BME280 samples
-    # (26, 27, 28 -> 27.0 °C; the first alone would be 26.0), less the 6.35 °C
-    # pedestal: 20.65 °C = 69.2 °F.
-    assert n == 3 and row[0] == 69.2
-    # Humidity: that read's newest BME280 sample, RH 48 (the ninth of the
-    # interval), Magnus-corrected by e^0.38197 = 1.46516 (worked in the test
-    # above).
-    assert row[1] == round(48.0 * 1.46516, 1)
+    rows = run.readings("ts, temp_f, humidity, pressure, pm1, pm25, pm10, co2_ppm")
+    assert rows[0] == (
+        run.start.strftime("%Y-%m-%d %H:%M:%S"),
+        41.0,
+        46.0,
+        1017.0,
+        4.0,
+        5.0,
+        6.0,
+        610,
+    )
+    # 5 C = 41 F, not the BME280's 28 C. RH46 is uncorrected SCD output.
+    # Pressure uses the last BME280 read; failed TMP/PMS reads do not erase good
+    # samples earlier in this same interval.
 
 
 def test_replay_of_a_day_includes_its_last_reads_filed_after_midnight(tmp_path, monkeypatch):
@@ -524,6 +539,11 @@ def test_replay_of_a_day_includes_its_last_reads_filed_after_midnight(tmp_path, 
     assert db.execute("SELECT ts, co2_ppm FROM readings").fetchall() == [
         ("2026-10-21 23:59:00", 610)
     ]
+    # These old retained records have no TMP119. No synthetic temperature or
+    # BME fallback, while SCD RH and old multi-read BME pressure still replay.
+    assert db.execute("SELECT temp_f, humidity, pressure FROM readings").fetchall() == [
+        (None, 45.0, 1016.0)
+    ]
 
 
 def test_a_hot_reloaded_publish_interval_closes_the_open_interval_on_its_own_grid(
@@ -536,8 +556,8 @@ def test_a_hot_reloaded_publish_interval_closes_the_open_interval_on_its_own_gri
 
     def bme():
         while True:
-            # The third read's first BME sample rewrites the config.
-            if next(calls) == 6:
+            # One BME read per loop: the third loop rewrites the config.
+            if next(calls) == 2:
                 cfg = json.loads(config_path[0].read_text())
                 cfg["intervals"]["publish_s"] = 3
                 config_path[0].write_text(json.dumps(cfg))
@@ -553,11 +573,13 @@ def test_a_hot_reloaded_publish_interval_closes_the_open_interval_on_its_own_gri
 
     monkeypatch.setattr(Run, "__init__", capture)
     scd = iter([(600, 23.0, 45.0), (601, 23.0, 45.0), (602, 23.0, 45.0)] + [None] * 20)
-    run = Run(tmp_path, monkeypatch, rows=3, scd41_reads=scd, bme_reads=bme())
+    run = Run(tmp_path, monkeypatch, rows=4, scd41_reads=scd, bme_reads=bme())
     rows = run.readings("ts, co2_ppm")
     second = (run.start + timedelta(seconds=1)).strftime("%Y-%m-%d %H:%M:%S")
     # Each one-second interval keeps its own row and its own read.
     assert rows[:2] == [(run.start.strftime("%Y-%m-%d %H:%M:%S"), 600), (second, 601)]
+    assert rows[3][0] == (run.start + timedelta(seconds=3)).strftime("%Y-%m-%d %H:%M:%S")
+    assert len(run.tier1()) > 5  # the fourth row required the coarser interval to close
 
 
 def test_a_pre_tier1_row_sharing_the_first_intervals_key_is_kept(tmp_path, monkeypatch):
@@ -703,3 +725,58 @@ def test_each_tap_is_retained_once_with_the_reading_that_crossed_the_threshold(
     run = Run(tmp_path, monkeypatch, rows=3, proximity_reads=reads)
     taps = [t for _, r in run.tier1() for t in r.get("ltr559_taps", [])]
     assert [(t["proximity"], t["tap_proximity"]) for t in taps] == [(tap + 5, tap), (tap, tap)]
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        OSError("address ioctl failed"),
+        ValueError("No I2C device at address"),
+        AttributeError("Cannot find a TMP117 or TMP119"),
+    ],
+)
+def test_tmp119_init_failure_is_retained_and_other_lanes_continue(tmp_path, monkeypatch, error):
+    run = Run(
+        tmp_path,
+        monkeypatch,
+        rows=2,
+        tmp119_init=iter([error, None]),
+        scd41_reads=iter([(600, 23.0, 45.0), (610, 23.0, 46.0), None]),
+    )
+    assert run.readings("temp_f, humidity, pressure, co2_ppm") == [
+        (None, 45.0, 1016.0, 600),
+        (76.1, 46.0, 1016.0, 610),
+    ]
+    first = run.tier1()[0]
+    assert first[0] == "partial" and "tmp119_error" in first[1]
+    assert "tmp119" not in first[1]
+    assert run.tmp119_calls == [("init", 0x48), ("init", 0x48)]
+
+
+def test_tmp119_failed_interval_has_no_other_sensor_or_previous_value_fallback(
+    tmp_path, monkeypatch
+):
+    run = Run(
+        tmp_path,
+        monkeypatch,
+        rows=3,
+        tmp119_reads=iter([24.5, OSError("read nack"), 0.0, 10.0]),
+        scd41_reads=itertools.repeat((600, 30.0, 45.125)),
+    )
+    assert run.readings("temp_f, humidity, pressure") == [
+        (76.1, 45.125, 1016.0),
+        (None, 45.125, 1016.0),
+        (32.0, 45.125, 1016.0),
+    ]
+    assert run.states[1]["indoor"]["temp_f"] is None
+    assert run.states[1]["indoor"]["humidity"] == 45.125  # reported RH, no Magnus
+    assert run.tier1()[0][1]["scd41"]["rh"] == 45.125
+    assert run.tier1()[1][0] == "partial"
+    assert run.tmp119_calls == [("init", 0x48), ("init", 0x48)]
+
+
+def test_new_temperature_projection_preserves_driver_precision(tmp_path, monkeypatch):
+    run = Run(tmp_path, monkeypatch, rows=1, tmp119_reads=itertools.repeat(24.46875))
+    assert run.tier1()[0][1]["tmp119"]["temperature_c"] == 24.46875
+    # Exact unit conversion of3132/128C, without a legacy BME display-rounding rule.
+    assert run.readings("temp_f")[0][0] == pytest.approx(76.04375)

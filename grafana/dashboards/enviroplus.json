@@ -50,13 +50,13 @@
       },
       "targets": [
         {
-          "queryText": "SELECT scd41_temp_c * 9 / 5 + 32 as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "queryText": "SELECT temp_f as value FROM readings ORDER BY ts DESC LIMIT 1",
           "queryType": "table",
-          "rawQueryText": "SELECT scd41_temp_c * 9 / 5 + 32 as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "rawQueryText": "SELECT temp_f as value FROM readings ORDER BY ts DESC LIMIT 1",
           "refId": "A"
         }
       ],
-      "title": "Temperature (SCD41)",
+      "title": "Room Temperature",
       "type": "stat"
     },
     {
@@ -109,9 +109,9 @@
       },
       "targets": [
         {
-          "queryText": "SELECT scd41_rh as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "queryText": "SELECT humidity as value FROM readings ORDER BY ts DESC LIMIT 1",
           "queryType": "table",
-          "rawQueryText": "SELECT scd41_rh as value FROM readings ORDER BY ts DESC LIMIT 1",
+          "rawQueryText": "SELECT humidity as value FROM readings ORDER BY ts DESC LIMIT 1",
           "refId": "A"
         }
       ],
@@ -359,9 +359,9 @@
       "id": 8,
       "targets": [
         {
-          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, scd41_temp_c * 9 / 5 + 32 as 'Temperature (SCD41)', scd41_rh as 'Humidity (SCD41)', temp_f as 'Temperature (BME280, compensated)', humidity as 'Humidity (BME280, corrected)' FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
+          "queryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as 'Room Temperature', humidity as 'Room Humidity' FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "table",
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, scd41_temp_c * 9 / 5 + 32 as 'Temperature (SCD41)', scd41_rh as 'Humidity (SCD41)', temp_f as 'Temperature (BME280, compensated)', humidity as 'Humidity (BME280, corrected)' FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) as time, temp_f as 'Room Temperature', humidity as 'Room Humidity' FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "refId": "A",
           "timeColumns": [
             "time"

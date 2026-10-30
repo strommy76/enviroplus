@@ -95,7 +95,7 @@
         "colorMode": "background",
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "last"
           ]
         },
         "textMode": "auto",
@@ -104,7 +104,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, scd41_temp_c * 9 / 5 + 32 AS value FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, temp_f AS value FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -160,7 +160,7 @@
         "colorMode": "background",
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "last"
           ]
         },
         "textMode": "auto",
@@ -169,7 +169,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, scd41_rh AS value FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, humidity AS value FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
@@ -1051,6 +1051,18 @@
                 }
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Indoor Temp"
+            },
+            "properties": [
+              {
+                "id": "custom.spanNulls",
+                "value": false
+              }
+            ]
           }
         ]
       },
@@ -1066,7 +1078,7 @@
       },
       "targets": [
         {
-          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, scd41_temp_c * 9 / 5 + 32 AS \"Indoor Temp\" FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
+          "rawQueryText": "SELECT CAST(strftime('%s', ts) AS INTEGER) AS time, temp_f AS \"Indoor Temp\" FROM readings WHERE ts >= datetime($__from / 1000, 'unixepoch') AND ts <= datetime($__to / 1000, 'unixepoch') ORDER BY ts",
           "queryType": "time series",
           "timeColumns": [
             "time"
