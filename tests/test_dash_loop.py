@@ -780,3 +780,20 @@ def test_new_temperature_projection_preserves_driver_precision(tmp_path, monkeyp
     assert run.tier1()[0][1]["tmp119"]["temperature_c"] == 24.46875
     # Exact unit conversion of3132/128C, without a legacy BME display-rounding rule.
     assert run.readings("temp_f")[0][0] == pytest.approx(76.04375)
+
+
+def test_old_bme_read_list_keeps_last_pressure_and_does_not_invent_tmp_history(
+    tmp_path, monkeypatch
+):
+    run = Run(tmp_path, monkeypatch, rows=1)
+    sample = run.tier1()[0][1]
+    del sample["tmp119"]  # valid record shape before this sensor was acquired
+    sample["bme280"] = [
+        {"temperature": 27.0, "humidity": 50.0, "pressure": pressure}
+        for pressure in (1015.01, 1015.02, 1015.03)
+    ]
+    import local_sensors
+
+    row = local_sensors.derive_row([sample], 1)
+    assert row["pressure"] == 1015.03
+    assert row["temp_f"] is None
