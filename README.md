@@ -26,8 +26,8 @@ A missing or failed reading shows `--` and leaves a gap in its trend; it is neve
 
 | Sensor | Chip | Measures | Notes |
 |--------|------|----------|-------|
-| Temperature | BME280 | °F (self-heat compensated) | Constant offset `calibration.self_heat_offset_c` in the CONFIG_PATH document |
-| Humidity | BME280 | % RH | |
+| Room temperature | TMP119 | °F (from driver °C) | Supported Adafruit TMP117/TMP119 driver; no software calibration |
+| Humidity | SCD41 | % RH as reported | No external correction or sensor-offset write |
 | Pressure | BME280 | hPa | |
 | Light | LTR559 | Lux | Also used as proximity sensor |
 | Oxidising gas | MICS6814 | kΩ (NO₂, O₃) | Higher resistance = cleaner air |
@@ -37,7 +37,7 @@ A missing or failed reading shows `--` and leaves a gap in its trend; it is neve
 | PM2.5 | PMS5003 | µg/m³ | Fine particles — primary AQI metric |
 | PM10 | PMS5003 | µg/m³ | Coarse particles |
 | CO₂ | SCD41 | ppm | Adafruit breakout, I2C 0x62; photoacoustic NDIR, one sample per 5 s, BME280 pressure compensation |
-| Temperature, humidity | SCD41 | °C, % RH | Stored as the sensor reports them (factory 4 °C offset); the indoor temperature and humidity on screen and in Grafana |
+| Diagnostic temperature, humidity | SCD41 | °C, % RH | Retained as reported; installed temperature offset is unknown. Humidity supplies the room display; temperature remains diagnostic |
 
 ---
 
@@ -51,6 +51,7 @@ flowchart LR
         MICS6814 -->|I2C/ADC| PI
         PMS5003 -->|UART| PI
         SCD41 -->|I2C| PI
+        TMP119 -->|I2C| PI
     end
 
     subgraph PI["Raspberry Pi"]
@@ -139,7 +140,7 @@ cp .env.example .env   # add credentials — secrets only, no tuning values here
 | `NWS_MAX_OBSERVATION_AGE_S` | Maximum accepted NWS latest-observation age in seconds |
 | `NWS_COLLECTION_LOOKBACK_S` | Bounded NWS observations query window in seconds |
 
-All tuning values (calibration, thresholds, intervals, display) live in the CONFIG_PATH document — see below.
+All tuning values (hardware addresses, thresholds, intervals, display) live in the CONFIG_PATH document — see below.
 
 ### 5. Run as a systemd service
 
@@ -169,10 +170,6 @@ All tunable runtime values live here. The running script watches this file and *
 
 ```json
 {
-  "calibration": {
-    "self_heat_offset_c": 6.35,  ← measured BME280 self-heat (see its provenance key)
-    "bme_samples":  3             ← BME280 readings averaged per loop (reduces noise)
-  },
   "intervals": {
     "publish_s":        60,  ← length of the interval each readings row covers
     "display_refresh_s": 2   ← display update rate
@@ -182,13 +179,24 @@ All tunable runtime values live here. The running script watches this file and *
 }
 ```
 
-**To recalibrate temperature:** re-measure the offset against a reference over 5-minute means and update `self_heat_offset_c`; its `self_heat_offset_provenance` records how the current value was measured. Then rebuild the affected days with `python local_sensors.py --replay DAY...`.
+## 🌡️ Room measurement sources
 
----
+TMP119 supplies room temperature; SCD41 supplies reported humidity and CO₂;
+BME280 supplies pressure. Complete driver returns (including BME temperature/RH)
+remain canonical diagnostic evidence. No BME self-heat offset, Magnus correction
+or SCD41 offset write is active. A failed cabled read is retained as a lane error;
+its interval has NULL when no successful read exists. No other-sensor fallback.
+LCD SCD41 freshness behavior is unchanged; missing current TMP119 reads show `--`.
 
-## 🌡️ Temperature Compensation
+The supported TMP constructor's startup/readiness behavior is used unchanged,
+per Bryan's October 30 decision; no extra timer, watchdog or plausibility guard.
+Whether later humidity correction should use TMP119 or a calibrated SCD41 offset
+remains an operator decision after stabilized paired readings; native output may
+already be offset-compensated. Neither method is implemented speculatively.
 
-The BME280 sits close to the Pi's CPU and reads high. On this Pi 5 with M.2 spacing the error is a near-constant pedestal, so the derived `temp_f` subtracts a measured constant, `calibration.self_heat_offset_c`, and `humidity` is corrected for the same self-heating with the Magnus formula. The SCD41, mounted clear of the Pi, supplies the indoor temperature and humidity on screen; both sensors are recorded.
+Stop the old hot-reloading dashboard before deploying the paired code/config and
+approved dependency update, then start the selected service. Removing old config
+keys while the old executable still runs is not a valid deployment order.
 
 ---
 
@@ -197,15 +205,24 @@ The BME280 sits close to the Pi's CPU and reads high. On this Pi 5 with M.2 spac
 | Store | Tier | Contents |
 |-------|------|----------|
 | `raw-capture/local_sensors/<day>.ndjson` | 1, canonical | Every loop's reads, each as its driver returned it; a failed read is recorded as that lane's error |
-| `readings` (SQLite) | 2, derived | One row per publish interval, projected by `local_sensors.derive_row` with the config's calibration |
+| `readings` (SQLite) | 2, derived | One row per publish interval, projected by `local_sensors.derive_row` using current sensor roles |
 
-Live and `local_sensors.py --replay DAY...` use the same projection, so a calibration change is applied to past days by replaying them. A row is keyed by its interval's start (rows from before Tier 1 are keyed by their write time), and replaying a day rewrites that day's rows, on the current `publish_s` grid. Replay a day once it has ended. Rows from before the first `local_sensors` record have no Tier 1 reads: they are kept as written and never rebuilt, dropped or overwritten. Live and replay differ only around a process restart: live never writes the interval open at shutdown and writes the one open at restart from its post-restart reads; replay writes both from all their reads.
+Live and `local_sensors.py --replay DAY...` use the same current projection. Replay is an explicit historical rewrite, never part of this sensor-role rollout. Records without TMP119 yield NULL temperature, not reconstructed BME estimates; SCD RH is available only where retained. BME records keep their list shape: old multi-read lists and new single-read lists both project pressure from the last element. A row is keyed by its interval's start (rows from before Tier 1 are keyed by their write time), and replaying a day rewrites that day's rows, on the current `publish_s` grid. Replay a day once it has ended. Rows from before the first `local_sensors` record have no Tier 1 reads: they are kept as written and never rebuilt, dropped or overwritten. Live and replay differ only around a process restart: live never writes the interval open at shutdown and writes the one open at restart from its post-restart reads; replay writes both from all their reads.
 
 ---
 
 ## 📝 Data notes
 
-Known-bad spans in the authoritative `readings` table. Rows are kept as written; these notes are how a reader knows to discount them.
+Sensor-source era: existing rows are unchanged. Before the TMP119 rollout,
+`temp_f`/`humidity` were BME280-derived estimates; afterward they use TMP119 and
+reported SCD41 RH. Generic room labels do not claim historical TMP119 measurements.
+The retired 6.35 °C offset was fitted July 30 against a reference for the then-current
+mounting, with a stated remeasure-on-mounting-change requirement. Its complete dated
+provenance/config and old projection remain at source revision `c2209a09`; a current
+replay does not recreate those old semantics. Exact onset of bias after relocation
+is not established here. No old row or canonical artifact is rewritten by rollout.
+
+Known-bad spans in the historical `readings` table (derived since local Tier 1 began; older rows have no raw source). Rows are kept as written; these notes are how a reader knows to discount them.
 
 | Span (UTC) | Columns | Issue |
 |------------|---------|-------|
@@ -271,12 +288,11 @@ ORDER BY ts;
 ## 📋 Roadmap
 
 - [x] 10-sensor dashboard on ST7735 display
-- [x] CPU temperature compensation (constant self-heat offset since 2026-07-30)
+- [x] TMP119 room temperature and reported SCD41 humidity
 - [x] SQLite logging with UTC timestamps + Pi telemetry
 - [x] Rotating log file
 - [x] systemd service with auto-restart
 - [x] Hot-reloadable dashboard config, single source of truth
-- [x] BME280 averaging for noise reduction
 - [x] Every local sensor read retained in Tier 1; `readings` derived and replayable
 - [ ] Ruff linting with pre-commit hook (referee not installed)
 - [x] Adafruit SCD-41 CO₂ sensor integration

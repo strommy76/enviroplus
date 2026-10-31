@@ -20,7 +20,9 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
     as each driver returned them.
   - `readings` is derived from them by `local_sensors.derive_row`; live and
     `local_sensors.py --replay DAY...` use that one projection, so rows rebuild
-    from retention. Rows from before the first `local_sensors` record have no retained reads:
+    from retention under current roles. Records without TMP119 yield NULL room
+    temperature; old BME multi-read lists still supply pressure. No automatic replay
+    accompanies a source change. Rows from before the first `local_sensors` record have no retained reads:
     SQLite and its backups are their only copy, so they are never rebuilt or
     dropped. Known-bad spans are annotated (README "Data notes"), not edited.
   - `outdoor`, `nws_weather` and `epa_air_quality` are derived. Rows captured
@@ -31,7 +33,7 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
     response: SQLite and its backups are their only copy, so never rebuild
     these tables by dropping them.
 - Uncommitted `CONFIG_PATH` selects exactly one dashboard configuration
-  document. That selected document owns runtime-tunable sensor calibration,
+  document. That selected document owns hardware addresses,
   thresholds, display behavior, and intervals. Repository content does not
   declare which profile is active on a host.
 - Uncommitted `.env` owns secrets and host-specific infrastructure bindings.
@@ -42,6 +44,8 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
 
 ## Service Boundaries
 
+- Room temperature is TMP119; humidity and CO2 are SCD41 as reported; pressure
+  remains BME280. No BME self-heat correction or SCD41 offset write is active.
 - `enviro_dash3.py` owns the local sensors, their display, and the canonical
   `local_sensors` retention; `local_sensors.py` owns the `readings` projection
   and its `--replay`.

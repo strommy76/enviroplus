@@ -4,7 +4,7 @@
 FILE:        enviro_dash3.py
 PATH:        ~/projects/enviroplus/enviro_dash3.py
 DESCRIPTION: Enviro+ sensor loop and its 160x80 ST7735 display. Reads the
-             BME280, LTR559, MICS6814, PMS5003 and SCD41, writes one readings
+             BME280, LTR559, MICS6814, PMS5003, SCD41 and TMP119, writes one readings
              row per publish interval, and shows one of the enviro_screens
              pages. A hand over the LTR559 proximity sensor changes page.
 
@@ -110,6 +110,8 @@ sys.path.insert(0, "/home/pistrommy/projects")
 import bme280
 import smbus2
 import st7735
+from adafruit_extended_bus import ExtendedI2C
+from adafruit_tmp117 import TMP117
 from enviroplus import gas
 from ltr559 import LTR559
 from pms5003 import PMS5003, ChecksumMismatchError, ReadTimeoutError, SerialTimeoutError
@@ -200,6 +202,28 @@ scd41_sensor = Scd4xDevice(
 )
 _scd41_measuring = False
 
+# Cabled room thermometer: the supported driver owns conversion/startup timing.
+_tmp119_bus = ExtendedI2C(_i2c_bus)
+_tmp119_sensor = None
+
+
+def _read_tmp119(sample):
+    global _tmp119_sensor
+    if _tmp119_sensor is None:
+        try:
+            _tmp119_sensor = TMP117(_tmp119_bus, address=_hw["tmp119_addr"])
+        except (OSError, ValueError, AttributeError) as error:
+            # Documented bus/probe/device-ID errors from the constructor only.
+            sample["tmp119_error"] = repr(error)
+            log.warning("TMP119 initialization failed: %s", error)
+            return
+    try:
+        sample["tmp119"] = {"temperature_c": _tmp119_sensor.temperature}
+    except OSError as error:
+        _tmp119_sensor = None
+        sample["tmp119_error"] = repr(error)
+        log.warning("TMP119 read failed: %s", error)
+
 
 def _scd41_start():
     """(Re)start periodic measurement, one sample per 5 s. A previous process
@@ -231,21 +255,21 @@ def _pi_raw():
 def read_sample():
     """One loop's reads, each as its driver returned it: the Tier 1 record.
 
-    PMS5003 and SCD41 are cabled peripherals: a failed read is that lane's
+    PMS5003, SCD41 and TMP119 are cabled peripherals: a failed read is that lane's
     recorded error, and the other lanes are still recorded. A failure in the
     HAT's own sensors (BME280, LTR559, MICS6814) ends the process, so the
     unit's restart/OnFailure policy reports it."""
     sample = {"read_utc": _utc_iso()}
-    sample["bme280"] = []
-    for _ in range(cfg["calibration"]["bme_samples"]):
-        _bme_sensor.update_sensor()
-        sample["bme280"].append(
-            {
-                "temperature": _bme_sensor.temperature,
-                "humidity": _bme_sensor.humidity,
-                "pressure": _bme_sensor.pressure,
-            }
-        )
+    _bme_sensor.update_sensor()
+    # Keep the retained list shape; old records have several complete reads.
+    sample["bme280"] = [
+        {
+            "temperature": _bme_sensor.temperature,
+            "humidity": _bme_sensor.humidity,
+            "pressure": _bme_sensor.pressure,
+        }
+    ]
+    _read_tmp119(sample)
     with open(_cpu_temp_path) as f:
         sample["cpu_temp_milli_c"] = int(f.read())
     sample["ltr559_lux"] = ltr559_sensor.get_lux()
@@ -397,8 +421,7 @@ page, near = 0, False
 # opened it. A hot-reloaded publish_s changes the bucket numbering, so the open
 # interval closes, and it is keyed on its own grid.
 interval, pending, pending_s = None, [], None
-# The SCD41 values on screen: the newest sample, cleared when a whole publish
-# interval passes without one.
+# Preserve the existing SCD41 display freshness contract.
 scd41_shown = None
 
 log.info("Enviro+ dash v3 starting")
@@ -415,7 +438,7 @@ try:
         publish_s = cfg["intervals"]["publish_s"]
         b = local_sensors.bucket_of(sample["read_utc"], publish_s)
         if pending and b != interval:
-            row = local_sensors.derive_row(pending, cfg["calibration"], pending_s)
+            row = local_sensors.derive_row(pending, pending_s)
             local_sensors.write(_db, row)
             log.info("readings row written  ts=%s", row["ts"])
             co2_hist.append(row["co2_ppm"])
@@ -425,7 +448,7 @@ try:
         interval, pending_s = b, publish_s
         pending.append(sample)
 
-        now = local_sensors.derive_row([sample], cfg["calibration"], publish_s)
+        now = local_sensors.derive_row([sample], publish_s)
         if "scd41" in sample:
             scd41_shown = sample["scd41"]
         for key in ("pm1", "pm25", "pm10"):
@@ -435,12 +458,8 @@ try:
         outdoor, outdoor_temps, winds = read_outdoor()
 
         state = {
-            # Indoor temperature and RH come from the SCD41, mounted clear of
-            # the Pi's heat; pressure from the BME280.
             "indoor": {
-                "temp_f": None
-                if scd41_shown is None
-                else local_sensors.c2f(scd41_shown["temperature_c"]),
+                "temp_f": now["temp_f"],
                 "humidity": None if scd41_shown is None else scd41_shown["rh"],
                 "pressure": now["pressure"],
             },

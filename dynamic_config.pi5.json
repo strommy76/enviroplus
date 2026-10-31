@@ -11,13 +11,9 @@
       "2026-03-18 00:00:00 EDT  Split from dynamic_config.json into Pi 5-specific file. Pi 3 B+ uses dynamic_config.json; Pi 5 selects this file via CONFIG_PATH in .env.",
       "2026-10-11 15:10:00 EDT  display: replace bar/plot scaling keys with tap_proximity and outdoor_stale_s (four-page LCD, PR #22); thresholds: drop unused pm1/pm25/pm10/aq_pm25 (AQI uses the EPA table in enviro_screens.py).",
       "2026-10-20 22:10:00 EDT  thresholds: add co2_ppm for the SCD41 page. Edges are the German Federal Environment Agency (UBA) indoor CO2 guide values (Bundesgesundheitsblatt 2008, 51:1358): up to 1000 ppm harmless, 1000-2000 elevated, above 2000 unacceptable.",
-      "2026-10-20 22:30:00 EDT  calibration: remove cal_actual_f, cpu_hist_size and cpu_factor_override. They configured the proportional CPU-factor model, inert since self_heat_offset_c (2026-07-30) and not rebuildable from Tier 1 reads; readings is now derived from Tier 1 with self_heat_offset_c alone."
+      "2026-10-20 22:30:00 EDT  calibration: remove cal_actual_f, cpu_hist_size and cpu_factor_override. They configured the proportional CPU-factor model, inert since self_heat_offset_c (2026-07-30) and not rebuildable from Tier 1 reads; readings is now derived from Tier 1 with self_heat_offset_c alone.",
+      "2026-10-30 Sensor roles: TMP119 temperature; SCD41 reported humidity/CO2. Retire BME room-temperature compensation and repeated averaging; raw fields/history retained."
     ]
-  },
-  "calibration": {
-    "bme_samples": 3,
-    "self_heat_offset_c":  6.35,
-    "self_heat_offset_provenance": "Measured 2026-07-30 00:05-01:23 EDT against an offset-corrected reference (AcuRite 01083M anchor + fine-resolution hygrometer; cheap-unit offset +1.23°F validated by two bidirectional boundary crossings). Fitted on 5-minute MEANS, not point samples — the BME280 chip wanders 1.87°F on a ~1-2 min timescale, so single samples cannot resolve it. Gap term measured at alpha=0.015, contributing 0.57°F across the full natural CPU-gap range (7-28°C) — below the wander floor, so DELIBERATELY OMITTED: the proportional cpu_factor form swings -3.7°F to +18.8°F across that same range and is structurally wrong for the M.2-spaced mounting. Accuracy is wander-limited at about ±1°F. Re-measure if the enclosure or sensor mounting changes."
   },
   "intervals": {
     "publish_s": 60,
@@ -44,6 +40,7 @@
     "display_backlight": "GPIO12",
     "display_rotation":  270,
     "spi_speed_hz":      40000000,
-    "bme280_addr":       118
+    "bme280_addr":       118,
+    "tmp119_addr":       72
   }
 }

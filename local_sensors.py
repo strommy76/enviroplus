@@ -14,11 +14,11 @@ DESCRIPTION: The two tiers of the local sensor lane, and the projection from
 
              Tier 2 (derived): the `readings` table. One row per publish
              interval, projected from that interval's Tier 1 records by
-             derive_row() with the calibration in the dashboard config.
+             derive_row() under the current sensor roles.
              Live (enviro_dash3.py) and `--replay DAY...` (here) both call it,
              and a row is keyed by its interval's start, so replaying a day
-             rewrites that day's rows; a changed calibration or publish_s is
-             applied to history by replaying. Where live and replay differ, a
+             rewrites that day's rows using current roles/publish_s. Records
+             without TMP119 have NULL room temperature; history is never inferred. Where live and replay differ, a
              process restart is the cause: live never writes the interval open
              at shutdown, and writes the interval open at restart from its
              post-restart reads only; replay writes both from all their reads.
@@ -35,7 +35,6 @@ CHANGELOG:
 
 import argparse
 import json
-import math
 import os
 import sys
 from datetime import date, datetime, timedelta, timezone
@@ -112,44 +111,27 @@ def c2f(c):
     return c * 9 / 5 + 32
 
 
-def correct_humidity(rh, raw_c, actual_c):
-    """Correct BME280 RH for chip self-heating with the Magnus formula: the
-    same water vapour at the room temperature instead of the warmer chip's."""
-
-    def psat(t):
-        return math.exp(17.625 * t / (243.04 + t))
-
-    return min(rh * psat(raw_c) / psat(actual_c), 100.0)
-
-
-def compensate(sample: dict, calibration: dict):
-    """(room_c, chip_c) from one record's BME280 reads. Self-heating on this
-    mounting is a near-constant pedestal (measured 2026-07-30), so the room
-    temperature is the mean chip temperature less self_heat_offset_c."""
-    chip_c = sum(b["temperature"] for b in sample["bme280"]) / len(sample["bme280"])
-    return chip_c - float(calibration["self_heat_offset_c"]), chip_c
-
-
 def last_with(samples: list[dict], key: str):
     """The newest sample in the interval that carries `key`, else None."""
     return next((s for s in reversed(samples) if key in s), None)
 
 
-def derive_row(samples: list[dict], calibration: dict, publish_s: int) -> dict:
+def derive_row(samples: list[dict], publish_s: int) -> dict:
     """The `readings` row for one publish interval's Tier 1 records, oldest
     first, keyed by the interval's start (UTC) on the publish_s grid that
     grouped them. Every lane takes its newest successful read in the interval;
     a lane with none is NULL, never a value from another interval."""
     last = samples[-1]
     start = interval_start(bucket_of(last["read_utc"], publish_s), publish_s)
-    room_c, chip_c = compensate(last, calibration)
+    tmp = last_with(samples, "tmp119")
+    scd = last_with(samples, "scd41")
     bme = last["bme280"][-1]
     gas = last["mics6814_ohms"]
     pi = last["pi"]
     row = {
         "ts": _ts(start),
-        "temp_f": _r(c2f(room_c), 1),
-        "humidity": _r(correct_humidity(bme["humidity"], chip_c, room_c), 1),
+        "temp_f": None if tmp is None else c2f(tmp["tmp119"]["temperature_c"]),
+        "humidity": None if scd is None else scd["scd41"]["rh"],
         "pressure": _r(bme["pressure"], 2),
         "lux": _r(last["ltr559_lux"], 1),
         "oxidising": _r(gas["oxidising"] / 1000, 1),
@@ -164,7 +146,6 @@ def derive_row(samples: list[dict], calibration: dict, publish_s: int) -> dict:
     words = None if pms is None else _pms_words(pms["pms5003_frame_hex"])
     for column, index in _PMS_STANDARD.items():
         row[column] = None if words is None else float(words[index])
-    scd = last_with(samples, "scd41")
     row["co2_ppm"] = None if scd is None else scd["scd41"]["co2_ppm"]
     row["scd41_temp_c"] = None if scd is None else scd["scd41"]["temperature_c"]
     row["scd41_rh"] = None if scd is None else scd["scd41"]["rh"]
@@ -218,7 +199,7 @@ def _ts(moment: datetime) -> str:
 
 def replay(db, days: list[str], cfg: dict) -> dict:
     """Rebuild `readings` for the named UTC days from Tier 1, with the current
-    calibration and publish_s grid.
+    sensor roles and publish_s grid. Missing TMP119 history yields NULL temperature.
 
     Each day is read through once first, so a corrupt or unverifiable record
     fails the replay before any row is touched. Then the day's rows are
@@ -231,7 +212,7 @@ def replay(db, days: list[str], cfg: dict) -> dict:
     interval that read falls in keeps the row live wrote for it.
     Assumes publish_s divides a day (it is 60): an interval spanning UTC
     midnight would be derived without its post-midnight reads."""
-    calibration, publish_s = cfg["calibration"], cfg["intervals"]["publish_s"]
+    publish_s = cfg["intervals"]["publish_s"]
     cutover = _first_retained_read()
     tally = {"samples": 0, "rows": 0}
     for day in days:
@@ -249,14 +230,14 @@ def replay(db, days: list[str], cfg: dict) -> dict:
         for sample in _day_samples(day):
             b = bucket_of(sample["read_utc"], publish_s)
             if pending and b != interval:
-                write(db, derive_row(pending, calibration, publish_s))
+                write(db, derive_row(pending, publish_s))
                 tally["rows"] += 1
                 pending = []
             interval = b
             pending.append(sample)
             tally["samples"] += 1
         if pending:
-            write(db, derive_row(pending, calibration, publish_s))
+            write(db, derive_row(pending, publish_s))
             tally["rows"] += 1
     return tally
 
@@ -281,8 +262,9 @@ def main(argv: list[str] | None = None) -> None:
         metavar="DAY",
         type=_utc_day,
         required=True,
-        help="rebuild `readings` rows from reads retained on these UTC days, "
-        "with the calibration in the CONFIG_PATH document, and exit",
+        help="rebuild derived readings on these UTC days using current sensor roles "
+        "and CONFIG_PATH publish_s. Records without TMP119 yield NULL temperature; "
+        "only-copy pre-retention rows are preserved.",
     )
     args = parser.parse_args(argv)
     base = os.path.dirname(os.path.abspath(__file__))
