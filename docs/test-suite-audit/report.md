@@ -1,7 +1,16 @@
 # Enviroplus test-suite findings
 
-**Recommend targeted consolidation and assertion/fixture corrections, not a broad
-test purge.** Baseline8eea566 has179 test functions and273 collected cases in13
+**Most tests protect real boundaries; some are redundant.** Propose removing14
+redundant functions and merging10 others while preserving their useful assertions.
+Three shared fixture corrections account for36 of the45 REVISE cases; the other9
+need individual oracle/name corrections. Fix these before pruning.
+
+If all14 removals and10 merges are absorbed into existing retained functions, with
+no parameter cases discarded or added, the predicted shape is **155 functions /
+249 cases**, from179/273. This is a conditional result of the listed edits, not a
+count target: all24 reduction candidates currently have one case apiece.
+
+Baseline8eea566 has179 test functions and273 collected cases in13
 modules. Parameterization accounts for94 extra cases. Count does not establish
 necessity. [cases.csv](cases.csv) dispositions every observed node ID with original
 test line, real code boundary, reachable input and evidence limit. No production
@@ -10,22 +19,23 @@ code or tests changed.
 |Recommendation|Cases|Meaning|
 |---|---:|---|
 |KEEP|153|Live input/boundary identified; fault detection not claimed from a pass|
-|KEEP_LIMITED|53|Boundary identified; assertions or deployment evidence are narrower than a broad reading|
-|REMOVE|15|Redundant smoke or assertion subsumed by named stronger cases|
-|MERGE|9|Combine setup while preserving distinct behavioral assertions|
-|REVISE|43|Name, oracle or fixture does not establish the claimed property|
+|KEEP_LIMITED|51|Boundary identified; assertions or deployment evidence are narrower than a broad reading|
+|REMOVE|14|Redundant smoke or assertion subsumed by named stronger cases|
+|MERGE|10|Combine setup while preserving distinct behavioral assertions|
+|REVISE|45|Name, oracle or fixture does not establish the claimed property|
 
-The15 removal candidates are content judgments, not experimentally observed proof
+The14 removal candidates are content judgments, not experimentally observed proof
 that all future faults remain detected after deletion. No deletion was attempted.
-The9 MERGE labels do not mean9 removable checks; preserve distinct assertions.
-The43 REVISE labels include21 cases sharing one invalid PMS fixture,3 sharing
-one backup isolation omission, and screen cases sharing one state helper. They
-are case-level effects of a few corrections, not43 new mechanisms.
+The10 MERGE labels do not mean10 removable checks; preserve distinct assertions.
+The45 REVISE labels include21 cases sharing one invalid PMS fixture,3 sharing
+one backup isolation omission, and12 sharing one screen-state helper. The other9
+are individual assertion/name corrections, not one fourth shared fix. No new
+mechanisms are proposed.
 
 ## Confirmed content findings and proposed dispositions
 
 1. **Redundant smoke/duplicates:** five shared callable imports, two callable-only
-   collector imports and two Ambient full/malformed classifiers overlap
+   collector imports and the Ambient full-response classifier overlap
    behavioral collector/config/SQLite cases. The unrelated-field subset of nominal row equality is also redundant.
    Remaining removal candidates duplicate
    same-day dedup, one-record visibility, single-day1,1,2 replay, two-root separation
@@ -37,7 +47,14 @@ are case-level effects of a few corrections, not43 new mechanisms.
    PRIMARY KEY and the actual SQLite execution establishes the declared syntax.
    The proposed rewrite was unnecessary; no missing-PK pass is claimed. Two backup source-preservation tests compare names/sizes, not actual source bytes.
    Revise only these expectations; no backup/test framework is proposed.
-3. **Names exceed assertions:** the day-boundary dedup case never crosses midnight;
+3. **Additional weak assertions:** shutdown records requested sleep durations but
+   checks only their count. A single full-poll sleep satisfies that count oracle;
+   inspect durations against the actual shutdown boundary. The loader test's
+   secret-absence check inspects unchanged fixture CONTRACT and observes no loader
+   behavior: remove that assertion/name claim while keeping URL/config checks.
+   These are test revisions, not new shutdown or credential-handling code.
+
+   **Names exceed assertions:** the day-boundary dedup case never crosses midnight;
    independently-replayable-days repeats one day. Retained-day sorting has only
    one day. The200KiB case is a cache-restart example, not evidence of a measured
    maximum-payload bound. Frame inequality does not isolate page-marker behavior.
@@ -60,7 +77,9 @@ are case-level effects of a few corrections, not43 new mechanisms.
    not an induced driver rejection/test-fault result.
 6. **Ambient outcome versus observation:** the empty-response test also asserts
    obs is None, while its proposed destination currently asserts only outcome.
-   Merge that distinct write/no-write consumer assertion; do not simply delete it.
+   The malformed-response case additionally checks observation absence and a
+   nonempty diagnostic. Merge those assertions as well; do not simply delete
+   either case on the rationale that outcome-only expectations subsume them.
 7. **Backup isolation:** three failure-path tests replace only replicate_file,
    leave replicate_tree real and supply remote test: without a local config.
    They can resolve ambient credentials/remotes and still pass on first-source

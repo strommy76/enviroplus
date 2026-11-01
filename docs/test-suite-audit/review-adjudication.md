@@ -67,3 +67,42 @@ after3a7ab2a are the unedited closing reports and this receipt; recommendations,
 source and tests are unchanged. Canonical273-pass invocation remains historically
 qualified by the discovered transport path. Ruff/format and diff checks pass on
 unchanged source; no bare-suite rerun follows discovery.
+
+
+## Receiving adjudication — November1 03:29EST
+PiClaude completed its independent two-family receiving at034155c, conveyed in
+broker335c2638-dbf9-4a38-82f1-64481f14eebb, sent03:25:26EST. Complete reports
+are receiving-codex-review.md and receiving-glm-review.md. Its conditional PASS
+permits the specified CSV/report corrections with no new round. The same plan,
+lifetime and silent-decision boundary continue; no tests/runtime/config/data
+change, new branch or new execution mechanism. Public audit/PR ruling remains
+pending, as does any separate test-cleanup implementation approval.
+
+|Finding|Author disposition from content|
+|---|---|
+|OpenAI shutdown-duration oracle|CONFIRMED at test_provider_collector.py:192: len(calls) ignores requested durations. KEEP_LIMITED -> REVISE; recommend duration/total-wait checks. This is static algebra, not an executed fault result.|
+|OpenAI malformed-Ambient removal|CONFIRMED at wiring.py:74 versus collectors.py:69: observation absence and diagnostic truthiness are not in outcome-only matrix. REMOVE -> MERGE explicitly carrying those assertions; no claim that every other suite test misses malformed responses.|
+|OpenAI unchanged loader fixture secrecy assertion|CONFIRMED at provider_contract test:110: checking CONTRACT observes no loader output. KEEP_LIMITED -> REVISE: remove that assertion and overbroad name, preserve URL/config assertions. No new guard/capability.|
+|GLM plain answer/projection|CONFIRMED presentation gap, closed by leading with practical finding and a conditional projection. REFUTED suggested164-case figure: all24 reduction candidates are single-case functions;179-24=155 functions and273-24=249 cases. Parameterized cases are retained. Merge assertions are useful, so24 is not a claim of24 wholly redundant contracts.|
+|GLM four shared fixes|REFUTED literally: three shared fixture corrections cover36 current cases; remaining9 need individual oracle/name changes. A group of weak oracles is not a single shared fix.|
+|GLM collapse retention type variants by branch|CLOSED WITHOUT ACTION in this audit: string/float/null are distinct supported JSON inputs. Same current rejection branch alone is not evidence that all distinguishable faults are equally detected. Cheap examples are not a confirmed unnecessary capability; no branch-coverage count quota or extra mechanism.|
+|GLM preceding-capture-day count oracle|CLOSED WITHOUT ACTION: expected2 is independently date-derived, unlike the circular returned-count comparison. CSV already limits it to count and does not claim actual prior-day payload selection. No different outcome is established for this authorized analysis.|
+|GLM relative namespace cannot overlap live backups|UNCONFIRMED for a historical resolved destination: rclone aliases can map arbitrary remote roots/subfolders (official https://rclone.org/alias/, read03:28EST). backups/x is a relative destination, not a historical resolved-backend proof. The recorded00:39EDT absent test: binding is configuration evidence only; prior actual contact/resolved destination remains UNCONFIRMED. Copy rather than sync limits bulk deletion; no new risk mechanism or remote probe follows.|
+|Remaining source/count/checksum/fixture findings|CONFIRMED against original source and complete current case inventory. These are audit recommendations, not completed fixture repair or operator-accepted residuals.|
+
+Construction and verification axiom-check for this finite fold:
+|Provision|Result, location and construction|
+|---|---|
+|1 Truth is absolute|CONFORMS: cases.csv has truthful oracle scopes; report's155/249 derives from actual24 single-case reductions, not reviewer arithmetic or a target.|
+|2 Cognition is adaptive|CONFORMS: generated273-case inventory unchanged; these are source-based decisions, no curated inventory or new rule system.|
+|3 Antifragility is doctrine|CONFORMS: missing/malformed responses retain distinct semantics; no parameter variation removed merely to lower count.|
+|4 KISS—simplicity is mandatory|CONFORMS: CSV/report corrections only; proposed assertion removal/name changes use existing tests, no new production mechanism or review round.|
+|5 Boundaries are determinate; interiors are free|CONFORMS: no bare suite/remote invocation; historical contact remains unconfirmed and relative paths do not certify resolved destinations.|
+|6 Maintenance is directional|CONFORMS: both current CSV and report preserve malformed observation/diagnostic assertions and remove unsupported necessity/name claims together.|
+|Preamble admission test|CONFORMS: same finite receiving fold; no implementation, exhaustive new campaign or redundant review cycle.|
+
+No new corrective class remains in this analysis; receiving PASS conditions are
+closed by these text folds under o. No additional author/receiving round is
+requested absent new evidence. Canonical source/tests unchanged; no pytest rerun.
+Final current categories153/51/14/10/45 sum273. No public push or PR attempt
+from this fold while the separate public-publication ruling is pending.
