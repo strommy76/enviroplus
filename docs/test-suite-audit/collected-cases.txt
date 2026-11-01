@@ -1,0 +1,273 @@
+tests/test_backup_lifecycle.py::test_verified_upload_leaves_no_staged_snapshot
+tests/test_backup_lifecycle.py::test_success_also_clears_a_snapshot_left_by_an_earlier_failure
+tests/test_backup_lifecycle.py::test_failed_upload_keeps_its_snapshot
+tests/test_backup_lifecycle.py::test_repeated_failures_do_not_accumulate_snapshots
+tests/test_backup_lifecycle.py::test_dry_run_creates_no_snapshot
+tests/test_backup_lifecycle.py::test_dry_run_does_not_create_the_staging_directory
+tests/test_backup_lifecycle.py::test_a_non_integer_failed_run_retention_fails_at_load[2]
+tests/test_backup_lifecycle.py::test_a_non_integer_failed_run_retention_fails_at_load[2.5]
+tests/test_backup_lifecycle.py::test_a_non_integer_failed_run_retention_fails_at_load[-1]
+tests/test_backup_lifecycle.py::test_a_non_integer_failed_run_retention_fails_at_load[True]
+tests/test_backup_lifecycle.py::test_a_non_integer_failed_run_retention_fails_at_load[None]
+tests/test_backup_lifecycle.py::test_a_config_without_failed_run_retention_fails_at_load
+tests/test_backup_lifecycle.py::test_dry_run_writes_no_manifest
+tests/test_backup_lifecycle.py::test_dry_run_leaves_the_source_tree_untouched
+tests/test_backup_lifecycle.py::test_retention_larger_than_the_backlog_deletes_nothing
+tests/test_backup_lifecycle.py::test_success_does_not_remove_a_concurrent_runs_newer_snapshot
+tests/test_backup_lifecycle.py::test_success_does_not_remove_a_different_sources_snapshots
+tests/test_backup_lifecycle.py::test_a_verified_run_leaves_the_source_tree_untouched
+tests/test_backup_lifecycle.py::test_cli_records_both_sources_despite_first_source_failure
+tests/test_backup_lifecycle.py::test_invalid_source_kind_dry_run_fails_without_writes
+tests/test_collector_wiring.py::test_importing_a_collector_does_not_run_it
+tests/test_collector_wiring.py::test_ambient_classifies_a_full_response
+tests/test_collector_wiring.py::test_ambient_classifies_an_empty_response
+tests/test_collector_wiring.py::test_ambient_classifies_a_malformed_response
+tests/test_collector_wiring.py::test_airnow_classifies_each_shape
+tests/test_collector_wiring.py::test_failure_maps_to_the_subsystem_that_broke[exc0-OUTCOME_WRITE_ERROR]
+tests/test_collector_wiring.py::test_failure_maps_to_the_subsystem_that_broke[exc1-OUTCOME_WRITE_ERROR]
+tests/test_collector_wiring.py::test_failure_maps_to_the_subsystem_that_broke[exc2-OUTCOME_FETCH_ERROR]
+tests/test_collector_wiring.py::test_failure_maps_to_the_subsystem_that_broke[exc3-OUTCOME_FETCH_ERROR]
+tests/test_collector_wiring.py::test_failure_maps_to_the_subsystem_that_broke[exc4-OUTCOME_FETCH_ERROR]
+tests/test_collector_wiring.py::test_outdoor_dropout_is_detected
+tests/test_collector_wiring.py::test_dropout_predicate_uses_measurements_not_field_count
+tests/test_collectors.py::test_ambient_row_mapping_hand_values
+tests/test_collectors.py::test_ambient_classification_never_raises[{"error": "apiKey invalid"}-malformed]
+tests/test_collectors.py::test_ambient_classification_never_raises[<html>502</html>-malformed]
+tests/test_collectors.py::test_ambient_classification_never_raises[[]-empty]
+tests/test_collectors.py::test_ambient_classification_never_raises[[{"macAddress": "11:22:33:44:55:66", "lastData": {"dateutc": 1, "tempf": 1.0}}]-empty]
+tests/test_collectors.py::test_ambient_classification_never_raises[[{"macAddress": "AA:BB:CC:DD:EE:FF", "lastData": {"tempinf": 70.0}}]-empty]
+tests/test_collectors.py::test_ambient_classification_never_raises[[{"macAddress": "AA:BB:CC:DD:EE:FF", "lastData": {"dateutc": 1, "tempinf": 70.0}}]-partial]
+tests/test_collectors.py::test_ambient_classification_never_raises[[{"macAddress": "AA:BB:CC:DD:EE:FF", "lastData": {"dateutc": 1, "tempf": 60.0}}]-ok]
+tests/test_collectors.py::test_ambient_selects_the_configured_station_not_the_first
+tests/test_collectors.py::test_ambient_partial_response_is_one_retained_record
+tests/test_collectors.py::test_ambient_replay_rebuilds_rows_from_retention
+tests/test_collectors.py::test_nws_unit_conversions_hand_values
+tests/test_collectors.py::test_nws_classification_never_raises[<html>503</html>-malformed]
+tests/test_collectors.py::test_nws_classification_never_raises[[{"features": []}]-malformed]
+tests/test_collectors.py::test_nws_classification_never_raises[{"status": 503}-malformed]
+tests/test_collectors.py::test_nws_classification_never_raises[{"features": [{"properties": {}}]}-malformed]
+tests/test_collectors.py::test_nws_classification_never_raises[{"features": []}-empty]
+tests/test_collectors.py::test_nws_classification_selects_newest
+tests/test_collectors.py::test_nws_replay_writes_fresh_newest_observation
+tests/test_collectors.py::test_ambient_response_the_canonical_tier_could_not_store_is_not_returned
+tests/test_collectors.py::test_nws_response_the_canonical_tier_could_not_store_ends_the_cycle
+tests/test_dash_loop.py::test_failed_pm_read_is_stored_as_null_not_the_last_good_value
+tests/test_dash_loop.py::test_sensor_error_ends_the_process
+tests/test_dash_loop.py::test_tier1_keeps_every_read_as_the_driver_returned_it
+tests/test_dash_loop.py::test_readings_are_derived_and_replay_reproduces_them
+tests/test_dash_loop.py::test_scd41_sample_is_stored_once_as_reported_and_a_gap_is_null
+tests/test_dash_loop.py::test_scd41_gets_bme280_pressure_in_pa_and_restarts_measurement
+tests/test_dash_loop.py::test_scd41_i2c_error_is_a_failed_read_and_the_lane_restarts[error0]
+tests/test_dash_loop.py::test_scd41_i2c_error_is_a_failed_read_and_the_lane_restarts[error1]
+tests/test_dash_loop.py::test_display_clears_co2_after_a_silent_interval_and_the_trend_shows_the_gap
+tests/test_dash_loop.py::test_an_existing_fifteen_column_table_keeps_its_rows_and_gains_the_new_columns
+tests/test_dash_loop.py::test_an_interval_takes_each_lanes_newest_successful_read
+tests/test_dash_loop.py::test_replay_of_a_day_includes_its_last_reads_filed_after_midnight
+tests/test_dash_loop.py::test_a_hot_reloaded_publish_interval_closes_the_open_interval_on_its_own_grid
+tests/test_dash_loop.py::test_a_pre_tier1_row_sharing_the_first_intervals_key_is_kept
+tests/test_dash_loop.py::test_a_read_the_canonical_tier_could_not_store_ends_the_process_underived
+tests/test_dash_loop.py::test_replay_rewrites_each_days_first_interval_but_not_the_cutover_one
+tests/test_dash_loop.py::test_a_day_with_an_unreadable_record_fails_replay_before_any_row_changes
+tests/test_dash_loop.py::test_each_tap_is_retained_once_with_the_reading_that_crossed_the_threshold
+tests/test_dash_loop.py::test_tmp119_init_failure_is_retained_and_other_lanes_continue[error0]
+tests/test_dash_loop.py::test_tmp119_init_failure_is_retained_and_other_lanes_continue[error1]
+tests/test_dash_loop.py::test_tmp119_init_failure_is_retained_and_other_lanes_continue[error2]
+tests/test_dash_loop.py::test_tmp119_failed_interval_has_no_other_sensor_or_previous_value_fallback
+tests/test_dash_loop.py::test_new_temperature_projection_preserves_driver_precision
+tests/test_dash_loop.py::test_old_bme_read_list_keeps_last_pressure_and_does_not_invent_tmp_history
+tests/test_imports.py::test_import_config_service
+tests/test_imports.py::test_import_db_service
+tests/test_imports.py::test_import_logging_service
+tests/test_imports.py::test_import_signal_handler
+tests/test_imports.py::test_import_utils
+tests/test_nws_wx.py::test_load_settings_requires_configured_station_list
+tests/test_nws_wx.py::test_select_observation_skips_stale_station_and_uses_fresh
+tests/test_nws_wx.py::test_fetch_uses_collection_and_returns_newest_observation
+tests/test_nws_wx.py::test_select_observation_raises_when_all_configured_stations_are_stale
+tests/test_nws_wx.py::test_ensure_schema_adds_station_id_to_existing_table
+tests/test_nws_wx.py::test_write_reports_duplicate_as_not_inserted
+tests/test_provider_collector.py::test_importing_the_collector_does_not_run_it
+tests/test_provider_collector.py::test_ok_response_is_retained_and_written_once
+tests/test_provider_collector.py::test_derived_row_existence_is_not_inferred_from_retention_dedup
+tests/test_provider_collector.py::test_provider_revision_overwrites_the_derived_row
+tests/test_provider_collector.py::test_unparseable_body_is_recorded_exactly_once
+tests/test_provider_collector.py::test_non_list_bodies_are_malformed_not_empty_and_recorded_once[0]
+tests/test_provider_collector.py::test_non_list_bodies_are_malformed_not_empty_and_recorded_once[false]
+tests/test_provider_collector.py::test_non_list_bodies_are_malformed_not_empty_and_recorded_once[""]
+tests/test_provider_collector.py::test_non_list_bodies_are_malformed_not_empty_and_recorded_once[null]
+tests/test_provider_collector.py::test_non_list_bodies_are_malformed_not_empty_and_recorded_once[{}]
+tests/test_provider_collector.py::test_non_list_bodies_are_malformed_not_empty_and_recorded_once[{"error": "rate limited"}]
+tests/test_provider_collector.py::test_non_list_bodies_are_malformed_not_empty_and_recorded_once[[1, 2]]
+tests/test_provider_collector.py::test_out_of_shape_payload_is_logged_at_error
+tests/test_provider_collector.py::test_write_failure_after_a_partial_arrival_keeps_both_facts
+tests/test_provider_collector.py::test_empty_list_is_recorded_and_nothing_is_written
+tests/test_provider_collector.py::test_shape_outside_the_contract_is_malformed_with_no_row
+tests/test_provider_collector.py::test_absent_parameter_writes_the_row_and_records_partial
+tests/test_provider_collector.py::test_a_later_statement_that_omits_a_parameter_keeps_the_earlier_value
+tests/test_provider_collector.py::test_a_later_statement_of_null_overwrites_the_earlier_value
+tests/test_provider_collector.py::test_write_failure_is_recorded_as_a_write_error
+tests/test_provider_collector.py::test_fetch_failure_is_recorded_as_a_fetch_error
+tests/test_provider_collector.py::test_run_stops_promptly_when_shutdown_is_requested
+tests/test_provider_collector.py::test_ensure_table_adds_declared_columns_to_an_existing_table
+tests/test_provider_collector.py::test_ensure_table_refuses_a_table_with_undeclared_columns
+tests/test_provider_collector.py::test_ensure_table_refuses_a_storage_class_or_primary_key_disagreement
+tests/test_provider_collector.py::test_build_requires_the_env_file_to_carry_sqlite_path
+tests/test_provider_collector.py::test_replay_reproduces_the_live_table_by_the_same_path
+tests/test_provider_collector.py::test_replay_is_idempotent_and_the_latest_statement_wins_in_capture_order
+tests/test_provider_collector.py::test_replay_counts_a_retained_outcome_that_content_no_longer_earns
+tests/test_provider_collector.py::test_replay_of_a_date_with_no_retention_is_empty_not_an_error
+tests/test_provider_collector.py::test_cli_replay_prints_one_summary_line_and_exits
+tests/test_provider_collector.py::test_replay_selects_by_observation_date_so_a_later_capture_day_still_wins
+tests/test_provider_collector.py::test_replay_leaves_statements_about_other_dates_alone
+tests/test_provider_collector.py::test_replay_counts_an_empty_arrival_as_empty_not_malformed
+tests/test_provider_collector.py::test_replay_repairs_a_row_the_live_write_lost
+tests/test_provider_collector.py::test_cli_replay_refuses_a_day_that_is_not_a_utc_day
+tests/test_provider_collector.py::test_replay_of_two_observation_days_is_order_independent_when_their_captures_start_on_different_days
+tests/test_provider_collector.py::test_replay_scans_one_capture_day_before_the_named_day
+tests/test_provider_collector.py::test_replay_refuses_an_observation_day_after_today
+tests/test_provider_collector.py::test_an_arrival_the_canonical_tier_could_not_store_derives_nothing_and_ends_the_run
+tests/test_provider_contract.py::test_loader_resolves_env_names_and_never_embeds_values_in_the_document
+tests/test_provider_contract.py::test_loader_fails_loud_on_missing_env_key
+tests/test_provider_contract.py::test_loader_refuses_non_integer_poll
+tests/test_provider_contract.py::test_loader_refuses_unknown_op
+tests/test_provider_contract.py::test_loader_refuses_produced_columns_that_are_not_declared
+tests/test_provider_contract.py::test_loader_refuses_declared_columns_never_produced
+tests/test_provider_contract.py::test_loader_refuses_time_op_with_undeclared_keys
+tests/test_provider_contract.py::test_create_table_sql_declares_the_primary_key
+tests/test_provider_contract.py::test_nominal_payload_projects_the_provider_statement_verbatim
+tests/test_provider_contract.py::test_both_ozone_spellings_map_to_the_ozone_columns
+tests/test_provider_contract.py::test_single_digit_hour_is_accepted_and_normalized_to_the_pk_shape
+tests/test_provider_contract.py::test_absent_declared_parameter_is_left_unstated_and_named
+tests/test_provider_contract.py::test_null_declared_field_is_a_statement_of_null
+tests/test_provider_contract.py::test_explicit_null_statements_are_an_observation
+tests/test_provider_contract.py::test_absent_non_key_field_is_left_unstated_and_named
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-undeclared parameterName value 'NO2']
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-lacks pivot key0]
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-two items resolve to store key 'ozone']
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-lacks declared field 'nowcastAQI']
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-lacks declared field]
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-must both be strings0]
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-must both be strings1]
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-do not match declared formats]
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-must both be strings2]
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-undeclared parameterName value \\['PM2.5'\\]]
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-pm25_aqi: value '11' is not INTEGER]
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-pm25_aqi: value True is not INTEGER]
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-pm25_aqi: value 11.5 is not INTEGER]
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-reporting_area: value \\['Somewhere'\\] is not TEXT]
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-items disagree on 'hourObserved']
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-items disagree on 'reportingAreaName'0]
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-items disagree on 'reportingAreaName'1]
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-lacks pivot key1]
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-not a non-empty list0]
+tests/test_provider_contract.py::test_payload_outside_the_declared_shape_is_refused[<lambda>-not a non-empty list1]
+tests/test_provider_contract.py::test_unrelated_fields_are_ignored_not_projected
+tests/test_provider_contract.py::test_row_fields_do_not_depend_on_item_order
+tests/test_provider_contract.py::test_loader_refuses_primary_key_that_is_not_a_row_projection
+tests/test_provider_contract.py::test_loader_refuses_row_column_that_a_pivot_template_also_produces
+tests/test_provider_contract.py::test_loader_refuses_pivot_template_without_key_placeholder
+tests/test_provider_contract.py::test_loader_refuses_param_spec_with_extra_keys
+tests/test_provider_contract.py::test_loader_refuses_empty_env_value
+tests/test_provider_contract.py::test_loader_refuses_unknown_storage_class
+tests/test_provider_contract.py::test_loader_refuses_time_projection_into_a_non_text_column
+tests/test_provider_contract.py::test_loader_refuses_boolean_where_a_positive_integer_is_declared
+tests/test_provider_contract.py::test_row_field_sent_as_null_is_a_statement_of_null
+tests/test_provider_contract.py::test_loader_refuses_a_primary_key_that_is_a_field_projection
+tests/test_raw_retention.py::test_payload_round_trips_byte_identical
+tests/test_raw_retention.py::test_integrity_failure_is_loud
+tests/test_raw_retention.py::test_failed_pull_records_outcome_and_no_payload
+tests/test_raw_retention.py::test_partial_outcome_is_distinguishable_from_absent_value
+tests/test_raw_retention.py::test_consecutive_identical_payload_is_recorded_not_restored
+tests/test_raw_retention.py::test_changed_payload_after_duplicate_is_stored
+tests/test_raw_retention.py::test_no_query_or_fragment_reaches_the_store[https://x.test/v1?apiKey=SUPERSECRET&lat=28]
+tests/test_raw_retention.py::test_no_query_or_fragment_reaches_the_store[https://x.test/v1?API_KEY=SUPERSECRET]
+tests/test_raw_retention.py::test_no_query_or_fragment_reaches_the_store[https://x.test/v1?api%5Fkey=SUPERSECRET]
+tests/test_raw_retention.py::test_no_query_or_fragment_reaches_the_store[https://x.test/v1?a=1;token=SUPERSECRET]
+tests/test_raw_retention.py::test_no_query_or_fragment_reaches_the_store[https://x.test/v1#token=SUPERSECRET]
+tests/test_raw_retention.py::test_no_query_or_fragment_reaches_the_store[https://x.test/v1?weird_param_name=SUPERSECRET]
+tests/test_raw_retention.py::test_redact_keeps_endpoint_identity
+tests/test_raw_retention.py::test_body_credential_is_scrubbed_from_stored_payload
+tests/test_raw_retention.py::test_scrub_preserves_every_other_byte
+tests/test_raw_retention.py::test_scrub_records_lineage
+tests/test_raw_retention.py::test_payload_without_secrets_records_no_scrub_lineage
+tests/test_raw_retention.py::test_unsafe_provider_key_is_refused[../evil]
+tests/test_raw_retention.py::test_unsafe_provider_key_is_refused[nws/../../evil]
+tests/test_raw_retention.py::test_unsafe_provider_key_is_refused[/etc/evil]
+tests/test_raw_retention.py::test_unsafe_provider_key_is_refused[nws/../..]
+tests/test_raw_retention.py::test_unsafe_provider_key_is_refused[..]
+tests/test_raw_retention.py::test_unsafe_provider_key_is_refused[nws/ev il]
+tests/test_raw_retention.py::test_hierarchical_provider_key_is_allowed
+tests/test_raw_retention.py::test_dedup_does_not_rescan_the_day_file
+tests/test_raw_retention.py::test_repeat_within_the_same_day_is_a_duplicate
+tests/test_raw_retention.py::test_record_is_flushed_immediately
+tests/test_raw_retention.py::test_write_row_raises_on_operational_error
+tests/test_raw_retention.py::test_write_row_returns_false_only_for_ignored_duplicate
+tests/test_raw_retention.py::test_busy_timeout_is_set
+tests/test_raw_retention.py::test_os_write_failure_raises_retention_write_error
+tests/test_raw_retention.py::test_programming_error_still_raises
+tests/test_raw_retention.py::test_dedup_does_not_span_the_day_boundary
+tests/test_raw_retention.py::test_every_day_file_is_independently_replayable
+tests/test_raw_retention.py::test_read_day_refuses_unsafe_provider_key[../evil]
+tests/test_raw_retention.py::test_read_day_refuses_unsafe_provider_key[/etc/evil]
+tests/test_raw_retention.py::test_read_day_refuses_unsafe_provider_key[nws/../..]
+tests/test_raw_retention.py::test_tail_window_exceeds_largest_measured_record
+tests/test_raw_retention.py::test_unconfigured_write_is_refused
+tests/test_raw_retention.py::test_configure_declares_the_root
+tests/test_raw_retention.py::test_dedup_state_does_not_leak_across_roots
+tests/test_raw_retention_root_key.py::test_fresh_root_starts_without_dedup_memory
+tests/test_raw_retention_root_key.py::test_same_store_under_another_spelling_still_dedups
+tests/test_raw_retention_root_key.py::test_relative_root_under_a_cwd_change_is_two_stores
+tests/test_raw_retention_write_failure.py::test_a_failed_append_raises_and_leaves_no_partial_line
+tests/test_raw_retention_write_failure.py::test_a_failed_append_is_an_oserror
+tests/test_raw_retention_write_failure.py::test_a_payload_that_failed_to_store_is_stored_on_the_next_attempt
+tests/test_raw_retention_write_failure.py::test_an_unsafe_key_is_still_a_value_error
+tests/test_raw_retention_write_failure.py::test_a_short_write_then_a_full_disk_leaves_no_torn_line
+tests/test_raw_retention_write_failure.py::test_a_day_file_that_cannot_be_read_for_dedup_is_a_write_error
+tests/test_raw_retention_write_failure.py::test_days_lists_the_retained_days_oldest_first
+tests/test_room_dashboard.py::test_room_stats_keep_trailing_null_and_indoor_chart_keeps_gaps
+tests/test_screens.py::test_pm25_aqi_matches_2024_epa_table[0.0-0]
+tests/test_screens.py::test_pm25_aqi_matches_2024_epa_table[9.0-50]
+tests/test_screens.py::test_pm25_aqi_matches_2024_epa_table[9.05-50]
+tests/test_screens.py::test_pm25_aqi_matches_2024_epa_table[9.1-51]
+tests/test_screens.py::test_pm25_aqi_matches_2024_epa_table[12.0-56]
+tests/test_screens.py::test_pm25_aqi_matches_2024_epa_table[35.4-100]
+tests/test_screens.py::test_pm25_aqi_matches_2024_epa_table[55.5-151]
+tests/test_screens.py::test_pm25_aqi_matches_2024_epa_table[125.4-200]
+tests/test_screens.py::test_pm25_aqi_matches_2024_epa_table[225.5-301]
+tests/test_screens.py::test_pm10_aqi_matches_epa_table[54-50]
+tests/test_screens.py::test_pm10_aqi_matches_epa_table[55-51]
+tests/test_screens.py::test_pm10_aqi_matches_epa_table[154.9-100]
+tests/test_screens.py::test_pm10_aqi_matches_epa_table[425-301]
+tests/test_screens.py::test_pm10_aqi_matches_epa_table[604-500]
+tests/test_screens.py::test_aqi_is_the_larger_sub_index
+tests/test_screens.py::test_absent_pm_is_no_aqi_not_zero
+tests/test_screens.py::test_category_edges[50-GOOD]
+tests/test_screens.py::test_category_edges[51-MODERATE]
+tests/test_screens.py::test_category_edges[100-MODERATE]
+tests/test_screens.py::test_category_edges[101-SENSITIVE]
+tests/test_screens.py::test_category_edges[150-SENSITIVE]
+tests/test_screens.py::test_category_edges[151-UNHEALTHY]
+tests/test_screens.py::test_category_edges[200-UNHEALTHY]
+tests/test_screens.py::test_category_edges[201-V UNHEALTHY]
+tests/test_screens.py::test_category_edges[300-V UNHEALTHY]
+tests/test_screens.py::test_category_edges[301-HAZARDOUS]
+tests/test_screens.py::test_every_page_renders_full_and_absent_data[0-True]
+tests/test_screens.py::test_every_page_renders_full_and_absent_data[0-False]
+tests/test_screens.py::test_every_page_renders_full_and_absent_data[1-True]
+tests/test_screens.py::test_every_page_renders_full_and_absent_data[1-False]
+tests/test_screens.py::test_every_page_renders_full_and_absent_data[2-True]
+tests/test_screens.py::test_every_page_renders_full_and_absent_data[2-False]
+tests/test_screens.py::test_every_page_renders_full_and_absent_data[3-True]
+tests/test_screens.py::test_every_page_renders_full_and_absent_data[3-False]
+tests/test_screens.py::test_every_page_renders_full_and_absent_data[4-True]
+tests/test_screens.py::test_every_page_renders_full_and_absent_data[4-False]
+tests/test_screens.py::test_pages_differ_and_mark_the_current_page
+tests/test_screens.py::test_oxidising_bands_keep_the_calibrated_direction[90.0-color0]
+tests/test_screens.py::test_oxidising_bands_keep_the_calibrated_direction[50.0-color1]
+tests/test_screens.py::test_oxidising_bands_keep_the_calibrated_direction[30.0-color2]
+tests/test_screens.py::test_co2_band_follows_the_uba_guide_values[1000.0-color0]
+tests/test_screens.py::test_co2_band_follows_the_uba_guide_values[1001.0-color1]
+tests/test_screens.py::test_co2_band_follows_the_uba_guide_values[2000.0-color2]
+tests/test_screens.py::test_co2_band_follows_the_uba_guide_values[2001.0-color3]
+tests/test_screens.py::test_co2_band_follows_the_uba_guide_values[None-color4]
+tests/test_screens.py::test_co2_reading_is_drawn
