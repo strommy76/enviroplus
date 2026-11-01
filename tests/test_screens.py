@@ -93,9 +93,9 @@ def _state(present):
         "pm": pm,
         "pm_hist": {k: [v(1.0), v(2.0), None, value] for k, value in pm.items()},
         "gas": gas,
-        "gas_hist": {k: [value] * 3 for k, value in gas.items()},
+        "gas_hist": {k: [value] * 4 for k, value in gas.items()},
         "co2": v(612.0),
-        "co2_hist": [v(600.0), v(612.0), None, v(640.0)],
+        "co2_hist": [v(600.0), None, v(640.0)],
         "outdoor": {
             "tempf": 68.0,
             "humidity": 60.0,

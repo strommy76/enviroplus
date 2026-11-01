@@ -55,8 +55,9 @@ canonical interpreter, lint/format and actual suite only after isolation repair.
 |Preamble admission test|Extra work beyond outcome? CONFORMS: one finite cleanup, canonical gate and required reviews; selected fault witnesses satisfy r, no fleet campaign or new mechanism.|
 
 ## Validation and review
-Implemented on this one branch. Source/test commit4da7879; subsequent additions
-are method/result/review records. Actual final canonical249passed in4.68s, Ruff
+Implemented on this one branch. Functional changes began at4da7879; author review at e7ae9f6
+then required only the two-literal screen-history fold recorded below. Latest
+canonical249passed in4.61s after that fold (previously4.68s), Ruff
 check and format pass (25files). AST finds155functions: actual consolidation is
 179->155functions and273->249cases, with all94parameterized extras retained.
 Runtime source, shared dependency, configuration and data are unchanged.
@@ -112,5 +113,20 @@ real cloud transfer and every future test fault are not certified by these passe
 |6 Maintenance is directional|CONFORMS: whole affected shared-fixture surface corrected; observed merged assertions fail on real faults, not just claimed preserved; source/config/service paths unmodified.|
 |Preamble admission test|CONFORMS: exact approved cleanup plus bounded r witnesses/canonical and required reviews; no extra product capability or broad mutation campaign.|
 
-Whole-delta author Astra/GLM review and PiClaude receiving remain before Bryan's
-merge verdict. No landing or deployment of this cleanup is claimed.
+Whole-delta author Astra/GLM reports and root dispositions are in
+[test-suite-cleanup/review-adjudication.md](test-suite-cleanup/review-adjudication.md).
+Astra's single confirmed fixture-chronology finding is corrected: four PM/gas
+loop entries coexist with three closed CO2 intervals. Both presence branches
+were constructed from the actual helper and verified4/4/3 with numeric HAT and
+matching PM/gas endpoints. Current CO2 need not equal the last closed interval.
+No further author defect class remains; next is PiClaude's separate two-family
+receiving on the final whole artifact, then Bryan's eventual merge decision.
+No landing or deployment of this cleanup is claimed.
+
+One post-review canonical command was mistakenly launched from the parent
+projects directory: it failed at collection with26 errors and ran no tests.
+Corrected worktree invocation passed249in4.61s; no application/assertion changes
+were made for this invocation error. Failed collection output stays private
+in the effort. The fault witnesses are reported at4da7879 only; their targeted
+source/test functions are unchanged by the screen-helper-only fold. No broader
+current-revision mutation strength is claimed.
