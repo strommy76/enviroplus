@@ -57,7 +57,7 @@ canonical interpreter, lint/format and actual suite only after isolation repair.
 ## Validation and review
 Implemented on this one branch. Functional changes began at4da7879; author review at e7ae9f6
 then required only the two-literal screen-history fold recorded below. Latest
-canonical249passed in4.61s after that fold (previously4.68s), Ruff
+canonical249passed in4.67s after the receiving fold (previously4.61s/4.68s), Ruff
 check and format pass (25files). AST finds155functions: actual consolidation is
 179->155functions and273->249cases, with all94parameterized extras retained.
 Runtime source, shared dependency, configuration and data are unchanged.
@@ -130,3 +130,22 @@ were made for this invocation error. Failed collection output stays private
 in the effort. The fault witnesses are reported at4da7879 only; their targeted
 source/test functions are unchanged by the screen-helper-only fold. No broader
 current-revision mutation strength is claimed.
+
+
+## Receiving fold
+PiClaude's two-family receiving at6b80e6b found one remaining direct construction
+in the CO2-presence comparison. Broker1b8ee822-f9c2-4e09-b094-559651424d15,
+sentNovember1 04:07:42EST. Both complete reports are in the evidence directory.
+Root confirmed and corrected only that test: absent history length derives from
+the existing three-entry span; absent SCD41 clears humidity; comparison selects
+the actual CO2 page by its function's place in PAGES. Humidity cannot make this
+CO2-page comparison pass. No new fixture, test or production mechanism.
+
+At source/test revision d3945ef, the corrected test passed; blanking the actual
+_co2 renderer body caused its assertion to fail; exact source restoration passed.
+Literal patch, target/results and inert method are co2-renderer-witness-result.json
+and co2-renderer-witness-method.txt in the evidence directory. This eleventh
+bounded witness establishes this content-dependency violation only, not text
+accuracy or optical behavior. Final canonical249passed4.67s; Ruff/format pass.
+PiClaude requested no new round and will independently check the fold. Eventual
+cleanup merge remains Bryan's post-review decision.

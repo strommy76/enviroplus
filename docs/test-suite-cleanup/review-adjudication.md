@@ -38,3 +38,30 @@ No operator-owned residual is invented. Cleanup landing still needs Bryan's
 post-review decision; separate audit-publication and PR25 merge remain blocked
 by automatic review's refusal of relayed authority until the platform accepts
 the operator direction. No bypass is used.
+
+
+## Independent receiving disposition
+PiClaude supplied complete two-family receiving reports against6b80e6b in
+1b8ee822-f9c2-4e09-b094-559651424d15, sent04:07:42EST. Both reports accompany
+this record. Root read them whole and checked their claims against source.
+
+|Finding|Root disposition|
+|---|---|
+|BothF1 residual CO2 override|CONFIRMED: directly set4history entries bypassed helper correction; absent SCD41 also clears humidity. Existing case now derives absent-history length, clears humidity and compares only the actual CO2 page. No image difference from humidity can satisfy that targeted page assertion.|
+|Scope/assertion/isolation/parameter/PMS findings|CONFIRMED from actual unchanged source and final155function/249case corpus. No further runtime or sibling transport path added.|
+|OpenAI pinned real driver read|Peer-executed result CONFIRMED as supplied review evidence; root independently corroborated pinned source/checksum arithmetic. No root hardware or serial-transaction claim.|
+|GLM counts25deleted/1added|REFUTED as a literal change inventory: actual approved24functions consolidated with7renames, not a new unapproved test. Actual179->155 and273->249 and unchanged decorators stand; count arithmetic alone does not identify deletions.|
+|Bounded fault and broader-detection limits|CONFIRMED: original10observed at4da7879; new CO2-specific violation observed atd3945ef, baseline0/fault1/restored0. Full raw logs retained. No universal detection or physical/cloud proof.|
+
+Construction/verification axiom-check for the receiving fold: Truth—producer-
+possible absent SCD state and targeted CO2 page; cognition—page selection from
+actual PAGES function identity, no curated page index; antifragility—history span
+derived from current helper; KISS—one existing case simplified to one page pair;
+boundaries—no transport/hardware/live source change; maintenance—direct helper
+consumer corrected along with missing sibling humidity. All six CONFORM at
+tests/test_screens.py:test_co2_presence_changes_rendered_content; Preamble
+CONFORMS: minimal fold plus one r witness, no new round/platform.
+
+This resolves the identified class in source. PiClaude's no-new-round delta check
+and independent canonical rerun are pending. Do not report his final acceptance
+until received; no cleanup merge authority is created by this disposition.
