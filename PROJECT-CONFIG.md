@@ -45,7 +45,10 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
 ## Service Boundaries
 
 - Room temperature is TMP119; humidity and CO2 are SCD41 as reported; pressure
-  remains BME280. No BME self-heat correction or SCD41 offset write is active.
+  remains BME280. No BME self-heat correction is active. SCD41's native temperature
+  compensation is calibrated against TMP119; existing canonical retention records
+  the actual settings and API outcomes as `local_sensor_calibration`. Runtime capture
+  never writes the offset automatically or layers a software correction over it.
 - `enviro_dash3.py` owns the local sensors, their display, and the canonical
   `local_sensors` retention; `local_sensors.py` owns the `readings` projection
   and its `--replay`.

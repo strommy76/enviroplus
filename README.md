@@ -27,7 +27,7 @@ A missing or failed reading shows `--` and leaves a gap in its trend; it is neve
 | Sensor | Chip | Measures | Notes |
 |--------|------|----------|-------|
 | Room temperature | TMP119 | °F (from driver °C) | Supported Adafruit TMP117/TMP119 driver; no software calibration |
-| Humidity | SCD41 | % RH as reported | No external correction or sensor-offset write |
+| Humidity | SCD41 | % RH as reported | Native temperature compensation calibrated against TMP119; no extra software correction |
 | Pressure | BME280 | hPa | |
 | Light | LTR559 | Lux | Also used as proximity sensor |
 | Oxidising gas | MICS6814 | kΩ (NO₂, O₃) | Higher resistance = cleaner air |
@@ -37,7 +37,7 @@ A missing or failed reading shows `--` and leaves a gap in its trend; it is neve
 | PM2.5 | PMS5003 | µg/m³ | Fine particles — primary AQI metric |
 | PM10 | PMS5003 | µg/m³ | Coarse particles |
 | CO₂ | SCD41 | ppm | Adafruit breakout, I2C 0x62; photoacoustic NDIR, one sample per 5 s, BME280 pressure compensation |
-| Diagnostic temperature, humidity | SCD41 | °C, % RH | Retained as reported; installed temperature offset is unknown. Humidity supplies the room display; temperature remains diagnostic |
+| Diagnostic temperature, humidity | SCD41 | °C, % RH | Retained as reported; native calibration events are retained as `local_sensor_calibration`. Humidity supplies the room display; temperature remains diagnostic |
 
 ---
 
@@ -183,16 +183,19 @@ All tunable runtime values live here. The running script watches this file and *
 
 TMP119 supplies room temperature; SCD41 supplies reported humidity and CO₂;
 BME280 supplies pressure. Complete driver returns (including BME temperature/RH)
-remain canonical diagnostic evidence. No BME self-heat offset, Magnus correction
-or SCD41 offset write is active. A failed cabled read is retained as a lane error;
+remain canonical diagnostic evidence. No BME self-heat offset or Magnus software
+correction is active. SCD41's native temperature compensation was calibrated against
+TMP119 on October31; actual old/new settings and API outcomes are canonical in
+`local_sensor_calibration`. The capture loop never writes that offset automatically.
+A failed cabled read is retained as a lane error;
 its interval has NULL when no successful read exists. No other-sensor fallback.
 LCD SCD41 freshness behavior is unchanged; missing current TMP119 reads show `--`.
 
 The supported TMP constructor's startup/readiness behavior is used unchanged,
 per Bryan's October 30 decision; no extra timer, watchdog or plausibility guard.
-Whether later humidity correction should use TMP119 or a calibrated SCD41 offset
-remains an operator decision after stabilized paired readings; native output may
-already be offset-compensated. Neither method is implemented speculatively.
+SCD41's native offset compensates both temperature and humidity; no second software
+humidity correction is layered over its output. Temperature agreement alone does
+not independently establish humidity accuracy. Historical reads remain unchanged.
 
 Stop the old hot-reloading dashboard before deploying the paired code/config and
 approved dependency update, then start the selected service. Removing old config
