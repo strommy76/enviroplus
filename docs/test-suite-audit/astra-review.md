@@ -1,0 +1,77 @@
+12:39 AM EDT · enviroplus_test_audit_astra · November 1, 2026
+
+**Independent author-review: correction required before handoff.** The overall recommendation for targeted consolidation is supported, but the frozen audit misses a test-isolation defect, certifies an impossible driver fixture as realistic, and proposes one removal without preserving its distinct assertion. Two smaller classification/fixture omissions also need disposition. This is a FINDER report; the author adjudicates it and Bryan decides landing.
+
+**Object and authority.** Reviewed Enviroplus audit revision `296dbc1a9fb2691ee84754ffee34ca7e92a61abc`, baseline `8eea5664f196bc91b97dadf92e33af5643864f34`, and shared `5cafbba3c19a7d52901083dcd0b8b26635e178be`. Read the whole supplied artifact and review prompt, canonical `/home/pistrommy/agent-config/AGENTS.md`, `OPERATOR.md`, and `/home/pistrommy/.codex/skills/axiom-check/SKILL.md`. Operator direction is the October 30 test-necessity/realism question and November 1 authorization of this read-only audit, relayed in PiClaude broker message `0cf91d4b-4275-47ec-8cac-c2110ee23e6d`; original wording is in the supplied review prompt. No separate authority to change tests, runtime, deployment, or production data is inferred.
+
+**Review execution and limits.** Read-only source inspection, git revision/delta inspection, AST/CSV identity assertions, and arithmetic over the unchanged `frame()` fixture. No tests or application source were modified; no implementation fault was injected; no suite, rclone, hardware, network, service, or production-data operation was run. No `.env` or credential file was read. The only created artifact is this report. No other review output was consulted and no delegation occurred. The local terminal had no measurable `stty` dimensions. The local PMS driver source was inspected as additional current primary evidence; it identifies itself as 1.0.1, matching requirements.txt, with SHA-256 `3b3e0e683c5942336a446a659a7b56d9f35663997a44a1921ee87245fabbe4a2` at `/home/pistrommy/.virtualenvs/pimoroni/lib/python3.13/site-packages/pms5003/__init__.py`.
+
+Before writing this report, its execution shape was checked against the canonical axioms: report only, finite source-backed findings, explicit uncertainty, no new mechanisms, no expansion into implementation, and author disposition of every finding. This review record is durable decision evidence whose mistakes could silently affect a later deletion decision; author adjudication and the declared receiving review remain necessary. A report correction/revert undoes this work; it has no deployed effect.
+
+**F1 — CONFIRMED, high: three backup tests cross the claimed isolation boundary.**
+
+Audit locations: `docs/test-suite-audit/cases.csv:4`, `:5`, `:16` classify the three cases KEEP without an isolation limitation; `plan.md:19`–`:22` declares no network operations and scratch-isolated canonical checks; `report.md:114` claims boundary conformance.
+
+Evidence: `tests/test_backup_lifecycle.py:72` names remote `test:` without `rclone_config_path`. The cases at lines 149, 165, and 283 replace **only** `replicate_file` (lines 156, 181, 305). The fixture also supplies a real raw tree. `scripts/backup_enviro.py:202` therefore obtains `None` for the rclone config; its loop continues after the deliberately failed database source and calls the real `replicate_tree` at line 272. Shared `_rclone` at lines 103–107 omits `--config` for None, and `probe_remote_tree` at lines 191–195 invokes `subprocess.run`. Thus these tests resolve `test:` through ambient rclone configuration/environment. If that remote exists, the real tree path can copy the synthetic fixture outside the effort. Their expected overall failure remains true regardless of that second source's result, so a green suite does not reveal the escape.
+
+This is a confirmed fixture/call-path defect, **not** a claim that an external transfer actually happened in the author's earlier run. Prior network activity and the host's current `test:` binding are UNCONFIRMED; credential configuration was deliberately not inspected. The dedicated CLI integration test at line 367 is different: it explicitly supplies an effort-local alias configuration.
+
+Minimal correction in this audit: flag those three cases for fixture revision while retaining their useful staging assertions; disclose the ambient transport path in method/limits and correct the boundary-conformance claim. Recommend stubbing `replicate_tree` in these failure-only lifecycle tests, or the existing explicit scratch-local alias pattern. Do not silently repair tests under this read-only plan. Do not repeat the bare canonical command as proof of no network access before the isolation issue is resolved or the execution boundary is explicitly constrained. No new backup framework is needed.
+
+**F2 — CONFIRMED, medium: the PMS success fixture cannot be returned by the real driver.**
+
+Audit location: `cases.csv:57` says the retention test uses “realistic driver returns” and checks the full PMS frame; related dashboard-loop rows inherit the same fixture without qualification.
+
+Evidence: `tests/test_dash_loop.py:61`–`:67` packs fourteen words with the final checksum word fixed at zero. `GOOD` uses `frame(1, 2, 3)`; the fake `PMS5003.read` at lines 117–121 returns those bytes without validation. The installed, pinned PMS5003 1.0.1 driver stores the fourteenth word as checksum at lines 30–34 and rejects a mismatch before returning at lines 147–166. Executing only the unchanged fixture function produced length 28, checksum 0, and required checksum **373** (start bytes + length bytes + body excluding checksum). The success return supplied to the application is therefore impossible through that real driver path.
+
+The projection/retention intents remain realistic; this does not justify deleting them or adding production checksum logic. Minimal correction: record a shared-fixture revision, remove the unsupported realistic-return assurance, and recommend that `frame()` encode the correct checksum while preserving the distinct PM channels. The real-driver rejection is established from current source plus arithmetic, not claimed as an observed test failure or mutation result.
+
+**F3 — CONFIRMED, medium: the empty-Ambient REMOVE recommendation loses an asserted consumer contract.**
+
+Audit locations: `cases.csv:24` says “Empty list and no row are covered by test_collectors classification matrix”; `report.md:25`–`:30` includes this in the removal group and says useful independent assertions are preserved.
+
+Evidence: `test_collector_wiring.py:68`–`:71` asserts `obs is None` **and** the empty outcome for `b"[]"`. The named replacement, `test_collectors.py:54`–`:70`, asserts only tuple element `[1]`, the outcome. Its empty input does not assert the observation at all. The station-selection case checks a successful observation and cannot replace the empty observation assertion. `_fetch` returns that observation to `ambient_wx.run`, which decides whether to write using `observation is not None`; thus this is an actual consumer decision, not merely an extra diagnostic-string comparison.
+
+Minimal correction: change this recommendation to MERGE (or KEEP), explicitly preserving the empty-result `obs is None` assertion in its destination; update aggregate counts and the duplicate summary accordingly. This is static assertion comparison. No claim is made that an injected implementation fault was observed to survive the remaining suite.
+
+**F4 — CONFIRMED, low: an exact subset assertion is retained as independently necessary.**
+
+Audit location: `cases.csv:165`, `test_unrelated_fields_are_ignored_not_projected`, is KEEP and explains its difference from unknown-pivot rejection, but omits the identical nominal projection case.
+
+Evidence: both `tests/test_provider_contract.py:171` and `:330` call `project(contract, PAYLOAD)` with the same fixture and input. The nominal case asserts the complete expected row dictionary, which contains neither `siteName` nor `lookupBoundary`. The latter test only asserts those two names are absent. Its assertions are therefore a strict subset of the complete-row equality; no different input, code path, or exception behavior is exercised. The fixture's extra fields already appear in PAYLOAD through `_item`.
+
+Minimal correction: mark REMOVE or MERGE into the nominal case, name the actual stronger destination, and update counts. This is a finite duplicate finding, not a recommendation for a target suite size. It addresses the operator's necessity question without additional execution.
+
+**F5 — CONFIRMED, low: the “normal” Gas-page fixture also contains an unreachable HAT gap.**
+
+Audit locations: `report.md:43`–`:49` limits the composite-fixture correction to the five False cases; the True cases are described in cases.csv as nominal rendering inputs.
+
+Evidence: `tests/test_screens.py:89` always inserts `None` into `hist`, even when present=True. Line 95 gives that history to all HAT gas channels. Production `enviro_dash3.py` starts empty gas deques and appends `now[key]` after mandatory successful gas reads; `local_sensors.derive_row` divides each gas value by 1000 before rounding. It cannot append a None gap on that path, and a HAT exception ends the process. `_gas` consumes this history via `sparkline`. Thus `[3-True]` also exercises a HAT history shape the sole production caller cannot construct; `_state(True)` is reused by the page-distinctness case too.
+
+Minimal correction: extend the existing shared `_state` revision recommendation to keep HAT histories present as well as HAT current values. Record the limited reachability of the nominal Gas case. Do not remove realistic gaps in PMS/SCD/outdoor histories, and do not add a production recovery path to justify the fixture. This is the same bounded fixture-cleanup effort already proposed, not a new mechanism.
+
+**Supported conclusions and rejected concerns.**
+
+| Status | Claim checked | Source / result |
+|---|---|---|
+| CONFIRMED | Inventory identity and counts | Executed method.md's AST/CSV assertions against frozen source: 273 unique ordered IDs, 179 functions, exact source-line matches; recommendation counts 178/59/15/8/13 agree with report. |
+| CONFIRMED | Documentation-only delta | `git diff --name-status 8eea566… HEAD` lists only the five new audit documents; named HEAD and shared revision match the prompt. |
+| CONFIRMED | Circular replay count and narrow day/sort/marker oracles | Read the actual replay expected dictionary, cache-only day test, one-day listing fixture, and whole-frame inequality; report's stated limitations match their assertions. |
+| REFUTED | Rare failures or alternate configured shapes are inherently phantom | Current provider/config/disk/replay interfaces admit them; the audit correctly separates supported contracts from observed deployment use. No broad purge is supported. |
+| REFUTED | Calling 273 passes establishes necessity or fault-detection strength | report.md:75–82 explicitly denies that inference, consistent with AGENTS.r. Its pass claim is retained only as author-reported compatibility evidence. |
+| UNCONFIRMED | Actual cloud/network access in the author's canonical run | Source establishes F1's escape path, not which ambient remote existed or where requests went. |
+| UNCONFIRMED | Current-revision mutation strength / physical LCD behavior | Neither was executed in this review; the report appropriately distinguishes them. Historical PR24 evidence was not independently reconstructed here. |
+
+**Canonical axiom-check — analysis object, not a runtime certification.**
+
+| Provision | Determinate falsification question applied to this finite artifact | Result and evidence |
+|---|---|---|
+| 1 — Truth is absolute | Do the inventory, recommendation evidence, and claimed observed boundaries agree with the named source and its deterministic contracts? | **VIOLATES.** Inventory identity passes, but cases.csv:24 claims an unasserted empty observation replacement (F3); :57 certifies impossible PMS bytes as realistic (F2). These fail SSOT/boundary fidelity under 1 and the content-evidence duties of E/l/r. |
+| 2 — Cognition is adaptive | Does a manually curated enumeration stand as the factual test inventory, or does actual generated collection/source define it while judgment remains explicit? | **CONFORMS.** method.md:25–45 and the executed identity assertions bind every CSV row to supplied collected IDs and AST locations; classifications are reviewable judgment, not executable heuristics or a registry claimed as fact. |
+| 3 — Antifragility is doctrine | Do recommendations discard admitted changing provider/sensor/config states merely because they are uncommon, or preserve their distinct boundary semantics? | **CONFORMS.** report.md:59–73 and all provider/local replay case rows retain omissions, NULLs, revisions, schema changes, cabled gaps, and historical cutover behavior with deployment limits stated. The identified fixture inaccuracies require correction but do not argue for ignoring flux. |
+| 4 — KISS | Does each proposed retention or added mechanism have a present distinct need after comparison with the rest of the suite? | **VIOLATES.** No new runtime/testing platform is proposed, but cases.csv:165 retains an exact subset assertion without accounting for the identical stronger nominal case (F4). The minimal outcome is to record that duplicate, consistent with “simplicity is mandatory.” |
+| 5 — Boundaries are determinate; interiors are free | Are audit execution, fixture substitution, and consumer contracts bounded so failures cannot read as satisfied isolation/realism? | **VIOLATES.** plan.md's scratch/no-network execution contract is not secured by the backup fixtures (F1); report.md:114 nevertheless asserts conformance. PMS and Gas history stand-ins also exceed the counterpart's successful-return contract (F2/F5). |
+| 6 — Maintenance is directional | Do proposed removals/merges preserve every distinct asserted consumer property while reducing only what the outcome requires? | **VIOLATES.** The Ambient empty result has a live write/no-write consumer and no replacement assertion in the cited matrix (F3), contradicting report.md:115's complete-preservation conclusion. Other targeted consolidation mechanisms remain proportionate. |
+| Preamble admission test | Does the artifact add mechanisms or review work beyond the finite operator-directed audit without naming a failure and arguing its avoided cost? | **CONFORMS.** Five finite analysis documents and the explicitly required independent review; no service, generic test framework, count quota, or mutation campaign. Corrections above fit the same artifact; no extra review platform is needed. |
+
+**Disposition and round closure under o.** F1–F5 are confirmed findings on the audit's completeness/correctness, proposed for folding into this same read-only plan; they are not author-dispositioned or operator-accepted residuals. Any actual test/runtime repair remains outside the present authorization. This independent whole-artifact review is complete. If another round is requested, its remaining class is **whether revised classifications/fixture limits preserve the actual assertions and accurately delimit execution reachability**, including F1's ambient transport path. An unchanged broad rerun has no stated purpose; author confirmation/correction of these source-specific findings is the next step.

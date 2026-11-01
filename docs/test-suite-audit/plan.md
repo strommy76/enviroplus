@@ -18,8 +18,11 @@ no arbitrary target count and no inference that rare means unreachable.
 One effort/branch/PR contains inventory, evidence, recommendations, this C/H
 declaration, review and source provenance. No tests or production code/config/data
 are changed, no fault is injected and no network/hardware/service operation is
-performed. Canonical checks use existing test isolation and scratch beneath this
-effort. The audit is a durable decision artifact whose error could silently lead
+performed by the audit itself. The initial canonical invocation relied on
+existing fixture isolation; source review subsequently found three tests reaching
+ambient rclone config. That assurance is withdrawn: no further suite run until
+the fixture is fixed or the execution boundary is explicitly constrained. See
+method/report for the historical uncertainty; no test fix is authorized here. The audit is a durable decision artifact whose error could silently lead
 to later removal of needed protection. Before handoff, spawned Astra and GLM-5.3
 through Ollama review the whole artifact plus the unmodified implementation/tests
 at a named revision; the author dispositions each finding. PiClaude then conducts
@@ -50,6 +53,6 @@ https://cosmic-ray.readthedocs.io/en/stable/index.html .
 |2 Adaptive cognition|Can a curated test inventory stand as coverage fact? CONFORMS: actual pytest collection joined to generated AST inventory, judgments remain explicit findings.|
 |3 Antifragility|Are provider failures dismissed because data vary? CONFORMS: real counterpart/live boundary traced before phantom classification.|
 |4 KISS|Does this add testing/runtime mechanisms or a count quota? CONFORMS: read-only audit and proposed reductions only.|
-|5 Boundaries|Can audit execution mutate canonical data or read as deployment? CONFORMS: existing raw-root isolation, effort scratch; no code/data/hardware/fault changes.|
+|5 Boundaries|Can audit execution escape scratch or read as deployment? Initial construction premise about fixture isolation was REFUTED by the ambient-rclone call path. The corrected plan stops further bare-suite execution and reports the finding; no code/data/hardware/fault changes or safe-isolation claim.|
 |6 Maintenance|Are tests judged apart from consumers/owners? CONFORMS: current call paths and contracts accompany each recommendation.|
 |Preamble|Does scope exceed the operator's question? CONFORMS: one finite per-case analysis and required two-family review, no test rewrite/coverage campaign.|

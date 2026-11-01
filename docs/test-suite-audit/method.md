@@ -57,3 +57,34 @@ Current-practice check: official pytest generated case IDs and boundary mocking,
 plus Cosmic Ray's definition of actual-source mutation. Links and divergence from
 a mutation campaign are in plan.md. No threshold or necessity judgment is inferred
 from external guidance alone. All recommendations are finite source analysis.
+
+
+## Review-discovered fixture boundary — November1 00:39–00:42EDT
+The initial273-pass invocation included three backup tests that leave tree
+replication real. See report findings and cases.csv: failed upload, repeated
+failure and retention-larger-than-backlog. Current read-only `rclone listremotes`
+reports only stocks_gdrive:; no test: remote, RCLONE_CONFIG override or
+RCLONE_CONFIG_TEST_* environment definition. Effective file path is
+~/.config/rclone/rclone.conf; its mtime is October31 05:22EDT. No credential values
+were read into context. These observations constrain current configuration;
+prior actual subprocess/network activity was not retained by the passing run and
+remains UNCONFIRMED. Raw-root isolation is not transport isolation. No further
+pytest execution after discovery; neither a passed suite nor a config snapshot
+proves no prior remote contact. No test/runtime fixture repair is performed here.
+
+Root independently read installed pinned PMS5003 1.0.1 source
+~/.virtualenvs/pimoroni/lib/python3.13/site-packages/pms5003/__init__.py: data
+checksum is word13; read() sums start0x42/0x4d, length bytes and raw[:-2], raises
+ChecksumMismatchError before returning. Evaluating only the unchanged frame()
+function gives28 bytes, stored checksum0, required373. Eighteen test functions
+call Run, yielding21 cases; all receive that shared success-frame fixture.
+Source/arithmetic proof only; no hardware, serial simulator or actual-code fault
+was executed. No new production validation is called for.
+
+Root's nominal supported contract/load/create-table call against scratch SQLite
+observed ts primary-key flag1. Existing test prefix literally includes
+`CREATE TABLE IF NOT EXISTS aq (ts TEXT PRIMARY KEY, pm25_aqi INTEGER`.
+A string without PRIMARY KEY cannot satisfy that assertion. Therefore the
+reviewer's missing-PK-would-pass assertion is refuted from the content, not
+reported as an observed mutation kill. Format coupling alone does not justify
+a new metadata test under minimum scope.
