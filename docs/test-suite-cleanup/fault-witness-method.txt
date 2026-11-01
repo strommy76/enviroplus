@@ -1,0 +1,40 @@
+"""Finite one-use source-fault witnesses for this cleanup, never a test platform."""
+import json,os,subprocess
+from pathlib import Path
+E=Path(__file__).resolve().parent;root=E/'worktree';out=E/'fault-witnesses';out.mkdir()
+python='/home/pistrommy/.virtualenvs/pimoroni/bin/python'
+env=dict(os.environ,PYTHONDONTWRITEBYTECODE='1',PYTHONPATH='/home/pistrommy/projects')
+CASES=[
+ ('shutdown_duration','provider_collector.py',[("sleep(_SHUTDOWN_CHECK_S)","sleep(self.contract.poll_s)")],['tests/test_provider_collector.py::test_run_stops_promptly_when_shutdown_is_requested']),
+ ('replay_count','provider_collector.py',[("_shift_day(wanted[0], -1)","_shift_day(wanted[0], -2)")],['tests/test_provider_collector.py::test_replay_reproduces_the_live_table_by_the_same_path']),
+ ('day_cache_identity','raw_retention.py',[("key = (str(_root().resolve()), provider, when.date().isoformat())","key = (str(_root().resolve()), provider)"),("_LAST_SHA[(str(_root().resolve()), provider, now.date().isoformat())] = digest","_LAST_SHA[(str(_root().resolve()), provider)] = digest")],['tests/test_raw_retention.py::test_dedup_does_not_span_the_day_boundary']),
+ ('retained_day_sort','raw_retention.py',[("return sorted(p.stem for p in d.glob(\"*.ndjson\"))","return [p.stem for p in d.glob(\"*.ndjson\")]")],['tests/test_raw_retention_write_failure.py::test_days_lists_the_retained_days_oldest_first']),
+ ('same_size_source_change','scripts/backup_enviro.py',[("elif kind == \"tree\":\n                if dry_run:","elif kind == \"tree\":\n                for source_file in source_path.rglob(\"*\"):\n                    if source_file.is_file():\n                        original = source_file.read_bytes()\n                        if original:\n                            source_file.write_bytes(bytes([original[0] ^ 1]) + original[1:])\n                if dry_run:")],['tests/test_backup_lifecycle.py::test_dry_run_creates_no_artifacts_and_preserves_source','tests/test_backup_lifecycle.py::test_a_verified_run_leaves_the_source_tree_untouched']),
+ ('dry_run_staging','scripts/backup_enviro.py',[("if kind == \"sqlite_snapshot\":\n                if dry_run:","if kind == \"sqlite_snapshot\":\n                staging.mkdir(parents=True, exist_ok=True)\n                if dry_run:")],['tests/test_backup_lifecycle.py::test_dry_run_creates_no_artifacts_and_preserves_source']),
+ ('empty_observation','ambient_wx.py',[("return None, OUTCOME_EMPTY, \"configured station (AW_MAC) not in the device list\"","return {}, OUTCOME_EMPTY, \"configured station (AW_MAC) not in the device list\"")],['tests/test_collectors.py::test_ambient_classification_never_raises']),
+ ('malformed_observation','ambient_wx.py',[("return None, OUTCOME_MALFORMED, str(exc)","return {}, OUTCOME_MALFORMED, str(exc)")],['tests/test_collectors.py::test_ambient_classification_never_raises']),
+ ('malformed_diagnostic','ambient_wx.py',[("return None, OUTCOME_MALFORMED, str(exc)","return None, OUTCOME_MALFORMED, None")],['tests/test_collectors.py::test_ambient_classification_never_raises']),
+ ('scrub_lineage','raw_retention.py',[("record[\"sha256_as_received\"] = original_digest","record[\"sha256_as_received\"] = digest")],['tests/test_raw_retention.py::test_scrub_preserves_every_other_byte']),
+]
+rev=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip()
+def run(label,phase,tests):
+    cmd=[python,'-m','pytest','-q',*tests,'--basetemp='+str(out/(label+'-'+phase+'-tmp')),'-o','cache_dir='+str(E/'pytest-cache')]
+    result=subprocess.run(cmd,cwd=root,env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+    (out/(label+'-'+phase+'.log')).write_text(result.stdout)
+    return result
+with (out/'results.jsonl').open('x') as record:
+    for label,file,patches,tests in CASES:
+        path=root/file;original=path.read_bytes();altered=original.decode()
+        for old,new in patches:
+            assert altered.count(old)==1,(label,old)
+            altered=altered.replace(old,new)
+        baseline=run(label,'before',tests);assert baseline.returncode==0,(label,baseline.stdout)
+        try:
+            path.write_text(altered)
+            observed=run(label,'fault',tests)
+        finally:path.write_bytes(original)
+        restored=run(label,'restored',tests)
+        entry={'revision':rev,'property':label,'source':file,'patches':patches,'tests':tests,'before_rc':baseline.returncode,'fault_rc':observed.returncode,'restored_rc':restored.returncode,'observed_assertion_failure':observed.returncode==1 and 'AssertionError' in observed.stdout and 'FAILED tests/' in observed.stdout and 'ERROR collecting' not in observed.stdout,'source_restored_exact':path.read_bytes()==original}
+        record.write(json.dumps(entry)+'\n');record.flush()
+        print(label,entry['before_rc'],entry['fault_rc'],entry['restored_rc'],entry['observed_assertion_failure'],flush=True)
+        assert entry['observed_assertion_failure'] and entry['restored_rc']==0 and entry['source_restored_exact'],entry

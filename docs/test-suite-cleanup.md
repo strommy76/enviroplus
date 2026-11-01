@@ -55,4 +55,62 @@ canonical interpreter, lint/format and actual suite only after isolation repair.
 |Preamble admission test|Extra work beyond outcome? CONFORMS: one finite cleanup, canonical gate and required reviews; selected fault witnesses satisfy r, no fleet campaign or new mechanism.|
 
 ## Validation and review
-Pending implementation and observed checks; no success claimed here.
+Implemented on this one branch. Source/test commit4da7879; subsequent additions
+are method/result/review records. Actual final canonical249passed in4.68s, Ruff
+check and format pass (25files). AST finds155functions: actual consolidation is
+179->155functions and273->249cases, with all94parameterized extras retained.
+Runtime source, shared dependency, configuration and data are unchanged.
+
+The3sibling tree stubs were fixed BEFORE the first suite invocation. Both failure
+lifecycle and explicit local-alias integration paths ran in the actual suite; no
+real ambient-configuration path remains in these failure tests. No external
+remote/hardware/service action was used. A one-use edit worksheet initially
+stopped on a docstring-only module, before any test run; partial patch was kept
+locally and baseline test bytes restored before corrected application.
+
+PMS frame(1,2,3) now produces28bytes/checksum373, matching the pinned driver's
+byte-sum contract, not an observed hardware/serial transaction. Screen state keeps
+mandatory HAT gas/pressure and numeric gas histories, while retaining reachable
+PMS/SCD/outdoor gaps. History endpoints match the current corresponding reads.
+Tests are renamed where the old name claimed more than the assertion.
+
+Ten actual production-implementation faults were made ONLY in this isolated
+worktree at4da7879, each after its targeted baseline passed; each was observed to
+fail at an assertion, then exact original source restoration passed the same
+targets. Complete literal patches/targets/outcomes are fault-results.jsonl and
+the inert one-use method archive is fault-witness-method.txt in
+[the evidence directory](test-suite-cleanup/). This is not an all-suite mutation
+score or certification of unexercised properties.
+
+|Observed implementation fault|Property whose assertion failed|
+|---|---|
+|Full-poll sleep instead of shutdown-check sleep|Requested sleep duration/total wait bound|
+|Scan begins two preceding days rather than one|Independent three-capture-day expectation|
+|Dedup cache omits day identity|Same payload retained/readable across actual UTC rollover|
+|Retained filenames returned unsorted|Out-of-order scratch days must enumerate oldest first|
+|Source first byte changed without size change|Both dry-run and verified-path source byte preservation|
+|Staging created before dry-run branch|No staging/snapshot/manifest artifact on dry run|
+|Empty response returns an observation object|Merged observation-absence assertion|
+|Malformed response returns an observation object|Merged malformed observation-absence assertion|
+|Malformed diagnostic suppressed|Merged nonempty diagnostic assertion|
+|Stored digest labeled as received digest|Merged source-lineage assertion|
+
+The same-size write is an induced violation in the real backup implementation,
+not a claim that transport was tested or this corruption was observed in live
+operation. Other driver/HTTP/replication stand-ins remain outside the property
+they isolate and use possible counterpart returns. Optical LCD, physical accuracy,
+real cloud transfer and every future test fault are not certified by these passes.
+
+## Implementation axiom-check
+|Provision|Result, location and executed construction|
+|---|---|
+|1 Truth is absolute|CONFORMS: exact source-fault outcomes at4da7879 are retained; actual count155/249; replay count and source bytes independent; no passing-suite necessity/accuracy claim.|
+|2 Cognition is adaptive|CONFORMS: actual pytest/AST inventory, no artificial count quota or dropped parameter variants; per-case decisions follow audit10fb169 rather than curated executable registry.|
+|3 Antifragility is doctrine|CONFORMS: actual UTC rollover and distinct missing/NULL/provider-state assertions retained; PMS/state helper repairs make permitted variation realistic without adding production recovery logic.|
+|4 KISS—simplicity is mandatory|CONFORMS: tests only;24functions consolidated, empty sections/import smokes removed; no new service, test framework or canonical validator. One-use method kept inert as provenance.|
+|5 Boundaries are determinate; interiors are free|CONFORMS: sibling tree stubs precede suite execution; explicit local-alias integration preserved; faults stay in isolated worktree, source restored byte-for-byte and final suite passes.|
+|6 Maintenance is directional|CONFORMS: whole affected shared-fixture surface corrected; observed merged assertions fail on real faults, not just claimed preserved; source/config/service paths unmodified.|
+|Preamble admission test|CONFORMS: exact approved cleanup plus bounded r witnesses/canonical and required reviews; no extra product capability or broad mutation campaign.|
+
+Whole-delta author Astra/GLM review and PiClaude receiving remain before Bryan's
+merge verdict. No landing or deployment of this cleanup is claimed.
