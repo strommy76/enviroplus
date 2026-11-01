@@ -17,7 +17,7 @@ code or tests changed.
 
 The15 removal candidates are content judgments, not experimentally observed proof
 that all future faults remain detected after deletion. No deletion was attempted.
-The9 MERGE labels do not mean8 removable checks; preserve distinct assertions.
+The9 MERGE labels do not mean9 removable checks; preserve distinct assertions.
 The43 REVISE labels include21 cases sharing one invalid PMS fixture,3 sharing
 one backup isolation omission, and screen cases sharing one state helper. They
 are case-level effects of a few corrections, not43 new mechanisms.
