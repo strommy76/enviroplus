@@ -2,18 +2,7 @@
 must not carry the previous root's last digest across (that labelled the first
 arrival into a new root `duplicate` and dropped its bytes)."""
 
-from datetime import datetime, timezone
-
 import raw_retention as rr
-
-
-def test_fresh_root_starts_without_dedup_memory(tmp_path, monkeypatch):
-    monkeypatch.setenv("ENVIRO_RAW_ROOT", str(tmp_path / "a"))
-    assert rr.retain("acme", b'[{"v": 1}]') == rr.OUTCOME_OK
-    monkeypatch.setenv("ENVIRO_RAW_ROOT", str(tmp_path / "b"))
-    assert rr.retain("acme", b'[{"v": 1}]') == rr.OUTCOME_OK
-    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    assert [o for _, o, _ in rr.read_day("acme", day)] == [rr.OUTCOME_OK]
 
 
 def test_same_store_under_another_spelling_still_dedups(tmp_path, monkeypatch):

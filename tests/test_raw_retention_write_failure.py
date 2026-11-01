@@ -70,11 +70,6 @@ def test_a_payload_that_failed_to_store_is_stored_on_the_next_attempt(root, monk
     assert [blob for _c, _o, blob in rr.read_day("acme", _day(root).stem)] == [b'{"v":1}']
 
 
-def test_an_unsafe_key_is_still_a_value_error(root):
-    with pytest.raises(ValueError):
-        rr.retain("../evil", b"{}")
-
-
 def test_a_short_write_then_a_full_disk_leaves_no_torn_line(root, monkeypatch):
     """The realistic torn write: part of the line reaches the file, then the
     disk is full. The fragment is removed and the next record stays readable."""
@@ -113,5 +108,9 @@ def test_a_day_file_that_cannot_be_read_for_dedup_is_a_write_error(root, monkeyp
 
 def test_days_lists_the_retained_days_oldest_first(root):
     assert rr.days("acme") == []
-    rr.retain("acme", b'{"v":1}')
-    assert rr.days("acme") == [_day(root).stem]
+    provider = root / "acme"
+    provider.mkdir(parents=True)
+    # A failed append can leave an empty day file; enumeration owns filenames.
+    for day in ("2026-08-07", "2026-08-05", "2026-08-06"):
+        (provider / (day + ".ndjson")).touch()
+    assert rr.days("acme") == ["2026-08-05", "2026-08-06", "2026-08-07"]

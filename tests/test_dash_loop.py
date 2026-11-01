@@ -55,11 +55,12 @@ class I2cError(IOError):
 
 
 def frame(pm1, pm25, pm10):
-    """A PMS5003 data frame: 14 big-endian words, standard-particle µg/m³ first,
-    then the atmospheric-environment ones (distinct here, so a mix-up shows)."""
-    return struct.pack(
-        ">14H", pm1, pm25, pm10, pm1 + 10, pm25 + 10, pm10 + 10, 300, 90, 20, 4, 1, 0, 0, 0
+    """Validated PMS5003 body, including its final 16-bit checksum word."""
+    body = struct.pack(
+        ">13H", pm1, pm25, pm10, pm1 + 10, pm25 + 10, pm10 + 10, 300, 90, 20, 4, 1, 0, 0
     )
+    header = b"BM" + struct.pack(">H", len(body) + 2)  # length includes checksum word
+    return body + struct.pack(">H", sum(header) + sum(body))
 
 
 class Signal:

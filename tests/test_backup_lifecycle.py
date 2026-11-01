@@ -153,6 +153,7 @@ def test_failed_upload_keeps_its_snapshot(lane, monkeypatch):
     def boom(src, obj, **kw):
         raise ReplicationError("remote refused")
 
+    _stub_success(monkeypatch)
     monkeypatch.setattr(backup_enviro, "replicate_file", boom)
 
     assert backup_enviro.run(config) == 1
@@ -178,6 +179,7 @@ def test_repeated_failures_do_not_accumulate_snapshots(lane, monkeypatch):
     def boom(src, obj, **kw):
         raise ReplicationError("remote refused")
 
+    _stub_success(monkeypatch)
     monkeypatch.setattr(backup_enviro, "replicate_file", boom)
     assert backup_enviro.run(config) == 1
 
@@ -190,31 +192,6 @@ def test_repeated_failures_do_not_accumulate_snapshots(lane, monkeypatch):
 
 
 # ── Gate: a dry run changes nothing ──────────────────────────────────────────
-
-
-def test_dry_run_creates_no_snapshot(lane, monkeypatch):
-    """Mutation: create the snapshot before the branch.
-
-    The snapshot was built and only then was the dry-run branch taken, so a dry
-    run wrote a full copy of the database into staging and nothing ever removed
-    it.
-    """
-    config, staging, _ = lane
-    _stub_success(monkeypatch)
-
-    assert backup_enviro.run(config, dry_run=True) == 0
-    assert _snapshots(staging) == [], "a dry run created a snapshot"
-
-
-def test_dry_run_does_not_create_the_staging_directory(lane, monkeypatch):
-    """ "Leaves staging unchanged" includes not bringing it into existence."""
-    config, staging, _ = lane
-    assert not staging.exists(), "fixture already created staging"
-    _stub_success(monkeypatch)
-
-    backup_enviro.run(config, dry_run=True)
-
-    assert not staging.exists(), "a dry run created the staging directory"
 
 
 @pytest.mark.parametrize("bad", ["2", 2.5, -1, True, None])
@@ -253,30 +230,23 @@ def test_a_config_without_failed_run_retention_fails_at_load(lane):
         backup_enviro.load_config(config)
 
 
-def test_dry_run_writes_no_manifest(lane, monkeypatch):
-    config, staging, _ = lane
-    _stub_success(monkeypatch)
-
-    backup_enviro.run(config, dry_run=True)
-
-    manifests = (
-        list((staging / "manifests").glob("backup_*.json"))
-        if (staging / "manifests").exists()
-        else []
-    )
-    assert manifests == [], "a dry run wrote a manifest"
-
-
-def test_dry_run_leaves_the_source_tree_untouched(lane, monkeypatch):
+def test_dry_run_creates_no_artifacts_and_preserves_source(lane, monkeypatch):
     """The raw tier is canonical; a backup must never write into it."""
-    config, _, root = lane
+    config, staging, root = lane
     raw = root / "raw-capture"
-    before = {p.relative_to(raw).as_posix(): p.stat().st_size for p in raw.rglob("*")}
+    before = {
+        p.relative_to(raw).as_posix(): p.read_bytes() if p.is_file() else None
+        for p in raw.rglob("*")
+    }
 
     _stub_success(monkeypatch)
-    backup_enviro.run(config, dry_run=True)
+    assert backup_enviro.run(config, dry_run=True) == 0
+    assert not staging.exists(), "dry run created staging/snapshot/manifest"
 
-    after = {p.relative_to(raw).as_posix(): p.stat().st_size for p in raw.rglob("*")}
+    after = {
+        p.relative_to(raw).as_posix(): p.read_bytes() if p.is_file() else None
+        for p in raw.rglob("*")
+    }
     assert before == after
 
 
@@ -302,6 +272,7 @@ def test_retention_larger_than_the_backlog_deletes_nothing(lane, monkeypatch):
     def boom(src, obj, **kw):
         raise ReplicationError("remote refused")
 
+    _stub_success(monkeypatch)
     monkeypatch.setattr(backup_enviro, "replicate_file", boom)
     assert backup_enviro.run(config) == 1
 
@@ -355,12 +326,18 @@ def test_success_does_not_remove_a_different_sources_snapshots(lane, monkeypatch
 def test_a_verified_run_leaves_the_source_tree_untouched(lane, monkeypatch):
     config, _, root = lane
     raw = root / "raw-capture"
-    before = {p.relative_to(raw).as_posix(): p.stat().st_size for p in raw.rglob("*")}
+    before = {
+        p.relative_to(raw).as_posix(): p.read_bytes() if p.is_file() else None
+        for p in raw.rglob("*")
+    }
 
     _stub_success(monkeypatch)
     backup_enviro.run(config)
 
-    after = {p.relative_to(raw).as_posix(): p.stat().st_size for p in raw.rglob("*")}
+    after = {
+        p.relative_to(raw).as_posix(): p.read_bytes() if p.is_file() else None
+        for p in raw.rglob("*")
+    }
     assert before == after
 
 

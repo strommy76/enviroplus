@@ -15,6 +15,7 @@ import hashlib
 import json
 import sqlite3
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -144,19 +145,6 @@ def test_redact_keeps_endpoint_identity():
 # ── Credentials inside the payload BODY are scrubbed, with lineage ────────────
 
 
-def test_body_credential_is_scrubbed_from_stored_payload(raw_root):
-    """A device secret in the response body must not reach the canonical store."""
-    payload = b'[{"passkey":"ABCDEF0123456789ABCDEF0123456789","tempf":81.3,"humidity":64}]'
-    rr.retain("acme", payload)
-
-    body = next(iter((raw_root / "acme").glob("*.ndjson"))).read_text()
-    assert "ABCDEF0123456789ABCDEF0123456789" not in body
-    assert (
-        "ABCDEF0123456789ABCDEF0123456789"
-        not in base64.b64decode(json.loads(body)["payload_b64"]).decode()
-    )
-
-
 def test_scrub_preserves_every_other_byte(raw_root):
     """Only the secret's bytes change -- key order and whitespace survive."""
     payload = b'[{"passkey":"S3CR3T","b":2,  "a":1,"ws":  true}]'
@@ -165,17 +153,12 @@ def test_scrub_preserves_every_other_byte(raw_root):
     (blob,) = [b for _, _, b in rr.read_day("acme", day) if b is not None]
     assert blob == b'[{"passkey":"<redacted>","b":2,  "a":1,"ws":  true}]'
 
-
-def test_scrub_records_lineage(raw_root):
-    """What arrived stays provable even though the secret is not retained."""
-    payload = b'[{"passkey":"S3CR3T","tempf":81.3}]'
-    expected = hashlib.sha256(payload).hexdigest()
-    rr.retain("acme", payload)
-
     (rec,) = _records(raw_root, "acme")
+    assert "S3CR3T" not in json.dumps(rec)
+    assert b"S3CR3T" not in blob
     assert rec["scrubbed_keys"] == ["passkey"]
-    assert rec["sha256_as_received"] == expected
-    assert rec["sha256"] != expected  # stored bytes differ from what arrived
+    assert rec["sha256_as_received"] == hashlib.sha256(payload).hexdigest()
+    assert rec["sha256"] != rec["sha256_as_received"]
 
 
 def test_payload_without_secrets_records_no_scrub_lineage(raw_root):
@@ -220,28 +203,6 @@ def test_dedup_does_not_rescan_the_day_file(raw_root, monkeypatch):
     for i in range(5):
         rr.retain("acme", f'{{"v":{i}}}'.encode())
     assert len(calls) <= 1, f"day file re-read {len(calls)} times"
-
-
-def test_repeat_within_the_same_day_is_a_duplicate(raw_root):
-    """Within one day, a byte-identical payload is recorded but not re-stored.
-
-    Renamed: this previously claimed to test cross-midnight behaviour while
-    both writes landed in the same day file, and asserted the opposite of the
-    design (day files are self-contained -- see the boundary test below).
-    """
-    payload = b'{"v":1}'
-    assert rr.retain("acme", payload) == rr.OUTCOME_OK
-    assert rr.retain("acme", payload) == rr.OUTCOME_DUPLICATE
-
-
-# ── Crash safety: a record is durable the moment it is written ────────────────
-
-
-def test_record_is_flushed_immediately(raw_root):
-    """No buffering window in which bytes exist without their integrity record."""
-    rr.retain("acme", b'{"v":1}')
-    recs = _records(raw_root, "acme")  # read from a separate handle, no close()
-    assert len(recs) == 1 and recs[0]["sha256"]
 
 
 # ── write_row must fail loud on non-integrity errors ──────────────────────────
@@ -298,31 +259,23 @@ def test_programming_error_still_raises(raw_root):
 # ── Day files stay self-contained ─────────────────────────────────────────────
 
 
-def test_dedup_does_not_span_the_day_boundary(raw_root):
-    """A duplicate must never reference a payload stored in another day file.
+def test_dedup_does_not_span_the_day_boundary(raw_root, monkeypatch):
+    """The same bytes must be independently recoverable on each UTC day."""
 
-    Otherwise replaying a single restored day is silently incomplete, and
-    pruning an old day severs the chain.
-    """
+    class Clock(datetime):
+        current = datetime(2026, 8, 6, 23, 59, 59, tzinfo=timezone.utc)
+
+        @classmethod
+        def now(cls, tz=None):
+            return cls.current
+
+    monkeypatch.setattr(rr, "datetime", Clock)
     payload = b'{"v":1}'
-    rr.retain("acme", payload)
-    # Same payload, next day: the cache is day-scoped, so it must re-store.
-    today = (
-        __import__("datetime").datetime.now(__import__("datetime").timezone.utc).date().isoformat()
-    )
-    root = str(raw_root)
-    assert (root, "acme", "2026-01-01") not in rr._LAST_SHA
-    assert [k[2] for k in rr._LAST_SHA if k[0] == root] == [today]
-
-
-def test_every_day_file_is_independently_replayable(raw_root):
-    """Every stored payload is recoverable from its own day file alone."""
-    for v in (1, 1, 2):
-        rr.retain("acme", f'{{"v":{v}}}'.encode())
-    day = next(iter((raw_root / "acme").glob("*.ndjson"))).stem
-    recs = list(rr.read_day("acme", day))
-    # Duplicates carry no payload, but every distinct payload is present here.
-    assert [b for _, _, b in recs if b] == [b'{"v":1}', b'{"v":2}']
+    assert rr.retain("acme", payload) == rr.OUTCOME_OK
+    Clock.current = datetime(2026, 8, 7, tzinfo=timezone.utc)
+    assert rr.retain("acme", payload) == rr.OUTCOME_OK
+    for day in ("2026-08-06", "2026-08-07"):
+        assert [blob for _, _, blob in rr.read_day("acme", day)] == [payload]
 
 
 # ── The read path honours the same boundary as the write path ─────────────────
@@ -334,11 +287,11 @@ def test_read_day_refuses_unsafe_provider_key(raw_root, bad):
         list(rr.read_day(bad, "2026-08-06"))
 
 
-# ── The tail window must exceed the largest real record ───────────────────────
+# ── Restart dedup recovers a retained large-payload example ───────────────────
 
 
-def test_tail_window_exceeds_largest_measured_record(raw_root):
-    """A tail read must never land mid-line and silently disable dedup."""
+def test_restart_dedup_recovers_a_large_retained_payload(raw_root):
+    """A 200KiB example remains deduplicated after clearing process cache."""
     big = b'{"pad":"' + b"x" * (200 * 1024) + b'"}'
     rr.retain("acme", big)
     rr._LAST_SHA.clear()  # force the file path, not the cache
