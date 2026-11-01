@@ -157,9 +157,8 @@ def test_co2_band_follows_the_uba_guide_values(ppm, color):
 
 def test_co2_presence_changes_rendered_content():
     with_co2, without = _state(True), _state(True)
-    without["co2"], without["co2_hist"] = None, [None] * 4
-    frames = [
-        (screens.render(p, with_co2).tobytes(), screens.render(p, without).tobytes())
-        for p in range(len(screens.PAGES))
-    ]
-    assert any(a != b for a, b in frames)
+    without["co2"] = None
+    without["co2_hist"] = [None] * len(without["co2_hist"])
+    without["indoor"]["humidity"] = None
+    page = screens.PAGES.index(screens._co2)
+    assert screens.render(page, with_co2).tobytes() != screens.render(page, without).tobytes()
