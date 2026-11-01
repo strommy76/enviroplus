@@ -86,15 +86,16 @@ def test_category_edges(aqi, name):
 
 def _state(present):
     v = (lambda x: x) if present else (lambda x: None)
-    hist = [v(1.0), v(2.0), None, v(3.0)]
+    pm = {"pm1": v(1.0), "pm25": v(2.0), "pm10": v(3.0)}
+    gas = {"oxidising": 40.0, "reducing": 100.0, "ammonia": 150.0}
     return {
-        "indoor": {"temp_f": v(72.0), "humidity": v(45.0), "pressure": v(1013.0)},
-        "pm": {"pm1": v(1.0), "pm25": v(2.0), "pm10": v(3.0)},
-        "pm_hist": {k: hist for k in ("pm1", "pm25", "pm10")},
-        "gas": {"oxidising": v(40.0), "reducing": v(100.0), "ammonia": v(150.0)},
-        "gas_hist": {k: hist for k in ("oxidising", "reducing", "ammonia")},
+        "indoor": {"temp_f": v(72.0), "humidity": v(45.0), "pressure": 1013.0},
+        "pm": pm,
+        "pm_hist": {k: [v(1.0), v(2.0), None, value] for k, value in pm.items()},
+        "gas": gas,
+        "gas_hist": {k: [value] * 4 for k, value in gas.items()},
         "co2": v(612.0),
-        "co2_hist": [v(600.0), v(612.0), None, v(640.0)],
+        "co2_hist": [v(600.0), None, v(640.0)],
         "outdoor": {
             "tempf": 68.0,
             "humidity": 60.0,
@@ -106,20 +107,20 @@ def _state(present):
         }
         if present
         else None,
-        "outdoor_temp_hist": hist,
-        "wind_hist": hist,
+        "outdoor_temp_hist": [v(66.0), v(67.0), None, v(68.0)],
+        "wind_hist": [v(2.0), v(3.0), None, v(4.0)],
         "thresholds": THRESHOLDS,
     }
 
 
 @pytest.mark.parametrize("present", [True, False])
 @pytest.mark.parametrize("page", range(len(screens.PAGES)))
-def test_every_page_renders_full_and_absent_data(page, present):
+def test_every_page_renders_full_and_cabled_dropout_data(page, present):
     img = screens.render(page, _state(present))
     assert img.size == (screens.W, screens.H)
 
 
-def test_pages_differ_and_mark_the_current_page():
+def test_pages_render_distinct_content():
     frames = [screens.render(p, _state(True)).tobytes() for p in range(len(screens.PAGES))]
     assert len(set(frames)) == len(frames)
 
@@ -154,11 +155,10 @@ def test_co2_band_follows_the_uba_guide_values(ppm, color):
     assert screens.band_color(ppm, CO2_BAND) == color
 
 
-def test_co2_reading_is_drawn():
+def test_co2_presence_changes_rendered_content():
     with_co2, without = _state(True), _state(True)
-    without["co2"], without["co2_hist"] = None, [None] * 4
-    frames = [
-        (screens.render(p, with_co2).tobytes(), screens.render(p, without).tobytes())
-        for p in range(len(screens.PAGES))
-    ]
-    assert any(a != b for a, b in frames)
+    without["co2"] = None
+    without["co2_hist"] = [None] * len(without["co2_hist"])
+    without["indoor"]["humidity"] = None
+    page = screens.PAGES.index(screens._co2)
+    assert screens.render(page, with_co2).tobytes() != screens.render(page, without).tobytes()

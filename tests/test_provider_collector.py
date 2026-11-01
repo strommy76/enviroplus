@@ -58,10 +58,6 @@ def _rows(collector):
     return collector.db.execute("SELECT ts, pm25_aqi FROM aq ORDER BY ts").fetchall()
 
 
-def test_importing_the_collector_does_not_run_it():
-    assert callable(pc.main) and callable(pc.build)
-
-
 def test_ok_response_is_retained_and_written_once(collector, monkeypatch):
     monkeypatch.setattr(collector, "fetch", lambda: json.dumps(PAYLOAD).encode())
     assert collector.attempt() is True
@@ -108,16 +104,6 @@ def test_non_list_bodies_are_malformed_not_empty_and_recorded_once(collector, mo
     assert _outcomes() == [rr.OUTCOME_MALFORMED] and _rows(collector) == []
 
 
-def test_out_of_shape_payload_is_logged_at_error(collector, monkeypatch, caplog):
-    monkeypatch.setattr(collector, "fetch", lambda: b'[{"WebServiceError": [{"Message": "x"}]}]')
-    with caplog.at_level(logging.ERROR, logger="test_acme"):
-        collector.attempt()
-    assert any(
-        "declared projection not satisfied" in r.getMessage() and r.levelno == logging.ERROR
-        for r in caplog.records
-    )
-
-
 def test_write_failure_after_a_partial_arrival_keeps_both_facts(collector, monkeypatch):
     monkeypatch.setattr(collector, "fetch", lambda: json.dumps(PAYLOAD[:2]).encode())
     collector.db.execute("DROP TABLE aq")
@@ -131,12 +117,20 @@ def test_empty_list_is_recorded_and_nothing_is_written(collector, monkeypatch):
     assert _outcomes() == [rr.OUTCOME_EMPTY] and _rows(collector) == []
 
 
-def test_shape_outside_the_contract_is_malformed_with_no_row(collector, monkeypatch):
+def test_shape_outside_the_contract_is_malformed_with_no_row(collector, monkeypatch, caplog):
+    assert pc.classify_response(b'[{"AQI":20}]')[1] == rr.OUTCOME_OK
+    assert pc.classify_response(b"[]")[1] == rr.OUTCOME_EMPTY
+    assert pc.classify_response(b"not json")[1] == rr.OUTCOME_MALFORMED
     renamed = [
         {("parameter" if k == "parameterName" else k): v for k, v in i.items()} for i in PAYLOAD
     ]
     monkeypatch.setattr(collector, "fetch", lambda: json.dumps(renamed).encode())
-    assert collector.attempt() is False
+    with caplog.at_level(logging.ERROR, logger="test_acme"):
+        assert collector.attempt() is False
+    assert any(
+        "declared projection not satisfied" in r.getMessage() and r.levelno == logging.ERROR
+        for r in caplog.records
+    )
     assert _outcomes() == [
         rr.OUTCOME_MALFORMED
     ]  # one arrival, one outcome, payload retained under it
@@ -199,7 +193,10 @@ def test_run_stops_promptly_when_shutdown_is_requested(collector, monkeypatch):
         return state["n"] > 3
 
     collector.run(is_shutting_down, sleep=calls.append)
-    assert len(calls) < collector.contract.poll_s  # did not sleep the whole poll interval
+    assert calls, "the scenario must exercise the shutdown-check wait"
+    # Collector.run declares at most one second between shutdown checks.
+    assert all(0 < seconds <= 1 for seconds in calls)
+    assert sum(calls) < collector.contract.poll_s
 
 
 def test_ensure_table_adds_declared_columns_to_an_existing_table(collector):
@@ -257,6 +254,12 @@ def _days_today():
 
 
 def test_replay_reproduces_the_live_table_by_the_same_path(collector, monkeypatch, tmp_path):
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2026, 9, 6, tzinfo=timezone.utc)
+
+    monkeypatch.setattr(rr, "datetime", Clock)
     arrivals = [
         PAYLOAD,  # ok
         PAYLOAD,  # identical -> duplicate, no payload retained
@@ -270,7 +273,7 @@ def test_replay_reproduces_the_live_table_by_the_same_path(collector, monkeypatc
         monkeypatch.setattr(collector, "fetch", lambda p=payload: json.dumps(p).encode())
         collector.attempt()
     live = collector.db.execute("SELECT * FROM aq ORDER BY ts").fetchall()
-    retention_before = _outcomes()
+    retention_before = list(rr.read_day("acme", "2026-09-06"))
 
     rebuilt = sqlite3.connect(tmp_path / "rebuilt.db")
     pc.ensure_table(rebuilt, collector.contract)
@@ -278,14 +281,14 @@ def test_replay_reproduces_the_live_table_by_the_same_path(collector, monkeypatc
         contract=collector.contract, db=rebuilt, log=logging.getLogger("test_replay")
     )
     summary = replayer.replay(
-        ["2026-09-05"], today=_days_today()[0]
+        ["2026-09-05"], today="2026-09-06"
     )  # the observation date PAYLOAD states
 
     assert rebuilt.execute("SELECT * FROM aq ORDER BY ts").fetchall() == live
     assert summary == {
         "provider": "acme",
         "days": ["2026-09-05"],
-        "capture_days_scanned": summary["capture_days_scanned"],
+        "capture_days_scanned": 3,  # Sept4 preceding day, observation Sept5, as-of Sept6
         "records": 5,
         "without_payload": 1,
         "projected": 4,
@@ -297,7 +300,9 @@ def test_replay_reproduces_the_live_table_by_the_same_path(collector, monkeypatc
         "malformed": 1,
         "reclassified": 0,
     }
-    assert _outcomes() == retention_before  # replay never writes retention
+    assert (
+        list(rr.read_day("acme", "2026-09-06")) == retention_before
+    )  # replay never writes retention
 
 
 def test_replay_is_idempotent_and_the_latest_statement_wins_in_capture_order(

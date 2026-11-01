@@ -67,7 +67,13 @@ def test_ambient_row_mapping_hand_values():
     ],
 )
 def test_ambient_classification_never_raises(body, outcome):
-    assert ambient_wx.classify_response(body, MAC.lower())[1] == outcome
+    observation, actual, detail = ambient_wx.classify_response(body, MAC.lower())
+    assert actual == outcome
+    if outcome in (raw_retention.OUTCOME_EMPTY, raw_retention.OUTCOME_MALFORMED):
+        assert observation is None
+        assert detail
+    else:
+        assert observation is not None
 
 
 def test_ambient_selects_the_configured_station_not_the_first():

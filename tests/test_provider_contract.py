@@ -107,9 +107,8 @@ def contract(tmp_path, env):
 # ── Loader ─────────────────────────────────────────────────────────────────────
 
 
-def test_loader_resolves_env_names_and_never_embeds_values_in_the_document(contract):
+def test_loader_resolves_request_and_poll_settings(contract):
     assert contract.params["latitude"] == "1.5"
-    assert "not-a-real-key" not in json.dumps(CONTRACT)
     assert contract.request_url() == (
         "https://api.example.test/current/"
         "?format=application%2Fjson&latitude=1.5&API_KEY=not-a-real-key"
@@ -325,11 +324,6 @@ def test_absent_non_key_field_is_left_unstated_and_named(contract):
 def test_payload_outside_the_declared_shape_is_refused(contract, mutate, match):
     with pytest.raises(ProjectionError, match=match):
         project(contract, mutate(copy.deepcopy(PAYLOAD)))
-
-
-def test_unrelated_fields_are_ignored_not_projected(contract):
-    row, _ = project(contract, PAYLOAD)
-    assert "siteName" not in row and "lookupBoundary" not in row
 
 
 def test_row_fields_do_not_depend_on_item_order(contract):

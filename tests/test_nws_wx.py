@@ -70,7 +70,7 @@ def _properties(ts: str, *, temp_c: float = 27.0) -> dict:
     }
 
 
-def test_load_settings_requires_configured_station_list(tmp_path, monkeypatch):
+def test_load_settings_preserves_configured_station_order_and_ages(tmp_path, monkeypatch):
     env_path = tmp_path / ".env"
     env_path.write_text(
         "\n".join(

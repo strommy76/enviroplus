@@ -18,7 +18,6 @@ CHANGELOG:
 --------------------------------------------------------------------------------
 """
 
-import json
 import sqlite3
 import sys
 import urllib.error
@@ -43,46 +42,6 @@ def collectors(tmp_path_factory):
     import provider_collector
 
     return ambient_wx, provider_collector
-
-
-# ── Importing a collector must not start collecting ───────────────────────────
-
-
-def test_importing_a_collector_does_not_run_it(collectors):
-    """The loop is behind run(); import alone must do no collecting."""
-    ambient, airnow = collectors
-    assert callable(ambient.run) and callable(airnow.main)
-
-
-# ── Response classification ───────────────────────────────────────────────────
-
-
-def test_ambient_classifies_a_full_response(collectors):
-    ambient, _ = collectors
-    raw = json.dumps([{"macAddress": "AA:BB", "lastData": {"tempf": 81.3, "dateutc": 1}}]).encode()
-    obs, outcome, detail = ambient.classify_response(raw, "aa:bb")
-    assert outcome == ambient.OUTCOME_OK and detail is None
-    assert obs["tempf"] == 81.3
-
-
-def test_ambient_classifies_an_empty_response(collectors):
-    ambient, _ = collectors
-    obs, outcome, detail = ambient.classify_response(b"[]", "AA:BB")
-    assert obs is None and outcome == ambient.OUTCOME_EMPTY and detail
-
-
-def test_ambient_classifies_a_malformed_response(collectors):
-    """Unparseable bytes are a distinct cause, not an empty result."""
-    ambient, _ = collectors
-    obs, outcome, detail = ambient.classify_response(b"<html>502 Bad Gateway", "AA:BB")
-    assert obs is None and outcome == ambient.OUTCOME_MALFORMED and detail
-
-
-def test_airnow_classifies_each_shape(collectors):
-    _, airnow = collectors
-    assert airnow.classify_response(b'[{"AQI":20}]')[1] == airnow.OUTCOME_OK
-    assert airnow.classify_response(b"[]")[1] == airnow.OUTCOME_EMPTY
-    assert airnow.classify_response(b"not json")[1] == airnow.OUTCOME_MALFORMED
 
 
 # ── Outcomes are causes, not severities ───────────────────────────────────────
@@ -112,18 +71,11 @@ def test_failure_maps_to_the_subsystem_that_broke(collectors, exc, expected_attr
 # ── Sensor dropout is a recorded fact, not an inference from nulls ────────────
 
 
-def test_outdoor_dropout_is_detected(collectors):
-    """A 13-field console-only payload must be recognisable as a dropout."""
-    ambient, _ = collectors
-    full = {"tempf": 81.3, "humidity": 64, "tempinf": 74.1}
-    indoor_only = {"tempinf": 74.1, "humidityin": 55, "baromabsin": 29.7}
-    assert ambient.has_outdoor_reading(full) is True
-    assert ambient.has_outdoor_reading(indoor_only) is False
-
-
 def test_dropout_predicate_uses_measurements_not_field_count(collectors):
     """Field count conflated two mechanisms; presence of a measurement is the
     actual signal. A short payload that still carries outdoor data is not a
     dropout."""
     ambient, _ = collectors
     assert ambient.has_outdoor_reading({"tempf": 80.0}) is True
+    assert ambient.has_outdoor_reading({"tempf": 81.3, "humidity": 64, "tempinf": 74.1})
+    assert not ambient.has_outdoor_reading({"tempinf": 74.1, "humidityin": 55, "baromabsin": 29.7})

@@ -1,0 +1,15 @@
+{
+  "revision": "d3945ef275a68e421e6ed416b69e3ca404331747",
+  "source": "enviro_screens.py",
+  "property": "CO2 page content depends on CO2 observations, independent of humidity",
+  "patch": {
+    "before": "def _co2(d, s):\n    ppm, color = s[\"co2\"], band_color(s[\"co2\"], s[\"thresholds\"][\"co2_ppm\"])\n    _text(d, (3, 2), \"CO\u2082  ppm\", 8, DIM)\n    _text(d, (3, 12), _fmt(ppm, \".0f\"), 26, color)\n    sparkline(d, s[\"co2_hist\"], 3, 46, 150, 26, color)\n",
+    "after": "def _co2(d, s):\n    pass\n"
+  },
+  "test": "tests/test_screens.py::test_co2_presence_changes_rendered_content",
+  "before_rc": 0,
+  "fault_rc": 1,
+  "restored_rc": 0,
+  "source_restored_exact": true,
+  "observed_assertion_failure": true
+}
