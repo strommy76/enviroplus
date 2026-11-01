@@ -32,3 +32,38 @@ named revision, with these source corrections and installed-driver content;
 review depth is bounded to that class, findings are not bounded. No unchanged
 full-suite rerun or unrelated coverage/platform work is justified. Actual test
 implementation remains subject to receiving review and Bryan's verdict.
+
+
+## Closing-round author disposition
+Both provider-family seats reviewed the WHOLE corrected artifact at
+3a7ab2acbdbb26334ff5eccf0b7bd9ff88bffa6b. Complete reports accompany this record
+as astra-closing-review.md and glm-closing-review.md. No new confirmed defect
+was identified. Root confirms the closing findings against actual bytes: all
+21 Run cases carry PMS limits; all12 screen-helper cases carry shared gas-history
+revision; all3 backup failure tests carry ambient-transport limits; empty Ambient
+observation is preserved; nominal subset duplicate and NWS name are corrected.
+Executed AST/CSV identities and final153/53/15/9/43 totals remain exact. The PK
+refutation rests on existing literal PRIMARY KEY, not an unobserved mutant.
+Historical remote contact, physical accuracy and current detection strength remain
+UNCONFIRMED; no closure is inferred for those claims. No reviewer verdict becomes
+operator authorization.
+
+Root verification against all canonical axioms (object: final corrected analysis):
+|Provision|Result and content/construction|
+|---|---|
+|1 Truth is absolute|CONFORMS: cases.csv binds every real collected ID/source line; report/method separate static findings, arithmetic, observed execution and unconfirmed contact/detection.|
+|2 Cognition is adaptive|CONFORMS: inventory comes from real pytest/AST; per-case recommendations are bounded source judgments, not a hand-curated fact registry.|
+|3 Antifragility is doctrine|CONFORMS: provider revisions/shape changes and genuine gaps remain; fixture corrections retain those semantics, not uniform fabricated success.|
+|4 KISS—simplicity is mandatory|CONFORMS: no test/runtime code or new tool platform; unnecessary PK rewrite withdrawn, exact duplicate and shared fixes identified.|
+|5 Boundaries are determinate; interiors are free|CONFORMS for analysis: original suite isolation premise refuted and disclosed, bare reruns stopped; actual source-suite violation remains proposed for repair, never reported fixed.|
+|6 Maintenance is directional|CONFORMS: affected shared-fixture cases and replacement assertions traced across all consumers in cases.csv, not only headline examples.|
+|Preamble admission test|CONFORMS: one bounded per-case audit and required closing class; no deployment, new source, generic coverage campaign or additional speculative guard.|
+
+The named class is closed in this audit under o; no further author round is
+warranted absent a new concrete defect class. The actual fixture/test revisions
+are the requested proposed outcome for receiving/operator adjudication, not
+operator-accepted residuals or an executed repair. Final repository additions
+after3a7ab2a are the unedited closing reports and this receipt; recommendations,
+source and tests are unchanged. Canonical273-pass invocation remains historically
+qualified by the discovered transport path. Ruff/format and diff checks pass on
+unchanged source; no bare-suite rerun follows discovery.
