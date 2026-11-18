@@ -1,4 +1,14 @@
-"""Enviro database snapshot storage and evidence-based remote retention."""
+"""
+--------------------------------------------------------------------------------
+FILE:        backup_snapshots.py
+PATH:        ~/projects/enviroplus/backup_snapshots.py
+DESCRIPTION: Native database snapshot objects and evidence-based remote retention.
+
+CHANGELOG:
+2026-11-18            Codex      [Feature] Keep configured verified database copies
+                                      and prune only older exact producer objects.
+--------------------------------------------------------------------------------
+"""
 
 import json
 import logging

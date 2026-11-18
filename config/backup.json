@@ -12,6 +12,7 @@
       "Each source is attempted independently; the manifest records verified and failed outcomes, and any failure makes the run nonzero."
     ],
     "changelog": [
+      "2026-11-18  Codex  [Refactor] Own native-host sources, cadence and copy policy; preserve authoritative delivery observations.",
       "2026-08-06 16:33  Claude  [Feature] Initial implementation.",
       "2026-08-06 20:33  Claude  [Fix] Delete staged snapshots on verified upload. retention_count=7 guarded a working set with no readers.",
       "2026-08-07 06:55  Claude  [Fix] Config described the tree lane as syncing immutable files; it copies, and today's partition is appended to all day. Success path now clears the whole staging pattern, and dry-run branches before the snapshot is created."

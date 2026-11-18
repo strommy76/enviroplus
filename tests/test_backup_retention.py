@@ -78,9 +78,10 @@ def test_committed_units_follow_native_host_configuration():
     assert f"RandomizedDelaySec={cfg['cadence']['randomized_delay_seconds']}" in timer
     assert f"TimeoutStartSec={cfg['cadence']['execution_timeout_seconds']}" in service
     assert cfg["local"] is None
+    assert cfg["drive"] > 0
 
 
-@pytest.mark.parametrize("absent", ["host", "drive", "local", "cadence"])
+@pytest.mark.parametrize("absent", ["host", "drive"])
 def test_required_configuration_absence_is_loud(tmp_path, absent):
     from scripts.backup_enviro import BackupError, load_config
 

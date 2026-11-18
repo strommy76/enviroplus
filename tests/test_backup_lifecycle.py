@@ -15,6 +15,8 @@ DESCRIPTION: Staging lifecycle of the backup lane: what a run leaves behind on
              what is under test here is which local files survive a run.
 
 CHANGELOG:
+2026-11-18            Codex      [Test] Exercise candidate imports and native
+                                      delivery evidence without a private path.
 2026-08-07 06:58      Claude     [Feature] Initial implementation.
 --------------------------------------------------------------------------------
 """
@@ -27,8 +29,6 @@ import sys
 from pathlib import Path
 
 import pytest
-
-sys.path.insert(0, "/home/pistrommy/projects")
 
 # The checkout under test, not the live one: an absolute path tested the main
 # checkout from every worktree.

@@ -23,6 +23,8 @@ DESCRIPTION: Backs up the enviroplus data tiers offsite and proves the copy.
 USAGE:       python3 scripts/backup_enviro.py [--config PATH] [--dry-run]
 
 CHANGELOG:
+2026-11-18            Codex      [Refactor] Use native-host backup policy and
+                                      retain immutable delivery observations.
 2026-08-06 16:34      Claude     [Feature] Initial implementation.
 2026-08-07 07:06      Claude     [Fix] Dry-run branches before the snapshot is
                                       created. Success clears this source's
@@ -74,9 +76,7 @@ def load_config(path: Path) -> dict:
         "sources",
         "local_staging",
         "manifest",
-        "cadence",
         "drive",
-        "local",
     ):
         if key not in cfg:
             raise BackupError(f"config missing required section: {key}")

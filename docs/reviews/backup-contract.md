@@ -54,3 +54,11 @@ file delivery with null hashes, which the native file replicator cannot produce.
 The fixture now obtains the actual source hash/size through the public primitive;
 tree results retain their real no-single-hash shape. This corrects test inputs
 under r without adding runtime logic or changing byte-proof expectations.
+
+Final review correction batch (November18): complete author/receiver original
+findings and independent dispositions are preserved in shared PR6
+backup-validation/final-fold-plan-and-adjudication-codex.md. Serialization
+precedes exclusive record creation; Enviro runtime validates only consumed
+configuration sections. Current source qualification follows this batch; earlier
+counts above are observations at their explicitly named prior revisions. No
+operator-held calendar/retirement/publication choice is implemented.
