@@ -37,21 +37,20 @@ import argparse
 import json
 import logging
 import os
-import re
+import socket
 import sqlite3
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-sys.path.insert(0, "/home/pistrommy/projects")
-
-from shared.offsite_replication import (  # noqa: E402
+from shared.offsite_replication import (
     ReplicationError,
     ReplicationResult,
     replicate_file,
     replicate_tree,
     write_manifest,
 )
+
+from backup_snapshots import prune_database_snapshots, run_rclone, snapshot_stamp
 
 _BASE = Path(__file__).resolve().parent.parent
 DEFAULT_CONFIG = _BASE / "config" / "backup.json"
@@ -65,8 +64,21 @@ class BackupError(RuntimeError):
 
 def load_config(path: Path) -> dict:
     with path.open() as fh:
-        cfg = json.load(fh)
-    for key in ("remote", "sources", "local_staging", "manifest"):
+        document = json.load(fh)
+    try:
+        cfg = document["hosts"][socket.gethostname()]
+    except KeyError as exc:
+        raise BackupError(f"config lacks this native host entry: {socket.gethostname()}") from exc
+    for key in (
+        "remote",
+        "sources",
+        "local_staging",
+        "manifest",
+        "cadence",
+        "drive",
+        "local",
+        "coverage_command",
+    ):
         if key not in cfg:
             raise BackupError(f"config missing required section: {key}")
     # Checked at load, not at first use. failed_run_retention is read only on
@@ -89,6 +101,9 @@ def load_config(path: Path) -> dict:
             f"config local_staging.failed_run_retention must be a non-negative "
             f"integer, got {retention!r}"
         )
+    copies = cfg["drive"]
+    if type(copies) is not int or copies <= 0:
+        raise BackupError("config drive must be a positive retained-copy count")
     return cfg
 
 
@@ -130,9 +145,6 @@ def snapshot_sqlite(source: Path, target: Path) -> Path:
     return target
 
 
-_SNAPSHOT_NAME = re.compile(r"^(?P<stem>.+)_(?P<stamp>\d{8}T\d{6}Z)\.db$")
-
-
 def staged_snapshots(staging: Path, stem: str) -> list[Path]:
     """This source's staged snapshots, oldest first, by name shape not by glob.
 
@@ -144,8 +156,7 @@ def staged_snapshots(staging: Path, stem: str) -> list[Path]:
     """
     out = []
     for path in staging.glob("*.db"):
-        match = _SNAPSHOT_NAME.match(path.name)
-        if match and match.group("stem") == stem:
+        if snapshot_stamp(path.name, stem) is not None:
             out.append(path)
     return sorted(out, key=lambda p: p.name)
 
@@ -183,15 +194,6 @@ def clear_snapshots_through(
     for path in doomed:
         path.unlink()
         removed.append(path.name)
-    return removed
-
-
-def prune(directory: Path, pattern: str, keep: int) -> list[str]:
-    files = sorted(directory.glob(pattern), key=lambda p: p.name, reverse=True)
-    removed = []
-    for stale in files[keep:]:
-        stale.unlink()
-        removed.append(stale.name)
     return removed
 
 
@@ -293,6 +295,7 @@ def run(config_path: Path, *, dry_run: bool = False) -> int:
             result.detail["error"] = f"{type(exc).__name__}: {exc}"
             log.error("source %s failed: %s", name, result.detail["error"])
         result.detail["source_name"] = name
+        result.detail["source_path"] = str(source_path)
         results.append(result)
 
     if dry_run:
@@ -311,7 +314,31 @@ def run(config_path: Path, *, dry_run: bool = False) -> int:
         results,
         extra={"remote_base": base, "config": str(config_path)},
     )
-    prune(manifest_dir, "backup_*.json", cfg["manifest"]["retention_count"])
+    # Delivery evidence must exist before it can authorize removal. Maintenance
+    # produces a second observation; the original delivery record is immutable.
+    maintained = False
+    for result in results:
+        src = cfg["sources"][result.detail["source_name"]]
+        if src["kind"] != "sqlite_snapshot" or not result.verified or result.detail.get("error"):
+            continue
+        maintained = True
+        try:
+            result.detail["retention"] = prune_database_snapshots(
+                result.remote_object.rsplit("/", 1)[0],
+                Path(src["source_path"]).stem,
+                cfg["drive"],
+                manifest_dir,
+                config_path=rclone_config,
+            )
+        except Exception as exc:
+            result.detail["error"] = f"retention failed: {type(exc).__name__}: {exc}"
+            log.error("source %s: %s", result.detail["source_name"], result.detail["error"])
+    if maintained:
+        manifest = write_manifest(
+            manifest_dir / f"backup_{stamp}_retention.json",
+            results,
+            extra={"remote_base": base, "config": str(config_path)},
+        )
 
     total = sum(r.bytes_transferred or 0 for r in results)
     log.info(
@@ -352,7 +379,7 @@ def verify_restore(config_path: Path) -> int:
     src = cfg["sources"]["database"]
     remote_dir = f"{base}/{src['remote_subpath'].strip('/')}"
 
-    listing = _run_rclone(rclone_config, "lsjson", remote_dir)
+    listing = run_rclone(rclone_config, "lsjson", remote_dir)
     objects = sorted(json.loads(listing), key=lambda o: o["Name"])
     if not objects:
         raise BackupError(f"no snapshot present at {remote_dir} -- nothing to restore")
@@ -361,7 +388,7 @@ def verify_restore(config_path: Path) -> int:
     work = Path(tempfile.mkdtemp(prefix="enviro-restore-"))
     try:
         local = work / newest
-        _run_rclone(rclone_config, "copyto", f"{remote_dir}/{newest}", str(local))
+        run_rclone(rclone_config, "copyto", f"{remote_dir}/{newest}", str(local))
         if not local.is_file():
             raise BackupError(f"restore produced no file for {newest}")
 
@@ -424,16 +451,6 @@ def verify_restore(config_path: Path) -> int:
         return 0
     finally:
         shutil.rmtree(work, ignore_errors=True)
-
-
-def _run_rclone(config_path: str | None, *args: str) -> str:
-    import subprocess
-
-    argv = ["rclone"] + (["--config", config_path] if config_path else []) + list(args)
-    result = subprocess.run(argv, capture_output=True, text=True, timeout=1800)
-    if result.returncode != 0:
-        raise BackupError(f"rclone {args[0]} failed: {result.stderr.strip()[:300]}")
-    return result.stdout
 
 
 def main() -> int:

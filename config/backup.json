@@ -17,34 +17,56 @@
       "2026-08-07 06:55  Claude  [Fix] Config described the tree lane as syncing immutable files; it copies, and today's partition is appended to all day. Success path now clears the whole staging pattern, and dry-run branches before the snapshot is created."
     ]
   },
-  "remote": {
-    "rclone_remote_name": "stocks_gdrive",
-    "rclone_remote_path": "backups/enviropi",
-    "rclone_config_path": "/home/pistrommy/.config/rclone/rclone.conf"
-  },
-  "sources": {
-    "database": {
-      "kind": "sqlite_snapshot",
-      "source_path": "/home/pistrommy/projects/enviroplus/enviro.db",
-      "remote_subpath": "database",
-      "comment": "VACUUM INTO, never a file copy. The database is journal_mode=WAL with four concurrent writers; a naive copy is torn and its hash would certify the torn artifact."
-    },
-    "raw_capture": {
-      "kind": "tree",
-      "source_path": "/home/pistrommy/projects/enviroplus/raw-capture",
-      "remote_subpath": "raw-capture",
-      "comment": "Canonical tier, append-only. Replicated by copy, never sync: sync deletes remote objects absent locally, so a truncated source would destroy the offsite copy and the following check would pass because both sides now agree. Each file is verified by prefix AND progress -- the remote must be a prefix of the local file and no shorter than that file was when the run began. A tarball would re-upload the whole corpus every run."
+  "hosts": {
+    "BSPiLHX": {
+      "remote": {
+        "rclone_remote_name": "stocks_gdrive",
+        "rclone_remote_path": "backups/enviropi",
+        "rclone_config_path": "/home/pistrommy/.config/rclone/rclone.conf"
+      },
+      "sources": {
+        "database": {
+          "kind": "sqlite_snapshot",
+          "source_path": "/home/pistrommy/projects/enviroplus/enviro.db",
+          "remote_subpath": "database",
+          "comment": "VACUUM INTO, never a file copy. The database is journal_mode=WAL with four concurrent writers; a naive copy is torn and its hash would certify the torn artifact."
+        },
+        "raw_capture": {
+          "kind": "tree",
+          "source_path": "/home/pistrommy/projects/enviroplus/raw-capture",
+          "remote_subpath": "raw-capture",
+          "comment": "Canonical tier, append-only. Replicated by copy, never sync: sync deletes remote objects absent locally, so a truncated source would destroy the offsite copy and the following check would pass because both sides now agree. Each file is verified by prefix AND progress -- the remote must be a prefix of the local file and no shorter than that file was when the run began. A tarball would re-upload the whole corpus every run."
+        }
+      },
+      "local_staging": {
+        "staging_dir": "/home/pistrommy/projects/enviroplus/.backup-staging",
+        "dir_mode": "0700",
+        "file_mode": "0600",
+        "comment": "Snapshots are staged locally so the uploaded artifact is the one whose hash was computed. A verified upload clears every staged snapshot for that source, not just the current run's: a snapshot kept to explain a failure has no purpose once a later run succeeds, and removing only the current file left those to accumulate for good. A failed run keeps its snapshot for diagnosis, bounded by failed_run_retention so a persistently failing remote cannot fill the disk.",
+        "failed_run_retention": 1,
+        "failed_run_retention_derivation": "Keep this source's latest failed snapshot for diagnosis; discard it after verified delivery."
+      },
+      "manifest": {
+        "manifest_dir": "/home/pistrommy/projects/enviroplus/.backup-staging/manifests",
+        "authority": "Append-only delivery and maintenance observations; never pruned or reconstructed."
+      },
+      "local": null,
+      "drive": 2,
+      "cadence": {
+        "on_calendar": "*-*-* 09:20:00 UTC",
+        "randomized_delay_seconds": 300,
+        "execution_timeout_seconds": 3600,
+        "provisional": {
+          "randomized_delay_seconds": "Retained deployment setting; settle whether delay is needed from the first post-change invocation overlap measurements.",
+          "execution_timeout_seconds": "Retained enclosing allowance; nominal seed115.6MB completed in about150s. Settle against first post-change complete native invocations at the current corpus size."
+        }
+      },
+      "coverage_command": [
+        "/usr/bin/env",
+        "PYTHONPATH=/home/pistrommy/projects/enviroplus:/home/pistrommy/projects",
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "scripts/backup_coverage.py"
+      ]
     }
-  },
-  "local_staging": {
-    "staging_dir": "/home/pistrommy/projects/enviroplus/.backup-staging",
-    "dir_mode": "0700",
-    "file_mode": "0600",
-    "comment": "Snapshots are staged locally so the uploaded artifact is the one whose hash was computed. A verified upload clears every staged snapshot for that source, not just the current run's: a snapshot kept to explain a failure has no purpose once a later run succeeds, and removing only the current file left those to accumulate for good. A failed run keeps its snapshot for diagnosis, bounded by failed_run_retention so a persistently failing remote cannot fill the disk.",
-    "failed_run_retention": 1
-  },
-  "manifest": {
-    "manifest_dir": "/home/pistrommy/projects/enviroplus/.backup-staging/manifests",
-    "retention_count": 30
   }
 }

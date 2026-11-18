@@ -21,6 +21,7 @@ CHANGELOG:
 
 import importlib.util
 import json
+import socket
 import sqlite3
 import sys
 from pathlib import Path
@@ -88,14 +89,21 @@ def lane(tmp_path):
             "file_mode": "0600",
             "failed_run_retention": 1,
         },
-        "manifest": {"manifest_dir": str(staging / "manifests"), "retention_count": 30},
+        "manifest": {"manifest_dir": str(staging / "manifests")},
+        "drive": 2,
+        "local": None,
+        "cadence": {},
+        "coverage_command": [sys.executable, "scripts/backup_coverage.py"],
     }
     path = tmp_path / "backup.json"
-    path.write_text(json.dumps(cfg))
+    path.write_text(json.dumps({"hosts": {socket.gethostname(): cfg}}))
     return path, staging, tmp_path
 
 
 def _stub_success(monkeypatch):
+    monkeypatch.setattr(
+        backup_enviro, "prune_database_snapshots", lambda *a, **k: {"retained": [], "delete": []}
+    )
     monkeypatch.setattr(
         backup_enviro,
         "replicate_file",
@@ -204,9 +212,10 @@ def test_a_non_integer_failed_run_retention_fails_at_load(lane, bad):
     explicitly because bool subclasses int and would silently mean 1.
     """
     config, _, _ = lane
-    cfg = json.loads(config.read_text())
+    document = json.loads(config.read_text())
+    cfg = document["hosts"][socket.gethostname()]
     cfg["local_staging"]["failed_run_retention"] = bad
-    config.write_text(json.dumps(cfg))
+    config.write_text(json.dumps(document))
 
     with pytest.raises(backup_enviro.BackupError, match="failed_run_retention"):
         backup_enviro.load_config(config)
@@ -222,9 +231,10 @@ def test_a_config_without_failed_run_retention_fails_at_load(lane):
     misconfiguration, an older config, so that is what the gate holds it to.
     """
     config, _, _ = lane
-    cfg = json.loads(config.read_text())
+    document = json.loads(config.read_text())
+    cfg = document["hosts"][socket.gethostname()]
     del cfg["local_staging"]["failed_run_retention"]
-    config.write_text(json.dumps(cfg))
+    config.write_text(json.dumps(document))
 
     with pytest.raises(backup_enviro.BackupError, match="missing failed_run_retention"):
         backup_enviro.load_config(config)
@@ -260,9 +270,10 @@ def test_retention_larger_than_the_backlog_deletes_nothing(lane, monkeypatch):
     which is why an extreme mutation could not find it.
     """
     config, staging, _ = lane
-    cfg = json.loads(config.read_text())
+    document = json.loads(config.read_text())
+    cfg = document["hosts"][socket.gethostname()]
     cfg["local_staging"]["failed_run_retention"] = 4  # keep_older = 3
-    config.write_text(json.dumps(cfg))
+    config.write_text(json.dumps(document))
 
     staging.mkdir(parents=True, exist_ok=True)
     priors = ["enviro_20260101T000000Z.db", "enviro_20260102T000000Z.db"]
@@ -344,14 +355,15 @@ def test_a_verified_run_leaves_the_source_tree_untouched(lane, monkeypatch):
 def test_cli_records_both_sources_despite_first_source_failure(lane, monkeypatch):
     """Real SQLite/rclone, independent source attempts and an honest exit."""
     config, staging, root = lane
-    cfg = json.loads(config.read_text())
+    document = json.loads(config.read_text())
+    cfg = document["hosts"][socket.gethostname()]
     rclone_config = root / "rclone.conf"
     rclone_config.write_text(f"[test]\ntype = alias\nremote = {root / 'remote'}\n")
     cfg["remote"]["rclone_config_path"] = str(rclone_config)
     blocked = root / "not-a-directory"
     blocked.write_bytes(b"staging cannot live inside this file")
     cfg["local_staging"]["staging_dir"] = str(blocked / "staging")
-    config.write_text(json.dumps(cfg))
+    config.write_text(json.dumps(document))
     monkeypatch.setattr(sys, "argv", ["backup_enviro.py", "--config", str(config)])
 
     assert backup_enviro.main() == 1
@@ -371,11 +383,107 @@ def test_cli_records_both_sources_despite_first_source_failure(lane, monkeypatch
 def test_invalid_source_kind_dry_run_fails_without_writes(lane, monkeypatch):
     """Dry-run cannot certify a source configuration the real run rejects."""
     config, staging, root = lane
-    cfg = json.loads(config.read_text())
+    document = json.loads(config.read_text())
+    cfg = document["hosts"][socket.gethostname()]
     cfg["sources"]["database"]["kind"] = "sqlite_snapsho"
-    config.write_text(json.dumps(cfg))
+    config.write_text(json.dumps(document))
     monkeypatch.setattr(sys, "argv", ["backup_enviro.py", "--config", str(config), "--dry-run"])
     before = (root / "raw-capture/ambient/2026-08-07.ndjson").read_bytes()
     assert backup_enviro.main() == 1
     assert not staging.exists()
     assert (root / "raw-capture/ambient/2026-08-07.ndjson").read_bytes() == before
+
+
+def test_delivery_observations_are_not_pruned(lane, monkeypatch):
+    config, staging, _ = lane
+    manifests = staging / "manifests"
+    manifests.mkdir(parents=True)
+    originals = {}
+    for day in range(1, 32):
+        path = manifests / f"backup_202601{day:02d}T000000Z.json"
+        path.write_text(json.dumps({"results": []}))
+        originals[path] = path.read_bytes()
+    _stub_success(monkeypatch)
+    assert backup_enviro.run(config) == 0
+    assert all(path.read_bytes() == content for path, content in originals.items())
+
+
+def test_pruning_failure_is_loud_after_independent_raw_delivery(lane, monkeypatch):
+    from backup_snapshots import prune_database_snapshots
+
+    config, staging, root = lane
+    document = json.loads(config.read_text())
+    cfg = document["hosts"][socket.gethostname()]
+    rclone_config = root / "rclone.conf"
+    rclone_config.write_text(f"[test]\ntype = alias\nremote = {root / 'remote'}\n")
+    cfg["remote"]["rclone_config_path"] = str(rclone_config)
+    config.write_text(json.dumps(document))
+    remote = root / "remote/backups/x/database"
+    remote.mkdir(parents=True)
+    # Existing producer objects can survive from before retention was present.
+    for day in (1, 2):
+        (remote / f"enviro_2026010{day}T000000Z.db").write_bytes(b"old snapshot")
+    manifests = staging / "manifests"
+    manifests.mkdir(parents=True)
+    from shared.offsite_replication import local_md5
+
+    name = "enviro_20260102T000000Z.db"
+    digest = local_md5(remote / name)
+    (manifests / "backup_20260102T000000Z.json").write_text(
+        json.dumps(
+            {
+                "results": [
+                    {
+                        "kind": "file",
+                        "remote_object": "test:backups/x/database/" + name,
+                        "source": str(staging / name),
+                        "verified": True,
+                        "local_hash": digest,
+                        "remote_hash": digest,
+                    }
+                ],
+            }
+        )
+    )
+
+    def deny_delete(*args, **kwargs):
+        remote.chmod(0o500)
+        try:
+            return prune_database_snapshots(*args, **kwargs)
+        finally:
+            remote.chmod(0o700)
+
+    monkeypatch.setattr(backup_enviro, "prune_database_snapshots", deny_delete)
+    assert backup_enviro.run(config) == 1
+    assert (
+        root / "remote/backups/x/raw-capture/ambient/2026-08-07.ndjson"
+    ).read_bytes() == b'{"n":1}\n'
+    observed = sorted(manifests.glob("backup_*_retention.json"))
+    assert len(observed) == 1
+    row = json.loads(observed[0].read_text())["results"][0]
+    assert row["verified"] is True
+    assert "retention failed" in row["detail"]["error"]
+
+
+def test_coverage_preserves_ownership_and_binds_the_actual_live_source(lane):
+    from scripts.backup_coverage import coverage
+
+    config, _, root = lane
+    document = json.loads(config.read_text())
+    cfg = document["hosts"][socket.gethostname()]
+    before = coverage(config)
+    assert set(before["exclusions"]) == {
+        source["source_path"] for source in cfg["sources"].values()
+    }
+    assert {gap["target"] for gap in before["gaps"]} == {"database", "raw_capture"}
+    rclone_config = root / "rclone.conf"
+    rclone_config.write_text(f"[test]\ntype = alias\nremote = {root / 'remote'}\n")
+    cfg["remote"]["rclone_config_path"] = str(rclone_config)
+    config.write_text(json.dumps(document))
+    assert backup_enviro.run(config) == 0
+    assert coverage(config)["gaps"] == []
+    cfg["sources"]["database"]["source_path"] = str(root / "replacement/enviro.db")
+    config.write_text(json.dumps(document))
+    after = coverage(config)
+    assert str(root / "replacement/enviro.db") in after["exclusions"]
+    assert [gap["target"] for gap in after["gaps"]] == ["database"]

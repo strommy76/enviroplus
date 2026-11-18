@@ -17,12 +17,11 @@ Type=oneshot
 User=pistrommy
 Group=pistrommy
 WorkingDirectory=/home/pistrommy/projects/enviroplus
-Environment=PYTHONPATH=/home/pistrommy/projects
+Environment=PYTHONPATH=/home/pistrommy/projects/enviroplus:/home/pistrommy/projects
 ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python scripts/backup_enviro.py
 
-# Off-nominal guard only. A nominal run transfers deltas over an already-synced
-# tree and completes in well under a minute; the first full run moved 115.6 MB
-# in ~2.5 minutes. This trips on a hung transfer, never on a normal one.
+# Config-owned provisional enclosing run limit; first seed115.6MB took~150s.
+# Settle from post-change invocation durations at the current corpus size.
 TimeoutStartSec=3600
 
 # The manifest records each source's verified or failed outcome; any failure
