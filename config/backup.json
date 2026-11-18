@@ -60,13 +60,33 @@
             "native_metadata_bytes_per_file": 163,
             "provisional": "Native current-corpus831-file seed reported131KiB logical metadata; upper-rounded132KiB /831, ceiling163B per file. Refit when source-name/file-count shape changes or observed native cost exceeds this fit. No compression/dedup credit."
           }
+        },
+        "observations": {
+          "authority": "authoritative",
+          "source_path": "/home/pistrommy/projects/enviroplus/.backup-staging/native/observations",
+          "capture_argv": null,
+          "estimate_argv": [
+            "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+            "-m",
+            "shared.backup_estimates",
+            "--config",
+            "/home/pistrommy/projects/enviroplus/config/backup.json",
+            "--component",
+            "observations"
+          ],
+          "estimate": {
+            "native_metadata_bytes_per_file": 1024,
+            "provisional": "Uses the existing two-file native seed metadata upper allowance per file. Settle against actual UUID-named observation-tree native statistics before activation; no compression/dedup credit."
+          }
         }
       },
       "destinations": {
         "local": null,
         "drive": {
           "storage": "gcd://backups/enviroplus-native",
-          "environment": {"DUPLICACY_GCD_TOKEN": "/home/pistrommy/.config/duplicacy/google-drive.json"},
+          "environment": {
+            "DUPLICACY_GCD_TOKEN": "/home/pistrommy/.config/duplicacy/google-drive.json"
+          },
           "copies": 2,
           "execution_timeout_seconds": 3600,
           "capacity_argv": [
@@ -80,7 +100,10 @@
             "1485052047360",
             "--timeout-seconds",
             "300"
-          ]
+          ],
+          "provisional": {
+            "capacity_timeout_seconds": "The --timeout-seconds300 native Google SDK request allowance is provisional. Settle actual cold-token-refresh and loaded quota request timings before activation."
+          }
         }
       },
       "cadence": {
@@ -91,6 +114,9 @@
           "randomized_delay_seconds": "Retained deployment setting; settle whether delay is needed from the first post-change invocation overlap measurements.",
           "execution_timeout_seconds": "Provisional retained enclosing allowance. Current native local seed: SQLite107962747B in7.26s and raw2028233827B/831files in50.82s. Settle the whole current-corpus cloud invocation at installation before activation."
         }
+      },
+      "provisional": {
+        "metadata_timeout_seconds": "300s retained provisional metadata allowance, not a measured maximum. Settle cold and loaded estimate/list/quota command timings on this host before activation."
       }
     }
   }

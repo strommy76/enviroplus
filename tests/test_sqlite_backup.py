@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import shared
 from shared.backup_service import run
 from shared.backup_status import latest_status
 from shared.duplicacy_cli import Duplicacy
@@ -54,10 +55,21 @@ def test_same_cardinality_restored_corruption_fails(tmp_path):
         verify(output)
 
 
-def test_enviro_runs_real_producers_through_common_service(tmp_path):
+def test_enviro_runs_real_producers_through_common_service(tmp_path, monkeypatch):
     binary = os.environ.get("DUPLICACY_TEST_BINARY")
     if binary is None:
         pytest.skip("Native consumer qualification requires DUPLICACY_TEST_BINARY")
+    # Producers run from the synthetic project's cwd, not this checkout.
+    # Preserve the actual source owners as absolute child import bindings.
+    monkeypatch.setenv(
+        "PYTHONPATH",
+        os.pathsep.join(
+            [
+                str(Path(__file__).resolve().parents[1]),
+                str(Path(shared.__file__).absolute().parent.parent),
+            ]
+        ),
+    )
     source = tmp_path / "live.db"
     database(source).close()
     raw = tmp_path / "raw"
@@ -114,6 +126,21 @@ def test_enviro_runs_real_producers_through_common_service(tmp_path):
                 ],
                 "estimate": {"native_metadata_bytes_per_file": 163},
             },
+            "observations": {
+                "authority": "authoritative",
+                "source_path": str(tmp_path / "state/observations"),
+                "capture_argv": None,
+                "estimate_argv": [
+                    sys.executable,
+                    "-m",
+                    "shared.backup_estimates",
+                    "--config",
+                    str(config),
+                    "--component",
+                    "observations",
+                ],
+                "estimate": {"native_metadata_bytes_per_file": 1024},
+            },
         },
         "destinations": {
             "local": {
@@ -135,6 +162,7 @@ def test_enviro_runs_real_producers_through_common_service(tmp_path):
     first = run(config)
     assert first["ok"]
     assert latest_status(config)["ok"]
+    assert not (tmp_path / "state/payloads/database").exists()
     restore = tmp_path / "restore"
     restore.mkdir()
     recovery = Duplicacy(
@@ -146,9 +174,52 @@ def test_enviro_runs_real_producers_through_common_service(tmp_path):
     source.rename(tmp_path / "temporarily-offline.db")
     result = run(config)
     assert not result["ok"]
-    assert [delivery["component"] for delivery in result["deliveries"]] == ["raw_capture"]
+    assert [delivery["component"] for delivery in result["deliveries"]] == [
+        "raw_capture",
+        "observations",
+    ]
     assert not latest_status(config)["ok"]
     assert (raw / "capture.ndjson").read_bytes() == b'{"original":true}\n'
+
+    # Fresh-directory recovery starts from the retained observations component,
+    # not the live evidence tree or a manufactured verification record.
+    evidence_dir = tmp_path / "recovered-observations"
+    evidence_dir.mkdir()
+    observations = Duplicacy(
+        binary, tmp_path / "observations-control", evidence_dir, str(storage), "observations", 300
+    )
+    observations.initialize()
+    observed_revision = next(
+        d["revision"] for d in result["deliveries"] if d["component"] == "observations"
+    )
+    observations.command("restore", "-r", str(observed_revision))
+    records = [json.loads(p.read_text()) for p in evidence_dir.glob("*.json")]
+    complete = max(
+        (r for r in records if r["type"] == "run" and r["complete"]),
+        key=lambda r: r["generated_utc"],
+    )
+    assert complete["run_id"] == first["run_id"]
+    for selected in complete["deliveries"]:
+        recovered = tmp_path / ("cohort-" + selected["component"])
+        recovered.mkdir()
+        native = Duplicacy(
+            binary,
+            tmp_path / ("control-" + selected["component"]),
+            recovered,
+            str(storage),
+            selected["snapshot_id"],
+            300,
+        )
+        native.initialize()
+        native.command("restore", "-r", str(selected["revision"]))
+        if selected["component"] == "database":
+            assert verify(recovered)["facts"]["table_rows"] == {"empty_but_valid": 0, "readings": 1}
+        elif selected["component"] == "raw_capture":
+            assert (recovered / "capture.ndjson").read_bytes() == b'{"original":true}\n'
+        else:
+            assert any(
+                json.loads(p.read_text())["type"] == "delivery" for p in recovered.glob("*.json")
+            )
 
 
 def test_native_unit_uses_common_owner_and_project_cadence():

@@ -305,7 +305,10 @@ ORDER BY ts;
 ## Backup and recovery
 
 `config/backup.json` owns this host's components, source bindings, per-project schedule,
-measured/provisional budgets and two Drive recovery points for each of SQLite and raw history.
+measured/provisional budgets and two Drive recovery points for SQLite, raw history and
+the authoritative backup observations. Observations are the last configured component;
+their snapshot contains earlier components' completed delivery records from this run.
+The terminal whole-run/maintenance records enter the next observation snapshot.
 The local retained tier is disabled; working SQLite payloads are not retained copies.
 The existing `enviro_backup.service` invokes `shared.backup_service`; its `OnFailure`
 continues to use the host's existing notification owner. Duplicacy preferences/cache stay
@@ -315,6 +318,13 @@ At the separately directed installation, bind the operator's direct existing-app
 Google token by private file/environment reference, qualify Drive quota against the physical
 E: mirror, and settle current-corpus capacity and cloud deadlines before activation. No
 new OAuth app, relay, readback service, test uploads or old-backup migration is part of this change.
+
+For fresh-host recovery, first restore the `observations` component into an isolated
+directory with the native CLI. Read its retained complete run and exact delivery revisions
+to select a recoverable cohort. The terminal run record lags one invocation; the first
+seed alone cannot supply a previous complete-run record. Native listing alone is not
+verification evidence. One owner writes records synchronously before their snapshot;
+an interrupted/incomplete record is a recovery error, not a fabricated success.
 
 For directed recovery, use native Duplicacy restore for the selected project/component/revision
 into an operator-owned recovery directory, with its control directory outside the output.

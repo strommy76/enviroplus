@@ -38,7 +38,9 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
   declare which profile is active on a host.
 - Uncommitted `.env` owns secrets and host-specific infrastructure bindings.
 - `config/backup.json` owns the database/raw-capture replication contract;
-  `python -m shared.backup_service --config config/backup.json` is its supported execution path.
+  `enviro_backup.service` invokes the shared backup CLI. Use
+  `systemctl start enviro_backup.service` for a manual run, so the native service
+  owner prevents overlap with the timer. Do not run a concurrent direct CLI.
   `sqlite_backup.py` owns SQLite capture/estimation and artifact-bound restore validation;
   raw files use the native tree input and shared filesystem estimate. Database backups
   include irreplaceable legacy rows and are protected as authoritative. Delivery/run/maintenance
@@ -86,6 +88,10 @@ PYTHONPATH=.. python -m pytest
 python -m ruff check .
 python -m ruff format --check .
 ```
+
+The native backup lane additionally requires the qualified executable:
+`DUPLICACY_TEST_BINARY=/absolute/path/to/duplicacy PYTHONPATH=.. python -m pytest tests/test_sqlite_backup.py`.
+Without that binding, native cases report skipped coverage, never a native pass.
 
 The owned `tests/test_env_completeness.py` integration lane checks required bindings
 against this repository's installed `.env` (the common Git checkout for worktrees);
