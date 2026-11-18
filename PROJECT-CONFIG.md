@@ -38,7 +38,11 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
   declare which profile is active on a host.
 - Uncommitted `.env` owns secrets and host-specific infrastructure bindings.
 - `config/backup.json` owns the database/raw-capture replication contract;
-  `scripts/backup_enviro.py` is its supported execution path.
+  `python -m shared.backup_service --config config/backup.json` is its supported execution path.
+  `sqlite_backup.py` owns SQLite capture/estimation and artifact-bound restore validation;
+  raw files use the native tree input and shared filesystem estimate. Database backups
+  include irreplaceable legacy rows and are protected as authoritative. Delivery/run/maintenance
+  observations are append-only authority; payloads/caches and status views are derived.
 - Tests must isolate the raw-retention root and must never write to the live
   canonical capture tree.
 
@@ -68,7 +72,7 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
 - Repo-managed service files describe the intended service content. Which
   hardware-specific dashboard unit is active is host residue and must be proven
   from the running service manager, not inferred from this repository.
-- Backup capture and off-host replication use the shared replication service;
+- Backup orchestration, native incremental delivery and retention use the shared backup service;
   provider collectors and the dashboard do not implement competing backup paths.
 
 ## Supported Validation

@@ -1,8 +1,7 @@
 [Unit]
 Description=Enviro+ offsite backup (database snapshot + canonical raw tier)
 Documentation=file:///home/pistrommy/projects/enviroplus/config/backup.json
-# Network-online, not just network: rclone needs a routable path to the remote,
-# and starting before that produces a failure that looks like a bad remote.
+# The native Drive API needs a routable network path.
 After=network-online.target
 Wants=network-online.target
 
@@ -18,13 +17,13 @@ User=pistrommy
 Group=pistrommy
 WorkingDirectory=/home/pistrommy/projects/enviroplus
 Environment=PYTHONPATH=/home/pistrommy/projects/enviroplus:/home/pistrommy/projects
-ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python scripts/backup_enviro.py
+ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python -m shared.backup_service --config /home/pistrommy/projects/enviroplus/config/backup.json
 
-# Config-owned provisional enclosing run limit; first seed115.6MB took~150s.
-# Settle from post-change invocation durations at the current corpus size.
+# Config-owned provisional enclosing limit; qualify current-corpus cloud timing
+# at installation before activation. Local native seed took58.1s for both components.
 TimeoutStartSec=3600
 
-# The manifest records each source's verified or failed outcome; any failure
+# Immutable observations record each source's delivery and maintenance; any failure
 # exits non-zero. Do not retry into a failing remote -- the timer's next firing is the
 # retry, and a failed unit stays visible in systemctl --failed rather than being
 # churned away.

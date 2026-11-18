@@ -1,0 +1,46 @@
+"""One-use local qualification of the new format against current Enviro data."""
+
+from pathlib import Path
+import hashlib
+import json
+import time
+
+from shared.duplicacy_cli import Duplicacy, native_events
+
+effort = Path(__file__).resolve().parent
+work = effort / "enviro-native-qualification"
+binary = str(effort / "tools/duplicacy_linux_arm64_3.3.0")
+sources = {
+    "database": work / "payload",
+    "raw_capture": Path("/home/pistrommy/projects/enviroplus/raw-capture"),
+}
+results = []
+for name, source in sources.items():
+    files = [p for p in source.rglob("*") if p.is_file()]
+    source_bytes = sum(p.stat().st_size for p in files)
+    client = Duplicacy(binary, work / "control" / name, source,
+                       str(work / "storage"), name, 3600)
+    started = time.monotonic()
+    client.initialize()
+    revision = client.backup("current-enviro-local-qualification")
+    stats = []
+    for log in client.control.glob("*.log"):
+        for _, event, message in native_events(log):
+            if event == "BACKUP_STATS":
+                stats.append(message)
+    results.append({
+        "component": name,
+        "source_bytes_at_start": source_bytes,
+        "files_at_start": len(files),
+        "revision": revision,
+        "native_stats": stats,
+        "elapsed_seconds": time.monotonic() - started,
+    })
+    (work / (name + "-result.json")).write_text(json.dumps(results[-1], indent=2)+"\n")
+    print(json.dumps(results[-1]), flush=True)
+result = {
+    "components": results,
+    "native_binary_sha256": hashlib.sha256(Path(binary).read_bytes()).hexdigest(),
+    "scope": "local new-format qualification only; no old backups or cloud storage touched",
+}
+(work / "result.json").write_text(json.dumps(result, indent=2)+"\n")

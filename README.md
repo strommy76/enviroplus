@@ -73,7 +73,7 @@ flowchart LR
     subgraph Outputs
         DISPLAY["🖥️ ST7735\n160×80 Display"]
         GRAFANA["📈 Grafana\n(container, reads enviro.db)"]
-        OFFSITE[("☁️ Offsite backup\nverified by remote hash")]
+        OFFSITE[("☁️ Offsite backup\nnative hash + API success")]
     end
 
     dynamic_config.pi5.json -->|hot-reload| enviro_dash3.py
@@ -301,3 +301,25 @@ ORDER BY ts;
 - [x] Adafruit SCD-41 CO₂ sensor integration
 - [ ] Grafana dashboard on AI host via Tailscale
 - [ ] Migrate to Raspberry Pi 5
+
+## Backup and recovery
+
+`config/backup.json` owns this host's components, source bindings, per-project schedule,
+measured/provisional budgets and two Drive recovery points for each of SQLite and raw history.
+The local retained tier is disabled; working SQLite payloads are not retained copies.
+The existing `enviro_backup.service` invokes `shared.backup_service`; its `OnFailure`
+continues to use the host's existing notification owner. Duplicacy preferences/cache stay
+outside source trees. Source data is never changed by this adoption.
+
+At the separately directed installation, bind the operator's direct existing-app native
+Google token by private file/environment reference, qualify Drive quota against the physical
+E: mirror, and settle current-corpus capacity and cloud deadlines before activation. No
+new OAuth app, relay, readback service, test uploads or old-backup migration is part of this change.
+
+For directed recovery, use native Duplicacy restore for the selected project/component/revision
+into an operator-owned recovery directory, with its control directory outside the output.
+Then run `python -m sqlite_backup verify <restored-database-directory>`. It compares integrity,
+exact captured bytes and captured table cardinalities (empty tables are valid), using the
+restored `capture.json`; it never queries later live data as an oracle. Raw recovery preserves
+the native selected revision's file boundaries, not a claim of a cross-file transaction.
+Existing backup objects remain outside this effort and are not deleted or qualified here.

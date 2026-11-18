@@ -3,9 +3,7 @@ Description=Daily Enviro+ offsite backup
 Documentation=file:///home/pistrommy/projects/enviroplus/config/backup.json
 
 [Timer]
-# 09:20 UTC = 05:20 EDT. Chosen to sit clear of the stocks backup lanes (capture
-# runs 07:10 UTC) so two rclone jobs never contend for the same remote, and well
-# clear of any market-hours activity on this host.
+# Project-configured quiet-hour calendar; no fleet-wide frequency assumption.
 OnCalendar=*-*-* 09:20:00 UTC
 
 # The predecessor to this lane failed for one reason above all others: it was
@@ -14,7 +12,7 @@ OnCalendar=*-*-* 09:20:00 UTC
 # silently skipping the day.
 Persistent=true
 
-# Avoids a thundering herd against the remote if other timers share the minute.
+# Provisional inherited delay; settle from actual overlap measurements.
 RandomizedDelaySec=300
 
 [Install]

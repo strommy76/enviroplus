@@ -1,0 +1,15 @@
+{
+ "captured_utc": "2026-11-18T21:19:22.220236+00:00",
+ "source": "/home/pistrommy/projects/enviroplus/enviro.db",
+ "artifact": "snapshot.db",
+ "facts": {
+  "bytes": 107962368,
+  "sha256": "f6c35c7b0a85615ceb59a36f909abb9dc485f838461b282f3a165078f4fc9cfd",
+  "table_rows": {
+   "epa_air_quality": 4736,
+   "nws_weather": 8369,
+   "outdoor": 342949,
+   "readings": 292620
+  }
+ }
+}

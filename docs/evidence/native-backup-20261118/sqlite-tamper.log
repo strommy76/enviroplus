@@ -1,0 +1,22 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______________ test_same_cardinality_restored_corruption_fails ________________
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/backup-config-fleet-20261118/producer-qualification/020a3003de54444fa9236abc052738d0/sqlite-tamper/test_same_cardinality_restored0')
+
+    def test_same_cardinality_restored_corruption_fails(tmp_path):
+        source = tmp_path / "live.db"
+        database(source).close()
+        output = tmp_path / "payload"
+        output.mkdir()
+        capture(source, output)
+        with sqlite3.connect(output / "snapshot.db") as restored:
+            restored.execute("UPDATE readings SET value='tampered'")
+>       with pytest.raises(RuntimeError, match="captured evidence"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'RuntimeError'>
+
+tests/test_sqlite_backup.py:53: Failed
+=========================== short test summary info ============================
+FAILED tests/test_sqlite_backup.py::test_same_cardinality_restored_corruption_fails
+1 failed in 0.12s

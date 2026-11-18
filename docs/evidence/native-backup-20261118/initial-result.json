@@ -1,0 +1,34 @@
+{
+  "components": [
+    {
+      "component": "database",
+      "source_bytes_at_start": 107962747,
+      "files_at_start": 2,
+      "revision": 1,
+      "native_stats": [
+        "Files: 2 total, 105,432K bytes; 2 new, 105,432K bytes",
+        "File chunks: 24 total, 105,432K bytes; 24 new, 105,432K bytes, 30,706K bytes uploaded",
+        "Metadata chunks: 3 total, 1K bytes; 3 new, 1K bytes, 1K bytes uploaded",
+        "All chunks: 27 total, 105,434K bytes; 27 new, 105,434K bytes, 30,708K bytes uploaded",
+        "Total running time: 00:00:07"
+      ],
+      "elapsed_seconds": 7.255879327000002
+    },
+    {
+      "component": "raw_capture",
+      "source_bytes_at_start": 2028233827,
+      "files_at_start": 831,
+      "revision": 1,
+      "native_stats": [
+        "Files: 831 total, 1,934M bytes; 831 new, 1,934M bytes",
+        "File chunks: 415 total, 1,934M bytes; 415 new, 1,934M bytes, 354,624K bytes uploaded",
+        "Metadata chunks: 3 total, 131K bytes; 3 new, 131K bytes, 95K bytes uploaded",
+        "All chunks: 418 total, 1,934M bytes; 418 new, 1,934M bytes, 354,719K bytes uploaded",
+        "Total running time: 00:00:50"
+      ],
+      "elapsed_seconds": 50.81412337400252
+    }
+  ],
+  "native_binary_sha256": "0e28cc3d943b2357136364d73a66ac82309ed9ecc36a3f9fea64b23ca1f8427c",
+  "scope": "local new-format qualification only; no old backups or cloud storage touched"
+}
