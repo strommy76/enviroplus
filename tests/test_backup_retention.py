@@ -80,7 +80,7 @@ def test_committed_units_follow_native_host_configuration():
     assert cfg["local"] is None
 
 
-@pytest.mark.parametrize("absent", ["host", "drive", "local", "cadence", "coverage_command"])
+@pytest.mark.parametrize("absent", ["host", "drive", "local", "cadence"])
 def test_required_configuration_absence_is_loud(tmp_path, absent):
     from scripts.backup_enviro import BackupError, load_config
 

@@ -83,6 +83,10 @@ python -m ruff check .
 python -m ruff format --check .
 ```
 
+The owned `tests/test_env_completeness.py` integration lane checks required bindings
+against this repository's installed `.env` (the common Git checkout for worktrees);
+it never reports secret values. Missing bindings fail at the public config seam.
+
 If Ruff is unavailable, that validation lane is red until the declared developer
 environment is restored; absence is not a passing result.
 

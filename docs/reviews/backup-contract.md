@@ -1,13 +1,43 @@
 # Backup configuration and retained copies
 
-Plan260ca28b and PiClaude verdict13f5b124 implement Bryan's November18 project-owned backup configuration and two-Drive-copy decisions (397a7ca8/1fc81098). Library direction550704ce chooses the existing shared repository; generic discovery remains held for that plan review. PiCodex executes this same coordinated plan. This record states decisions, not verbatim operator words.
+Authority: Bryan's November18 project-count/configuration decisions397a7ca8/
+1fc81098 and project-only rulings cc73641b/beb15280. Revised complete plan
+1c0f0fff, verified f408d688, lives in shared PR6 docs/plans/backup-configuration.md.
+PiCodex executes; PiClaude owns assigned cross-family whole-artifact seats and
+adjudication. Root independently adjudicates every original finding.
 
-C/H: lasting runtime code. Failure can silently misstate coverage or irreversibly delete snapshots, so whole-artifact cross-family review applies. A source/config revert restores prior behavior; removed bytes are not promised recoverable. Fleet landing remains held. No activation, upload, live deletion, secret edit or service installation is included.
+C/H: lasting runtime code; wrong retained-object selection could silently
+misstate delivery or irreversibly remove copies. k applies to the final whole
+source. Source/config revert restores behavior, not deleted bytes. Fleet landing
+and activation remain held. No live upload/delete or secret/configuration change.
 
-`config/backup.json` owns the native host entry, Drive2/local:null, sources, coverage argv, timer calendar, delay and provisional enclosing run bound. `backup_snapshots.py` owns exact producer naming, current remote-hash/evidence selection and native removal. Keep the two newest verified database objects; remove only exact producer objects older than the oldest survivor. Fewer than two proofs permits no removal. Preserve newer unverified objects, other sources and unmanaged objects. The additive raw tree has no pruning path.
+One config/backup.json owns exact native-host sources, Drive2/local:null and
+calendar/delay/enclosing lifetime with settling measurements at definition.
+The existing service supplies PYTHONPATH; no private runtime path insertion.
+backup_snapshots.py owns exact producer-object selection and native rclone.
+Keep two freshly hash-verified delivered database copies, remove only older exact
+producer objects, and preserve newer unverified/unmanaged/other-source objects.
+With fewer than two verified copies, prune nothing. Prune failure stays nonzero,
+while independent additive raw capture still executes; raw partitions are never
+pruned here. Append-only delivery is recorded before maintenance; the separate
+maintenance observation never replaces it. All authoritative manifests remain.
+Failed staging retains one latest diagnostic, not another recovery-copy tier.
 
-Delivery is recorded before maintenance; a second observation reports maintenance without rewriting delivery. Authoritative manifests are append-only and no longer pruned. Failed staging retains the latest diagnostic snapshot, not another recovery tier. Coverage preserves source exclusions when evidence is missing and reports named gaps. New delivery evidence binds the actual configured source path to its staged object; an old staged filename alone cannot prove a replacement live source. Shared retains transport verification; this project owns policy and its run allowance. The service supplies the import environment rather than the executable inserting a private host path.
+The host discovery producer, coverage_command and sole coverage test are removed
+by the project-only ruling. Its unconsumed source-path metadata is removed too;
+source_name still binds each result to its actual configured retention source.
+The live .env integration check moves from shared to its owner here, using the
+common Git checkout path for worktrees, without reporting secret values.
 
-Validation: complete Enviro suite260passed using the Pimoroni interpreter and candidate shared transport. Full Ruff lint/format passed. Observed real-code violations make tests fail for copy count, cutoff, source-name isolation, fresh-hash matching, calendar/delay/lifetime drift and manifest pruning. The first isolation control exposed a fixture blind spot; its sibling now sorts below the cutoff and the control fails. These observations qualify those properties, not every test. Method/results remain in `~/projects/.tmp/backup-config-fleet-20261118/qualify_enviro_backup_tests.py` and `enviro-observed-test-violations.json` until the effort lands; final evidence is folded into the whole review artifact.
+Current regression observation:263 tests passed5.82s through the deployed
+Pimoroni interpreter with candidate shared imported BEFORE pytest and its real
+path asserted. Full Ruff lint/format passes. Eight real-source/unit violations
+for hash/count/cutoff/source isolation, calendar/delay/lifetime and immutable
+history are being requalified against final source; earlier results remain dated
+provenance until that observation completes. No claim that every passing test
+establishes its property under r. Full final source review/effect review pending.
 
-Activation requires the exact prospective deletion set from `snapshot_retention_plan`, current shared capacity, final reviewed source/config and operator deployment authority. Local synthetic tests used no Drive data. Whole-artifact review and deployed-effect review remain pending and distinct.
+All-section construction and implementation evidence are in the coordinated
+plan and final whole artifact. Activation still requires the exact prospective
+snapshot_retention_plan deletion set, current shared capacity and operator
+full-boundary deployment authority. Synthetic tests used no Drive data.

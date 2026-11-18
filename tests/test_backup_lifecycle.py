@@ -93,7 +93,6 @@ def lane(tmp_path):
         "drive": 2,
         "local": None,
         "cadence": {},
-        "coverage_command": [sys.executable, "scripts/backup_coverage.py"],
     }
     path = tmp_path / "backup.json"
     path.write_text(json.dumps({"hosts": {socket.gethostname(): cfg}}))
@@ -463,27 +462,3 @@ def test_pruning_failure_is_loud_after_independent_raw_delivery(lane, monkeypatc
     row = json.loads(observed[0].read_text())["results"][0]
     assert row["verified"] is True
     assert "retention failed" in row["detail"]["error"]
-
-
-def test_coverage_preserves_ownership_and_binds_the_actual_live_source(lane):
-    from scripts.backup_coverage import coverage
-
-    config, _, root = lane
-    document = json.loads(config.read_text())
-    cfg = document["hosts"][socket.gethostname()]
-    before = coverage(config)
-    assert set(before["exclusions"]) == {
-        source["source_path"] for source in cfg["sources"].values()
-    }
-    assert {gap["target"] for gap in before["gaps"]} == {"database", "raw_capture"}
-    rclone_config = root / "rclone.conf"
-    rclone_config.write_text(f"[test]\ntype = alias\nremote = {root / 'remote'}\n")
-    cfg["remote"]["rclone_config_path"] = str(rclone_config)
-    config.write_text(json.dumps(document))
-    assert backup_enviro.run(config) == 0
-    assert coverage(config)["gaps"] == []
-    cfg["sources"]["database"]["source_path"] = str(root / "replacement/enviro.db")
-    config.write_text(json.dumps(document))
-    after = coverage(config)
-    assert str(root / "replacement/enviro.db") in after["exclusions"]
-    assert [gap["target"] for gap in after["gaps"]] == ["database"]

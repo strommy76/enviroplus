@@ -77,7 +77,6 @@ def load_config(path: Path) -> dict:
         "cadence",
         "drive",
         "local",
-        "coverage_command",
     ):
         if key not in cfg:
             raise BackupError(f"config missing required section: {key}")
@@ -295,7 +294,6 @@ def run(config_path: Path, *, dry_run: bool = False) -> int:
             result.detail["error"] = f"{type(exc).__name__}: {exc}"
             log.error("source %s failed: %s", name, result.detail["error"])
         result.detail["source_name"] = name
-        result.detail["source_path"] = str(source_path)
         results.append(result)
 
     if dry_run:

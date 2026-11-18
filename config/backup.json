@@ -60,13 +60,7 @@
           "randomized_delay_seconds": "Retained deployment setting; settle whether delay is needed from the first post-change invocation overlap measurements.",
           "execution_timeout_seconds": "Retained enclosing allowance; nominal seed115.6MB completed in about150s. Settle against first post-change complete native invocations at the current corpus size."
         }
-      },
-      "coverage_command": [
-        "/usr/bin/env",
-        "PYTHONPATH=/home/pistrommy/projects/enviroplus:/home/pistrommy/projects",
-        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
-        "scripts/backup_coverage.py"
-      ]
+      }
     }
   }
 }
