@@ -29,11 +29,11 @@ source_name still binds each result to its actual configured retention source.
 The live .env integration check moves from shared to its owner here, using the
 common Git checkout path for worktrees, without reporting secret values.
 
-Current regression observation:263 tests passed5.82s through the deployed
+Current regression observation:263 tests passed9.593s through the deployed
 Pimoroni interpreter with candidate shared imported BEFORE pytest and its real
 path asserted. Full Ruff lint/format passes. Eight real-source/unit violations
 for hash/count/cutoff/source isolation, calendar/delay/lifetime and immutable
-history were each introduced into real source at4214b09 and OBSERVED to fail their
+history were each introduced into real source at28c16d0 and OBSERVED to fail their
 named tests with candidate shared preloaded; exact bytes restored afterward.
 The complete method/results are in backup-validation. No claim that every passing test
 establishes its property under r. Full final source review/effect review pending.

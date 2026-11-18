@@ -1,74 +1,66 @@
 [
   {
+    "revision": "28c16d0f279832da062d7d37726880eefd577cb2",
     "violation": "remote-hash",
     "file": "backup_snapshots.py",
     "test": "tests/test_backup_retention.py::test_changed_remote_bytes_do_not_qualify_as_a_second_verified_copy",
     "exit_code": 1,
-    "observed_failed": true,
-    "revision": "4214b09",
-    "candidate_shared_preloaded": true
+    "observed_failed": true
   },
   {
+    "revision": "28c16d0f279832da062d7d37726880eefd577cb2",
     "violation": "retained-cutoff",
     "file": "backup_snapshots.py",
     "test": "tests/test_backup_retention.py::test_retention_keeps_two_proven_copies_and_only_prunes_older_producer_objects",
     "exit_code": 1,
-    "observed_failed": true,
-    "revision": "4214b09",
-    "candidate_shared_preloaded": true
+    "observed_failed": true
   },
   {
+    "revision": "28c16d0f279832da062d7d37726880eefd577cb2",
     "violation": "retained-count",
     "file": "backup_snapshots.py",
     "test": "tests/test_backup_retention.py::test_retention_keeps_two_proven_copies_and_only_prunes_older_producer_objects",
     "exit_code": 1,
-    "observed_failed": true,
-    "revision": "4214b09",
-    "candidate_shared_preloaded": true
+    "observed_failed": true
   },
   {
+    "revision": "28c16d0f279832da062d7d37726880eefd577cb2",
     "violation": "producer-isolation",
     "file": "backup_snapshots.py",
     "test": "tests/test_backup_retention.py::test_retention_keeps_two_proven_copies_and_only_prunes_older_producer_objects",
     "exit_code": 1,
-    "observed_failed": true,
-    "revision": "4214b09",
-    "candidate_shared_preloaded": true
+    "observed_failed": true
   },
   {
+    "revision": "28c16d0f279832da062d7d37726880eefd577cb2",
     "violation": "calendar-binding",
     "file": "enviro_backup.timer",
     "test": "tests/test_backup_retention.py::test_committed_units_follow_native_host_configuration",
     "exit_code": 1,
-    "observed_failed": true,
-    "revision": "4214b09",
-    "candidate_shared_preloaded": true
+    "observed_failed": true
   },
   {
+    "revision": "28c16d0f279832da062d7d37726880eefd577cb2",
     "violation": "delay-binding",
     "file": "enviro_backup.timer",
     "test": "tests/test_backup_retention.py::test_committed_units_follow_native_host_configuration",
     "exit_code": 1,
-    "observed_failed": true,
-    "revision": "4214b09",
-    "candidate_shared_preloaded": true
+    "observed_failed": true
   },
   {
+    "revision": "28c16d0f279832da062d7d37726880eefd577cb2",
     "violation": "lifetime-binding",
     "file": "enviro_backup.service",
     "test": "tests/test_backup_retention.py::test_committed_units_follow_native_host_configuration",
     "exit_code": 1,
-    "observed_failed": true,
-    "revision": "4214b09",
-    "candidate_shared_preloaded": true
+    "observed_failed": true
   },
   {
+    "revision": "28c16d0f279832da062d7d37726880eefd577cb2",
     "violation": "manifest-immutability",
     "file": "scripts/backup_enviro.py",
     "test": "tests/test_backup_lifecycle.py::test_delivery_observations_are_not_pruned",
     "exit_code": 1,
-    "observed_failed": true,
-    "revision": "4214b09",
-    "candidate_shared_preloaded": true
+    "observed_failed": true
   }
 ]
