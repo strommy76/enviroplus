@@ -1,0 +1,32 @@
+"""One-use real source/unit violations; restore exact candidate bytes each time."""
+import json, os, subprocess
+from pathlib import Path
+
+root=Path(__file__).resolve().parent
+repo=root/'enviroplus-worktree'
+python='/home/pistrommy/.virtualenvs/pimoroni/bin/python'
+checks=[
+ ('remote-hash', 'backup_snapshots.py', 'remote[name].md5 == delivered.get(name)', 'True', 'tests/test_backup_retention.py::test_changed_remote_bytes_do_not_qualify_as_a_second_verified_copy'),
+ ('retained-cutoff', 'backup_snapshots.py', 'name < retained[0]', 'name <= retained[0]', 'tests/test_backup_retention.py::test_retention_keeps_two_proven_copies_and_only_prunes_older_producer_objects'),
+ ('retained-count', 'backup_snapshots.py', 'verified[-keep:]', 'verified[-1:]', 'tests/test_backup_retention.py::test_retention_keeps_two_proven_copies_and_only_prunes_older_producer_objects'),
+ ('producer-isolation', 'backup_snapshots.py', 're.escape(stem) + r"_', 're.escape(stem) + r".*_', 'tests/test_backup_retention.py::test_retention_keeps_two_proven_copies_and_only_prunes_older_producer_objects'),
+ ('calendar-binding','enviro_backup.timer','OnCalendar=*-*-* 09:20:00 UTC','OnCalendar=*-*-* 09:21:00 UTC','tests/test_backup_retention.py::test_committed_units_follow_native_host_configuration'),
+ ('delay-binding','enviro_backup.timer','RandomizedDelaySec=300','RandomizedDelaySec=301','tests/test_backup_retention.py::test_committed_units_follow_native_host_configuration'),
+ ('lifetime-binding','enviro_backup.service','TimeoutStartSec=3600','TimeoutStartSec=3601','tests/test_backup_retention.py::test_committed_units_follow_native_host_configuration'),
+ ('manifest-immutability','scripts/backup_enviro.py','    total = sum(r.bytes_transferred or 0 for r in results)','    for stale in sorted(manifest_dir.glob("backup_*.json"))[:-30]:\n        stale.unlink()\n    total = sum(r.bytes_transferred or 0 for r in results)','tests/test_backup_lifecycle.py::test_delivery_observations_are_not_pruned'),
+]
+results=[]
+revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip()
+for name,relative,before,after,test in checks:
+ path=repo/relative;original=path.read_bytes();text=original.decode();assert text.count(before)==1,(name,text.count(before))
+ try:
+  path.write_text(text.replace(before,after,1))
+  env={**os.environ,'PYTHONPATH':str(root/'test-imports')+':'+str(repo),'PYTHONDONTWRITEBYTECODE':'1'}
+  run=subprocess.run([python,'-c','from pathlib import Path; import shared; assert Path(shared.__file__).resolve().parent == Path('+repr(str(root/'shared-worktree'))+'); import pytest,sys; raise SystemExit(pytest.main(sys.argv[1:]))','-q','--tb=short',test,'--basetemp',str(root/('enviro-violation-'+name))],cwd=repo,env=env,capture_output=True,text=True)
+  (root/('enviro-violation-'+name+'.log')).write_text(run.stdout+run.stderr)
+  result={'revision':revision,'violation':name,'file':relative,'test':test,'exit_code':run.returncode,'observed_failed':run.returncode==1 and 'FAILED' in run.stdout};results.append(result)
+  print(json.dumps(result),flush=True)
+ finally:
+  path.write_bytes(original)
+(root/'enviro-observed-test-violations.json').write_text(json.dumps(results,indent=2)+'\n')
+assert all(r['observed_failed'] for r in results)

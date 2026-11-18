@@ -37,17 +37,20 @@ _spec = importlib.util.spec_from_file_location("backup_enviro", _SCRIPT)
 backup_enviro = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(backup_enviro)
 
-from shared.offsite_replication import ReplicationError, ReplicationResult  # noqa: E402
+from shared.offsite_replication import ReplicationError, ReplicationResult, local_md5  # noqa: E402
 
 
 def _result(kind, source, remote_object):
+    source = Path(source)
+    digest = local_md5(source) if kind == "file" else None
+    files = [source] if kind == "file" else (p for p in source.rglob("*") if p.is_file())
     return ReplicationResult(
         kind=kind,
         source=str(source),
         remote_object=remote_object,
-        bytes_transferred=1,
-        local_hash=None,
-        remote_hash=None,
+        bytes_transferred=sum(path.stat().st_size for path in files),
+        local_hash=digest,
+        remote_hash=digest,
         verified=True,
         started_utc="2026-08-07T00:00:00+00:00",
         finished_utc="2026-08-07T00:00:01+00:00",

@@ -33,11 +33,24 @@ Current regression observation:263 tests passed5.82s through the deployed
 Pimoroni interpreter with candidate shared imported BEFORE pytest and its real
 path asserted. Full Ruff lint/format passes. Eight real-source/unit violations
 for hash/count/cutoff/source isolation, calendar/delay/lifetime and immutable
-history are being requalified against final source; earlier results remain dated
-provenance until that observation completes. No claim that every passing test
+history were each introduced into real source at4214b09 and OBSERVED to fail their
+named tests with candidate shared preloaded; exact bytes restored afterward.
+The complete method/results are in backup-validation. No claim that every passing test
 establishes its property under r. Full final source review/effect review pending.
 
 All-section construction and implementation evidence are in the coordinated
 plan and final whole artifact. Activation still requires the exact prospective
 snapshot_retention_plan deletion set, current shared capacity and operator
 full-boundary deployment authority. Synthetic tests used no Drive data.
+
+The raw-tree preservation is existing behavior retained on PiClaude's
+recommendation in1fc81098; Bryan's10:36 answer selected copy counts. This
+interim snapshot/tree rclone transport is NOT the final encrypted-restic fleet
+target. That transport migration remains explicitly deferred work requiring a
+complete reviewed plan; no current contract-wide completion is claimed.
+
+Test triage additionally confirmed the old lifecycle fixture could claim verified
+file delivery with null hashes, which the native file replicator cannot produce.
+The fixture now obtains the actual source hash/size through the public primitive;
+tree results retain their real no-single-hash shape. This corrects test inputs
+under r without adding runtime logic or changing byte-proof expectations.
