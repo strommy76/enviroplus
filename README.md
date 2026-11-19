@@ -319,6 +319,10 @@ Google token by private file/environment reference, qualify Drive quota against 
 E: mirror, and settle current-corpus capacity and cloud deadlines before activation. No
 new OAuth app, relay, readback service, test uploads or old-backup migration is part of this change.
 
+Deploy the reviewed shared checkout and install its declared dependencies into the
+consumer interpreter before, or together with, this new backup invocation. The old
+canonical shared checkout does not provide the new modules. Landing is not activation.
+
 For fresh-host recovery, first restore the `observations` component into an isolated
 directory with the native CLI. Read its retained complete run and exact delivery revisions
 to select a recoverable cohort. The terminal run record lags one invocation; the first
