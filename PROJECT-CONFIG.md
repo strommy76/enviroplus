@@ -84,6 +84,7 @@ service or a developer environment satisfying `requirements.txt`, with the
 sibling `shared` package available:
 
 ```bash
+PYTHONPATH=.. python -m shared.backup_units --config config/backup.json --output-dir .
 PYTHONPATH=.. python -m pytest
 python -m ruff check .
 python -m ruff format --check .

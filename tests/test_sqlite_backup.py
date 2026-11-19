@@ -226,11 +226,14 @@ def test_enviro_runs_real_producers_through_common_service(tmp_path, monkeypatch
             )
 
 
-def test_native_unit_uses_common_owner_and_project_cadence():
+def test_native_unit_uses_common_owner_and_project_cadence(tmp_path):
+    from shared.backup_units import rendered_units
+
     root = Path(__file__).resolve().parents[1]
     config = json.loads((root / "config/backup.json").read_text())["hosts"][socket.gethostname()]
-    service = (root / "enviro_backup.service").read_text()
-    timer = (root / "enviro_backup.timer").read_text()
+    units = rendered_units(root / "config/backup.json")
+    service = units[config["cadence"]["service_unit"]]
+    timer = units[config["cadence"]["timer_unit"]]
     assert "-m shared.backup_service --config " in service
     service_config = ConfigParser(interpolation=None)
     service_config.read_string(service)
@@ -240,3 +243,22 @@ def test_native_unit_uses_common_owner_and_project_cadence():
     assert (
         f"RandomizedDelaySec={config['cadence']['randomized_delay_seconds']}" in timer.splitlines()
     )
+    document = json.loads((root / "config/backup.json").read_text())
+    cadence = document["hosts"][socket.gethostname()]["cadence"]
+    cadence.update(
+        execution_timeout_seconds=2713,
+        on_calendar="*-*-* 10:17:00 UTC",
+        randomized_delay_seconds=23,
+    )
+    (tmp_path / "config").mkdir()
+    path = tmp_path / "config/backup.json"
+    path.write_text(json.dumps(document))
+    for name in units:
+        (tmp_path / (name + ".in")).write_bytes((root / (name + ".in")).read_bytes())
+    edited = rendered_units(path)
+    service_config.read_string(edited[cadence["service_unit"]])
+    timer_config = ConfigParser(interpolation=None)
+    timer_config.read_string(edited[cadence["timer_unit"]])
+    assert service_config["Service"]["TimeoutStartSec"] == "2713"
+    assert timer_config["Timer"]["OnCalendar"] == "*-*-* 10:17:00 UTC"
+    assert timer_config["Timer"]["RandomizedDelaySec"] == "23"

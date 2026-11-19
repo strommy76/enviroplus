@@ -337,3 +337,14 @@ exact captured bytes and captured table cardinalities (empty tables are valid), 
 restored `capture.json`; it never queries later live data as an oracle. Raw recovery preserves
 the native selected revision's file boundaries, not a claim of a cross-file transaction.
 Existing backup objects remain outside this effort and are not deleted or qualified here.
+
+Backup service/timer files are derived outputs. After editing `config/backup.json`,
+render them before linking or reconciling systemd units:
+
+```bash
+python -m shared.backup_units --config config/backup.json --output-dir .
+```
+
+The `.in` files own unit policy; backup configuration alone owns cadence, jitter
+and the enclosing deadline. Generated unit files are ignored by Git. Apply the
+existing systemd link/reconcile and daemon-reload steps after rendering.

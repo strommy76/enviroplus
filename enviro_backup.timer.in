@@ -4,16 +4,14 @@ Documentation=file:///home/pistrommy/projects/enviroplus/config/backup.json
 
 [Timer]
 # Project-configured quiet-hour calendar; no fleet-wide frequency assumption.
-OnCalendar=*-*-* 09:20:00 UTC
 
 # The predecessor to this lane failed for one reason above all others: it was
 # never scheduled, so it never ran, so nobody learned it was broken. Persistent
-# means a host that was asleep at 09:20 still backs up on wake rather than
+# means a host that was asleep at the configured time still backs up on wake rather than
 # silently skipping the day.
 Persistent=true
 
-# Provisional inherited delay; settle from actual overlap measurements.
-RandomizedDelaySec=300
+# Timing directives are generated from config/backup.json.
 
 [Install]
 WantedBy=timers.target
