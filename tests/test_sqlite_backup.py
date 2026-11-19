@@ -231,3 +231,6 @@ def test_native_unit_uses_common_owner_and_project_cadence():
     assert "OnFailure=stocks_ops_alert@%n.service" in service
     assert f"TimeoutStartSec={config['cadence']['execution_timeout_seconds']}" in service
     assert f"OnCalendar={config['cadence']['on_calendar']}" in timer
+    assert (
+        f"RandomizedDelaySec={config['cadence']['randomized_delay_seconds']}" in timer.splitlines()
+    )
