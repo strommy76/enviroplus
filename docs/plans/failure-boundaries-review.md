@@ -1,3 +1,13 @@
+### Consumer fixture review fold — November19
+
+Astra1 and GLMF1 CONFIRMED: observations still carried its obsolete source_path
+and both identity arguments in the existing native integration fixture. Remove
+all three copied inputs without changing assertions or runtime. Repaired owning
+module5passed; disabling actual Shared argument injection ONLY for observations
+now makes that same flow test fail at first.ok. Source restored exactly. The
+original broader producer-input control still proves only its named combined
+case. Same C/H/axiom/all-section declaration; no new behavior or review scope.
+
 ## Common backup-interface consumer adoption — November19
 
 Released Shared batch8d57189a/50f593b8; common source is draft SharedPR8.

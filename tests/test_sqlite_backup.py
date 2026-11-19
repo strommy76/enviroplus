@@ -120,16 +120,11 @@ def test_enviro_runs_real_producers_through_common_service(tmp_path, monkeypatch
             },
             "observations": {
                 "authority": "authoritative",
-                "source_path": str(tmp_path / "state/observations"),
                 "capture_argv": None,
                 "estimate_argv": [
                     sys.executable,
                     "-m",
                     "shared.backup_estimates",
-                    "--config",
-                    str(config),
-                    "--component",
-                    "observations",
                 ],
                 "estimate": {"native_metadata_bytes_per_file": 1024},
             },
