@@ -1,0 +1,9 @@
+[Unit]
+Description=Check provider observation freshness
+
+[Timer]
+OnBootSec=0
+Unit=enviro_provider_health.service
+
+[Install]
+WantedBy=timers.target

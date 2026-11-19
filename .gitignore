@@ -22,3 +22,7 @@ raw-capture-tools/
 # Derived systemd backup units; edit config/backup.json or the .in templates.
 /enviro_backup.service
 /enviro_backup.timer
+
+# Derived from config/provider_health.json and matching .in templates.
+/enviro_provider_health.service
+/enviro_provider_health.timer

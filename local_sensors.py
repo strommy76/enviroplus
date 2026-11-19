@@ -125,22 +125,24 @@ def derive_row(samples: list[dict], publish_s: int) -> dict:
     start = interval_start(bucket_of(last["read_utc"], publish_s), publish_s)
     tmp = last_with(samples, "tmp119")
     scd = last_with(samples, "scd41")
-    bme = last["bme280"][-1]
-    gas = last["mics6814_ohms"]
-    pi = last["pi"]
+    bme = last_with(samples, "bme280")
+    gas = last_with(samples, "mics6814_ohms")
+    pi = last_with(samples, "pi")
+    lux = last_with(samples, "ltr559_lux")
+    cpu = last_with(samples, "cpu_temp_milli_c")
     row = {
         "ts": _ts(start),
         "temp_f": None if tmp is None else c2f(tmp["tmp119"]["temperature_c"]),
         "humidity": None if scd is None else scd["scd41"]["rh"],
-        "pressure": _r(bme["pressure"], 2),
-        "lux": _r(last["ltr559_lux"], 1),
-        "oxidising": _r(gas["oxidising"] / 1000, 1),
-        "reducing": _r(gas["reducing"] / 1000, 1),
-        "ammonia": _r(gas["nh3"] / 1000, 1),
-        "cpu_temp_c": _r(last["cpu_temp_milli_c"] / 1000, 1),
-        "cpu_load": _r(pi["loadavg_1m"], 2),
-        "mem_free_mb": _r(pi["mem_available_kb"] / 1024, 1),
-        "uptime_s": int(pi["uptime_s"]),
+        "pressure": None if bme is None else _r(bme["bme280"][-1]["pressure"], 2),
+        "lux": None if lux is None else _r(lux["ltr559_lux"], 1),
+        "oxidising": None if gas is None else _r(gas["mics6814_ohms"]["oxidising"] / 1000, 1),
+        "reducing": None if gas is None else _r(gas["mics6814_ohms"]["reducing"] / 1000, 1),
+        "ammonia": None if gas is None else _r(gas["mics6814_ohms"]["nh3"] / 1000, 1),
+        "cpu_temp_c": None if cpu is None else _r(cpu["cpu_temp_milli_c"] / 1000, 1),
+        "cpu_load": None if pi is None else _r(pi["pi"]["loadavg_1m"], 2),
+        "mem_free_mb": None if pi is None else _r(pi["pi"]["mem_available_kb"] / 1024, 1),
+        "uptime_s": None if pi is None else int(pi["pi"]["uptime_s"]),
     }
     pms = last_with(samples, "pms5003_frame_hex")
     words = None if pms is None else _pms_words(pms["pms5003_frame_hex"])

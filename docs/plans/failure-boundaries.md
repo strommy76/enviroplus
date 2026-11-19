@@ -30,9 +30,9 @@ LTR559, PMS and SCD41 at import; some reads/taps/display calls also escape lane
 handling. local_sensors.derive_row indexes BME/lux/gas/CPU unconditionally.
 Existing cabled-read isolation is incomplete at construction/bus boundaries.
 
-Extract hardware acquisition into a cohesive local sensor I/O module with lazy,
-independent driver initialization/read boundaries. Extract the display adapter
-separately from the pure enviro_screens renderer. The entrypoint composes these
+Extract hardware acquisition into one cohesive local sensor I/O module with lazy,
+independent driver initialization/read boundaries, including the display hardware.
+The existing enviro_screens renderer remains pure; no separate adapter file is added. The entrypoint composes these
 owners with existing raw retention and projection; it is not another hardware
 registry/plugin framework. Each real sensor (including host metrics) records
 its own failed acquisition without invented measurements; siblings still read.
@@ -115,3 +115,48 @@ k declared family review then receiving review; l absent hardware/measurement
 explicit; m same acquisition contract under missing hardware; n/o explicit
 failures/dispositions; p/q remove fatal design statements/superseded paths and
 update tests/docs; r real implementation violations observed, no mirrored oracle.
+
+## Plan-review adjudication and implementation shape
+
+PiClaude accepted November19 11:07 (`ac12a55e`) with minimum-structure and
+net-source-line reporting constraints. One `sensor_io.py` owns hardware and
+independent resource lifetimes; no separate display-adapter file/framework was
+added. Keeping retryable driver/display handles out of the interval/retention
+entrypoint removes its existing gravity well; the one owner also preserves PMS
+GPIO handles across serial reinitialization. The installed gas driver latches
+an absent ADC; its public availability/cleanup plus module reload resets that
+failed setup for a later normal read, without writing driver-private flags.
+The exact installed driver APIs were read before moving them.
+
+`provider_health.py` is one read-only SQLite checker over committed freshness
+obligations. Ambient's presence predicate comes from the collector's existing
+measurement roles, including console-only rows. AirNow local timestamps must
+agree with their recorded timezone abbreviation under the configured civil
+zone, including the repeated autumn hour. The units are derived with the shared
+renderer from `config/provider_health.json`; nested templates avoid changing the
+backup renderer's existing single-template discovery contract. No health store,
+second log, timer per provider, new .env key or service activation is introduced.
+
+All current-day retained Ambient records were inspected through the supported
+reader/classifier. Its first observation is left-censored (Nov18 21:59 UTC),
+repeated up to46792s old: outage evidence, never a healthy freshness allowance.
+194 newly advancing observations had maximum first-arrival age84.006878s;
+159.006878s adds the actual60s poll and15s request budget. NWS reuses its7200s
+admission plus600s poll/15s request; AirNow combines documented hourly granularity
+and approximate one-hour publication lag with actual1800s poll/15s request.
+These fitted/derived bounds remain provisional at definition with their settling
+measurements. The E2 source reads actual latest observations, not log activity.
+
+The live ENVIRO_RAW_ROOT key is absent; collectors use their declared repository
+raw-capture root, matching backup configuration. The conditional raw-path concern
+is closed without change from that source check; no new key/resolver is needed.
+F4 removes the obsolete DB literal and invokes the existing environment owner.
+The backup test deliberately leaves an obsolete literal pointing at its first
+scratch DB, then changes only SQLITE_PATH: both captures must follow the binding.
+
+Operator evidence November19 11:25 (source: broker648ab3e1, PiClaude sent11:25:55):
+Bryan identified the preceding Ambient outage as a breaker trip caused by the
+entryway light shorting in rain, restored about06:00 EST. This confirms the old
+returns are off-nominal outage samples to exclude from the nominal fit, and the
+real stopped-controller condition E2 must surface. This is a recorded decision,
+not a verbatim quotation; the original relay travels with the review inputs.

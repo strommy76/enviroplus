@@ -1,0 +1,99 @@
+[
+  {
+    "name": "enviro-device-violation",
+    "source_paths": [
+      "enviro_dash3.py",
+      "local_sensors.py"
+    ],
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-c",
+      "import shared; import pytest; raise SystemExit(pytest.main(['tests/test_dash_loop.py', '-q', '-k', 'each_driver_boundary or display_and_proximity or gas_failure_is_retained', '--basetemp=/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-device-violation-tmp']))"
+    ],
+    "exit": 1
+  },
+  {
+    "name": "enviro-db-binding-violation",
+    "source_paths": [
+      "sqlite_backup.py"
+    ],
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-c",
+      "import shared; import pytest; raise SystemExit(pytest.main(['tests/test_sqlite_backup.py', '-q', '-k', 'capture_follows_only', '--basetemp=/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-db-binding-violation-tmp']))"
+    ],
+    "exit": 1
+  },
+  {
+    "name": "enviro-provider-filter-violation",
+    "source_paths": [
+      "config/provider_health.json"
+    ],
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-c",
+      "import shared; import pytest; raise SystemExit(pytest.main(['tests/test_provider_health.py', '-q', '-k', 'console_only', '--basetemp=/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-provider-filter-violation-tmp']))"
+    ],
+    "exit": 1
+  },
+  {
+    "name": "enviro-provider-isolation-violation",
+    "source_paths": [
+      "provider_health.py"
+    ],
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-c",
+      "import shared; import pytest; raise SystemExit(pytest.main(['tests/test_provider_health.py', '-q', '-k', 'broken_provider_query', '--basetemp=/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-provider-isolation-violation-tmp']))"
+    ],
+    "exit": 0
+  },
+  {
+    "name": "enviro-provider-isolation-violation",
+    "source_paths": [
+      "provider_health.py"
+    ],
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-c",
+      "import shared; import pytest; raise SystemExit(pytest.main(['tests/test_provider_health.py', '-q', '-k', 'broken_provider_query', '--basetemp=/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-provider-isolation-violation-tmp']))"
+    ],
+    "exit": 1
+  },
+  {
+    "name": "enviro-provider-clock-violation",
+    "source_paths": [
+      "provider_health.py"
+    ],
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-c",
+      "import shared; import pytest; raise SystemExit(pytest.main(['tests/test_provider_health.py', '-q', '-k', 'provider_local_time', '--basetemp=/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-provider-clock-violation-tmp']))"
+    ],
+    "exit": 1
+  },
+  {
+    "name": "enviro-provider-exit-violation",
+    "source_paths": [
+      "provider_health.py"
+    ],
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-c",
+      "import shared; import pytest; raise SystemExit(pytest.main(['tests/test_provider_health.py', '-q', '-k', 'cli_reports_failure', '--basetemp=/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-provider-exit-violation-tmp']))"
+    ],
+    "exit": 1
+  },
+  {
+    "name": "enviro-provider-null-violation",
+    "source_paths": [
+      "provider_health.py"
+    ],
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-c",
+      "import shared; import pytest; raise SystemExit(pytest.main(['tests/test_provider_health.py', '-q', '-k', 'missing_observation', '--basetemp=/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-provider-null-violation-tmp']))"
+    ],
+    "exit": 1
+  }
+]

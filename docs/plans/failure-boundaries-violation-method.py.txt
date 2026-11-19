@@ -1,0 +1,53 @@
+"""One-use real-source counterexamples. Every mutation is restored in finally."""
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+E = Path(__file__).resolve().parent
+imports = E.parent / 'backup-config-fleet-20261118/test-imports'
+S = E/'stocks-worktree'
+V = E/'enviroplus-worktree'
+records=[]
+
+def observe(name,root,paths,selector,files,mutate=None):
+    if len(sys.argv)>1 and name not in sys.argv[1:]:
+        return
+    saved={p:(root/p).read_bytes() for p in paths}
+    try:
+        for p in paths:
+            if mutate is None:
+                revision='c93a27a' if root==S else '0350abe'
+                raw=subprocess.check_output(['git','show',revision+':'+p],cwd=root)
+            else:
+                raw=mutate(p,saved[p].decode()).encode()
+            (root/p).write_bytes(raw)
+        python=str(S/'.venv/bin/python') if root==S else '/home/pistrommy/.virtualenvs/pimoroni/bin/python'
+        arguments=[*files,'-q','-k',selector,'--basetemp='+str(E/(name+'-tmp'))]
+        code='import shared; import pytest; raise SystemExit(pytest.main('+repr(arguments)+'))'
+        argv=[python,'-c',code] if root==V else [python,'-m','pytest',*arguments]
+        with (E/(name+'.log')).open('w') as stream:
+            result=subprocess.run(argv,cwd=root,env=os.environ|{'PYTHONPATH':os.pathsep.join([str(imports),str(root)]),'PYTHONDONTWRITEBYTECODE':'1'},stdout=stream,stderr=subprocess.STDOUT)
+        record={'name':name,'source_paths':paths,'argv':argv,'exit':result.returncode}
+        records.append(record)
+        (E/"violation-observations-continuation.json").write_text(json.dumps(records,indent=2)+"\n")
+        print(json.dumps(record),flush=True)
+        if result.returncode!=1:
+            raise RuntimeError(name+' did not produce an assertion/runtime test failure; inspect its log')
+    finally:
+        for p,raw in saved.items():(root/p).write_bytes(raw)
+
+observe('stocks-lane-violation',S,['src/services/data/freshness.py'],'failed_timestamp_lane or requested_span_problem',['tests/test_data_freshness.py'])
+observe('stocks-store-violation',S,['src/services/data/acquisition_health.py'],'unreadable_store_preserves',['tests/test_acquisition_health.py'])
+observe('stocks-attribution-violation',S,['src/services/research/fnspid_forward_accrual_monitor.py'],'monitor_exit_attributes',['tests/test_fnspid_forward_accrual_monitor.py'])
+observe('stocks-holdout-violation',S,['src/backtest/walk_forward.py'],'missing_config_refuses',['tests/test_holdout_policy.py'])
+observe('enviro-device-violation',V,['enviro_dash3.py','local_sensors.py'],'each_driver_boundary or display_and_proximity or gas_failure_is_retained',['tests/test_dash_loop.py'])
+observe('enviro-db-binding-violation',V,['sqlite_backup.py'],'capture_follows_only',['tests/test_sqlite_backup.py'])
+observe('enviro-provider-filter-violation',V,['config/provider_health.json'],'console_only',['tests/test_provider_health.py'],lambda p,t:t.replace(' WHERE {outdoor_presence}',''))
+observe('enviro-provider-isolation-violation',V,['provider_health.py'],'broken_provider_query',['tests/test_provider_health.py'],lambda p,t:t.replace('        except (sqlite3.Error, OSError, ValueError, StopIteration) as error:\n', '        except (sqlite3.Error, OSError, ValueError, StopIteration) as error:\n            raise\n'))
+observe('enviro-provider-clock-violation',V,['provider_health.py'],'provider_local_time',['tests/test_provider_health.py'],lambda p,t:t.replace('zone = ZoneInfo(lane["timezone"])','zone = timezone.utc'))
+observe('enviro-provider-exit-violation',V,['provider_health.py'],'cli_reports_failure',['tests/test_provider_health.py'],lambda p,t:t.replace('return int(any(result["problem"] is not None for result in results))','return 0'))
+observe('stocks-unit-source-violation',S,['src/services/ops/systemd_unit_sources.py'],'job_dependency_and_command',['tests/test_service_execution_units.py'])
+observe('enviro-provider-null-violation',V,['provider_health.py'],'missing_observation',['tests/test_provider_health.py'],lambda p,t:t.replace('result["problem"] = "observation_missing"','result["problem"] = None'))
+(E/'violation-observations.json').write_text(json.dumps(records,indent=2)+'\n')

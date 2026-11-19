@@ -1,0 +1,11 @@
+{
+  "day": "2026-11-19",
+  "last_capture": "2026-11-19T16:21:06.866765+00:00",
+  "observations": 853,
+  "max_age_seconds": 46792.068199,
+  "min_age_seconds": 24.304253,
+  "first_observed": "2026-11-18T21:59:00+00:00",
+  "new_observations": 194,
+  "max_new_arrival_age_seconds": 84.006878,
+  "max_new_observation_step_seconds": 6660.0
+}
