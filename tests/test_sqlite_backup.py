@@ -5,6 +5,7 @@ import os
 import socket
 import sqlite3
 import sys
+from configparser import ConfigParser
 from pathlib import Path
 
 import pytest
@@ -228,7 +229,9 @@ def test_native_unit_uses_common_owner_and_project_cadence():
     service = (root / "enviro_backup.service").read_text()
     timer = (root / "enviro_backup.timer").read_text()
     assert "-m shared.backup_service --config " in service
-    assert "OnFailure=stocks_ops_alert@%n.service" in service
+    service_config = ConfigParser(interpolation=None)
+    service_config.read_string(service)
+    assert service_config["Unit"]["OnFailure"] == "stocks_ops_alert@%n.service"
     assert f"TimeoutStartSec={config['cadence']['execution_timeout_seconds']}" in service
     assert f"OnCalendar={config['cadence']['on_calendar']}" in timer
     assert (
