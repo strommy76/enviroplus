@@ -10,6 +10,7 @@ from pathlib import Path
 from shared.backup_configuration import load_configuration
 from shared.backup_estimates import fractional_tree_estimate, fractional_upload_bytes
 from shared.backup_records import write_record
+from shared.config_service import load_env, require
 
 
 def database_facts(path: Path) -> dict:
@@ -93,15 +94,16 @@ def main() -> int:
     else:
         _, config, _ = load_configuration(args.config)
         component = config["components"][args.component]
-        source = Path(component["source_path"])
+        if config["environment_file"] is not None:
+            load_env(config["environment_file"])
         if args.mode == "capture":
-            result = capture(source, args.output_dir)
+            result = capture(Path(require("SQLITE_PATH")), args.output_dir)
         elif args.output_dir is not None:
             result = fractional_tree_estimate(
                 args.output_dir, component["estimate"]["native_overhead_fraction"]
             )
         else:
-            result = estimate(source, component["estimate"])
+            result = estimate(Path(require("SQLITE_PATH")), component["estimate"])
     print(json.dumps(result))
     return 0
 

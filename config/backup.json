@@ -15,7 +15,6 @@
       "components": {
         "database": {
           "authority": "authoritative",
-          "source_path": "/home/pistrommy/projects/enviroplus/enviro.db",
           "capture_argv": [
             "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
             "-m",

@@ -73,6 +73,7 @@ def test_enviro_runs_real_producers_through_common_service(tmp_path, monkeypatch
     )
     source = tmp_path / "live.db"
     database(source).close()
+    monkeypatch.setenv("SQLITE_PATH", str(source))
     raw = tmp_path / "raw"
     raw.mkdir()
     (raw / "capture.ndjson").write_bytes(b'{"original":true}\n')
@@ -88,7 +89,6 @@ def test_enviro_runs_real_producers_through_common_service(tmp_path, monkeypatch
         "components": {
             "database": {
                 "authority": "authoritative",
-                "source_path": str(source),
                 "capture_argv": [
                     sys.executable,
                     "-m",
