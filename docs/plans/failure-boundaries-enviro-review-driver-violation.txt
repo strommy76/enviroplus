@@ -1,0 +1,310 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+__________ test_driver_gpio_exit_does_not_exit_capture[pms5003_init] ___________
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-review-driver-violation-tmp/test_driver_gpio_exit_does_not0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fffa7446060>
+boundary = 'pms5003_init'
+
+    @pytest.mark.parametrize("boundary", ["pms5003_init", "display_init"])
+    def test_driver_gpio_exit_does_not_exit_capture(tmp_path, monkeypatch, boundary):
+        """Installed gpiodevice emits SystemExit when a chip/pin cannot be claimed."""
+>       run = Run(tmp_path, monkeypatch, rows=2, failures={boundary: [SystemExit("GPIO unavailable")]})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dash_loop.py:891: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dash_loop.py:338: in __init__
+    runpy.run_path(str(app / "enviro_dash3.py"), run_name="__main__")
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+../enviro-review-driver-violation-tmp/test_driver_gpio_exit_does_not0/app/enviro_dash3.py:303: in <module>
+    sample = read_sample()
+             ^^^^^^^^^^^^^
+../enviro-review-driver-violation-tmp/test_driver_gpio_exit_does_not0/app/enviro_dash3.py:176: in read_sample
+    sample = io.read(_utc_iso())
+             ^^^^^^^^^^^^^^^^^^^
+../enviro-review-driver-violation-tmp/test_driver_gpio_exit_does_not0/app/sensor_io.py:54: in read
+    self._observe(
+../enviro-review-driver-violation-tmp/test_driver_gpio_exit_does_not0/app/sensor_io.py:38: in _observe
+    value = read()
+            ^^^^^^
+../enviro-review-driver-violation-tmp/test_driver_gpio_exit_does_not0/app/sensor_io.py:128: in _pms
+    self.pms = PMS5003(device=self.pms_device)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_dash_loop.py:126: in __init__
+    fault("pms5003_init")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'pms5003_init'
+
+    def fault(name):
+        errors = failures.get(name, [])
+        if errors:
+>           raise errors.pop(0)
+E           SystemExit: GPIO unavailable
+
+tests/test_dash_loop.py:90: SystemExit
+----------------------------- Captured stderr call -----------------------------
+{"ts": "2026-11-19 12:11:05", "level": "INFO", "module": "enviro_dash3", "msg": "Enviro+ dash v3 starting"}
+------------------------------ Captured log call -------------------------------
+INFO     enviro_dash:enviro_dash3.py:295 Enviro+ dash v3 starting
+__________ test_driver_gpio_exit_does_not_exit_capture[display_init] ___________
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-review-driver-violation-tmp/test_driver_gpio_exit_does_not1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fffa7445a70>
+boundary = 'display_init'
+
+    @pytest.mark.parametrize("boundary", ["pms5003_init", "display_init"])
+    def test_driver_gpio_exit_does_not_exit_capture(tmp_path, monkeypatch, boundary):
+        """Installed gpiodevice emits SystemExit when a chip/pin cannot be claimed."""
+>       run = Run(tmp_path, monkeypatch, rows=2, failures={boundary: [SystemExit("GPIO unavailable")]})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dash_loop.py:891: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dash_loop.py:338: in __init__
+    runpy.run_path(str(app / "enviro_dash3.py"), run_name="__main__")
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+../enviro-review-driver-violation-tmp/test_driver_gpio_exit_does_not1/app/enviro_dash3.py:345: in <module>
+    io.display(screens.render(page, state))
+../enviro-review-driver-violation-tmp/test_driver_gpio_exit_does_not1/app/sensor_io.py:175: in display
+    self._device("display", create).display(image)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../enviro-review-driver-violation-tmp/test_driver_gpio_exit_does_not1/app/sensor_io.py:33: in _device
+    self.devices[key] = create()
+                        ^^^^^^^^
+../enviro-review-driver-violation-tmp/test_driver_gpio_exit_does_not1/app/sensor_io.py:163: in create
+    display = st7735.ST7735(
+tests/test_dash_loop.py:96: in __init__
+    fault("display_init")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'display_init'
+
+    def fault(name):
+        errors = failures.get(name, [])
+        if errors:
+>           raise errors.pop(0)
+E           SystemExit: GPIO unavailable
+
+tests/test_dash_loop.py:90: SystemExit
+----------------------------- Captured stderr call -----------------------------
+{"ts": "2026-11-19 12:11:05", "level": "INFO", "module": "enviro_dash3", "msg": "Enviro+ dash v3 starting"}
+------------------------------ Captured log call -------------------------------
+INFO     enviro_dash:enviro_dash3.py:295 Enviro+ dash v3 starting
+_________ test_installed_gas_setup_must_complete_before_reading[mode] __________
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-review-driver-violation-tmp/test_installed_gas_setup_must_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fffa63e7530>
+failed_setup = 'mode'
+
+    @pytest.mark.parametrize("failed_setup", ["mode", "heater"])
+    def test_installed_gas_setup_must_complete_before_reading(tmp_path, monkeypatch, failed_setup):
+        """Real installed driver: failed setup retries; a later read error keeps its heater handle."""
+        import atexit
+        import importlib.metadata
+        import importlib.util
+    
+        source = Path(importlib.metadata.distribution("enviroplus").locate_file("enviroplus/gas.py"))
+        trace = {"adcs": 0, "modes": 0, "claims": 0, "voltages": 0}
+        fault_remaining = [True]
+    
+        class ADC:
+            def __init__(self, **kwargs):
+                trace["adcs"] += 1
+    
+            def detect_chip_type(self):
+                return "ADS1015"
+    
+            def set_mode(self, mode):
+                trace["modes"] += 1
+                if failed_setup == "mode" and fault_remaining[0]:
+                    fault_remaining[0] = False
+                    raise OSError("I2C configuration failed")
+    
+            def set_programmable_gain(self, value):
+                pass
+    
+            def set_sample_rate(self, value):
+                pass
+    
+            def get_voltage(self, channel):
+                trace["voltages"] += 1
+                if trace["voltages"] == 4:
+                    raise OSError("transient measurement error")
+                return 1.0
+    
+        def prepare():
+            import ads1015
+            import gpiodevice
+    
+            monkeypatch.setattr(ads1015, "ADS1015", ADC)
+    
+            def claim(*args):
+                if failed_setup == "heater" and fault_remaining[0]:
+                    fault_remaining[0] = False
+                    raise SystemExit("GPIO heater unavailable")
+                trace["claims"] += 1
+                return types.SimpleNamespace(set_value=lambda *a: None), 0
+    
+            monkeypatch.setattr(gpiodevice, "get_pin", claim)
+            monkeypatch.setattr(atexit, "register", lambda fn: fn)
+            parent = sys.modules["enviroplus"]
+            parent.__path__ = [str(source.parent)]
+            spec = importlib.util.spec_from_file_location("enviroplus.gas", source)
+            module = importlib.util.module_from_spec(spec)
+            monkeypatch.setitem(sys.modules, "enviroplus.gas", module)
+            parent.gas = module
+            spec.loader.exec_module(module)
+    
+        run = Run(tmp_path, monkeypatch, rows=3, prepare_gas=prepare)
+        readings = run.readings("oxidising,temp_f,pressure")
+        assert readings[0] == (None, 76.1, 1016.0)
+        assert readings[1][0] is not None
+        assert readings[2] == (None, 76.1, 1016.0)
+>       assert trace["adcs"] == 2
+E       assert 1 == 2
+
+tests/test_dash_loop.py:959: AssertionError
+----------------------------- Captured stderr call -----------------------------
+{"ts": "2026-11-19 12:11:05", "level": "INFO", "module": "enviro_dash3", "msg": "Enviro+ dash v3 starting"}
+{"ts": "2026-11-19 12:11:05", "level": "WARNING", "module": "sensor_io", "msg": "mics6814_ohms acquisition failed: I2C configuration failed"}
+{"ts": "2026-11-19 12:11:05", "level": "INFO", "module": "enviro_dash3", "msg": "readings row written  ts=2026-11-19 17:11:00"}
+{"ts": "2026-11-19 12:11:05", "level": "WARNING", "module": "sensor_io", "msg": "mics6814_ohms acquisition failed: transient measurement error"}
+{"ts": "2026-11-19 12:11:05", "level": "INFO", "module": "enviro_dash3", "msg": "readings row written  ts=2026-11-19 17:11:01"}
+{"ts": "2026-11-19 12:11:05", "level": "INFO", "module": "enviro_dash3", "msg": "readings row written  ts=2026-11-19 17:11:02"}
+------------------------------ Captured log call -------------------------------
+INFO     enviro_dash:enviro_dash3.py:295 Enviro+ dash v3 starting
+WARNING  enviro_dash:sensor_io.py:44 mics6814_ohms acquisition failed: I2C configuration failed
+INFO     enviro_dash:enviro_dash3.py:311 readings row written  ts=2026-11-19 17:11:00
+WARNING  enviro_dash:sensor_io.py:44 mics6814_ohms acquisition failed: transient measurement error
+INFO     enviro_dash:enviro_dash3.py:311 readings row written  ts=2026-11-19 17:11:01
+INFO     enviro_dash:enviro_dash3.py:311 readings row written  ts=2026-11-19 17:11:02
+________ test_installed_gas_setup_must_complete_before_reading[heater] _________
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-review-driver-violation-tmp/test_installed_gas_setup_must_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fffa70f3790>
+failed_setup = 'heater'
+
+    @pytest.mark.parametrize("failed_setup", ["mode", "heater"])
+    def test_installed_gas_setup_must_complete_before_reading(tmp_path, monkeypatch, failed_setup):
+        """Real installed driver: failed setup retries; a later read error keeps its heater handle."""
+        import atexit
+        import importlib.metadata
+        import importlib.util
+    
+        source = Path(importlib.metadata.distribution("enviroplus").locate_file("enviroplus/gas.py"))
+        trace = {"adcs": 0, "modes": 0, "claims": 0, "voltages": 0}
+        fault_remaining = [True]
+    
+        class ADC:
+            def __init__(self, **kwargs):
+                trace["adcs"] += 1
+    
+            def detect_chip_type(self):
+                return "ADS1015"
+    
+            def set_mode(self, mode):
+                trace["modes"] += 1
+                if failed_setup == "mode" and fault_remaining[0]:
+                    fault_remaining[0] = False
+                    raise OSError("I2C configuration failed")
+    
+            def set_programmable_gain(self, value):
+                pass
+    
+            def set_sample_rate(self, value):
+                pass
+    
+            def get_voltage(self, channel):
+                trace["voltages"] += 1
+                if trace["voltages"] == 4:
+                    raise OSError("transient measurement error")
+                return 1.0
+    
+        def prepare():
+            import ads1015
+            import gpiodevice
+    
+            monkeypatch.setattr(ads1015, "ADS1015", ADC)
+    
+            def claim(*args):
+                if failed_setup == "heater" and fault_remaining[0]:
+                    fault_remaining[0] = False
+                    raise SystemExit("GPIO heater unavailable")
+                trace["claims"] += 1
+                return types.SimpleNamespace(set_value=lambda *a: None), 0
+    
+            monkeypatch.setattr(gpiodevice, "get_pin", claim)
+            monkeypatch.setattr(atexit, "register", lambda fn: fn)
+            parent = sys.modules["enviroplus"]
+            parent.__path__ = [str(source.parent)]
+            spec = importlib.util.spec_from_file_location("enviroplus.gas", source)
+            module = importlib.util.module_from_spec(spec)
+            monkeypatch.setitem(sys.modules, "enviroplus.gas", module)
+            parent.gas = module
+            spec.loader.exec_module(module)
+    
+>       run = Run(tmp_path, monkeypatch, rows=3, prepare_gas=prepare)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dash_loop.py:954: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dash_loop.py:338: in __init__
+    runpy.run_path(str(app / "enviro_dash3.py"), run_name="__main__")
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+../enviro-review-driver-violation-tmp/test_installed_gas_setup_must_1/app/enviro_dash3.py:303: in <module>
+    sample = read_sample()
+             ^^^^^^^^^^^^^
+../enviro-review-driver-violation-tmp/test_installed_gas_setup_must_1/app/enviro_dash3.py:176: in read_sample
+    sample = io.read(_utc_iso())
+             ^^^^^^^^^^^^^^^^^^^
+../enviro-review-driver-violation-tmp/test_installed_gas_setup_must_1/app/sensor_io.py:52: in read
+    self._observe(sample, "mics6814_ohms", self._gas)
+../enviro-review-driver-violation-tmp/test_installed_gas_setup_must_1/app/sensor_io.py:38: in _observe
+    value = read()
+            ^^^^^^
+../enviro-review-driver-violation-tmp/test_installed_gas_setup_must_1/app/sensor_io.py:104: in _gas
+    value = gas.read_all()
+            ^^^^^^^^^^^^^^
+../../../../.virtualenvs/pimoroni/lib/python3.13/site-packages/enviroplus/gas.py:98: in read_all
+    setup()
+../../../../.virtualenvs/pimoroni/lib/python3.13/site-packages/enviroplus/gas.py:67: in setup
+    _heater = gpiodevice.get_pin("GPIO24", "EnviroPlus", OUTH)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('GPIO24', 'EnviroPlus', gpiod.LineSettings(direction=gpiod.line.Direction.OUTPUT, edge_detection=gpiod.line.Edge.NONE..., debounce_period=datetime.timedelta(0), event_clock=gpiod.line.Clock.MONOTONIC, output_value=gpiod.line.Value.ACTIVE))
+
+    def claim(*args):
+        if failed_setup == "heater" and fault_remaining[0]:
+            fault_remaining[0] = False
+>           raise SystemExit("GPIO heater unavailable")
+E           SystemExit: GPIO heater unavailable
+
+tests/test_dash_loop.py:940: SystemExit
+----------------------------- Captured stderr call -----------------------------
+{"ts": "2026-11-19 12:11:05", "level": "INFO", "module": "enviro_dash3", "msg": "Enviro+ dash v3 starting"}
+------------------------------ Captured log call -------------------------------
+INFO     enviro_dash:enviro_dash3.py:295 Enviro+ dash v3 starting
+=========================== short test summary info ============================
+FAILED tests/test_dash_loop.py::test_driver_gpio_exit_does_not_exit_capture[pms5003_init]
+FAILED tests/test_dash_loop.py::test_driver_gpio_exit_does_not_exit_capture[display_init]
+FAILED tests/test_dash_loop.py::test_installed_gas_setup_must_complete_before_reading[mode]
+FAILED tests/test_dash_loop.py::test_installed_gas_setup_must_complete_before_reading[heater]
+4 failed, 34 deselected in 0.57s

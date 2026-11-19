@@ -77,7 +77,7 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
 - Backup orchestration, native incremental delivery and retention use the shared backup service;
   provider collectors and the dashboard do not implement competing backup paths.
 
-- `provider_health.py` checks the configured derived-observation freshness obligations in `config/provider_health.json`. It preserves independent lane errors and uses the existing operations alert. Generate its native units with `python -m provider_health_units`; the hardware dashboard remains independently disabled until reconnected.
+- `provider_health.py` checks the configured derived-observation freshness obligations in `config/provider_health.json`. It preserves independent lane errors and uses the existing operations alert. Generate its native units with `PYTHONPATH=.. python -m provider_health_units`; the hardware dashboard remains independently disabled until reconnected.
 
 ## Supported Validation
 

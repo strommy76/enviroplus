@@ -77,3 +77,40 @@ def test_cli_reports_failure_and_preserves_all_lane_results(tmp_path, monkeypatc
     results = json.loads(capsys.readouterr().out)
     assert len(results) == 3
     assert results[1]["problem"] == "observation_unreadable"
+
+
+def test_clean_entrypoints_use_the_declared_shared_binding(tmp_path):
+    """The real service import and documented renderer need no inherited shell path."""
+    import os
+    import shutil
+    import subprocess
+    import sys
+
+    import shared
+
+    root = Path(__file__).resolve().parents[1]
+    environment = {key: value for key, value in os.environ.items() if key != "PYTHONPATH"}
+    service = (root / "config/unit_templates/enviro_provider_health.service.in").read_text()
+    import shlex
+
+    for line in service.splitlines():
+        if line.startswith("Environment="):
+            for binding in shlex.split(line.partition("=")[2]):
+                key, value = binding.split("=", 1)
+                environment[key] = value
+    subprocess.run(
+        [sys.executable, "-c", "import provider_health"], cwd=root, env=environment, check=True
+    )
+    # Reproduce the documented sibling layout with the actual selected Shared owner.
+    (tmp_path / "shared").symlink_to(
+        Path(shared.__file__).resolve().parent, target_is_directory=True
+    )
+    app = tmp_path / "enviroplus"
+    app.mkdir()
+    shutil.copy(root / "provider_health_units.py", app)
+    shutil.copytree(root / "config", app / "config")
+    environment["PYTHONPATH"] = ".."
+    subprocess.run(
+        [sys.executable, "-m", "provider_health_units"], cwd=app, env=environment, check=True
+    )
+    assert (app / "enviro_provider_health.timer").is_file()

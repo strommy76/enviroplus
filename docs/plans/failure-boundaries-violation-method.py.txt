@@ -11,14 +11,14 @@ S = E/'stocks-worktree'
 V = E/'enviroplus-worktree'
 records=[]
 
-def observe(name,root,paths,selector,files,mutate=None):
+def observe(name,root,paths,selector,files,mutate=None,revision=None):
     if len(sys.argv)>1 and name not in sys.argv[1:]:
         return
     saved={p:(root/p).read_bytes() for p in paths}
     try:
         for p in paths:
             if mutate is None:
-                revision='c93a27a' if root==S else '0350abe'
+                revision=revision or ('c93a27a' if root==S else '0350abe')
                 raw=subprocess.check_output(['git','show',revision+':'+p],cwd=root)
             else:
                 raw=mutate(p,saved[p].decode()).encode()
@@ -50,4 +50,8 @@ observe('enviro-provider-clock-violation',V,['provider_health.py'],'provider_loc
 observe('enviro-provider-exit-violation',V,['provider_health.py'],'cli_reports_failure',['tests/test_provider_health.py'],lambda p,t:t.replace('return int(any(result["problem"] is not None for result in results))','return 0'))
 observe('stocks-unit-source-violation',S,['src/services/ops/systemd_unit_sources.py'],'job_dependency_and_command',['tests/test_service_execution_units.py'])
 observe('enviro-provider-null-violation',V,['provider_health.py'],'missing_observation',['tests/test_provider_health.py'],lambda p,t:t.replace('result["problem"] = "observation_missing"','result["problem"] = None'))
+observe('stocks-review-recency-violation',S,['src/services/observation/daily_history_coverage.py'],'requested_span_problem and (failed_stale or failed_future)',['tests/test_data_freshness.py'],revision='0006b6f')
+observe('stocks-review-policy-violation',S,['src/backtest/walk_forward.py'],'enabled_policy_cannot',['tests/test_holdout_policy.py'],revision='0006b6f')
+observe('enviro-review-driver-violation',V,['sensor_io.py'],'driver_gpio_exit or installed_gas_setup',['tests/test_dash_loop.py'],revision='f088d52')
+observe('enviro-review-startup-violation',V,['config/unit_templates/enviro_provider_health.service.in'],'clean_entrypoints',['tests/test_provider_health.py'],revision='f088d52')
 (E/'violation-observations.json').write_text(json.dumps(records,indent=2)+'\n')

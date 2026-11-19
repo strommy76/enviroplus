@@ -7,3 +7,4 @@ Type=oneshot
 User=pistrommy
 WorkingDirectory=/home/pistrommy/projects/enviroplus
 ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python -m provider_health
+Environment=PYTHONPATH=/home/pistrommy/projects

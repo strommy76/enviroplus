@@ -95,5 +95,29 @@
       "import shared; import pytest; raise SystemExit(pytest.main(['tests/test_provider_health.py', '-q', '-k', 'missing_observation', '--basetemp=/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-provider-null-violation-tmp']))"
     ],
     "exit": 1
+  },
+  {
+    "name": "enviro-review-driver-violation",
+    "source_paths": [
+      "sensor_io.py"
+    ],
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-c",
+      "import shared; import pytest; raise SystemExit(pytest.main(['tests/test_dash_loop.py', '-q', '-k', 'driver_gpio_exit or installed_gas_setup', '--basetemp=/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-review-driver-violation-tmp']))"
+    ],
+    "exit": 1
+  },
+  {
+    "name": "enviro-review-startup-violation",
+    "source_paths": [
+      "config/unit_templates/enviro_provider_health.service.in"
+    ],
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-c",
+      "import shared; import pytest; raise SystemExit(pytest.main(['tests/test_provider_health.py', '-q', '-k', 'clean_entrypoints', '--basetemp=/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-review-startup-violation-tmp']))"
+    ],
+    "exit": 1
   }
 ]

@@ -1,0 +1,37 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_broken_provider_query_keeps_the_other_observations ____________
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-provider-isolation-violation-tmp/test_broken_provider_query_kee0')
+
+    def test_broken_provider_query_keeps_the_other_observations(tmp_path):
+        path, policy, now = observations(tmp_path)
+        with sqlite3.connect(path) as db:
+            db.execute("DROP TABLE nws_weather")
+>       results = check(path, policy, now)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_provider_health.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-provider-isolation-violation-tmp/test_broken_provider_query_kee0/observations.db')
+policy = {'_meta': {'airnow_derivation': 'AirNow hourly timestamp granularity3600s + about3600s publication lag + AIRNOW_POLL_S...al_time_zone AS timezone_abbreviation FROM epa_air_quality ORDER BY ts DESC LIMIT 1', 'timezone': 'America/New_York'}]}
+now = datetime.datetime(2026, 11, 19, 16, 0, tzinfo=datetime.timezone.utc)
+
+    def check(database, policy, now):
+        results = []
+        # A broken query/observation belongs to its lane, not its siblings.
+        for lane in policy["lanes"]:
+            result = {"lane": lane["name"], "problem": None}
+            try:
+                with sqlite3.connect(f"file:{database}?mode=ro", uri=True) as db:
+                    db.row_factory = sqlite3.Row
+>                   row = db.execute(
+                        lane["query"].format(outdoor_presence=outdoor_presence_sql())
+                    ).fetchone()
+E                   sqlite3.OperationalError: no such table: nws_weather
+
+provider_health.py:22: OperationalError
+=========================== short test summary info ============================
+FAILED tests/test_provider_health.py::test_broken_provider_query_keeps_the_other_observations
+1 failed, 4 deselected in 1.92s

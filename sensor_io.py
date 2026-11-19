@@ -27,13 +27,16 @@ class SensorIO:
         self.pms = None
         self.pms_restart = False
         self.proximity_error = None
+        self.gas_ready = False
 
     def _device(self, key, create):
         if key not in self.devices:
             self.devices[key] = create()
         return self.devices[key]
 
-    def _observe(self, sample, key, read, errors=(OSError, RuntimeError), error_key=None):
+    def _observe(
+        self, sample, key, read, errors=(OSError, RuntimeError, SystemExit), error_key=None
+    ):
         try:
             value = read()
             if value is not None:
@@ -55,7 +58,14 @@ class SensorIO:
             sample,
             "pms5003_frame_hex",
             self._pms,
-            (OSError, RuntimeError, ReadTimeoutError, SerialTimeoutError, ChecksumMismatchError),
+            (
+                OSError,
+                RuntimeError,
+                SystemExit,
+                ReadTimeoutError,
+                SerialTimeoutError,
+                ChecksumMismatchError,
+            ),
             error_key="pms5003_error",
         )
         self._observe(sample, "scd41", lambda: self._scd(sample))
@@ -100,16 +110,20 @@ class SensorIO:
             return None
 
     def _gas(self):
-        try:
-            value = gas.read_all()
-        except (OSError, RuntimeError):
-            # The installed driver latches an absent ADC at setup. Its public
-            # availability/cleanup plus Python reload allow an ordinary later
-            # read to probe again, without changing the driver's private state.
-            if not gas.available():
+        if not self.gas_ready:
+            try:
+                gas.setup()
+                if not gas.available():
+                    raise RuntimeError("Gas sensor not connected.")
+            except (OSError, RuntimeError, SystemExit):
+                # The driver latches setup/availability before configuration
+                # completes. Reset only incomplete setup; retain an established
+                # heater/GPIO handle through transient measurement failures.
                 gas.cleanup()
                 importlib.reload(gas)
-            raise
+                raise
+            self.gas_ready = True
+        value = gas.read_all()
         return {"oxidising": value.oxidising, "reducing": value.reducing, "nh3": value.nh3}
 
     @staticmethod
@@ -173,6 +187,6 @@ class SensorIO:
 
         try:
             self._device("display", create).display(image)
-        except (OSError, RuntimeError) as error:
+        except (OSError, RuntimeError, SystemExit) as error:
             self.devices.pop("display", None)
             self.log.warning("Display failed; capture continues: %s", error)
