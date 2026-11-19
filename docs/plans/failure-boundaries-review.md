@@ -45,7 +45,7 @@ production activation is certified here; full canonical remains resource-gated.
 |h | Existing driver, environment, capture, projection, rendering and alert interfaces are used; no alternate engine. |
 |i | Fatal dependency/iteration/init coupling, permissive policy fallback and wrong source were diagnosed before correction; no symptom suppression masquerades as health. |
 |j | Canonical raw/legacy evidence unchanged and append-only; derived rows/units/health remain derived. No new durable store. |
-|k | OpenAI Astra and GLM whole-artifact seats reviewed the initial implementation. Every finding is adjudicated below. Corrected recency/required-policy and driver-init/bootstrap boundaries are the only remaining source review class; receiving and deployed-effect review remain separate. |
+|k | OpenAI Astra and GLM whole-artifact seats reviewed the initial implementation. Every finding is adjudicated below. Both families and root adjudication close the driver-init/bootstrap source class; receiving/canonical/deployed-effect review remain separate. |
 |l | CONFIRMED, REFUTED and UNCONFIRMED claims remain differentiated; missing power is not reported as absence. |
 |m | UNCONFIRMED installed hardware/native effect; local source uses supported APIs and preserves observation contracts. No portability claim. |
 |n | Per-boundary errors survive; unreadable/missing data fails health, config/storage errors still fail loudly. |
