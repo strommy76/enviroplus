@@ -110,7 +110,7 @@ def _install_drivers(
             self.temperature, self.humidity, self.pressure = next(bme_reads)
 
     class LTR559:
-        def __init__(self):
+        def __init__(self, i2c_dev=None):
             fault("ltr559_init")
 
         def get_lux(self):
@@ -186,7 +186,7 @@ def _install_drivers(
     module(
         "sensirion_i2c_driver",
         CrcCalculator=lambda *a: None,
-        I2cConnection=lambda t: None,
+        I2cConnection=lambda t: object(),
         LinuxI2cTransceiver=lambda path: None,
     )
     module("sensirion_i2c_driver.errors", I2cError=I2cError)
@@ -196,7 +196,17 @@ def _install_drivers(
     module("adafruit_tmp117", TMP117=TMP117)
     module("adafruit_extended_bus", ExtendedI2C=lambda bus: None)
     module("st7735", ST7735=Display)
-    module("smbus2", SMBus=lambda *a, **k: None)
+
+    class SMBus:
+        fd = None
+
+        def open(self, bus):
+            self.fd = 1
+
+        def close(self):
+            self.fd = None
+
+    module("smbus2", SMBus=SMBus)
     module("bme280", BME280=BME280)
     module("ltr559", LTR559=LTR559)
     module(
@@ -906,6 +916,8 @@ def test_installed_gas_setup_must_complete_before_reading(tmp_path, monkeypatch,
     class ADC:
         def __init__(self, **kwargs):
             trace["adcs"] += 1
+            self._ads1015 = types.SimpleNamespace(_i2c=types.SimpleNamespace(close=lambda: None))
+            self._ads1115 = types.SimpleNamespace(_i2c=types.SimpleNamespace(close=lambda: None))
 
         def detect_chip_type(self):
             return "ADS1015"

@@ -1,3 +1,72 @@
+## Current receiving-fold declaration — November 19
+
+This is the same accepted increment and same lasting/silent/irreversible C/H
+boundary. Pi receiving direction09430141 and acceptance94723643 govern these
+folds; earlier dated source clearances below are provenance, superseded where
+this section identifies a finding. No new framework, timeout, retry or host
+resource policy is authorized. The post-reboot blanket scheduling gate was
+withdrawn by94723643; actual ownership of the isolated test database still
+requires waiting for its current canonical consumer to release it.
+
+Original author Astra/GLM reports remain intact. Receiving GLM and Pi's complete
+adjudication are retained beside this artifact. Opus' separate report was
+returned to Pi as text and was not supplied in full here; its actual fd-leak
+construction was supplied, read and independently reproduced. These limits
+prevent a claim that the author read the missing raw report. Pi directly verifies
+these exact folds; another seat round is required only if the accepted design
+grows. Canonical, landing and deployed-effect verdicts remain distinct.
+
+E1-1 CONFIRMED: actual installed drivers leak one fd per failed BME/LTR/SCD
+initialization, two for gas. Baseline68176b5 produced5->205,5->205,5->205 and
+6->406 over200 further failures. Keep one unopened/lazy SMBus on SensorIO outside
+the per-device cache for BME/LTR, and one SCD connection outside that cache.
+The gas ADC exposes no public close/injection API; the searched installed driver
+constructs two Device-owned SMBus objects. Close both actual bus handles before
+reloading failed setup, preserving established gas handles. Pi accepted that
+minimum resource ownership (94723643). TMP's bus already finalizes; no TMP change.
+Corrected focused native checks:53 passed in68.38s, including the actual
+Duplicacy consumer (receiving-enviro-focused.txt). The first final caller had a
+SyntaxError before collection; it is not counted as execution evidence.
+One separate test_sensor_io.py uses real installed drivers/native fd ownership;
+only the external controller/device response is substituted. All four actual
+restored-source cases fail, corrected counts stay flat. No resource manager,
+retry service, new registry or driver protocol reimplementation.
+
+E2-1 CONFIRMED: the old fit used arrival lag plus an assumed poll, while the
+monitor measures now minus retained observation time. Current fit inventories
+all977 returns through16:21:06.866765UTC, then188 contiguous valid intervals after
+the operator's06:00EST breaker restoration, resetting at all126 failed or
+non-outdoor returns in that window. No age-threshold exclusion. Maximum next
+arrival minus previous observation timestamp144.304253s, plus the acquisition
+owner's15s request allowance, gives provisional159.304253s. The allowance covers
+one full configured request beyond the empirical observed peak, not a second
+poll or a claim about unseen latency. Full metadata and executable method-as-
+provenance are provider-health-intervals.*; earlier fit artifacts are provenance
+only. No fit certifies a false-alert rate; settle with loaded healthy intervals.
+Ambient activation remains held for receiving/native qualification. Operator
+wet-array evidence is not a reason to widen or conceal missing outdoor returns.
+
+F4-1 CONFIRMED after consumer search: shared.load_configuration itself does not
+load env, but the actual production caller shared.backup_service.run already
+loads it and the producer inherits it. No independent capture/estimate caller
+needing another load was found; verify mode needs no env. Remove producer load,
+keep require(SQLITE_PATH). No new standalone environment owner/test is invented.
+
+Axiom1: raw/NULL/error contracts unchanged;2: actual installed drivers own facts;
+3: bounded resource ownership prevents absent devices disabling siblings;
+4/Preamble: four observed leaks and the measured wrong statistic justify only
+these mechanisms;5: per-lane errors retained, real storage failure loud;
+6: SensorIO owns I/O, separate owning fd test avoids dashboard gravity well.
+A/B original relays/executor;C/H above;D same E1/E2/F4;E native hardware untested;
+F no secret values;G no activation;a minimum;b repo/broker state;c functional
+names;d distinct effect;e/f same PR31;g empirical/provisional bound above;
+h installed interfaces searched before private resource access;i reproduced
+fd exhaustion;j no authoritative reconstruction;k receiving evidence/limits
+above;l exact claims;o all findings dispositioned;m hardware effect pending;
+n lane failures remain visible;p/q old fd ownership/load/fit removed from live
+code and current config, prior records immutable;r actual baseline violations
+fail the fd property; substitutions stay outside fd ownership.
+
 # Failure-boundary implementation review artifact
 
 Scope: Enviro30 E1/E2 and auditF4 only; hardware stays disabled until reconnected.

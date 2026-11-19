@@ -1,0 +1,40 @@
+"""One-use read-only complete interval inventory, before selecting any fit."""
+import json
+from datetime import datetime,timezone
+from pathlib import Path
+from shared.config_service import load_env,require
+from ambient_wx import classify_response
+from raw_retention import configure,read_day
+load_env('/home/pistrommy/projects/enviroplus/.env')
+configure('/home/pistrommy/projects/enviroplus/raw-capture')
+through='2026-11-19T16:21:06.866765+00:00'
+start=datetime(2026,11,19,11,tzinfo=timezone.utc)
+rows=[];intervals=[];previous=None;invalid=0
+for captured,outcome,blob in read_day('ambient','2026-11-19'):
+    if captured>through:break
+    at=datetime.fromisoformat(captured)
+    observation=None;classified='no_body'
+    if blob is not None:observation,classified,_=classify_response(blob,require('AW_MAC'))
+    valid=observation is not None and classified=='ok' and outcome in ('ok','duplicate')
+    observed=None if observation is None else datetime.fromtimestamp(observation['dateutc']/1000,timezone.utc)
+    row={'captured':captured,'outcome':outcome,'classified':classified,'observed_at':None if observed is None else observed.isoformat(),'outdoor':valid}
+    rows.append(row)
+    if at<start or not valid:
+        previous=None
+        if at>=start:invalid+=1
+        continue
+    if previous is not None and observed!=previous[0]:
+        intervals.append({'previous_observed':previous[0].isoformat(),'next_observed':observed.isoformat(),'next_arrival':captured,'peak_age_seconds':(at-previous[0]).total_seconds(),'observation_step_seconds':(observed-previous[0]).total_seconds()})
+    previous=(observed,at)
+result={'source_revision':'68176b5ea99755fbcb36df4793b430b35cb14212','raw_root_reference':'/home/pistrommy/projects/enviroplus/raw-capture','day':'2026-11-19','through':through,'window_start':start.isoformat(),'window_basis':'operator breaker restoration about06:00EST; cutoff precedes documented late-morning wet dropout. Reset interval on every observed non-outdoor or failed return; no age-based filter.','records':rows,'intervals':intervals,'invalid_returns_in_window':invalid}
+E=Path(__file__).resolve().parent
+(E/'ambient-intervals-inventory.json').write_text(json.dumps(result,indent=2)+'\n')
+print(json.dumps({'records':len(rows),'intervals':len(intervals),'invalid_returns_in_window':invalid,'first':intervals[:2],'largest_peaks':sorted(intervals,key=lambda r:r['peak_age_seconds'],reverse=True)[:5]}))
+
+# Derive from the acquisition owner at the named source revision; no copied value.
+import ast
+source=Path(__file__).resolve().parents[2]/'ambient_wx.py'
+timeout=next(ast.literal_eval(node.value) for node in ast.parse(source.read_text()).body if isinstance(node,ast.Assign) and any(isinstance(target,ast.Name) and target.id=='REQUEST_TIMEOUT_S' for target in node.targets))
+peak=max(item['peak_age_seconds'] for item in intervals)
+result.update(max_nominal_peak_age_seconds=peak,request_timeout_seconds=timeout,provisional_bound_seconds=peak+timeout)
+(E/'provider-health-intervals.json').write_text(json.dumps(result,indent=2)+'\n')

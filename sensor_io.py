@@ -28,6 +28,17 @@ class SensorIO:
         self.pms_restart = False
         self.proximity_error = None
         self.gas_ready = False
+        self.bus = smbus2.SMBus()
+        self.scd_connection = None
+
+    def _bus(self):
+        if self.bus.fd is None:
+            try:
+                self.bus.open(self.i2c_bus)
+            except OSError:
+                self.bus.close()
+                raise
+        return self.bus
 
     def _device(self, key, create):
         if key not in self.devices:
@@ -77,9 +88,7 @@ class SensorIO:
     def _bme(self):
         sensor = self._device(
             "bme280",
-            lambda: bme280.BME280(
-                i2c_addr=self.hardware["bme280_addr"], i2c_dev=smbus2.SMBus(self.i2c_bus)
-            ),
+            lambda: bme280.BME280(i2c_addr=self.hardware["bme280_addr"], i2c_dev=self._bus()),
         )
         sensor.update_sensor()
         return [
@@ -98,7 +107,7 @@ class SensorIO:
         return {"temperature_c": sensor.temperature}
 
     def _ltr(self):
-        return self._device("ltr559_lux", LTR559)
+        return self._device("ltr559_lux", lambda: LTR559(i2c_dev=self._bus()))
 
     def proximity(self):
         try:
@@ -120,6 +129,11 @@ class SensorIO:
                 # completes. Reset only incomplete setup; retain an established
                 # heater/GPIO handle through transient measurement failures.
                 gas.cleanup()
+                if hasattr(gas, "adc"):
+                    # This driver has no ADC close API. Each Device owns its
+                    # own SMBus; close both before discarding incomplete setup.
+                    gas.adc._ads1015._i2c.close()
+                    gas.adc._ads1115._i2c.close()
                 importlib.reload(gas)
                 raise
             self.gas_ready = True
@@ -151,10 +165,12 @@ class SensorIO:
 
     def _scd(self, sample):
         def create():
+            if self.scd_connection is None:
+                self.scd_connection = I2cConnection(LinuxI2cTransceiver(f"/dev/i2c-{self.i2c_bus}"))
             # SCD41 fixed address and datasheet CRC-8; driver owns command timing.
             sensor = Scd4xDevice(
                 I2cChannel(
-                    I2cConnection(LinuxI2cTransceiver(f"/dev/i2c-{self.i2c_bus}")),
+                    self.scd_connection,
                     slave_address=0x62,
                     crc=CrcCalculator(8, 0x31, 0xFF, 0x0),
                 )

@@ -1,0 +1,556 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+___ test_failed_sensor_initialization_keeps_file_descriptors_bounded[bme280] ___
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-resource-lifetime-violation-tmp/test_failed_sensor_initializat0')
+lane = 'bme280'
+
+    @pytest.mark.parametrize("lane", ["bme280", "ltr559_lux", "mics6814_ohms", "scd41"])
+    def test_failed_sensor_initialization_keeps_file_descriptors_bounded(tmp_path, lane):
+        device = tmp_path / "i2c-device"
+        device.touch()
+        code = """
+    import logging, os, sys
+    from unittest.mock import patch
+    import smbus2
+    from sensor_io import SensorIO
+    
+    real_open = os.open
+    def open_device(path, *args, **kwargs):
+        if isinstance(path, str) and path.startswith('/dev/i2c-'):
+            path = sys.argv[1]
+        return real_open(path, *args, **kwargs)
+    
+    log = logging.getLogger('sensor-fd-check')
+    log.addHandler(logging.NullHandler())
+    log.propagate = False
+    with patch('os.open', open_device), patch.object(
+        smbus2.SMBus, '_get_funcs', lambda self: smbus2.I2cFunc.I2C
+    ):
+        # A controller can open successfully while a sensor fails I/O. Only that
+        # external controller-capability response is substituted; actual driver
+        # allocation, native fds, errors, ownership and close() remain real.
+        io = SensorIO({'bme280_addr': 0x76}, 1, '/unused', '/unused', log)
+        read = {
+            'bme280': io._bme,
+            'ltr559_lux': lambda: io._ltr().get_lux(),
+            'mics6814_ohms': io._gas,
+            'scd41': lambda: io._scd({}),
+        }[sys.argv[2]]
+        sample = {}
+        io._observe(sample, sys.argv[2], read)
+        before = len(os.listdir('/proc/self/fd'))
+        for _ in range(200):
+            io._observe(sample, sys.argv[2], read)
+        after = len(os.listdir('/proc/self/fd'))
+        assert sys.argv[2] + '_error' in sample
+        assert after == before, (before, after, sample)
+    """
+>       subprocess.run(
+            [sys.executable, "-c", code, str(device), lane],
+            cwd=Path(__file__).resolve().parents[1],
+            check=True,
+        )
+
+tests/test_sensor_io.py:51: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+input = None, capture_output = False, timeout = None, check = True
+popenargs = (['/home/pistrommy/.virtualenvs/pimoroni/bin/python', '-c', "\nimport logging, os, sys\nfrom unittest.mock import patc...d-config-audit-20261119/enviro-resource-lifetime-violation-tmp/test_failed_sensor_initializat0/i2c-device', 'bme280'],)
+kwargs = {'cwd': PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviroplus-worktree')}
+process = <Popen: returncode: 1 args: ['/home/pistrommy/.virtualenvs/pimoroni/bin/pyth...>
+stdout = None, stderr = None, retcode = 1
+
+    def run(*popenargs,
+            input=None, capture_output=False, timeout=None, check=False, **kwargs):
+        """Run command with arguments and return a CompletedProcess instance.
+    
+        The returned instance will have attributes args, returncode, stdout and
+        stderr. By default, stdout and stderr are not captured, and those attributes
+        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,
+        or pass capture_output=True to capture both.
+    
+        If check is True and the exit code was non-zero, it raises a
+        CalledProcessError. The CalledProcessError object will have the return code
+        in the returncode attribute, and output & stderr attributes if those streams
+        were captured.
+    
+        If timeout (seconds) is given and the process takes too long,
+         a TimeoutExpired exception will be raised.
+    
+        There is an optional argument "input", allowing you to
+        pass bytes or a string to the subprocess's stdin.  If you use this argument
+        you may not also use the Popen constructor's "stdin" argument, as
+        it will be used internally.
+    
+        By default, all communication is in bytes, and therefore any "input" should
+        be bytes, and the stdout and stderr will be bytes. If in text mode, any
+        "input" should be a string, and stdout and stderr will be strings decoded
+        according to locale encoding, or by "encoding" if set. Text mode is
+        triggered by setting any of text, encoding, errors or universal_newlines.
+    
+        The other arguments are the same as for the Popen constructor.
+        """
+        if input is not None:
+            if kwargs.get('stdin') is not None:
+                raise ValueError('stdin and input arguments may not both be used.')
+            kwargs['stdin'] = PIPE
+    
+        if capture_output:
+            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+                raise ValueError('stdout and stderr arguments may not be used '
+                                 'with capture_output.')
+            kwargs['stdout'] = PIPE
+            kwargs['stderr'] = PIPE
+    
+        with Popen(*popenargs, **kwargs) as process:
+            try:
+                stdout, stderr = process.communicate(input, timeout=timeout)
+            except TimeoutExpired as exc:
+                process.kill()
+                if _mswindows:
+                    # Windows accumulates the output in a single blocking
+                    # read() call run on child threads, with the timeout
+                    # being done in a join() on those threads.  communicate()
+                    # _after_ kill() is required to collect that and add it
+                    # to the exception.
+                    exc.stdout, exc.stderr = process.communicate()
+                else:
+                    # POSIX _communicate already populated the output so
+                    # far into the TimeoutExpired exception.
+                    process.wait()
+                raise
+            except:  # Including KeyboardInterrupt, communicate handled that.
+                process.kill()
+                # We don't call process.wait() as .__exit__ does that for us.
+                raise
+            retcode = process.poll()
+            if check and retcode:
+>               raise CalledProcessError(retcode, process.args,
+                                         output=stdout, stderr=stderr)
+E               subprocess.CalledProcessError: Command '['/home/pistrommy/.virtualenvs/pimoroni/bin/python', '-c', "\nimport logging, os, sys\nfrom unittest.mock import patch\nimport smbus2\nfrom sensor_io import SensorIO\n\nreal_open = os.open\ndef open_device(path, *args, **kwargs):\n    if isinstance(path, str) and path.startswith('/dev/i2c-'):\n        path = sys.argv[1]\n    return real_open(path, *args, **kwargs)\n\nlog = logging.getLogger('sensor-fd-check')\nlog.addHandler(logging.NullHandler())\nlog.propagate = False\nwith patch('os.open', open_device), patch.object(\n    smbus2.SMBus, '_get_funcs', lambda self: smbus2.I2cFunc.I2C\n):\n    # A controller can open successfully while a sensor fails I/O. Only that\n    # external controller-capability response is substituted; actual driver\n    # allocation, native fds, errors, ownership and close() remain real.\n    io = SensorIO({'bme280_addr': 0x76}, 1, '/unused', '/unused', log)\n    read = {\n        'bme280': io._bme,\n        'ltr559_lux': lambda: io._ltr().get_lux(),\n        'mics6814_ohms': io._gas,\n        'scd41': lambda: io._scd({}),\n    }[sys.argv[2]]\n    sample = {}\n    io._observe(sample, sys.argv[2], read)\n    before = len(os.listdir('/proc/self/fd'))\n    for _ in range(200):\n        io._observe(sample, sys.argv[2], read)\n    after = len(os.listdir('/proc/self/fd'))\n    assert sys.argv[2] + '_error' in sample\n    assert after == before, (before, after, sample)\n", '/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-resource-lifetime-violation-tmp/test_failed_sensor_initializat0/i2c-device', 'bme280']' returned non-zero exit status 1.
+
+/usr/lib/python3.13/subprocess.py:577: CalledProcessError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 36, in <module>
+    assert after == before, (before, after, sample)
+           ^^^^^^^^^^^^^^^
+AssertionError: (5, 205, {'bme280_error': "RuntimeError('Unable to find bme280 on 0x76, IOError')"})
+_ test_failed_sensor_initialization_keeps_file_descriptors_bounded[ltr559_lux] _
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-resource-lifetime-violation-tmp/test_failed_sensor_initializat1')
+lane = 'ltr559_lux'
+
+    @pytest.mark.parametrize("lane", ["bme280", "ltr559_lux", "mics6814_ohms", "scd41"])
+    def test_failed_sensor_initialization_keeps_file_descriptors_bounded(tmp_path, lane):
+        device = tmp_path / "i2c-device"
+        device.touch()
+        code = """
+    import logging, os, sys
+    from unittest.mock import patch
+    import smbus2
+    from sensor_io import SensorIO
+    
+    real_open = os.open
+    def open_device(path, *args, **kwargs):
+        if isinstance(path, str) and path.startswith('/dev/i2c-'):
+            path = sys.argv[1]
+        return real_open(path, *args, **kwargs)
+    
+    log = logging.getLogger('sensor-fd-check')
+    log.addHandler(logging.NullHandler())
+    log.propagate = False
+    with patch('os.open', open_device), patch.object(
+        smbus2.SMBus, '_get_funcs', lambda self: smbus2.I2cFunc.I2C
+    ):
+        # A controller can open successfully while a sensor fails I/O. Only that
+        # external controller-capability response is substituted; actual driver
+        # allocation, native fds, errors, ownership and close() remain real.
+        io = SensorIO({'bme280_addr': 0x76}, 1, '/unused', '/unused', log)
+        read = {
+            'bme280': io._bme,
+            'ltr559_lux': lambda: io._ltr().get_lux(),
+            'mics6814_ohms': io._gas,
+            'scd41': lambda: io._scd({}),
+        }[sys.argv[2]]
+        sample = {}
+        io._observe(sample, sys.argv[2], read)
+        before = len(os.listdir('/proc/self/fd'))
+        for _ in range(200):
+            io._observe(sample, sys.argv[2], read)
+        after = len(os.listdir('/proc/self/fd'))
+        assert sys.argv[2] + '_error' in sample
+        assert after == before, (before, after, sample)
+    """
+>       subprocess.run(
+            [sys.executable, "-c", code, str(device), lane],
+            cwd=Path(__file__).resolve().parents[1],
+            check=True,
+        )
+
+tests/test_sensor_io.py:51: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+input = None, capture_output = False, timeout = None, check = True
+popenargs = (['/home/pistrommy/.virtualenvs/pimoroni/bin/python', '-c', "\nimport logging, os, sys\nfrom unittest.mock import patc...nfig-audit-20261119/enviro-resource-lifetime-violation-tmp/test_failed_sensor_initializat1/i2c-device', 'ltr559_lux'],)
+kwargs = {'cwd': PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviroplus-worktree')}
+process = <Popen: returncode: 1 args: ['/home/pistrommy/.virtualenvs/pimoroni/bin/pyth...>
+stdout = None, stderr = None, retcode = 1
+
+    def run(*popenargs,
+            input=None, capture_output=False, timeout=None, check=False, **kwargs):
+        """Run command with arguments and return a CompletedProcess instance.
+    
+        The returned instance will have attributes args, returncode, stdout and
+        stderr. By default, stdout and stderr are not captured, and those attributes
+        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,
+        or pass capture_output=True to capture both.
+    
+        If check is True and the exit code was non-zero, it raises a
+        CalledProcessError. The CalledProcessError object will have the return code
+        in the returncode attribute, and output & stderr attributes if those streams
+        were captured.
+    
+        If timeout (seconds) is given and the process takes too long,
+         a TimeoutExpired exception will be raised.
+    
+        There is an optional argument "input", allowing you to
+        pass bytes or a string to the subprocess's stdin.  If you use this argument
+        you may not also use the Popen constructor's "stdin" argument, as
+        it will be used internally.
+    
+        By default, all communication is in bytes, and therefore any "input" should
+        be bytes, and the stdout and stderr will be bytes. If in text mode, any
+        "input" should be a string, and stdout and stderr will be strings decoded
+        according to locale encoding, or by "encoding" if set. Text mode is
+        triggered by setting any of text, encoding, errors or universal_newlines.
+    
+        The other arguments are the same as for the Popen constructor.
+        """
+        if input is not None:
+            if kwargs.get('stdin') is not None:
+                raise ValueError('stdin and input arguments may not both be used.')
+            kwargs['stdin'] = PIPE
+    
+        if capture_output:
+            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+                raise ValueError('stdout and stderr arguments may not be used '
+                                 'with capture_output.')
+            kwargs['stdout'] = PIPE
+            kwargs['stderr'] = PIPE
+    
+        with Popen(*popenargs, **kwargs) as process:
+            try:
+                stdout, stderr = process.communicate(input, timeout=timeout)
+            except TimeoutExpired as exc:
+                process.kill()
+                if _mswindows:
+                    # Windows accumulates the output in a single blocking
+                    # read() call run on child threads, with the timeout
+                    # being done in a join() on those threads.  communicate()
+                    # _after_ kill() is required to collect that and add it
+                    # to the exception.
+                    exc.stdout, exc.stderr = process.communicate()
+                else:
+                    # POSIX _communicate already populated the output so
+                    # far into the TimeoutExpired exception.
+                    process.wait()
+                raise
+            except:  # Including KeyboardInterrupt, communicate handled that.
+                process.kill()
+                # We don't call process.wait() as .__exit__ does that for us.
+                raise
+            retcode = process.poll()
+            if check and retcode:
+>               raise CalledProcessError(retcode, process.args,
+                                         output=stdout, stderr=stderr)
+E               subprocess.CalledProcessError: Command '['/home/pistrommy/.virtualenvs/pimoroni/bin/python', '-c', "\nimport logging, os, sys\nfrom unittest.mock import patch\nimport smbus2\nfrom sensor_io import SensorIO\n\nreal_open = os.open\ndef open_device(path, *args, **kwargs):\n    if isinstance(path, str) and path.startswith('/dev/i2c-'):\n        path = sys.argv[1]\n    return real_open(path, *args, **kwargs)\n\nlog = logging.getLogger('sensor-fd-check')\nlog.addHandler(logging.NullHandler())\nlog.propagate = False\nwith patch('os.open', open_device), patch.object(\n    smbus2.SMBus, '_get_funcs', lambda self: smbus2.I2cFunc.I2C\n):\n    # A controller can open successfully while a sensor fails I/O. Only that\n    # external controller-capability response is substituted; actual driver\n    # allocation, native fds, errors, ownership and close() remain real.\n    io = SensorIO({'bme280_addr': 0x76}, 1, '/unused', '/unused', log)\n    read = {\n        'bme280': io._bme,\n        'ltr559_lux': lambda: io._ltr().get_lux(),\n        'mics6814_ohms': io._gas,\n        'scd41': lambda: io._scd({}),\n    }[sys.argv[2]]\n    sample = {}\n    io._observe(sample, sys.argv[2], read)\n    before = len(os.listdir('/proc/self/fd'))\n    for _ in range(200):\n        io._observe(sample, sys.argv[2], read)\n    after = len(os.listdir('/proc/self/fd'))\n    assert sys.argv[2] + '_error' in sample\n    assert after == before, (before, after, sample)\n", '/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-resource-lifetime-violation-tmp/test_failed_sensor_initializat1/i2c-device', 'ltr559_lux']' returned non-zero exit status 1.
+
+/usr/lib/python3.13/subprocess.py:577: CalledProcessError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 36, in <module>
+    assert after == before, (before, after, sample)
+           ^^^^^^^^^^^^^^^
+AssertionError: (5, 205, {'ltr559_lux_error': "OSError(25, 'Inappropriate ioctl for device')"})
+_ test_failed_sensor_initialization_keeps_file_descriptors_bounded[mics6814_ohms] _
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-resource-lifetime-violation-tmp/test_failed_sensor_initializat2')
+lane = 'mics6814_ohms'
+
+    @pytest.mark.parametrize("lane", ["bme280", "ltr559_lux", "mics6814_ohms", "scd41"])
+    def test_failed_sensor_initialization_keeps_file_descriptors_bounded(tmp_path, lane):
+        device = tmp_path / "i2c-device"
+        device.touch()
+        code = """
+    import logging, os, sys
+    from unittest.mock import patch
+    import smbus2
+    from sensor_io import SensorIO
+    
+    real_open = os.open
+    def open_device(path, *args, **kwargs):
+        if isinstance(path, str) and path.startswith('/dev/i2c-'):
+            path = sys.argv[1]
+        return real_open(path, *args, **kwargs)
+    
+    log = logging.getLogger('sensor-fd-check')
+    log.addHandler(logging.NullHandler())
+    log.propagate = False
+    with patch('os.open', open_device), patch.object(
+        smbus2.SMBus, '_get_funcs', lambda self: smbus2.I2cFunc.I2C
+    ):
+        # A controller can open successfully while a sensor fails I/O. Only that
+        # external controller-capability response is substituted; actual driver
+        # allocation, native fds, errors, ownership and close() remain real.
+        io = SensorIO({'bme280_addr': 0x76}, 1, '/unused', '/unused', log)
+        read = {
+            'bme280': io._bme,
+            'ltr559_lux': lambda: io._ltr().get_lux(),
+            'mics6814_ohms': io._gas,
+            'scd41': lambda: io._scd({}),
+        }[sys.argv[2]]
+        sample = {}
+        io._observe(sample, sys.argv[2], read)
+        before = len(os.listdir('/proc/self/fd'))
+        for _ in range(200):
+            io._observe(sample, sys.argv[2], read)
+        after = len(os.listdir('/proc/self/fd'))
+        assert sys.argv[2] + '_error' in sample
+        assert after == before, (before, after, sample)
+    """
+>       subprocess.run(
+            [sys.executable, "-c", code, str(device), lane],
+            cwd=Path(__file__).resolve().parents[1],
+            check=True,
+        )
+
+tests/test_sensor_io.py:51: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+input = None, capture_output = False, timeout = None, check = True
+popenargs = (['/home/pistrommy/.virtualenvs/pimoroni/bin/python', '-c', "\nimport logging, os, sys\nfrom unittest.mock import patc...g-audit-20261119/enviro-resource-lifetime-violation-tmp/test_failed_sensor_initializat2/i2c-device', 'mics6814_ohms'],)
+kwargs = {'cwd': PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviroplus-worktree')}
+process = <Popen: returncode: 1 args: ['/home/pistrommy/.virtualenvs/pimoroni/bin/pyth...>
+stdout = None, stderr = None, retcode = 1
+
+    def run(*popenargs,
+            input=None, capture_output=False, timeout=None, check=False, **kwargs):
+        """Run command with arguments and return a CompletedProcess instance.
+    
+        The returned instance will have attributes args, returncode, stdout and
+        stderr. By default, stdout and stderr are not captured, and those attributes
+        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,
+        or pass capture_output=True to capture both.
+    
+        If check is True and the exit code was non-zero, it raises a
+        CalledProcessError. The CalledProcessError object will have the return code
+        in the returncode attribute, and output & stderr attributes if those streams
+        were captured.
+    
+        If timeout (seconds) is given and the process takes too long,
+         a TimeoutExpired exception will be raised.
+    
+        There is an optional argument "input", allowing you to
+        pass bytes or a string to the subprocess's stdin.  If you use this argument
+        you may not also use the Popen constructor's "stdin" argument, as
+        it will be used internally.
+    
+        By default, all communication is in bytes, and therefore any "input" should
+        be bytes, and the stdout and stderr will be bytes. If in text mode, any
+        "input" should be a string, and stdout and stderr will be strings decoded
+        according to locale encoding, or by "encoding" if set. Text mode is
+        triggered by setting any of text, encoding, errors or universal_newlines.
+    
+        The other arguments are the same as for the Popen constructor.
+        """
+        if input is not None:
+            if kwargs.get('stdin') is not None:
+                raise ValueError('stdin and input arguments may not both be used.')
+            kwargs['stdin'] = PIPE
+    
+        if capture_output:
+            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+                raise ValueError('stdout and stderr arguments may not be used '
+                                 'with capture_output.')
+            kwargs['stdout'] = PIPE
+            kwargs['stderr'] = PIPE
+    
+        with Popen(*popenargs, **kwargs) as process:
+            try:
+                stdout, stderr = process.communicate(input, timeout=timeout)
+            except TimeoutExpired as exc:
+                process.kill()
+                if _mswindows:
+                    # Windows accumulates the output in a single blocking
+                    # read() call run on child threads, with the timeout
+                    # being done in a join() on those threads.  communicate()
+                    # _after_ kill() is required to collect that and add it
+                    # to the exception.
+                    exc.stdout, exc.stderr = process.communicate()
+                else:
+                    # POSIX _communicate already populated the output so
+                    # far into the TimeoutExpired exception.
+                    process.wait()
+                raise
+            except:  # Including KeyboardInterrupt, communicate handled that.
+                process.kill()
+                # We don't call process.wait() as .__exit__ does that for us.
+                raise
+            retcode = process.poll()
+            if check and retcode:
+>               raise CalledProcessError(retcode, process.args,
+                                         output=stdout, stderr=stderr)
+E               subprocess.CalledProcessError: Command '['/home/pistrommy/.virtualenvs/pimoroni/bin/python', '-c', "\nimport logging, os, sys\nfrom unittest.mock import patch\nimport smbus2\nfrom sensor_io import SensorIO\n\nreal_open = os.open\ndef open_device(path, *args, **kwargs):\n    if isinstance(path, str) and path.startswith('/dev/i2c-'):\n        path = sys.argv[1]\n    return real_open(path, *args, **kwargs)\n\nlog = logging.getLogger('sensor-fd-check')\nlog.addHandler(logging.NullHandler())\nlog.propagate = False\nwith patch('os.open', open_device), patch.object(\n    smbus2.SMBus, '_get_funcs', lambda self: smbus2.I2cFunc.I2C\n):\n    # A controller can open successfully while a sensor fails I/O. Only that\n    # external controller-capability response is substituted; actual driver\n    # allocation, native fds, errors, ownership and close() remain real.\n    io = SensorIO({'bme280_addr': 0x76}, 1, '/unused', '/unused', log)\n    read = {\n        'bme280': io._bme,\n        'ltr559_lux': lambda: io._ltr().get_lux(),\n        'mics6814_ohms': io._gas,\n        'scd41': lambda: io._scd({}),\n    }[sys.argv[2]]\n    sample = {}\n    io._observe(sample, sys.argv[2], read)\n    before = len(os.listdir('/proc/self/fd'))\n    for _ in range(200):\n        io._observe(sample, sys.argv[2], read)\n    after = len(os.listdir('/proc/self/fd'))\n    assert sys.argv[2] + '_error' in sample\n    assert after == before, (before, after, sample)\n", '/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-resource-lifetime-violation-tmp/test_failed_sensor_initializat2/i2c-device', 'mics6814_ohms']' returned non-zero exit status 1.
+
+/usr/lib/python3.13/subprocess.py:577: CalledProcessError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 36, in <module>
+    assert after == before, (before, after, sample)
+           ^^^^^^^^^^^^^^^
+AssertionError: (6, 406, {'mics6814_ohms_error': "RuntimeError('Gas sensor not connected.')"})
+___ test_failed_sensor_initialization_keeps_file_descriptors_bounded[scd41] ____
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-resource-lifetime-violation-tmp/test_failed_sensor_initializat3')
+lane = 'scd41'
+
+    @pytest.mark.parametrize("lane", ["bme280", "ltr559_lux", "mics6814_ohms", "scd41"])
+    def test_failed_sensor_initialization_keeps_file_descriptors_bounded(tmp_path, lane):
+        device = tmp_path / "i2c-device"
+        device.touch()
+        code = """
+    import logging, os, sys
+    from unittest.mock import patch
+    import smbus2
+    from sensor_io import SensorIO
+    
+    real_open = os.open
+    def open_device(path, *args, **kwargs):
+        if isinstance(path, str) and path.startswith('/dev/i2c-'):
+            path = sys.argv[1]
+        return real_open(path, *args, **kwargs)
+    
+    log = logging.getLogger('sensor-fd-check')
+    log.addHandler(logging.NullHandler())
+    log.propagate = False
+    with patch('os.open', open_device), patch.object(
+        smbus2.SMBus, '_get_funcs', lambda self: smbus2.I2cFunc.I2C
+    ):
+        # A controller can open successfully while a sensor fails I/O. Only that
+        # external controller-capability response is substituted; actual driver
+        # allocation, native fds, errors, ownership and close() remain real.
+        io = SensorIO({'bme280_addr': 0x76}, 1, '/unused', '/unused', log)
+        read = {
+            'bme280': io._bme,
+            'ltr559_lux': lambda: io._ltr().get_lux(),
+            'mics6814_ohms': io._gas,
+            'scd41': lambda: io._scd({}),
+        }[sys.argv[2]]
+        sample = {}
+        io._observe(sample, sys.argv[2], read)
+        before = len(os.listdir('/proc/self/fd'))
+        for _ in range(200):
+            io._observe(sample, sys.argv[2], read)
+        after = len(os.listdir('/proc/self/fd'))
+        assert sys.argv[2] + '_error' in sample
+        assert after == before, (before, after, sample)
+    """
+>       subprocess.run(
+            [sys.executable, "-c", code, str(device), lane],
+            cwd=Path(__file__).resolve().parents[1],
+            check=True,
+        )
+
+tests/test_sensor_io.py:51: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+input = None, capture_output = False, timeout = None, check = True
+popenargs = (['/home/pistrommy/.virtualenvs/pimoroni/bin/python', '-c', "\nimport logging, os, sys\nfrom unittest.mock import patc...ed-config-audit-20261119/enviro-resource-lifetime-violation-tmp/test_failed_sensor_initializat3/i2c-device', 'scd41'],)
+kwargs = {'cwd': PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviroplus-worktree')}
+process = <Popen: returncode: 1 args: ['/home/pistrommy/.virtualenvs/pimoroni/bin/pyth...>
+stdout = None, stderr = None, retcode = 1
+
+    def run(*popenargs,
+            input=None, capture_output=False, timeout=None, check=False, **kwargs):
+        """Run command with arguments and return a CompletedProcess instance.
+    
+        The returned instance will have attributes args, returncode, stdout and
+        stderr. By default, stdout and stderr are not captured, and those attributes
+        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,
+        or pass capture_output=True to capture both.
+    
+        If check is True and the exit code was non-zero, it raises a
+        CalledProcessError. The CalledProcessError object will have the return code
+        in the returncode attribute, and output & stderr attributes if those streams
+        were captured.
+    
+        If timeout (seconds) is given and the process takes too long,
+         a TimeoutExpired exception will be raised.
+    
+        There is an optional argument "input", allowing you to
+        pass bytes or a string to the subprocess's stdin.  If you use this argument
+        you may not also use the Popen constructor's "stdin" argument, as
+        it will be used internally.
+    
+        By default, all communication is in bytes, and therefore any "input" should
+        be bytes, and the stdout and stderr will be bytes. If in text mode, any
+        "input" should be a string, and stdout and stderr will be strings decoded
+        according to locale encoding, or by "encoding" if set. Text mode is
+        triggered by setting any of text, encoding, errors or universal_newlines.
+    
+        The other arguments are the same as for the Popen constructor.
+        """
+        if input is not None:
+            if kwargs.get('stdin') is not None:
+                raise ValueError('stdin and input arguments may not both be used.')
+            kwargs['stdin'] = PIPE
+    
+        if capture_output:
+            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+                raise ValueError('stdout and stderr arguments may not be used '
+                                 'with capture_output.')
+            kwargs['stdout'] = PIPE
+            kwargs['stderr'] = PIPE
+    
+        with Popen(*popenargs, **kwargs) as process:
+            try:
+                stdout, stderr = process.communicate(input, timeout=timeout)
+            except TimeoutExpired as exc:
+                process.kill()
+                if _mswindows:
+                    # Windows accumulates the output in a single blocking
+                    # read() call run on child threads, with the timeout
+                    # being done in a join() on those threads.  communicate()
+                    # _after_ kill() is required to collect that and add it
+                    # to the exception.
+                    exc.stdout, exc.stderr = process.communicate()
+                else:
+                    # POSIX _communicate already populated the output so
+                    # far into the TimeoutExpired exception.
+                    process.wait()
+                raise
+            except:  # Including KeyboardInterrupt, communicate handled that.
+                process.kill()
+                # We don't call process.wait() as .__exit__ does that for us.
+                raise
+            retcode = process.poll()
+            if check and retcode:
+>               raise CalledProcessError(retcode, process.args,
+                                         output=stdout, stderr=stderr)
+E               subprocess.CalledProcessError: Command '['/home/pistrommy/.virtualenvs/pimoroni/bin/python', '-c', "\nimport logging, os, sys\nfrom unittest.mock import patch\nimport smbus2\nfrom sensor_io import SensorIO\n\nreal_open = os.open\ndef open_device(path, *args, **kwargs):\n    if isinstance(path, str) and path.startswith('/dev/i2c-'):\n        path = sys.argv[1]\n    return real_open(path, *args, **kwargs)\n\nlog = logging.getLogger('sensor-fd-check')\nlog.addHandler(logging.NullHandler())\nlog.propagate = False\nwith patch('os.open', open_device), patch.object(\n    smbus2.SMBus, '_get_funcs', lambda self: smbus2.I2cFunc.I2C\n):\n    # A controller can open successfully while a sensor fails I/O. Only that\n    # external controller-capability response is substituted; actual driver\n    # allocation, native fds, errors, ownership and close() remain real.\n    io = SensorIO({'bme280_addr': 0x76}, 1, '/unused', '/unused', log)\n    read = {\n        'bme280': io._bme,\n        'ltr559_lux': lambda: io._ltr().get_lux(),\n        'mics6814_ohms': io._gas,\n        'scd41': lambda: io._scd({}),\n    }[sys.argv[2]]\n    sample = {}\n    io._observe(sample, sys.argv[2], read)\n    before = len(os.listdir('/proc/self/fd'))\n    for _ in range(200):\n        io._observe(sample, sys.argv[2], read)\n    after = len(os.listdir('/proc/self/fd'))\n    assert sys.argv[2] + '_error' in sample\n    assert after == before, (before, after, sample)\n", '/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-resource-lifetime-violation-tmp/test_failed_sensor_initializat3/i2c-device', 'scd41']' returned non-zero exit status 1.
+
+/usr/lib/python3.13/subprocess.py:577: CalledProcessError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 36, in <module>
+    assert after == before, (before, after, sample)
+           ^^^^^^^^^^^^^^^
+AssertionError: (5, 205, {'scd41_error': "OSError(25, 'Inappropriate ioctl for device')"})
+=========================== short test summary info ============================
+FAILED tests/test_sensor_io.py::test_failed_sensor_initialization_keeps_file_descriptors_bounded[bme280]
+FAILED tests/test_sensor_io.py::test_failed_sensor_initialization_keeps_file_descriptors_bounded[ltr559_lux]
+FAILED tests/test_sensor_io.py::test_failed_sensor_initialization_keeps_file_descriptors_bounded[mics6814_ohms]
+FAILED tests/test_sensor_io.py::test_failed_sensor_initialization_keeps_file_descriptors_bounded[scd41]
+4 failed in 2.59s

@@ -1,0 +1,17 @@
+import logging, os, sys
+sys.path.insert(0, sys.argv[1])
+from sensor_io import SensorIO
+fake = sys.argv[2]   # regular file: os.open succeeds, I2C ioctl fails
+log = logging.getLogger("x"); log.addHandler(logging.NullHandler()); log.propagate=False
+io = SensorIO({"bme280_addr": 0x76}, fake, "/nonexistent", "/nonexistent", log)
+def nfd(): return len(os.listdir("/proc/self/fd"))
+before = nfd()
+for _ in range(200):
+    s = {}
+    io._observe(s, "bme280", io._bme)
+print("bme280 error:", s.get("bme280_error"))
+print("fds before", before, "after 200 failed cycles", nfd())
+import resource; resource.setrlimit(resource.RLIMIT_NOFILE, (nfd()+5, resource.getrlimit(resource.RLIMIT_NOFILE)[1]))
+for _ in range(10): io._observe(s, "bme280", io._bme)
+s2 = {}; io._observe(s2, "cpu_temp_milli_c", lambda: int(open("/sys/class/thermal/thermal_zone0/temp").read()))
+print("sibling cpu lane after exhaustion:", s2)

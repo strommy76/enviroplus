@@ -10,7 +10,7 @@ from pathlib import Path
 from shared.backup_configuration import load_configuration
 from shared.backup_estimates import fractional_tree_estimate, fractional_upload_bytes
 from shared.backup_records import write_record
-from shared.config_service import load_env, require
+from shared.config_service import require
 
 
 def database_facts(path: Path) -> dict:
@@ -94,8 +94,6 @@ def main() -> int:
     else:
         _, config, _ = load_configuration(args.config)
         component = config["components"][args.component]
-        if config["environment_file"] is not None:
-            load_env(config["environment_file"])
         if args.mode == "capture":
             result = capture(Path(require("SQLITE_PATH")), args.output_dir)
         elif args.output_dir is not None:

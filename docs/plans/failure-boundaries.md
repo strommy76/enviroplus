@@ -1,3 +1,17 @@
+## Current receiving-fold amendment — November19
+
+Same lasting/silent/irreversible C/H increment, branches and review artifacts.
+Pi09430141/94723643 accept the exact folds below for direct verification; no
+new seat round unless the design grows. Current details, evidence, all-section
+and axiom assessment are in failure-boundaries-review.md.
+
+E1 retains shared BME/LTR and SCD bus ownership and closes both failed gas bus handles. E2 refits the actual between-arrival age, provisionally159.304253s; Ambient activation remains held. F4 removes duplicate producer env loading.
+
+No new host policy follows the reboot; the blanket scheduling gate is withdrawn.
+The current test-database owner must release it before this suite uses it.
+Canonical, operator landing and deployed effect remain separate prerequisites;
+older dated clearances below are provenance, not current clearance for these folds.
+
 # Enviroplus: independent sensor capture and provider health
 
 Authority: Bryan's November19 10:33 every-sensor isolation decision (6984c89c),
