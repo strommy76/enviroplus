@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from shared.backup_configuration import load_configuration
-from shared.backup_estimates import tree_estimate
+from shared.backup_estimates import fractional_tree_estimate, fractional_upload_bytes
 from shared.backup_records import write_record
 
 
@@ -67,10 +67,10 @@ def estimate(source: Path, settings: dict) -> dict:
     staging = size + settings["capture_evidence_bytes"]
     return {
         "staging_bytes": staging,
-        "upload_bytes": staging + 2 * settings["native_metadata_bytes_per_file"],
+        "upload_bytes": fractional_upload_bytes(staging, settings["native_overhead_fraction"]),
         "source_bytes": size,
         "source_files": 2,
-        "derivation": "Current allocated SQLite pages plus measured capture evidence and provisional native metadata for the database/evidence files; no compression credit",
+        "derivation": "Current allocated SQLite pages plus measured capture evidence and provisional native encoding fraction; no compression credit",
     }
 
 
@@ -97,8 +97,8 @@ def main() -> int:
         if args.mode == "capture":
             result = capture(source, args.output_dir)
         elif args.output_dir is not None:
-            result = tree_estimate(
-                args.output_dir, component["estimate"]["native_metadata_bytes_per_file"]
+            result = fractional_tree_estimate(
+                args.output_dir, component["estimate"]["native_overhead_fraction"]
             )
         else:
             result = estimate(source, component["estimate"])

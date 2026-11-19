@@ -110,7 +110,10 @@ def test_enviro_runs_real_producers_through_common_service(tmp_path, monkeypatch
                     "--component",
                     "database",
                 ],
-                "estimate": {"capture_evidence_bytes": 379, "native_metadata_bytes_per_file": 1024},
+                "estimate": {
+                    "capture_evidence_bytes": 379,
+                    "native_overhead_fraction": {"numerator": 0, "denominator": 107970939},
+                },
             },
             "raw_capture": {
                 "authority": "authoritative",

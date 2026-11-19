@@ -49,3 +49,21 @@ prospective checks now have the native observations above; k final direct
 verification remains pending until received, and no operator residual/landing
 or deployment clearance is invented. Current failures/scope holds remain
 reported; historical exposure/revocation status is not changed by these tests.
+# Installation cost fitting — November19
+
+Existing coordinated plan and4ff76957/e2d79c82: database estimates use the common
+exact fraction helper. Actual payload107970939B exceeds its first native Drive
+encoded cost; overhead floors at0, with no compression credit. Config names its
+provisional source and future settling observation. Raw/observation tree sizing
+is unchanged. Actual public post-capture CLI on the cloud-restored database
+returns107970939B. Existing native consumer fixture follows the new config field.
+
+C/H: lasting admission-only change; a wrong estimate surfaces at capacity/native
+delivery, with no change to verification/retention. Revert config/producer/shared
+helper together. Direct numeric verification dc5d94e8/a5a521de follows current
+checks; original source and separately assigned deployed-effect review stand.
+Shared's existing install-qualification record contains complete methods,
+observations, omission controls and all-section assessment. Full current check
+is pending; prior native882s/46s runs and462.099s cloud recovery were on the
+previous installed source and are not relabelled as this candidate's effect.
+

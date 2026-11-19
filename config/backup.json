@@ -39,8 +39,11 @@
           ],
           "estimate": {
             "capture_evidence_bytes": 379,
-            "native_metadata_bytes_per_file": 1024,
-            "provisional": "Measured current-corpus capture.json379B and native metadata upper-rounded2KiB for2 files at Nov18 local seed. Settle from future source/evidence/schema changes and exact native upload stats; no compression/dedup credit."
+            "provisional": "Observed first actual Drive seed: payload107970939B, uploaded30711KiB (rounded native stats). Net encoding cost is below payload, so overhead floors at0 without compression credit. Refit from future scheduled native costs after source/format changes.",
+            "native_overhead_fraction": {
+              "numerator": 0,
+              "denominator": 107970939
+            }
           }
         },
         "raw_capture": {
