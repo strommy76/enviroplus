@@ -38,7 +38,13 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
   declare which profile is active on a host.
 - Uncommitted `.env` owns secrets and host-specific infrastructure bindings.
 - `config/backup.json` owns the database/raw-capture replication contract;
-  `scripts/backup_enviro.py` is its supported execution path.
+  `enviro_backup.service` invokes the shared backup CLI. Use
+  `systemctl start enviro_backup.service` for a manual run, so the native service
+  owner prevents overlap with the timer. Do not run a concurrent direct CLI.
+  `sqlite_backup.py` owns SQLite capture/estimation and artifact-bound restore validation;
+  raw files use the native tree input and shared filesystem estimate. Database backups
+  include irreplaceable legacy rows and are protected as authoritative. Delivery/run/maintenance
+  observations are append-only authority; payloads/caches and status views are derived.
 - Tests must isolate the raw-retention root and must never write to the live
   canonical capture tree.
 
@@ -68,7 +74,7 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
 - Repo-managed service files describe the intended service content. Which
   hardware-specific dashboard unit is active is host residue and must be proven
   from the running service manager, not inferred from this repository.
-- Backup capture and off-host replication use the shared replication service;
+- Backup orchestration, native incremental delivery and retention use the shared backup service;
   provider collectors and the dashboard do not implement competing backup paths.
 
 ## Supported Validation
@@ -82,6 +88,14 @@ PYTHONPATH=.. python -m pytest
 python -m ruff check .
 python -m ruff format --check .
 ```
+
+The native backup lane additionally requires the qualified executable:
+`DUPLICACY_TEST_BINARY=/absolute/path/to/duplicacy PYTHONPATH=.. python -m pytest tests/test_sqlite_backup.py`.
+Without that binding, native cases report skipped coverage, never a native pass.
+
+The owned `tests/test_env_completeness.py` integration lane checks required bindings
+against this repository's installed `.env` (the common Git checkout for worktrees);
+it never reports secret values. Missing bindings fail at the public config seam.
 
 If Ruff is unavailable, that validation lane is red until the declared developer
 environment is restored; absence is not a passing result.

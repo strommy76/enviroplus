@@ -1,0 +1,33 @@
+{
+  "components": [
+    {
+      "component": "database",
+      "revision": 2,
+      "native_stats": [
+        "Files: 2 total, 105,432K bytes; 2 new, 105,432K bytes",
+        "File chunks: 24 total, 105,432K bytes; 3 new, 18,216K bytes, 4,985K bytes uploaded",
+        "Metadata chunks: 3 total, 1K bytes; 2 new, 1K bytes, 1K bytes uploaded",
+        "All chunks: 27 total, 105,434K bytes; 5 new, 18,218K bytes, 4,987K bytes uploaded",
+        "Total running time: 00:00:01"
+      ],
+      "capture_and_restore_seconds": 3.477314274990931,
+      "pinned_restore_verified": true
+    },
+    {
+      "component": "raw_capture",
+      "revision": 2,
+      "native_stats": [
+        "Files: 831 total, 1,934M bytes; 1 new, 2,928K bytes",
+        "File chunks: 417 total, 1,937M bytes; 2 new, 2,928K bytes, 245K bytes uploaded",
+        "Metadata chunks: 3 total, 131K bytes; 3 new, 131K bytes, 95K bytes uploaded",
+        "All chunks: 420 total, 1,937M bytes; 5 new, 3,059K bytes, 341K bytes uploaded",
+        "Total running time: 00:00:01"
+      ],
+      "capture_and_restore_seconds": 23.7109236719989,
+      "pinned_restore_verified": true
+    }
+  ],
+  "raw_pinned_files": 831,
+  "raw_pinned_bytes": 2028238585,
+  "scope": "new native format only, local storage; no old backups or cloud calls"
+}

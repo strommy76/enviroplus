@@ -1,0 +1,58 @@
+"""One-use current-corpus incremental capture and pinned-boundary restoration."""
+
+from pathlib import Path
+import json
+import shutil
+import sys
+import time
+
+from shared.duplicacy_cli import Duplicacy, native_events
+from shared.offsite_replication import prefix_md5
+
+effort = Path(__file__).resolve().parent
+sys.path.insert(0, str(effort / "enviroplus-worktree"))
+from sqlite_backup import capture, verify
+
+work = effort / "enviro-native-qualification"
+payload = work / "payload"
+shutil.rmtree(payload)  # Only this method's derived payload; native revisions stay.
+payload.mkdir()
+capture(Path("/home/pistrommy/projects/enviroplus/enviro.db"), payload)
+raw = Path("/home/pistrommy/projects/enviroplus/raw-capture")
+boundaries = {}
+for path in raw.rglob("*"):
+    if path.is_file():
+        size = path.stat().st_size
+        boundaries[str(path.relative_to(raw))] = {"bytes": size, "md5": prefix_md5(path, size)}
+(work / "raw-prefix-boundaries.json").write_text(json.dumps(boundaries, indent=2)+"\n")
+binary = str(effort / "tools/duplicacy_linux_arm64_3.3.0")
+storage = str(work / "storage")
+results = []
+for name, source in {"database": payload, "raw_capture": raw}.items():
+    started = time.monotonic()
+    client = Duplicacy(binary, work / "control" / name, source, storage, name, 3600)
+    client.initialize()
+    revision = client.backup("current-enviro-incremental-qualification")
+    stats = [message for _, event, message in native_events(client.backup_log)
+             if event == "BACKUP_STATS"]
+    restore = work / "restore" / name
+    restore.mkdir(parents=True)
+    recovery = Duplicacy(binary, work / "restore-control" / name, restore,
+                         storage, name, 3600)
+    recovery.initialize()
+    recovery.command("restore", "-r", str(revision))
+    if name == "database":
+        verify(restore)
+    else:
+        for relative, boundary in boundaries.items():
+            assert prefix_md5(restore / relative, boundary["bytes"]) == boundary["md5"], relative
+    result = {"component": name, "revision": revision, "native_stats": stats,
+              "capture_and_restore_seconds": time.monotonic()-started,
+              "pinned_restore_verified": True}
+    results.append(result)
+    print(json.dumps(result), flush=True)
+(work / "incremental-restore-result.json").write_text(json.dumps({
+    "components": results, "raw_pinned_files": len(boundaries),
+    "raw_pinned_bytes": sum(b["bytes"] for b in boundaries.values()),
+    "scope": "new native format only, local storage; no old backups or cloud calls",
+}, indent=2)+"\n")

@@ -1,0 +1,38 @@
+[
+  {
+    "property": "postgres-data-omission",
+    "source": "src/services/db/postgres_capture.py",
+    "original_sha256": "24adc0c3e12660f2780265a1e1c10eebb11599acaac691e3c9c47eafa29fd08d",
+    "change": {
+      "from": "            \"-F\",",
+      "to": "            \"--schema-only\",\n            \"-F\","
+    },
+    "test": "tests/test_postgres_capture.py",
+    "exit": 1,
+    "log": "postgres-data-omission.log"
+  },
+  {
+    "property": "postgres-tamper",
+    "source": "src/services/db/postgres_capture.py",
+    "original_sha256": "24adc0c3e12660f2780265a1e1c10eebb11599acaac691e3c9c47eafa29fd08d",
+    "change": {
+      "from": "if artifact_facts(directory / evidence[\"artifact\"]) != evidence[\"facts\"]:",
+      "to": "if False:"
+    },
+    "test": "tests/test_postgres_capture.py",
+    "exit": 1,
+    "log": "postgres-tamper.log"
+  },
+  {
+    "property": "sqlite-tamper",
+    "source": "sqlite_backup.py",
+    "original_sha256": "9e7eaac741672813410ae37794c1eb5b0337350cc6d9378fbd7c96dd62d487fc",
+    "change": {
+      "from": "if observed != evidence[\"facts\"]:",
+      "to": "if False:"
+    },
+    "test": "tests/test_sqlite_backup.py::test_same_cardinality_restored_corruption_fails",
+    "exit": 1,
+    "log": "sqlite-tamper.log"
+  }
+]
