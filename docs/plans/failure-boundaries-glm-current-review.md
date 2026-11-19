@@ -1,0 +1,34 @@
+**Verdict: would not block.** No remaining blocking defect in the Enviroplus class (incomplete driver setup/GPIO isolation; clean native/bootstrap environment) at `732c8536` (base `0350abe`). Closure basis below. The Stocks half of the named class is **not in this packet** — no Stocks source, tests, or controls are supplied — so its dispositions are unconfirmed from this seat and no verdict on them is implied or offered.
+
+## Disposition adjudication (from content, class-scoped)
+
+| Disposition (failure-boundaries-review.md) | Independent adjudication |
+|---|---|
+| Astra1/GLM1 startup `shared` import — CONFIRMED, folded/closed | **Confirmed closed.** `enviro_provider_health.service.in` now carries `Environment=PYTHONPATH=/home/pistrommy/projects` (line 9), the same seam the five collectors hard-insert; PROJECT-CONFIG documents `PYTHONPATH=.. python -m provider_health_units`; `test_clean_entrypoints_use_the_declared_shared_binding` executes both entrypoints in a child with `PYTHONPATH` stripped, applying the service's declared bindings. The f088d52 control log shows both failing with `ModuleNotFoundError` (exit 1). |
+| Astra2 driver SystemExit — CONFIRMED, folded/closed | **Confirmed closed.** `sensor_io._observe` default tuple and the PMS tuple include `SystemExit`; `display()` catches `(OSError, RuntimeError, SystemExit)`. Scope is confined to the hardware observation/display boundary: `retain_sample`, `derive_row`, `local_sensors.write` and DB reads sit outside any wrapper, so storage/shutdown failures still end the process. Control at f088d52: exit 1 for `pms5003_init` and `display_init` SystemExit. |
+| Astra3 latched gas setup — CONFIRMED, folded/closed | **Confirmed closed.** `gas_ready` gates first setup; on incomplete setup (including `available()` false and `get_pin` SystemExit) `_gas` runs `gas.cleanup()` + `importlib.reload(gas)` — which, against the supplied installed `gas.py`, is exactly what clears the `_is_setup`/`_is_available`/`_heater` latch — then re-raises. `read_all()` sits outside the try, so a post-setup transient error keeps the established heater handle (`gas_ready` stays true). The installed driver shows the latch; the f088d52 control shows the fabricated-reading defect (`adcs == 1`, plausible reading after failed setup). |
+| Astra4 timestamp-only NWS/AirNow | **Concur, refuted as defect.** The plan directs the console-only exclusion for Ambient specifically; NWS/AirNow collectors and the contract write explicit NULL as a provider statement, so lane semantics are age of accepted statements. Closed without action is correct; adding a completeness whitelist would be phantom hardening. |
+| GLM2 boot-time check / GLM3 invalid timezone | **Concur, both refuted.** Post-outage staleness is the exact case E2 must alert (operator record 648ab3e1); a bad committed timezone aborts loudly with nonzero exit → OnFailure. No guard warranted. |
+| GLM4 no-op control / GLM5 estimate binding | **Concur.** Honest provenance, disclosed; and `sqlite_backup.main` routes capture and estimate through the same `require("SQLITE_PATH")` seam. Closed without action. |
+
+**Nothing disputed in the prior dispositions for this class. Nobody named:** (a) after a *successful* gas setup, a permanently lost ADC never re-runs driver setup — every cycle records a loud lane failure, which matches the adjudicated "preserve the established handle on ordinary transient failures" contract; not worth a re-setup engine, flag for residual acceptance only. (b) the clean-entrypoint test asserts the rendered timer file exists but not its content; hand-verification of `render_unit` against the template shows the rendered `[Timer]` correctly gains `OnUnitActiveSec=60` while keeping `OnBootSec=0` and `Unit=`.
+
+## Axiom check (object: enviroplus @ 732c8536, class-scoped)
+
+| Axiom | Question | Result |
+|---|---|---|
+| 1 · Truth | Can a failed setup/GPIO claim or a broken bootstrap read as a good observation or successful check? | **CONFORMS** — `sensor_io.py:38–44/_gas` records lane errors and pops only that device; service template declares the real import seam; f088d52 controls demonstrate the violations existed. |
+| 2 · Cognition | Does the fix introduce a curated failure roster or bypass the driver? | **CONFORMS** — the driver's own public `setup/available/cleanup` interface plus reload; no private-flag mutation; SystemExit translation is a boundary contract, not a whitelist. |
+| 3 · Antifragility | Can one driver's GPIO/SystemExit failure stop independent sensors? | **CONFORMS at source** — per-lane `_observe` isolation, display/proximity failures recorded without ending capture; violation-sensitivity proven by the f088d52 control logs. |
+| 4 · KISS | Is any admitted mechanism without an observed failure? | **CONFORMS** — each fix maps 1:1 to a supplied control log; no retry service, scheduler, or new store added. |
+| 5 · Boundaries | Is any failure in the class swallowed to look healthy? | **CONFORMS** — lane errors retained in Tier 1; `RetentionWriteError` and DB/config errors remain unwrapped process failures; per-lane health problems reach nonzero exit → OnFailure. |
+| 6 · Maintenance | Does superseded content survive, or a duplicate resolver appear? | **CONFORMS** — f088d52's seam-less template superseded by the declared binding; collectors' existing `sys.path` seam untouched; no second import mechanism. |
+| Preamble | Cost of any mechanism beyond the named failures? | **CONFORMS** — nothing beyond the minimum each confirmed finding requires. |
+
+## Unconfirmed limits
+
+- **No supplied execution log at the current revision.** `failure-boundaries-checks.json`'s "corrected_focused exit 0, 48 cases" is treated as a claim, not evidence; the only executed outputs in the packet are the violation controls (at f088d52/0350abe and mutations), which establish test sensitivity, not a current pass. My conformance rests on source content read against those controls.
+- **Stocks class items** (failed-acquisition recency/attribution, holdout policy semantics, timer evidence completeness): sources, tests, and the `stocks-review-recency/policy-violation` logs are referenced by the method file but absent from this packet. Unconfirmable here; that half belongs to the Stocks seat.
+- Deployed/native effect (unit installation, timer/alert receipt, hardware), installed `ads1015` internals, and live `.env` values remain behind the declared gate; no canonical or deployed-effect claim is made.
+
+**Would block: no** — for the Enviroplus class as scoped. This round is complete on the Enviroplus side; no further source round is requested from this seat.

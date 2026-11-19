@@ -94,3 +94,22 @@ real missing-outdoor observation, not grounds to widen the bound or repair hardw
 The lifetime/uncertainty of the provisional bound remains declared in config.
 
 Net runtime/config/unit lines versus 0350abe: +374/-168, net +206; excludes tests, provenance/docs and .gitignore. This size is reported, not used as a conformance proxy.
+
+## Same-round source closure — November 19
+
+Astra and GLM independently confirm the corrected 732c853 bootstrap, GPIO and
+incomplete-gas-setup boundaries, with no remaining source blocker in the named
+class. Both confirm the content-based rejection of NULL-completeness/boot-grace/
+bad-timezone guards. Native/import and actual driver substitutions establish
+only those properties; hardware, installed timer, real alert and canonical
+effects remain UNCONFIRMED until separately observed.
+
+GLM's proposed further consideration of an established ADC that never recovers
+is closed without action: repeated lane errors remain retained and loud, and
+no live/observed permanently lost ADC establishes a defect requiring a new
+re-setup engine. Reconnected hardware recovery is still a qualification item,
+not a verified claim. Timer-file existence establishes existence only; unit
+semantics are read from the actual renderer/config/template, not inferred from
+that assertion. Full corrected focused/native-pass outputs are now retained,
+closing the packet's pass-evidence omission without repeating the experiment.
+No remaining source-review defect class is identified.
