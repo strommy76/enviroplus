@@ -1,3 +1,20 @@
+## Common backup-interface consumer adoption — November19
+
+Released Shared batch8d57189a/50f593b8; common source is draft SharedPR8.
+Necessary dependent adoption only: bare python means the backup service's own
+interpreter; capture/estimate prefixes omit repeated config/component arguments;
+observations omits its Shared-owned state-relative source path; Drive capacity
+omits --token-file and uses its existing native destination environment binding.
+All database/source/storage/retention/timing values stay unchanged. No new source,
+resolver, schedule or activation. Same C/H runtime failure declaration; deploy
+only as the reviewed coordinated Shared/consumer tuple. Existing own artifact
+and PR are reused; no separate plan or verdict fragment. Axiom1/5 preserve
+required binding/errors;2/3 derive rather than repeat;4/Preamble remove parts;
+6 updates actual consumers/fixtures. A-r existing assessment applies; new common
+source gets whole Astra/GLM review and Pi receiving review; consumer adoption
+travels whole with that tuple. Own focused capture/config tests and actual
+common-source violations define the evidence, no repeat unrelated full suite.
+
 ## Current receiving-fold declaration — November 19
 
 This is the same accepted increment and same lasting/silent/irreversible C/H

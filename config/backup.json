@@ -16,25 +16,17 @@
         "database": {
           "authority": "authoritative",
           "capture_argv": [
-            "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+            "python",
             "-m",
             "sqlite_backup",
-            "capture",
-            "--config",
-            "/home/pistrommy/projects/enviroplus/config/backup.json",
-            "--component",
-            "database"
+            "capture"
           ],
           "capture_timeout_seconds": 3600,
           "estimate_argv": [
-            "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+            "python",
             "-m",
             "sqlite_backup",
-            "estimate",
-            "--config",
-            "/home/pistrommy/projects/enviroplus/config/backup.json",
-            "--component",
-            "database"
+            "estimate"
           ],
           "estimate": {
             "capture_evidence_bytes": 379,
@@ -50,13 +42,9 @@
           "source_path": "/home/pistrommy/projects/enviroplus/raw-capture",
           "capture_argv": null,
           "estimate_argv": [
-            "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+            "python",
             "-m",
-            "shared.backup_estimates",
-            "--config",
-            "/home/pistrommy/projects/enviroplus/config/backup.json",
-            "--component",
-            "raw_capture"
+            "shared.backup_estimates"
           ],
           "estimate": {
             "native_metadata_bytes_per_file": 163,
@@ -65,16 +53,11 @@
         },
         "observations": {
           "authority": "authoritative",
-          "source_path": "/home/pistrommy/projects/enviroplus/.backup-staging/native/observations",
           "capture_argv": null,
           "estimate_argv": [
-            "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+            "python",
             "-m",
-            "shared.backup_estimates",
-            "--config",
-            "/home/pistrommy/projects/enviroplus/config/backup.json",
-            "--component",
-            "observations"
+            "shared.backup_estimates"
           ],
           "estimate": {
             "native_metadata_bytes_per_file": 1024,
@@ -92,12 +75,10 @@
           "copies": 2,
           "execution_timeout_seconds": 3600,
           "capacity_argv": [
-            "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+            "python",
             "-m",
             "shared.backup_capacity",
             "drive",
-            "--token-file",
-            "/home/pistrommy/.config/duplicacy/google-drive.json",
             "--mirror-capacity-bytes",
             "1485052047360",
             "--timeout-seconds",
