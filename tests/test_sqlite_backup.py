@@ -232,12 +232,16 @@ def test_native_unit_uses_common_owner_and_project_cadence(tmp_path):
     root = Path(__file__).resolve().parents[1]
     config = json.loads((root / "config/backup.json").read_text())["hosts"][socket.gethostname()]
     units = rendered_units(root / "config/backup.json")
-    service = units[config["cadence"]["service_unit"]]
-    timer = units[config["cadence"]["timer_unit"]]
+    (service_name,) = (p.stem for p in root.glob("*.service.in"))
+    timer_name = service_name.removesuffix(".service") + ".timer"
+    service = units[service_name]
+    timer = units[timer_name]
     assert "-m shared.backup_service --config " in service
     service_config = ConfigParser(interpolation=None)
     service_config.read_string(service)
-    assert service_config["Unit"]["OnFailure"] == "stocks_ops_alert@%n.service"
+    template = ConfigParser(interpolation=None)
+    template.read(root / (service_name + ".in"))
+    assert service_config["Unit"]["OnFailure"] == template["Unit"]["OnFailure"]
     assert f"TimeoutStartSec={config['cadence']['execution_timeout_seconds']}" in service
     assert f"OnCalendar={config['cadence']['on_calendar']}" in timer
     assert (
@@ -256,9 +260,9 @@ def test_native_unit_uses_common_owner_and_project_cadence(tmp_path):
     for name in units:
         (tmp_path / (name + ".in")).write_bytes((root / (name + ".in")).read_bytes())
     edited = rendered_units(path)
-    service_config.read_string(edited[cadence["service_unit"]])
+    service_config.read_string(edited[service_name])
     timer_config = ConfigParser(interpolation=None)
-    timer_config.read_string(edited[cadence["timer_unit"]])
+    timer_config.read_string(edited[timer_name])
     assert service_config["Service"]["TimeoutStartSec"] == "2713"
     assert timer_config["Timer"]["OnCalendar"] == "*-*-* 10:17:00 UTC"
     assert timer_config["Timer"]["RandomizedDelaySec"] == "23"

@@ -342,7 +342,7 @@ Backup service/timer files are derived outputs. After editing `config/backup.jso
 render them before linking or reconciling systemd units:
 
 ```bash
-python -m shared.backup_units --config config/backup.json --output-dir .
+python -m shared.backup_units --config config/backup.json
 ```
 
 The `.in` files own unit policy; backup configuration alone owns cadence, jitter
