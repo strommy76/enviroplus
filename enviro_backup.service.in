@@ -1,6 +1,6 @@
 [Unit]
 Description=Enviro+ offsite backup (database snapshot + canonical raw tier)
-Documentation=file:///home/pistrommy/projects/enviroplus/config/backup.json
+Documentation=file://@ROOT@/config/backup.json
 # The native Drive API needs a routable network path.
 After=network-online.target
 Wants=network-online.target
@@ -15,9 +15,9 @@ OnFailure=stocks_ops_alert@%n.service
 Type=oneshot
 User=pistrommy
 Group=pistrommy
-WorkingDirectory=/home/pistrommy/projects/enviroplus
-Environment=PYTHONPATH=/home/pistrommy/projects/enviroplus:/home/pistrommy/projects
-ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python -m shared.backup_service --config /home/pistrommy/projects/enviroplus/config/backup.json
+WorkingDirectory=@ROOT@
+Environment="PYTHONPATH=@ROOT@:@ROOT@/.."
+ExecStart="@PYTHON@" -m shared.backup_service --config "@ROOT@/config/backup.json"
 
 # Timing directives are generated from config/backup.json.
 

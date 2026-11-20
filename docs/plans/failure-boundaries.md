@@ -174,3 +174,59 @@ entryway light shorting in rain, restored about06:00 EST. This confirms the old
 returns are off-nominal outage samples to exclude from the nominal fit, and the
 real stopped-controller condition E2 must surface. This is a recorded decision,
 not a verbatim quotation; the original relay travels with the review inputs.
+## Operator folds — November19 22:00/22:07
+
+Authority9d4a016c/cb3d5c42/e3b27595: none of E3 or unit-path duplication is
+accepted as residual. Same lasting/silent/irreversible C/H branch and artifact.
+There is no HAT config switch: the native producer unit is the current authority.
+One systemctl show reads LoadState and UnitFileState for the policy's producer.
+Loaded/enabled checks local readings through the existing SQLite lane; disabled
+or not-found is explicitly inactive with detail, never described as healthy.
+Any other state or failed query is observation_unreadable. This native gate is
+interim pending pi-config#31; no new flag, store or controller is added.
+
+Local age allowance derives from the selected CONFIG_PATH publish grid: two
+publish intervals (rows are keyed at interval start and published on the next
+interval), plus the existing health-check phase and display-loop interval.
+This is provisional at definition: settle loaded healthy publication ages and
+sensor-I/O delays when hardware is activated. No hardware activation here.
+This checks producer freshness, not a new sensor-completeness whitelist.
+
+Remove literal interpreter/root bindings from every current Enviro unit policy.
+The existing project renderer becomes service_units and derives nested collector/
+dashboard/provider units, plus backup output through shared.backup_units. Old
+static source files become derived outputs; current consumers/docs follow.
+Shared render_unit substitutes only @PYTHON@ from sys.executable and @ROOT@
+from the caller's config-root location. Backup's existing renderer supplies
+that root. No configured interpreter duplicate or shadow backup implementation.
+Shared's narrow follow-up is authorized by cb3d5c42, stays in its existing
+branch/artifact, and is held for final-content landing/coordinated deployment.
+
+Current primary systemctl/systemd.service documentation was checked November19:
+show exposes native properties; enabled state differs from runtime activity.
+The selected producer actually reports not-found on this Pi, matching the
+explicit operator disposition. Native state vocabulary can evolve: unknown
+state remains unreadable, not an inferred disablement. Source method agrees
+with the current supported interface; no stale alternative is retained.
+https://www.freedesktop.org/software/systemd/man/latest/systemctl.html
+
+Construction axiom-check at provider_health, service_units and Shared unit owners:
+| Axiom | Falsification question / prospective result |
+|---|---|
+|1 Truth|Does absent hardware or a failed manager read become healthy? CONFORMS: inactive detail vs explicit unreadable are distinct.|
+|2 Cognition|Is a second activation flag or curated unit census introduced? CONFORMS: native state and template discovery; no second declaration.|
+|3 Antifragility|Do changed interpreter/root or one unreadable producer hide independent lanes? CONFORMS: derive paths and retain lane isolation.|
+|4 KISS|Does implementation exceed the actual lost health/path defects? CONFORMS: one native read and existing renderer only.|
+|5 Boundaries|Can unknown unit state or stale active readings pass quietly? CONFORMS: explicit unreadable/stale and inactive records.|
+|6 Maintenance|Do old literal templates or renderer entrypoints survive live? CONFORMS: replace all current unit policies and migrate the owning entrypoint.|
+|Preamble|Is a new mechanism beyond the minimum added? CONFORMS: no registry/controller/backup engine; existing owners extended.|
+
+A/B relayed operator decisions/executor; C/H same risk; D Shared extension
+authorized after source search; E false switch premise corrected from actual
+content; F no secrets; G no deploy/activation; a minimum; b repo evidence;
+c service_units states actual function; d source/effect distinct; e/f same
+branches/artifacts; g age derived/provisional; h current renderer/native API;
+i actual native/source defects; j stores unchanged; k Pi directly verifies
+the directed folds; l evidence status explicit; m host-derived paths;
+n unreadable stays failure; o residuals folded; p/q retire static/old entrypoint
+surfaces and repair dependent tests/docs; r actual-source violations required.

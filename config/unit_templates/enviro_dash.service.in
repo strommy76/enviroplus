@@ -12,8 +12,8 @@ OnFailure=stocks_ops_alert@%n.service
 [Service]
 Type=simple
 User=pistrommy
-WorkingDirectory=/home/pistrommy/projects/enviroplus
-ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python enviro_dash3.py
+WorkingDirectory=@ROOT@
+ExecStart="@PYTHON@" enviro_dash3.py
 Restart=on-failure
 # PROVISIONAL inherited spacing: settle from observed recovery time/attempt cost.
 RestartSec=30

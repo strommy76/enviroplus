@@ -6,7 +6,8 @@
     "nws_derivation": "Existing NWS_MAX_OBSERVATION_AGE_S7200 admission bound + NWS_POLL_S600 + owner REQUEST_TIMEOUT_S15 =7815s.",
     "airnow_derivation": "AirNow hourly timestamp granularity3600s + about3600s publication lag + AIRNOW_POLL_S1800 + contract timeout15 =9015s. https://airnow-blue.app.cloud.gov/about-the-data/ and https://docs.airnowapi.org/faq, checked2026-11-19.",
     "provisional": "All bounds are provisional: settle the distribution of successful observation ages and false alerts under loaded, healthy collection. Ambient fit is finite current-day new arrivals; AirNow publication lag is approximate, not an SLA. No outage is relabelled healthy to fit these bounds.",
-    "timezone": "AirNow location is Satellite Beach; America/New_York resolves its observed EST/EDT metadata, which must agree. Ambient ts is UTC by its projector; NWS ts carries its own offset."
+    "timezone": "AirNow location is Satellite Beach; America/New_York resolves its observed EST/EDT metadata, which must agree. Ambient ts is UTC by its projector; NWS ts carries its own offset.",
+    "local_readings": "Active only when the configured producer is natively loaded/enabled. Not installed/disabled is explicitly inactive, not healthy. Age allowance derives from selected CONFIG_PATH intervals in load_policy; provisional until loaded healthy publication-age/I/O measurements at activation. Interim native activation authority pending pi-config#31."
   },
   "check_interval_seconds": 60,
   "lanes": [
@@ -27,6 +28,12 @@
       "query": "SELECT ts, local_time_zone AS timezone_abbreviation FROM epa_air_quality ORDER BY ts DESC LIMIT 1",
       "timezone": "America/New_York",
       "max_age_seconds": 9015
+    },
+    {
+      "name": "local_readings",
+      "producer_unit": "enviro_dash.service",
+      "query": "SELECT MAX(ts) AS ts FROM readings",
+      "timezone": "UTC"
     }
   ]
 }

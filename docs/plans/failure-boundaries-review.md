@@ -301,3 +301,46 @@ Existing C/H, axiom and all-section assessment remains applicable; no new
 mechanism, values, services or review round. HAT/Ambient remain unactivated;
 159.3seconds is not an approved paging threshold. Operator residuals and GLM's
 receiving-input limitation remain disclosed, not waived by a passing suite.
+## Operator E3 and unit-binding fold verification — November19 22:00/22:07
+
+Authorities9d4a016c/26a6fb76/cb3d5c42/e3b27595 are recorded in the plan.
+The supposed HAT config switch was absent; native enabled/disabled/not-installed
+state is the explicit interim source. One supported systemctl show reads both
+properties. Loaded/enabled checks readings freshness; disabled and not-found
+are explicitly inactive, with detail. A failed or other native state is
+observation_unreadable and retains provider siblings. Provisional local age
+uses the selected capture publish/display intervals and existing check phase;
+activation must measure loaded healthy publication/I/O ages. This monitors the
+producer, not a new per-sensor completeness policy.
+
+All current collector/dashboard/provider/backup unit policy templates now bind
+@PYTHON@ and @ROOT@ through Shared, deriving the actual rendering interpreter
+and config-root location. service_units replaces provider_health_units and
+discovers nested policies; it invokes the existing backup unit owner rather
+than reproducing cadence logic. Four old static source units become derived
+outputs. Root unit outputs are ignored by a root-scoped pattern, not a curated
+new roster. README/PROJECT-CONFIG and real entrypoint tests follow the owner.
+The old display-spi rollback files are explicitly immutable provenance in
+docs/display-spi-validation.md and are not rewritten or treated as live policy.
+
+18 owning Enviro/provider/unit/native-SQLite backup cases PASS; Shared's owning
+renderer case PASS. Seven actual-source controls FAIL: literal interpreter,
+literal root, missing local lane, lost disabled exemption, lost not-installed
+exemption, wrong Shared interpreter and dropped native-query error boundary.
+All source bytes restored. A first focused run exposed a test worktree parent
+without its documented Shared sibling; repair constructs the real sibling
+layout using current source and selected Shared, with no assertion weakened.
+Initial failure and corrected full owning output are both retained.
+
+Read-only actual Pi query returns not-found/empty UnitFileState; the candidate
+reports inactive/producer not installed without opening a DB or alerting.
+This is not deployed timer/hardware proof. Existing Stocks backup-unit output
+compares byte-identical before/after the Shared extension. Public project
+unit generation succeeds under the actual Pimoroni rendering interpreter.
+
+All six plan construction axiom questions and Preamble now verify CONFORMS
+at these actual owners/controls. All-section assessment remains in the plan;
+no new flags, stores, controller, host activation or unapproved residual.
+Pi directly verifies this same fold, including Shared. Original GLM receiving
+input limitation is not erased or waived by these checks. No new full suite,
+landing or coordinated deployment is inferred.

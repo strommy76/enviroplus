@@ -2,11 +2,27 @@
 
 import json
 import sqlite3
+import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import pytest
+
+import provider_health
 from ambient_wx import ensure_schema
 from provider_health import check
+
+native_producer_state = provider_health.producer_state
+
+
+@pytest.fixture(autouse=True)
+def disabled_hardware_outside_provider_properties(monkeypatch):
+    # Native activation is outside the existing external-provider SQL properties.
+    monkeypatch.setattr(
+        provider_health,
+        "producer_state",
+        lambda unit: {"LoadState": "loaded", "UnitFileState": "disabled"},
+    )
 
 
 def observations(tmp_path):
@@ -71,11 +87,14 @@ def test_cli_reports_failure_and_preserves_all_lane_results(tmp_path, monkeypatc
     with sqlite3.connect(path) as db:
         db.execute("DROP TABLE nws_weather")
     monkeypatch.setenv("SQLITE_PATH", str(path))
+    capture = tmp_path / "capture.json"
+    capture.write_text(json.dumps({"intervals": {"publish_s": 60, "display_refresh_s": 2}}))
+    monkeypatch.setenv("CONFIG_PATH", str(capture))
     # Environment acquisition is outside the SQL/CLI-failure property.
     monkeypatch.setattr(provider_health, "load_env", lambda *args, **kwargs: None)
     assert provider_health.main() == 1
     results = json.loads(capsys.readouterr().out)
-    assert len(results) == 3
+    assert len(results) == 4
     assert results[1]["problem"] == "observation_unreadable"
 
 
@@ -89,8 +108,22 @@ def test_clean_entrypoints_use_the_declared_shared_binding(tmp_path):
     import shared
 
     root = Path(__file__).resolve().parents[1]
+    # Actual documented sibling layout, including the selected Shared owner;
+    # an arbitrary worktree parent need not carry the sibling checkout.
+    (tmp_path / "shared").symlink_to(
+        Path(shared.__file__).resolve().parent, target_is_directory=True
+    )
+    app = tmp_path / "enviroplus"
+    app.mkdir()
+    for source in root.glob("*.py"):
+        shutil.copy(source, app)
+    shutil.copytree(root / "config", app / "config")
+    for template in root.glob("*.in"):
+        shutil.copy(template, app)
     environment = {key: value for key, value in os.environ.items() if key != "PYTHONPATH"}
-    service = (root / "config/unit_templates/enviro_provider_health.service.in").read_text()
+    from service_units import rendered_units
+
+    service = rendered_units(app)["enviro_provider_health.service"]
     import shlex
 
     for line in service.splitlines():
@@ -99,18 +132,63 @@ def test_clean_entrypoints_use_the_declared_shared_binding(tmp_path):
                 key, value = binding.split("=", 1)
                 environment[key] = value
     subprocess.run(
-        [sys.executable, "-c", "import provider_health"], cwd=root, env=environment, check=True
+        [sys.executable, "-c", "import provider_health"], cwd=app, env=environment, check=True
     )
-    # Reproduce the documented sibling layout with the actual selected Shared owner.
-    (tmp_path / "shared").symlink_to(
-        Path(shared.__file__).resolve().parent, target_is_directory=True
-    )
-    app = tmp_path / "enviroplus"
-    app.mkdir()
-    shutil.copy(root / "provider_health_units.py", app)
-    shutil.copytree(root / "config", app / "config")
     environment["PYTHONPATH"] = ".."
-    subprocess.run(
-        [sys.executable, "-m", "provider_health_units"], cwd=app, env=environment, check=True
-    )
+    subprocess.run([sys.executable, "-m", "service_units"], cwd=app, env=environment, check=True)
     assert (app / "enviro_provider_health.timer").is_file()
+
+
+@pytest.mark.parametrize(
+    ("load_state", "file_state", "reading", "problem"),
+    [
+        ("loaded", "enabled", "missing", "observation_missing"),
+        ("loaded", "enabled", "stale", "observation_stale"),
+        ("loaded", "disabled", "missing", None),
+        ("not-found", "", "missing", None),
+        ("query_error", "", "missing", "observation_unreadable"),
+        ("loaded", "static", "missing", "observation_unreadable"),
+    ],
+)
+def test_local_readings_follow_native_producer_authority(
+    tmp_path, monkeypatch, load_state, file_state, reading, problem
+):
+    path, _, now = observations(tmp_path)
+    capture = tmp_path / "capture.json"
+    capture.write_text(json.dumps({"intervals": {"publish_s": 60, "display_refresh_s": 2}}))
+    monkeypatch.setenv("CONFIG_PATH", str(capture))
+    policy = provider_health.load_policy(Path(__file__).resolve().parents[1])
+    lane = next(item for item in policy["lanes"] if "producer_unit" in item)
+    assert lane["max_age_seconds"] == 2 * 60 + policy["check_interval_seconds"] + 2
+    with sqlite3.connect(path) as db:
+        db.execute("CREATE TABLE readings (ts TEXT PRIMARY KEY)")
+        if reading == "stale":
+            old = now - timedelta(seconds=lane["max_age_seconds"] + 1)
+            db.execute("INSERT INTO readings VALUES (?)", (old.isoformat(),))
+
+    def native(command, **kwargs):
+        assert command == [
+            "systemctl",
+            "show",
+            lane["producer_unit"],
+            "--property=LoadState,UnitFileState",
+        ]
+        assert kwargs["check"] is True
+        if load_state == "query_error":
+            raise subprocess.CalledProcessError(1, command)
+        return subprocess.CompletedProcess(
+            command, 0, f"LoadState={load_state}\nUnitFileState={file_state}\n", ""
+        )
+
+    monkeypatch.setattr(provider_health, "producer_state", native_producer_state)
+    monkeypatch.setattr(provider_health.subprocess, "run", native)
+    results = check(path, policy, now)
+    local = next(item for item in results if item["lane"] == lane["name"])
+    assert local["problem"] == problem
+    if load_state == "not-found":
+        assert local["active"] is False
+        assert local["detail"] == "producer not installed"
+    elif file_state == "disabled":
+        assert local["active"] is False
+        assert local["detail"] == "producer disabled"
+    assert all(item["problem"] is None for item in results if item is not local)

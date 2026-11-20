@@ -71,13 +71,15 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
   `provider_collector.py --contract <c> --replay DAY...` is the supported path
   that re-derives a contract's derived table from canonical retention through
   the same projection and write path live uses.
-- Repo-managed service files describe the intended service content. Which
+- Unit policy templates describe the intended service content; service_units
+  derives current files through the shared renderer and backup owner, using the
+  rendering interpreter and config-root location. Which
   hardware-specific dashboard unit is active is host residue and must be proven
   from the running service manager, not inferred from this repository.
 - Backup orchestration, native incremental delivery and retention use the shared backup service;
   provider collectors and the dashboard do not implement competing backup paths.
 
-- `provider_health.py` checks the configured derived-observation freshness obligations in `config/provider_health.json`. It preserves independent lane errors and uses the existing operations alert. Generate its native units with `PYTHONPATH=.. python -m provider_health_units`; the hardware dashboard remains independently disabled until reconnected.
+- `provider_health.py` checks the configured derived-observation freshness obligations in `config/provider_health.json`. It preserves independent lane errors and uses the existing operations alert. The local readings lane is active only for the natively enabled producer; disabled/not-installed is explicitly inactive. Generate all native units with `PYTHONPATH=.. python -m service_units`; the hardware dashboard remains independently out of service until reconnected.
 
 ## Supported Validation
 
