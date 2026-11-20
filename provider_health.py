@@ -50,8 +50,11 @@ def check(database, policy, now):
                     result.update(active=False, detail="producer not installed")
                     results.append(result)
                     continue
-                if state.get("LoadState") == "loaded" and state.get("UnitFileState") == "disabled":
-                    result.update(active=False, detail="producer disabled")
+                if state.get("LoadState") == "masked" or (
+                    state.get("LoadState") == "loaded"
+                    and state.get("UnitFileState") in ("disabled", "linked")
+                ):
+                    result.update(active=False, detail=f"producer {state['UnitFileState']}")
                     results.append(result)
                     continue
                 if state.get("LoadState") != "loaded" or state.get("UnitFileState") != "enabled":

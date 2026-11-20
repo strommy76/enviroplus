@@ -182,6 +182,7 @@ There is no HAT config switch: the native producer unit is the current authority
 One systemctl show reads LoadState and UnitFileState for the policy's producer.
 Loaded/enabled checks local readings through the existing SQLite lane; disabled
 or not-found is explicitly inactive with detail, never described as healthy.
+The22:35 receiving fold also admits masked/linked as explicit inactive states.
 Any other state or failed query is observation_unreadable. This native gate is
 interim pending pi-config#31; no new flag, store or controller is added.
 
@@ -230,3 +231,9 @@ i actual native/source defects; j stores unchanged; k Pi directly verifies
 the directed folds; l evidence status explicit; m host-derived paths;
 n unreadable stays failure; o residuals folded; p/q retire static/old entrypoint
 surfaces and repair dependent tests/docs; r actual-source violations required.
+
+Coordinated deployment must regenerate all Enviro units through service_units
+in the checkout-update step, BEFORE daemon-reload, then verify native LoadState
+for AirNow, NWS, Ambient and provider health. No early reload may leave the
+former tracked-file symlinks dangling. This is sequencing of the authorized
+deployment, not a new runtime service.

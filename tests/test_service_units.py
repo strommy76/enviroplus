@@ -11,19 +11,28 @@ from service_units import rendered_units
 
 def test_all_units_derive_interpreter_and_root(tmp_path, monkeypatch):
     source = Path(__file__).resolve().parents[1]
-    root = tmp_path / "relocated project"
+    root = tmp_path / "relocated"
     shutil.copytree(source / "config", root / "config")
     for template in source.glob("*.in"):
         shutil.copy(template, root)
-    interpreter = str(tmp_path / "other environment/bin/python")
+    interpreter_path = tmp_path / "other environment/bin/python"
+    interpreter_path.parent.mkdir(parents=True)
+    interpreter_path.symlink_to(sys.executable)
+    interpreter = str(interpreter_path)
     monkeypatch.setattr(sys, "executable", interpreter)
     units = rendered_units(root)
+    (backup_template,) = root.glob("*.service.in")
     assert {path.stem for path in (root / "config/unit_templates").glob("*.in")} < units.keys()
     for name, content in units.items():
+        assert str(source) not in content, name
+        assert "@PYTHON@" not in content and "@ROOT@" not in content, name
         unit = ConfigParser(interpolation=None)
         unit.read_string(content)
         if name.endswith(".service"):
-            assert shlex.split(unit["Service"]["ExecStart"])[0] == interpreter, name
+            command = shlex.split(unit["Service"]["ExecStart"])
+            assert command[0] == interpreter, name
+            if name == backup_template.stem:
+                assert command[-2:] == ["--config", str(root / "config/backup.json")]
             assert Path(unit["Service"]["WorkingDirectory"]) == root, name
             if "Environment" in unit["Service"]:
                 for binding in shlex.split(unit["Service"]["Environment"]):

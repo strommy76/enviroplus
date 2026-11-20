@@ -145,6 +145,8 @@ def test_clean_entrypoints_use_the_declared_shared_binding(tmp_path):
         ("loaded", "enabled", "missing", "observation_missing"),
         ("loaded", "enabled", "stale", "observation_stale"),
         ("loaded", "disabled", "missing", None),
+        ("masked", "masked", "missing", None),
+        ("loaded", "linked", "missing", None),
         ("not-found", "", "missing", None),
         ("query_error", "", "missing", "observation_unreadable"),
         ("loaded", "static", "missing", "observation_unreadable"),
@@ -191,4 +193,7 @@ def test_local_readings_follow_native_producer_authority(
     elif file_state == "disabled":
         assert local["active"] is False
         assert local["detail"] == "producer disabled"
+    elif load_state == "masked" or file_state == "linked":
+        assert local["active"] is False
+        assert local["detail"] == f"producer {file_state}"
     assert all(item["problem"] is None for item in results if item is not local)

@@ -344,3 +344,61 @@ no new flags, stores, controller, host activation or unapproved residual.
 Pi directly verifies this same fold, including Shared. Original GLM receiving
 input limitation is not erased or waived by these checks. No new full suite,
 landing or coordinated deployment is inferred.
+## Receiving-fold adjudication — November19 22:35
+
+Read both complete Opus/GLM reports under8e3c2f22. E1 CONFIRMED: masked
+and linked are intentional native inactive states, not a failed observation.
+Fold those into the existing inactive branch and test actual native-shaped
+states. Unknown state stays unreadable. E2's surviving literal backup argument
+is CONFIRMED. The proposed blanket ban on @ is REFUTED: current valid native
+OnFailure=stocks_ops_alert@%n.service requires it. Also this checkout's source
+root differs from the injected production root. Assert the specific unresolved
+@PYTHON@/@ROOT@ tokens are absent, source checkout path absent, and the actual
+backup --config argument equals the target root's config/backup.json. Preserve
+native template references. E5 CONFIRMED: remove the artificial space from the
+fixture root; no URI-encoding capability is needed for the current deployment.
+
+E3 CONFIRMED as deployment sequencing: regenerate all Enviro units in the same
+checkout-update step BEFORE any daemon-reload, then verify LoadState for the
+three collectors and provider health. No new runtime workaround. E4 is not a
+defect in this outcome: the shared required CONFIG_PATH failure is loud and
+intentionally not hidden inside a lane. CLOSED WITHOUT ACTION. T1 is confirmed
+by the author's retained real PostgreSQL missing-column control, not by a
+reviewer's unexecuted inference. Source/deployment verdicts remain separate.
+
+GLM's Stocks block is REFUTED from whole actual S4 sources and the earlier
+accepted a7d7f63 dependent repairs; the audit dataclass has production_repo_root;
+coverage_results has only completed/capture_failed/missing-outcome shapes;
+SQL completed_at<=asof excludes NULL; shutil is imported inside the owning
+test. No speculative code is added for those claims. GLM explicitly received
+diffs only and lacked actors/plans; that k input limitation remains recorded,
+not waived by this adjudication or a pass count.
+
+Same C/H declaration and existing branch/artifact. Construction uses the six
+plan questions/Preamble at provider_health and test_service_units:1 preserve
+native state and syntax;2 no new flag/roster;3 masked/linked remain inactive;
+4 change existing branch/assertions only;5 unknown remains loud;6 no duplicate
+renderer or stale entrypoint; Preamble no new runtime guard/framework. All
+CONFORMS prospectively. A-r assessment remains; E/L confirm content, o dispositions
+above, p/q repair tests, r exercise the actual surviving mutation. Focused owning
+checks only, Pi directly verifies, no new seat/full-suite round or deployment.
+
+
+Receiving-fold verification: old owners FAIL both masked/linked cases and the
+rootless @PYTHON@ case. Corrected Enviro owning20 cases and Shared2 cases PASS.
+M4 restoring only the real backup ExecStart config argument FAILS the corrected
+all-unit assertion. Resolving the lexical interpreter symlink to its realpath
+also FAILS; the test now supplies an actual symlink. Specific token assertions
+preserve valid native @%n alert references. All sources restored exactly.
+Existing six construction questions/Preamble now verify CONFORMS at these
+changed owners and observed controls; A-r scope unchanged. No new runtime
+guard, configured value, source roster, reviewer round or full suite.
+
+Foreign rendering context observed under E: the actual Stocks reconciler
+render_backup_units invokes the backup writer in-process for BOTH Stocks and
+Enviro unit_config_source paths. Thus rendering sys.executable can belong to
+Stocks, contrary to the premise that the target project's environment always
+renders it. This caller/context discrepancy is CONFIRMED; an actual backup
+failure is UNCONFIRMED. Raised in brokerc7d08b87 for adjudication; the directed
+implementation stands and is not silently redesigned. Source landing and
+coordinated deployment still await the operator; no production change here.
