@@ -1,0 +1,208 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.0.3, pluggy-1.6.0
+rootdir: /home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviroplus-worktree
+configfile: pyproject.toml
+collected 6 items
+
+tests/test_provider_health.py FFFFFF                                     [100%]
+
+=================================== FAILURES ===================================
+_ test_local_readings_follow_native_producer_authority[loaded-enabled-missing-observation_missing] _
+
+tmp_path = PosixPath('/tmp/qual-enviroplus-itix2e7j/pytest-of-pistrommy/pytest-2/test_local_readings_follow_nat0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff12426520>
+load_state = 'loaded', file_state = 'enabled', reading = 'missing'
+problem = 'observation_missing'
+
+    @pytest.mark.parametrize(
+        ("load_state", "file_state", "reading", "problem"),
+        [
+            ("loaded", "enabled", "missing", "observation_missing"),
+            ("loaded", "enabled", "stale", "observation_stale"),
+            ("loaded", "disabled", "missing", None),
+            ("not-found", "", "missing", None),
+            ("query_error", "", "missing", "observation_unreadable"),
+            ("loaded", "static", "missing", "observation_unreadable"),
+        ],
+    )
+    def test_local_readings_follow_native_producer_authority(
+        tmp_path, monkeypatch, load_state, file_state, reading, problem
+    ):
+        path, _, now = observations(tmp_path)
+        capture = tmp_path / "capture.json"
+        capture.write_text(json.dumps({"intervals": {"publish_s": 60, "display_refresh_s": 2}}))
+        monkeypatch.setenv("CONFIG_PATH", str(capture))
+        policy = provider_health.load_policy(Path(__file__).resolve().parents[1])
+        lane = next(item for item in policy["lanes"] if "producer_unit" in item)
+>       assert lane["max_age_seconds"] == 2 * 60 + policy["check_interval_seconds"] + 2
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'max_age_seconds'
+
+tests/test_provider_health.py:162: KeyError
+_ test_local_readings_follow_native_producer_authority[loaded-enabled-stale-observation_stale] _
+
+tmp_path = PosixPath('/tmp/qual-enviroplus-itix2e7j/pytest-of-pistrommy/pytest-2/test_local_readings_follow_nat1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff12425cd0>
+load_state = 'loaded', file_state = 'enabled', reading = 'stale'
+problem = 'observation_stale'
+
+    @pytest.mark.parametrize(
+        ("load_state", "file_state", "reading", "problem"),
+        [
+            ("loaded", "enabled", "missing", "observation_missing"),
+            ("loaded", "enabled", "stale", "observation_stale"),
+            ("loaded", "disabled", "missing", None),
+            ("not-found", "", "missing", None),
+            ("query_error", "", "missing", "observation_unreadable"),
+            ("loaded", "static", "missing", "observation_unreadable"),
+        ],
+    )
+    def test_local_readings_follow_native_producer_authority(
+        tmp_path, monkeypatch, load_state, file_state, reading, problem
+    ):
+        path, _, now = observations(tmp_path)
+        capture = tmp_path / "capture.json"
+        capture.write_text(json.dumps({"intervals": {"publish_s": 60, "display_refresh_s": 2}}))
+        monkeypatch.setenv("CONFIG_PATH", str(capture))
+        policy = provider_health.load_policy(Path(__file__).resolve().parents[1])
+        lane = next(item for item in policy["lanes"] if "producer_unit" in item)
+>       assert lane["max_age_seconds"] == 2 * 60 + policy["check_interval_seconds"] + 2
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'max_age_seconds'
+
+tests/test_provider_health.py:162: KeyError
+_ test_local_readings_follow_native_producer_authority[loaded-disabled-missing-None] _
+
+tmp_path = PosixPath('/tmp/qual-enviroplus-itix2e7j/pytest-of-pistrommy/pytest-2/test_local_readings_follow_nat2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff12150dd0>
+load_state = 'loaded', file_state = 'disabled', reading = 'missing'
+problem = None
+
+    @pytest.mark.parametrize(
+        ("load_state", "file_state", "reading", "problem"),
+        [
+            ("loaded", "enabled", "missing", "observation_missing"),
+            ("loaded", "enabled", "stale", "observation_stale"),
+            ("loaded", "disabled", "missing", None),
+            ("not-found", "", "missing", None),
+            ("query_error", "", "missing", "observation_unreadable"),
+            ("loaded", "static", "missing", "observation_unreadable"),
+        ],
+    )
+    def test_local_readings_follow_native_producer_authority(
+        tmp_path, monkeypatch, load_state, file_state, reading, problem
+    ):
+        path, _, now = observations(tmp_path)
+        capture = tmp_path / "capture.json"
+        capture.write_text(json.dumps({"intervals": {"publish_s": 60, "display_refresh_s": 2}}))
+        monkeypatch.setenv("CONFIG_PATH", str(capture))
+        policy = provider_health.load_policy(Path(__file__).resolve().parents[1])
+        lane = next(item for item in policy["lanes"] if "producer_unit" in item)
+>       assert lane["max_age_seconds"] == 2 * 60 + policy["check_interval_seconds"] + 2
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'max_age_seconds'
+
+tests/test_provider_health.py:162: KeyError
+_ test_local_readings_follow_native_producer_authority[not-found--missing-None] _
+
+tmp_path = PosixPath('/tmp/qual-enviroplus-itix2e7j/pytest-of-pistrommy/pytest-2/test_local_readings_follow_nat3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff123d3f00>
+load_state = 'not-found', file_state = '', reading = 'missing', problem = None
+
+    @pytest.mark.parametrize(
+        ("load_state", "file_state", "reading", "problem"),
+        [
+            ("loaded", "enabled", "missing", "observation_missing"),
+            ("loaded", "enabled", "stale", "observation_stale"),
+            ("loaded", "disabled", "missing", None),
+            ("not-found", "", "missing", None),
+            ("query_error", "", "missing", "observation_unreadable"),
+            ("loaded", "static", "missing", "observation_unreadable"),
+        ],
+    )
+    def test_local_readings_follow_native_producer_authority(
+        tmp_path, monkeypatch, load_state, file_state, reading, problem
+    ):
+        path, _, now = observations(tmp_path)
+        capture = tmp_path / "capture.json"
+        capture.write_text(json.dumps({"intervals": {"publish_s": 60, "display_refresh_s": 2}}))
+        monkeypatch.setenv("CONFIG_PATH", str(capture))
+        policy = provider_health.load_policy(Path(__file__).resolve().parents[1])
+        lane = next(item for item in policy["lanes"] if "producer_unit" in item)
+>       assert lane["max_age_seconds"] == 2 * 60 + policy["check_interval_seconds"] + 2
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'max_age_seconds'
+
+tests/test_provider_health.py:162: KeyError
+_ test_local_readings_follow_native_producer_authority[query_error--missing-observation_unreadable] _
+
+tmp_path = PosixPath('/tmp/qual-enviroplus-itix2e7j/pytest-of-pistrommy/pytest-2/test_local_readings_follow_nat4')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff121b06b0>
+load_state = 'query_error', file_state = '', reading = 'missing'
+problem = 'observation_unreadable'
+
+    @pytest.mark.parametrize(
+        ("load_state", "file_state", "reading", "problem"),
+        [
+            ("loaded", "enabled", "missing", "observation_missing"),
+            ("loaded", "enabled", "stale", "observation_stale"),
+            ("loaded", "disabled", "missing", None),
+            ("not-found", "", "missing", None),
+            ("query_error", "", "missing", "observation_unreadable"),
+            ("loaded", "static", "missing", "observation_unreadable"),
+        ],
+    )
+    def test_local_readings_follow_native_producer_authority(
+        tmp_path, monkeypatch, load_state, file_state, reading, problem
+    ):
+        path, _, now = observations(tmp_path)
+        capture = tmp_path / "capture.json"
+        capture.write_text(json.dumps({"intervals": {"publish_s": 60, "display_refresh_s": 2}}))
+        monkeypatch.setenv("CONFIG_PATH", str(capture))
+        policy = provider_health.load_policy(Path(__file__).resolve().parents[1])
+        lane = next(item for item in policy["lanes"] if "producer_unit" in item)
+>       assert lane["max_age_seconds"] == 2 * 60 + policy["check_interval_seconds"] + 2
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'max_age_seconds'
+
+tests/test_provider_health.py:162: KeyError
+_ test_local_readings_follow_native_producer_authority[loaded-static-missing-observation_unreadable] _
+
+tmp_path = PosixPath('/tmp/qual-enviroplus-itix2e7j/pytest-of-pistrommy/pytest-2/test_local_readings_follow_nat5')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff1243d250>
+load_state = 'loaded', file_state = 'static', reading = 'missing'
+problem = 'observation_unreadable'
+
+    @pytest.mark.parametrize(
+        ("load_state", "file_state", "reading", "problem"),
+        [
+            ("loaded", "enabled", "missing", "observation_missing"),
+            ("loaded", "enabled", "stale", "observation_stale"),
+            ("loaded", "disabled", "missing", None),
+            ("not-found", "", "missing", None),
+            ("query_error", "", "missing", "observation_unreadable"),
+            ("loaded", "static", "missing", "observation_unreadable"),
+        ],
+    )
+    def test_local_readings_follow_native_producer_authority(
+        tmp_path, monkeypatch, load_state, file_state, reading, problem
+    ):
+        path, _, now = observations(tmp_path)
+        capture = tmp_path / "capture.json"
+        capture.write_text(json.dumps({"intervals": {"publish_s": 60, "display_refresh_s": 2}}))
+        monkeypatch.setenv("CONFIG_PATH", str(capture))
+        policy = provider_health.load_policy(Path(__file__).resolve().parents[1])
+        lane = next(item for item in policy["lanes"] if "producer_unit" in item)
+>       assert lane["max_age_seconds"] == 2 * 60 + policy["check_interval_seconds"] + 2
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'max_age_seconds'
+
+tests/test_provider_health.py:162: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_provider_health.py::test_local_readings_follow_native_producer_authority[loaded-enabled-missing-observation_missing]
+FAILED tests/test_provider_health.py::test_local_readings_follow_native_producer_authority[loaded-enabled-stale-observation_stale]
+FAILED tests/test_provider_health.py::test_local_readings_follow_native_producer_authority[loaded-disabled-missing-None]
+FAILED tests/test_provider_health.py::test_local_readings_follow_native_producer_authority[not-found--missing-None]
+FAILED tests/test_provider_health.py::test_local_readings_follow_native_producer_authority[query_error--missing-observation_unreadable]
+FAILED tests/test_provider_health.py::test_local_readings_follow_native_producer_authority[loaded-static-missing-observation_unreadable]
+============================== 6 failed in 0.16s ===============================

@@ -1,0 +1,38 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.0.3, pluggy-1.6.0
+rootdir: /home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviroplus-worktree
+configfile: pyproject.toml
+collected 1 item
+
+tests/test_service_units.py F                                            [100%]
+
+=================================== FAILURES ===================================
+__________________ test_all_units_derive_interpreter_and_root __________________
+
+tmp_path = PosixPath('/tmp/qual-enviroplus-itix2e7j/pytest-of-pistrommy/pytest-1/test_all_units_derive_interpre0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fffb0e2dba0>
+
+    def test_all_units_derive_interpreter_and_root(tmp_path, monkeypatch):
+        source = Path(__file__).resolve().parents[1]
+        root = tmp_path / "relocated project"
+        shutil.copytree(source / "config", root / "config")
+        for template in source.glob("*.in"):
+            shutil.copy(template, root)
+        interpreter = str(tmp_path / "other environment/bin/python")
+        monkeypatch.setattr(sys, "executable", interpreter)
+        units = rendered_units(root)
+        assert {path.stem for path in (root / "config/unit_templates").glob("*.in")} < units.keys()
+        for name, content in units.items():
+            unit = ConfigParser(interpolation=None)
+            unit.read_string(content)
+            if name.endswith(".service"):
+                assert shlex.split(unit["Service"]["ExecStart"])[0] == interpreter, name
+>               assert Path(unit["Service"]["WorkingDirectory"]) == root, name
+E               AssertionError: enviro_provider_health.service
+E               assert PosixPath('/home/pistrommy/projects/enviroplus') == PosixPath('/tmp/qual-enviroplus-itix2e7j/pytest-of-pistrommy/pytest-1/test_all_units_derive_interpre0/relocated project')
+E                +  where PosixPath('/home/pistrommy/projects/enviroplus') = Path('/home/pistrommy/projects/enviroplus')
+
+tests/test_service_units.py:27: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_service_units.py::test_all_units_derive_interpreter_and_root
+============================== 1 failed in 0.04s ===============================
