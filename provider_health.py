@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from shared.config_service import load_env, require
+from shared.config_service import ConfigError, load_env, require
 
 from ambient_wx import outdoor_presence_sql
 
@@ -20,22 +20,6 @@ def producer_state(unit):
         text=True,
     )
     return dict(line.split("=", 1) for line in result.stdout.splitlines())
-
-
-def load_policy(root):
-    policy = json.loads((root / "config/provider_health.json").read_text())
-    capture = json.loads(Path(require("CONFIG_PATH")).read_text())
-    for lane in policy["lanes"]:
-        if "producer_unit" in lane:
-            # Provisional: interval-start age spans the closed and open publish
-            # grids, plus check phase and display-loop delay. Settle loaded
-            # healthy publication ages/sensor I/O when hardware is activated.
-            lane["max_age_seconds"] = (
-                2 * capture["intervals"]["publish_s"]
-                + policy["check_interval_seconds"]
-                + capture["intervals"]["display_refresh_s"]
-            )
-    return policy
 
 
 def check(database, policy, now):
@@ -60,6 +44,17 @@ def check(database, policy, now):
                 if state.get("LoadState") != "loaded" or state.get("UnitFileState") != "enabled":
                     raise ValueError(f"unreadable producer state: {state}")
                 result["active"] = True
+                capture = json.loads(Path(require("CONFIG_PATH")).read_text())
+                # Provisional: interval-start age spans closed and open publish
+                # grids, check phase and display-loop delay. Settle loaded healthy
+                # publication ages/sensor I/O when hardware is activated.
+                max_age_seconds = (
+                    2 * capture["intervals"]["publish_s"]
+                    + policy["check_interval_seconds"]
+                    + capture["intervals"]["display_refresh_s"]
+                )
+            else:
+                max_age_seconds = lane["max_age_seconds"]
             with sqlite3.connect(f"file:{database}?mode=ro", uri=True) as db:
                 db.row_factory = sqlite3.Row
                 row = db.execute(
@@ -84,7 +79,7 @@ def check(database, policy, now):
                 result.update(observed_at=observed.isoformat(), age_seconds=age)
                 if age < 0:
                     result["problem"] = "observation_in_future"
-                elif age > lane["max_age_seconds"]:
+                elif age > max_age_seconds:
                     result["problem"] = "observation_stale"
         except (
             sqlite3.Error,
@@ -92,6 +87,7 @@ def check(database, policy, now):
             ValueError,
             StopIteration,
             subprocess.CalledProcessError,
+            ConfigError,
         ) as error:
             result.update(
                 problem="observation_unreadable", detail=f"{type(error).__name__}: {error}"
@@ -103,7 +99,7 @@ def check(database, policy, now):
 def main():
     root = Path(__file__).resolve().parent
     load_env(str(root / ".env"), expect_key="SQLITE_PATH")
-    policy = load_policy(root)
+    policy = json.loads((root / "config/provider_health.json").read_text())
     results = check(require("SQLITE_PATH"), policy, datetime.now(timezone.utc))
     print(json.dumps(results, indent=2))
     return int(any(result["problem"] is not None for result in results))

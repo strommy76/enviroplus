@@ -410,3 +410,42 @@ render owner. The old all-lanes caller FAILS the new preservation assertion;
 22 owning backup/reconciler cases PASS after correction. No venv heuristic,
 new field or foreign generation service. The unexecuted backup-failure claim
 remains UNCONFIRMED; the observed ownership defect is closed by the change.
+
+## E4 reopened and corrected — November19 23:02
+
+Pi f0312af1 (22:55:35 EST), relaying Bryan's 22:55 residual direction,
+reverses the dated22:35 E4 close above. That old disposition is provenance,
+not current clearance. CONFIRMED: load_policy read local CONFIG_PATH before
+any lane, coupling a broken dashboard config to unrelated provider results.
+FOLDED: remove the helper; main reads provider policy only, and check reads
+dashboard config/derives age inside the local lane's try AFTER its inactive
+gate. Catch Shared's actual ConfigError explicitly for a missing local binding;
+existing OSError/ValueError handle missing file/invalid JSON. No fallback,
+KeyError suppression, threshold change or hardware activation. G-c stays closed.
+
+The new real-SQLite/main regression FAILS on aeee648's original ordering with
+JSONDecodeError before output. Corrected owning module15 PASS0.33s; Ruff
+check/format PASS. It asserts all policy lanes, healthy retained provider
+observations, active local unreadable with JSONDecodeError detail and CLI exit1.
+Native-state tests now load unmodified policy and independently derive their
+stale input from configured publish/check/display intervals, rather than
+inspecting a helper's mutable policy output. Raw method/logs/provenance are in
+failure-boundaries-local-config/. This is source evidence, not deployed effect.
+
+Verification axiom-check against actual provider_health.check/main, policy
+metadata, owning tests and the observed baseline failure:
+| Axiom | Result and evidence at the implementing location |
+|---|---|
+|1 Truth|CONFORMS: main returns nonzero and emits local unreadable plus all three independent observed provider results in the regression.|
+|2 Cognition|CONFORMS: check uses the existing native producer gate/policy; no flag, roster, inferred value or fallback added.|
+|3 Antifragility|CONFORMS: the malformed dashboard regression now survives across provider siblings; prior ordering demonstrably failed.|
+|4 KISS|CONFORMS: remove load_policy; relocate the same calculation and extend the existing catch with the actual config owner's error.|
+|5 Boundaries|CONFORMS: inactive gate precedes the local read; local JSON failure is unreadable; provider policy remains outside main's lane catch and KeyError remains uncaught.|
+|6 Maintenance|CONFORMS: main/test/metadata no longer reference the superseded helper; historical raw evidence stays immutable.|
+|Preamble|CONFORMS: only the confirmed cross-lane dependency is corrected; no validator, retry, registry or second owner.|
+
+All-section construction assessment in the plan remains applicable; actual
+source confirms each location. E4 is closed by this change pending Pi's direct
+receiving verification. Prior GLM diff-only input limitation remains disclosed,
+not waived. Stocks1591d079 and Sharedf42d0c4 are untouched. No new review round,
+full-suite rerun, landing, activation or coordinated deployment is inferred.

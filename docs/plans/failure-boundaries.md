@@ -1,5 +1,49 @@
 ## Current receiving-fold amendment — November19
 
+### E4 correction — November19 23:01
+
+Pi f0312af1 (sent November19 22:55:35 EST) relays Bryan's 22:55 residual
+direction and reopens only the local CONFIG_PATH coupling. Same lasting C/H
+increment and silent-failure declaration, branch and review artifact; no landing,
+deployment, hardware activation, new review round or other reopened finding.
+Remove load_policy's pre-loop local-config read: main reads provider policy;
+only the natively active local lane reads dashboard config and derives its age
+inside its existing try. Missing binding/file or invalid JSON yields that lane's
+observation_unreadable and nonzero exit while provider siblings remain present.
+Malformed provider policy remains loud; no KeyError suppression or fallback.
+The existing owner search found load_policy only in main, its owning test and
+policy metadata (historical evidence is immutable). Remove that helper and
+update these live dependents. First add one bad-dashboard CLI regression and
+observe old-order failure; then correct and run the owning module and Ruff.
+Pi directly verifies the whole resulting source under the existing round.
+
+Current Python JSON documentation confirms invalid input raises JSONDecodeError,
+a ValueError handled by the existing lane boundary; Shared require raises its
+own ConfigError, which must be caught explicitly at that boundary. No new parser
+or retry machinery is needed. Approach agrees with current supported interfaces:
+https://docs.python.org/3/library/json.html#json.JSONDecodeError (checked today).
+
+Construction axiom-check, before mutation of implementation:
+| Axiom | Falsification question, location and prospective result |
+|---|---|
+|1 Truth|Can local config failure erase provider evidence or read as health? CONFORMS: check retains sibling results and local explicit failure; main remains nonzero.|
+|2 Cognition|Is a new flag, curated lane roster or fallback introduced? CONFORMS: existing native producer gate and policy drive check.|
+|3 Antifragility|Does changing/breaking dashboard config interrupt unrelated providers? CONFORMS: read and calculation move inside active local lane's try.|
+|4 KISS|Does correction add a second loader/validation mechanism? CONFORMS: remove load_policy and reuse existing JSON/config owners and catch.|
+|5 Boundaries|Are inactive producer, active unreadable local config and invalid provider policy distinguishable? CONFORMS: native gate precedes local read; local unreadable vs loud provider-policy error.|
+|6 Maintenance|Do helper references or dependent tests preserve superseded coupling? CONFORMS: update main, owning test and policy metadata together.|
+|Preamble|Is machinery added beyond the observed cross-lane failure? CONFORMS: move existing work, one explicit existing-owner exception, one regression.|
+
+All-section assessment: A/B original operator direction/executor unchanged;
+C/H declaration above; D same directed fold; E reverse earlier E4 closure from
+actual ordering; F no secret reads; G source only; a minimum; b repo authority;
+c remove needless loader; d no deployed-effect claim; e/f same increment/artifact;
+g allowance unchanged/derived/provisional; h existing owners searched/reused;
+i causal ordering corrected; j no store change; k existing Pi direct verification
+with prior GLM input limitation disclosed; l/o E4 confirmed and folded, G-c closed;
+m no host-specific fallback; n local failure explicit; p/q remove helper/live
+references and update dependent tests; r observe actual pre-fix failure.
+
 Same lasting/silent/irreversible C/H increment, branches and review artifacts.
 Pi09430141/94723643 accept the exact folds below for direct verification; no
 new seat round unless the design grows. Current details, evidence, all-section

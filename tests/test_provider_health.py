@@ -139,6 +139,38 @@ def test_clean_entrypoints_use_the_declared_shared_binding(tmp_path):
     assert (app / "enviro_provider_health.timer").is_file()
 
 
+def test_bad_dashboard_config_keeps_provider_results(tmp_path, monkeypatch, capsys):
+    path, policy, _ = observations(tmp_path)
+    now = datetime.now(timezone.utc)
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE outdoor SET ts = ?", (now.isoformat(),))
+        db.execute("UPDATE nws_weather SET ts = ?", (now.isoformat(),))
+        local = now.astimezone(provider_health.ZoneInfo("America/New_York"))
+        db.execute(
+            "UPDATE epa_air_quality SET ts = ?, local_time_zone = ?",
+            (local.replace(tzinfo=None).isoformat(), local.tzname()),
+        )
+    capture = tmp_path / "capture.json"
+    capture.write_text("{broken JSON")
+    monkeypatch.setenv("SQLITE_PATH", str(path))
+    monkeypatch.setenv("CONFIG_PATH", str(capture))
+    monkeypatch.setattr(provider_health, "load_env", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        provider_health,
+        "producer_state",
+        lambda unit: {"LoadState": "loaded", "UnitFileState": "enabled"},
+    )
+    assert provider_health.main() == 1
+    results = json.loads(capsys.readouterr().out)
+    assert [item["lane"] for item in results] == [item["name"] for item in policy["lanes"]]
+    providers = [item for item in results if item["lane"] != "local_readings"]
+    assert all(item["problem"] is None and "observed_at" in item for item in providers)
+    readings = next(item for item in results if item["lane"] == "local_readings")
+    assert readings["active"] is True
+    assert readings["problem"] == "observation_unreadable"
+    assert readings["detail"].startswith("JSONDecodeError:")
+
+
 @pytest.mark.parametrize(
     ("load_state", "file_state", "reading", "problem"),
     [
@@ -155,17 +187,16 @@ def test_clean_entrypoints_use_the_declared_shared_binding(tmp_path):
 def test_local_readings_follow_native_producer_authority(
     tmp_path, monkeypatch, load_state, file_state, reading, problem
 ):
-    path, _, now = observations(tmp_path)
+    path, policy, now = observations(tmp_path)
     capture = tmp_path / "capture.json"
     capture.write_text(json.dumps({"intervals": {"publish_s": 60, "display_refresh_s": 2}}))
     monkeypatch.setenv("CONFIG_PATH", str(capture))
-    policy = provider_health.load_policy(Path(__file__).resolve().parents[1])
     lane = next(item for item in policy["lanes"] if "producer_unit" in item)
-    assert lane["max_age_seconds"] == 2 * 60 + policy["check_interval_seconds"] + 2
+    allowance = 2 * 60 + policy["check_interval_seconds"] + 2
     with sqlite3.connect(path) as db:
         db.execute("CREATE TABLE readings (ts TEXT PRIMARY KEY)")
         if reading == "stale":
-            old = now - timedelta(seconds=lane["max_age_seconds"] + 1)
+            old = now - timedelta(seconds=allowance + 1)
             db.execute("INSERT INTO readings VALUES (?)", (old.isoformat(),))
 
     def native(command, **kwargs):
