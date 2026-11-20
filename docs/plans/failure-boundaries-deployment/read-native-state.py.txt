@@ -1,0 +1,43 @@
+"""Collect nonsecret native deployment observations, never inferred success."""
+
+import json
+import subprocess
+from datetime import datetime, timezone
+from pathlib import Path
+
+root = Path('/home/pistrommy/projects')
+receipt = Path(__file__).resolve().parent
+result = {'observed_at': datetime.now(timezone.utc).isoformat(), 'repositories': {}}
+for name in ('shared', 'stocks', 'enviroplus'):
+    result['repositories'][name] = {
+        'head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root/name, text=True).strip(),
+        'status': subprocess.check_output(['git', 'status', '--short'], cwd=root/name, text=True),
+    }
+units = ('market_monitor.service', 'alpaca_minute_capture.service',
+         'airnow_wx.service', 'nws_wx.service', 'ambient_wx.service',
+         'enviro_provider_health.service', 'enviro_provider_health.timer', 'enviro_dash.service',
+         'stocks_fred_backfill.service', 'stocks_factor_attribution_refresh.service',
+         'stocks_postgres_backup.timer', 'alpaca_corporate_actions.timer',
+         'stocks_ops_alert@enviro_provider_health.service.service')
+properties = ('Id', 'LoadState', 'UnitFileState', 'ActiveState', 'SubState', 'Result',
+              'MainPID', 'ExecMainStatus', 'ExecMainStartTimestamp', 'ExecMainExitTimestamp',
+              'NextElapseUSecRealtime', 'NextElapseUSecMonotonic', 'FragmentPath')
+command = ['systemctl', 'show', *units]
+for prop in properties:
+    command += ['-p', prop]
+text = subprocess.check_output(command, text=True)
+(receipt/'native-units.txt').write_text(text)
+result['units'] = [dict(line.split('=', 1) for line in block.splitlines())
+                   for block in text.strip().split('\n\n')]
+status = json.loads((root/'stocks/.tmp/logs/market_monitor_runtime_status.json').read_text())
+result['market_monitor_runtime'] = {key: status[key] for key in
+                                  ('pid', 'start_git_sha', 'current_git_sha')}
+before = json.loads((receipt/'alerts-before-enviro.json').read_text())['active']
+after = json.loads((receipt/'alerts-after-activation.json').read_text())['active']
+result['new_active_alerts'] = sorted(set(after)-set(before))
+result['pending'] = ['02:10 EST Stocks backup result',
+                     'operator disposition of pre-existing project-document edits',
+                     'physical cause of Ambient outdoor-array absence']
+(receipt/'native-result.json').write_text(json.dumps(result, indent=2)+'\n')
+print(json.dumps({'heads': result['repositories'], 'runtime': result['market_monitor_runtime'],
+                  'new_active_alerts': result['new_active_alerts'], 'pending': result['pending']},indent=2))

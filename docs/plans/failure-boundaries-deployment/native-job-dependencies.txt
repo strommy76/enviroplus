@@ -1,0 +1,23 @@
+Id=stocks.service
+Requires=sysinit.target -.mount system.slice
+Wants=stocks_fred_backfill.service network-online.target stocks_market_capture.service stocks_factor_attribution_refresh.service
+After=stocks_market_capture.service systemd-journald.socket system.slice -.mount network-online.target sysinit.target stocks.timer basic.target
+LoadState=loaded
+
+Id=strategy_preparation.service
+Requires=-.mount sysinit.target system.slice
+Wants=network-online.target stocks_market_capture.service
+After=systemd-journald.socket strategy_session_execution.service strategy_preparation.timer network-online.target system.slice -.mount basic.target sysinit.target stocks_market_capture.service
+LoadState=loaded
+
+Id=stocks_fred_backfill.service
+Requires=sysinit.target -.mount system.slice
+Wants=network-online.target
+After=systemd-journald.socket sysinit.target -.mount stocks_market_capture.service system.slice network-online.target basic.target
+LoadState=loaded
+
+Id=stocks_factor_attribution_refresh.service
+Requires=-.mount sysinit.target system.slice
+Wants=network-online.target
+After=network-online.target system.slice sysinit.target basic.target systemd-journald.socket -.mount stocks_market_capture.service
+LoadState=loaded

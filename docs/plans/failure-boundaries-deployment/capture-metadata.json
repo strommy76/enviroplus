@@ -1,0 +1,44 @@
+{
+  "ambient": {
+    "records": 262,
+    "since_activation": 8,
+    "last_captured_utc": "2026-11-20T04:22:07.287060+00:00",
+    "last_outcome": "partial",
+    "last_payload_captured_utc": "2026-11-20T04:22:07.287060+00:00",
+    "last_payload_classification": "partial",
+    "provider_dateutc": 1795148460000,
+    "provider_observed_at": "2026-11-20T04:21:00+00:00"
+  },
+  "nws": {
+    "records": 0,
+    "since_activation": 0
+  },
+  "nws/KCOF": {
+    "records": 27,
+    "since_activation": 1,
+    "last_captured_utc": "2026-11-20T04:22:31.036540+00:00",
+    "last_outcome": "duplicate"
+  },
+  "nws/KMLB": {
+    "records": 0,
+    "since_activation": 0
+  },
+  "nws/KXMR": {
+    "records": 0,
+    "since_activation": 0
+  },
+  "nws/KX21": {
+    "records": 0,
+    "since_activation": 0
+  },
+  "nws/KVRB": {
+    "records": 0,
+    "since_activation": 0
+  },
+  "airnow": {
+    "records": 9,
+    "since_activation": 1,
+    "last_captured_utc": "2026-11-20T04:22:20.860403+00:00",
+    "last_outcome": "ok"
+  }
+}

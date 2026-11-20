@@ -1,0 +1,13 @@
+{
+  "stocks": {
+    "merge": "0972547eb9e45c7c9e948006c7888c71f94f94da",
+    "accepted_head": "1591d0798bc1fce3b490cfc7c05174b624632c98",
+    "merge_tree_equals_accepted": true
+  },
+  "enviroplus": {
+    "merge": "f179669cf9d4cd6ca1c29be19592750dc91a98b8",
+    "accepted_head": "4f30aabb4295f157e54d81da43535cdac0c9492f",
+    "merge_tree_equals_accepted": true
+  },
+  "shared_preexisting_document_preserved": true
+}

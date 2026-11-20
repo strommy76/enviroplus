@@ -1,0 +1,14 @@
+{
+  "unit": "market_monitor.service",
+  "previous_sha": "56edfbfc9225ea4ee1c05da4e664ef4cb91a1dd1",
+  "deployed_sha": "0972547eb9e45c7c9e948006c7888c71f94f94da",
+  "running_sha": "0972547eb9e45c7c9e948006c7888c71f94f94da",
+  "steps": [
+    "unit-declared",
+    "tree-clean",
+    "pulled",
+    "restarted",
+    "unit-healthy",
+    "running-sha-verified"
+  ]
+}

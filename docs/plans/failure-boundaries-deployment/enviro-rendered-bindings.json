@@ -1,0 +1,34 @@
+{
+  "rendering_interpreter": "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+  "units": {
+    "ambient_wx.service": [
+      "WorkingDirectory=/home/pistrommy/projects/enviroplus",
+      "ExecStart=\"/home/pistrommy/.virtualenvs/pimoroni/bin/python\" ambient_wx.py"
+    ],
+    "enviro_dash.service": [
+      "WorkingDirectory=/home/pistrommy/projects/enviroplus",
+      "ExecStart=\"/home/pistrommy/.virtualenvs/pimoroni/bin/python\" enviro_dash3.py"
+    ],
+    "nws_wx.service": [
+      "WorkingDirectory=/home/pistrommy/projects/enviroplus",
+      "ExecStart=\"/home/pistrommy/.virtualenvs/pimoroni/bin/python\" nws_wx.py"
+    ],
+    "airnow_wx.service": [
+      "WorkingDirectory=/home/pistrommy/projects/enviroplus",
+      "ExecStart=\"/home/pistrommy/.virtualenvs/pimoroni/bin/python\" provider_collector.py --contract contracts/airnow_current.json"
+    ],
+    "enviro_provider_health.service": [
+      "WorkingDirectory=/home/pistrommy/projects/enviroplus",
+      "ExecStart=\"/home/pistrommy/.virtualenvs/pimoroni/bin/python\" -m provider_health"
+    ],
+    "enviro_provider_health.timer": [
+      "OnUnitActiveSec=60"
+    ],
+    "enviro_backup.service": [
+      "WorkingDirectory=/home/pistrommy/projects/enviroplus",
+      "ExecStart=\"/home/pistrommy/.virtualenvs/pimoroni/bin/python\" -m shared.backup_service --config \"/home/pistrommy/projects/enviroplus/config/backup.json\""
+    ],
+    "enviro_backup.timer": []
+  },
+  "native_executable_bindings": "ExecStart={ path=/home/pistrommy/.virtualenvs/pimoroni/bin/python ; argv[]=/home/pistrommy/.virtualenvs/pimoroni/bin/python provider_collector.py --contract contracts/airnow_current.json ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }\nWorkingDirectory=/home/pistrommy/projects/enviroplus\nId=airnow_wx.service\n\nExecStart={ path=/home/pistrommy/.virtualenvs/pimoroni/bin/python ; argv[]=/home/pistrommy/.virtualenvs/pimoroni/bin/python nws_wx.py ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }\nWorkingDirectory=/home/pistrommy/projects/enviroplus\nId=nws_wx.service\n\nExecStart={ path=/home/pistrommy/.virtualenvs/pimoroni/bin/python ; argv[]=/home/pistrommy/.virtualenvs/pimoroni/bin/python ambient_wx.py ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }\nWorkingDirectory=/home/pistrommy/projects/enviroplus\nId=ambient_wx.service\n\nExecStart={ path=/home/pistrommy/.virtualenvs/pimoroni/bin/python ; argv[]=/home/pistrommy/.virtualenvs/pimoroni/bin/python -m provider_health ; ignore_errors=no ; start_time=[Thu 2026-11-19 23:19:07 EST] ; stop_time=[Thu 2026-11-19 23:19:07 EST] ; pid=1174749 ; code=exited ; status=1 }\nWorkingDirectory=/home/pistrommy/projects/enviroplus\nId=enviro_provider_health.service\n\nExecStart={ path=/home/pistrommy/.virtualenvs/pimoroni/bin/python ; argv[]=/home/pistrommy/.virtualenvs/pimoroni/bin/python -m shared.backup_service --config /home/pistrommy/projects/enviroplus/config/backup.json ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }\nWorkingDirectory=/home/pistrommy/projects/enviroplus\nId=enviro_backup.service\n"
+}

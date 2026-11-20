@@ -1,0 +1,41 @@
+"""Read deployed canonical captures through their owner; emit no payloads/secrets."""
+
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+
+from shared.config_service import load_env, require
+
+import ambient_wx
+import nws_wx
+import raw_retention
+from provider_contract import load_contract
+
+root = Path('/home/pistrommy/projects/enviroplus')
+load_env(str(root / '.env'))
+raw_retention.configure(root / 'raw-capture')
+day = datetime.now(timezone.utc).date().isoformat()
+providers = (ambient_wx.PROVIDER, nws_wx.PROVIDER,
+             *(f'{nws_wx.PROVIDER}/{station}' for station in nws_wx.load_settings().stations),
+             load_contract(root / 'contracts/airnow_current.json').provider)
+result = {}
+for provider in providers:
+    summary = {'records': 0, 'since_activation': 0}
+    for captured, outcome, blob in raw_retention.read_day(provider, day):
+        summary['records'] += 1
+        # Initial native provider-health activation was23:15:06EST (unit receipt).
+        if datetime.fromisoformat(captured) >= datetime(2026, 11, 20, 4, 15, 6, tzinfo=timezone.utc):
+            summary['since_activation'] += 1
+        summary.update(last_captured_utc=captured, last_outcome=outcome)
+        if provider == ambient_wx.PROVIDER and blob is not None:
+            observation, classified, _ = ambient_wx.classify_response(blob, require('AW_MAC'))
+            summary['last_payload_captured_utc'] = captured
+            summary['last_payload_classification'] = classified
+            summary['provider_dateutc'] = None if observation is None else observation['dateutc']
+            if observation is not None:
+                summary['provider_observed_at'] = datetime.fromtimestamp(
+                    observation['dateutc'] / 1000, timezone.utc).isoformat()
+    result[provider] = summary
+text = json.dumps(result, indent=2) + '\n'
+Path(__file__).with_name('capture-metadata.json').write_text(text)
+print(text)

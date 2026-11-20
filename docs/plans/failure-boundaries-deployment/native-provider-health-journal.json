@@ -1,0 +1,522 @@
+[
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "["
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "    \"lane\": \"ambient_outdoor\","
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "    \"problem\": \"observation_stale\","
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "    \"observed_at\": \"2026-11-20T03:29:00+00:00\","
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "    \"age_seconds\": 2766.527434"
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "  },"
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "    \"lane\": \"nws\","
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "    \"problem\": null,"
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "    \"observed_at\": \"2026-11-20T02:55:00+00:00\","
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "    \"age_seconds\": 4806.527434"
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "  },"
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "    \"lane\": \"airnow\","
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "    \"problem\": null,"
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "    \"observed_at\": \"2026-11-19T22:00:00-05:00\","
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "    \"age_seconds\": 4506.527434"
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "  },"
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "    \"lane\": \"local_readings\","
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "    \"problem\": null,"
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "    \"active\": false,"
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "    \"detail\": \"producer not installed\""
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "  }"
+  },
+  {
+    "journal_timestamp_us": "1795148106537605",
+    "message": "]"
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "["
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "    \"lane\": \"ambient_outdoor\","
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "    \"problem\": \"observation_stale\","
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "    \"observed_at\": \"2026-11-20T03:29:00+00:00\","
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "    \"age_seconds\": 2826.662579"
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "  },"
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "    \"lane\": \"nws\","
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "    \"problem\": null,"
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "    \"observed_at\": \"2026-11-20T02:55:00+00:00\","
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "    \"age_seconds\": 4866.662579"
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "  },"
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "    \"lane\": \"airnow\","
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "    \"problem\": null,"
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "    \"observed_at\": \"2026-11-19T22:00:00-05:00\","
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "    \"age_seconds\": 4566.662579"
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "  },"
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "    \"lane\": \"local_readings\","
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "    \"problem\": null,"
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "    \"active\": false,"
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "    \"detail\": \"producer not installed\""
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "  }"
+  },
+  {
+    "journal_timestamp_us": "1795148166673358",
+    "message": "]"
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "["
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "    \"lane\": \"ambient_outdoor\","
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "    \"problem\": \"observation_stale\","
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "    \"observed_at\": \"2026-11-20T03:29:00+00:00\","
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "    \"age_seconds\": 2887.500406"
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "  },"
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "    \"lane\": \"nws\","
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "    \"problem\": null,"
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "    \"observed_at\": \"2026-11-20T02:55:00+00:00\","
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "    \"age_seconds\": 4927.500406"
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "  },"
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "    \"lane\": \"airnow\","
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "    \"problem\": null,"
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "    \"observed_at\": \"2026-11-19T22:00:00-05:00\","
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "    \"age_seconds\": 4627.500406"
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "  },"
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "    \"lane\": \"local_readings\","
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "    \"problem\": null,"
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "    \"active\": false,"
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "    \"detail\": \"producer not installed\""
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "  }"
+  },
+  {
+    "journal_timestamp_us": "1795148227516547",
+    "message": "]"
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "["
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "    \"lane\": \"ambient_outdoor\","
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "    \"problem\": \"observation_stale\","
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "    \"observed_at\": \"2026-11-20T03:29:00+00:00\","
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "    \"age_seconds\": 2947.90562"
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "  },"
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "    \"lane\": \"nws\","
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "    \"problem\": null,"
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "    \"observed_at\": \"2026-11-20T02:55:00+00:00\","
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "    \"age_seconds\": 4987.90562"
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "  },"
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "    \"lane\": \"airnow\","
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "    \"problem\": null,"
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "    \"observed_at\": \"2026-11-19T22:00:00-05:00\","
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "    \"age_seconds\": 4687.90562"
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "  },"
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "    \"lane\": \"local_readings\","
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "    \"problem\": null,"
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "    \"active\": false,"
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "    \"detail\": \"producer not installed\""
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "  }"
+  },
+  {
+    "journal_timestamp_us": "1795148287917637",
+    "message": "]"
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "["
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "    \"lane\": \"ambient_outdoor\","
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "    \"problem\": \"observation_stale\","
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "    \"observed_at\": \"2026-11-20T03:29:00+00:00\","
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "    \"age_seconds\": 3007.951422"
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "  },"
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "    \"lane\": \"nws\","
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "    \"problem\": null,"
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "    \"observed_at\": \"2026-11-20T02:55:00+00:00\","
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "    \"age_seconds\": 5047.951422"
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "  },"
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "    \"lane\": \"airnow\","
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "    \"problem\": null,"
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "    \"observed_at\": \"2026-11-19T22:00:00-05:00\","
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "    \"age_seconds\": 4747.951422"
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "  },"
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "  {"
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "    \"lane\": \"local_readings\","
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "    \"problem\": null,"
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "    \"active\": false,"
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "    \"detail\": \"producer not installed\""
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "  }"
+  },
+  {
+    "journal_timestamp_us": "1795148347962761",
+    "message": "]"
+  }
+]

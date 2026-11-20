@@ -1,0 +1,26 @@
+[
+  {
+    "lane": "ambient_outdoor",
+    "problem": "observation_stale",
+    "observed_at": "2026-11-20T03:29:00+00:00",
+    "age_seconds": 3233.269491
+  },
+  {
+    "lane": "nws",
+    "problem": null,
+    "observed_at": "2026-11-20T02:55:00+00:00",
+    "age_seconds": 5273.269491
+  },
+  {
+    "lane": "airnow",
+    "problem": null,
+    "observed_at": "2026-11-19T23:00:00-05:00",
+    "age_seconds": 1373.269491
+  },
+  {
+    "lane": "local_readings",
+    "problem": null,
+    "active": false,
+    "detail": "producer not installed"
+  }
+]

@@ -1,0 +1,27 @@
+"""One attended invocation of the existing Stocks deployment owner."""
+
+import json
+import shutil
+from dataclasses import asdict
+from pathlib import Path
+
+from src.services.ops.deploy import deploy_unit
+
+root = Path('/home/pistrommy/projects/stocks')
+receipt = Path(__file__).resolve().parent
+image = root / 'Screenshot 2026-11-03 162525.png'
+held = receipt / image.name
+assert image.is_file() and not held.exists()
+# The supported owner requires a clean tree. Preserve the unrelated untracked
+# image intact outside it only for this invocation, then restore its exact path.
+shutil.move(image, held)
+try:
+    result = deploy_unit(
+        'market_monitor.service',
+        expected_sha='0972547eb9e45c7c9e948006c7888c71f94f94da',
+    )
+    (receipt / 'stocks-deploy-result.json').write_text(json.dumps(asdict(result), indent=2)+'\n')
+    print(json.dumps(asdict(result)))
+finally:
+    assert not image.exists()
+    shutil.move(held, image)

@@ -1,0 +1,24 @@
+"""Observe every unit emitted by the actual deployed owner."""
+
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+from service_units import rendered_units
+
+root = Path('/home/pistrommy/projects/enviroplus')
+result = {'rendering_interpreter': sys.executable, 'units': {}}
+for name, expected in rendered_units(root).items():
+    actual = (root/name).read_text()
+    assert actual == expected, name
+    assert '@PYTHON@' not in actual and '@ROOT@' not in actual, name
+    result['units'][name] = [line for line in actual.splitlines()
+                             if line.startswith(('ExecStart=', 'WorkingDirectory=', 'OnUnitActiveSec='))]
+result['native_executable_bindings'] = subprocess.check_output(
+    ['systemctl', 'show', 'airnow_wx.service', 'nws_wx.service', 'ambient_wx.service',
+     'enviro_provider_health.service', 'enviro_backup.service',
+     '-p', 'Id', '-p', 'ExecStart', '-p', 'WorkingDirectory'], text=True)
+Path(__file__).with_name('enviro-rendered-bindings.json').write_text(json.dumps(result,indent=2)+'\n')
+print(json.dumps({'rendered_units_match_owner':len(result['units']),
+                   'rendering_interpreter':sys.executable}))
