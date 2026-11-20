@@ -1,0 +1,9 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.0.3, pluggy-1.6.0
+rootdir: /home/pistrommy/projects/.tmp/backup-config-fleet-20261118/shared-worktree
+configfile: pyproject.toml
+collected 2 items
+
+tests/test_systemd_units.py ..                                           [100%]
+
+============================== 2 passed in 0.02s ===============================

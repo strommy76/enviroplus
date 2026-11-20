@@ -1,0 +1,129 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.0.3, pluggy-1.6.0
+rootdir: /home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviroplus-worktree
+configfile: pyproject.toml
+collected 8 items / 6 deselected / 2 selected
+
+tests/test_provider_health.py FF                                         [100%]
+
+=================================== FAILURES ===================================
+_ test_local_readings_follow_native_producer_authority[masked-masked-missing-None] _
+
+tmp_path = PosixPath('/tmp/qual-enviroplus-itix2e7j/pytest-of-pistrommy/pytest-9/test_local_readings_follow_nat0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fffbcede520>
+load_state = 'masked', file_state = 'masked', reading = 'missing'
+problem = None
+
+    @pytest.mark.parametrize(
+        ("load_state", "file_state", "reading", "problem"),
+        [
+            ("loaded", "enabled", "missing", "observation_missing"),
+            ("loaded", "enabled", "stale", "observation_stale"),
+            ("loaded", "disabled", "missing", None),
+            ("masked", "masked", "missing", None),
+            ("loaded", "linked", "missing", None),
+            ("not-found", "", "missing", None),
+            ("query_error", "", "missing", "observation_unreadable"),
+            ("loaded", "static", "missing", "observation_unreadable"),
+        ],
+    )
+    def test_local_readings_follow_native_producer_authority(
+        tmp_path, monkeypatch, load_state, file_state, reading, problem
+    ):
+        path, _, now = observations(tmp_path)
+        capture = tmp_path / "capture.json"
+        capture.write_text(json.dumps({"intervals": {"publish_s": 60, "display_refresh_s": 2}}))
+        monkeypatch.setenv("CONFIG_PATH", str(capture))
+        policy = provider_health.load_policy(Path(__file__).resolve().parents[1])
+        lane = next(item for item in policy["lanes"] if "producer_unit" in item)
+        assert lane["max_age_seconds"] == 2 * 60 + policy["check_interval_seconds"] + 2
+        with sqlite3.connect(path) as db:
+            db.execute("CREATE TABLE readings (ts TEXT PRIMARY KEY)")
+            if reading == "stale":
+                old = now - timedelta(seconds=lane["max_age_seconds"] + 1)
+                db.execute("INSERT INTO readings VALUES (?)", (old.isoformat(),))
+    
+        def native(command, **kwargs):
+            assert command == [
+                "systemctl",
+                "show",
+                lane["producer_unit"],
+                "--property=LoadState,UnitFileState",
+            ]
+            assert kwargs["check"] is True
+            if load_state == "query_error":
+                raise subprocess.CalledProcessError(1, command)
+            return subprocess.CompletedProcess(
+                command, 0, f"LoadState={load_state}\nUnitFileState={file_state}\n", ""
+            )
+    
+        monkeypatch.setattr(provider_health, "producer_state", native_producer_state)
+        monkeypatch.setattr(provider_health.subprocess, "run", native)
+        results = check(path, policy, now)
+        local = next(item for item in results if item["lane"] == lane["name"])
+>       assert local["problem"] == problem
+E       AssertionError: assert 'observation_unreadable' == None
+
+tests/test_provider_health.py:189: AssertionError
+_ test_local_readings_follow_native_producer_authority[loaded-linked-missing-None] _
+
+tmp_path = PosixPath('/tmp/qual-enviroplus-itix2e7j/pytest-of-pistrommy/pytest-9/test_local_readings_follow_nat1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fffbceddcd0>
+load_state = 'loaded', file_state = 'linked', reading = 'missing'
+problem = None
+
+    @pytest.mark.parametrize(
+        ("load_state", "file_state", "reading", "problem"),
+        [
+            ("loaded", "enabled", "missing", "observation_missing"),
+            ("loaded", "enabled", "stale", "observation_stale"),
+            ("loaded", "disabled", "missing", None),
+            ("masked", "masked", "missing", None),
+            ("loaded", "linked", "missing", None),
+            ("not-found", "", "missing", None),
+            ("query_error", "", "missing", "observation_unreadable"),
+            ("loaded", "static", "missing", "observation_unreadable"),
+        ],
+    )
+    def test_local_readings_follow_native_producer_authority(
+        tmp_path, monkeypatch, load_state, file_state, reading, problem
+    ):
+        path, _, now = observations(tmp_path)
+        capture = tmp_path / "capture.json"
+        capture.write_text(json.dumps({"intervals": {"publish_s": 60, "display_refresh_s": 2}}))
+        monkeypatch.setenv("CONFIG_PATH", str(capture))
+        policy = provider_health.load_policy(Path(__file__).resolve().parents[1])
+        lane = next(item for item in policy["lanes"] if "producer_unit" in item)
+        assert lane["max_age_seconds"] == 2 * 60 + policy["check_interval_seconds"] + 2
+        with sqlite3.connect(path) as db:
+            db.execute("CREATE TABLE readings (ts TEXT PRIMARY KEY)")
+            if reading == "stale":
+                old = now - timedelta(seconds=lane["max_age_seconds"] + 1)
+                db.execute("INSERT INTO readings VALUES (?)", (old.isoformat(),))
+    
+        def native(command, **kwargs):
+            assert command == [
+                "systemctl",
+                "show",
+                lane["producer_unit"],
+                "--property=LoadState,UnitFileState",
+            ]
+            assert kwargs["check"] is True
+            if load_state == "query_error":
+                raise subprocess.CalledProcessError(1, command)
+            return subprocess.CompletedProcess(
+                command, 0, f"LoadState={load_state}\nUnitFileState={file_state}\n", ""
+            )
+    
+        monkeypatch.setattr(provider_health, "producer_state", native_producer_state)
+        monkeypatch.setattr(provider_health.subprocess, "run", native)
+        results = check(path, policy, now)
+        local = next(item for item in results if item["lane"] == lane["name"])
+>       assert local["problem"] == problem
+E       AssertionError: assert 'observation_unreadable' == None
+
+tests/test_provider_health.py:189: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_provider_health.py::test_local_readings_follow_native_producer_authority[masked-masked-missing-None]
+FAILED tests/test_provider_health.py::test_local_readings_follow_native_producer_authority[loaded-linked-missing-None]
+======================= 2 failed, 6 deselected in 0.12s ========================

@@ -1,0 +1,46 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.0.3, pluggy-1.6.0
+rootdir: /home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviroplus-worktree
+configfile: pyproject.toml
+collected 1 item
+
+tests/test_service_units.py F                                            [100%]
+
+=================================== FAILURES ===================================
+__________________ test_all_units_derive_interpreter_and_root __________________
+
+tmp_path = PosixPath('/tmp/qual-enviroplus-itix2e7j/pytest-of-pistrommy/pytest-11/test_all_units_derive_interpre0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ffed741da70>
+
+    def test_all_units_derive_interpreter_and_root(tmp_path, monkeypatch):
+        source = Path(__file__).resolve().parents[1]
+        root = tmp_path / "relocated"
+        shutil.copytree(source / "config", root / "config")
+        for template in source.glob("*.in"):
+            shutil.copy(template, root)
+        interpreter_path = tmp_path / "other environment/bin/python"
+        interpreter_path.parent.mkdir(parents=True)
+        interpreter_path.symlink_to(sys.executable)
+        interpreter = str(interpreter_path)
+        monkeypatch.setattr(sys, "executable", interpreter)
+        units = rendered_units(root)
+        (backup_template,) = root.glob("*.service.in")
+        assert {path.stem for path in (root / "config/unit_templates").glob("*.in")} < units.keys()
+        for name, content in units.items():
+            assert str(source) not in content, name
+            assert "@PYTHON@" not in content and "@ROOT@" not in content, name
+            unit = ConfigParser(interpolation=None)
+            unit.read_string(content)
+            if name.endswith(".service"):
+                command = shlex.split(unit["Service"]["ExecStart"])
+>               assert command[0] == interpreter, name
+E               AssertionError: enviro_provider_health.service
+E               assert '/usr/bin/python3.13' == '/tmp/qual-en...nt/bin/python'
+E                 
+E                 - /tmp/qual-enviroplus-itix2e7j/pytest-of-pistrommy/pytest-11/test_all_units_derive_interpre0/other environment/bin/python
+E                 + /usr/bin/python3.13
+
+tests/test_service_units.py:33: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_service_units.py::test_all_units_derive_interpreter_and_root
+============================== 1 failed in 0.04s ===============================

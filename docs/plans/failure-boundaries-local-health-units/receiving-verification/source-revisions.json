@@ -1,0 +1,12 @@
+{
+  "source_revisions": {
+    "enviroplus": "cc8c9444000688d9fc34690872548722a49aee9d",
+    "shared": "25952ecb7434b74391809983119bce39ca853b58"
+  },
+  "prior_runtime": {
+    "enviroplus": "0cb2d10f4a4ccb1668462e3d4ef8ae3a6c2cf17b",
+    "shared": "be665335a0b8c1732e09441110e6d6aaf7d91cfe"
+  },
+  "old_control_inputs": "Current repaired tests with the prior runtime owners before their corrections; full old-owner command records retained.",
+  "scope": "Receiving E1/E2/E5/S1 folds only. No Stocks change or new full canonical. The original GLM report explicitly states diff-only input, retained as a limitation."
+}

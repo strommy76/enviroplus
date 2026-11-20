@@ -1,0 +1,40 @@
+"""One-use direct verification of receiving8e3c2f22/a280b30f folds."""
+from pathlib import Path
+import os, json, subprocess
+
+h = Path('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119')
+v = h / 'enviroplus-worktree'
+s = h.parent / 'backup-config-fleet-20261118/shared-worktree'
+out = Path(__file__).parent
+env = os.environ | json.loads((h / 'final-canonical/enviroplus/result.json').read_text())['explicit_nonsecret_bindings']
+py = '/home/pistrommy/.virtualenvs/pimoroni/bin/python'
+results = []
+
+def run(name, root, tests):
+    argv = [py, '-m', 'pytest', *tests]
+    with (out / (name + '.log')).open('x') as log:
+        p = subprocess.run(argv, cwd=root, env=env, stdout=log, stderr=subprocess.STDOUT)
+    results.append({'name': name, 'argv': argv, 'exit_code': p.returncode})
+    (out / 'result.json').write_text(json.dumps(results, indent=2) + '\n')
+    print(name, p.returncode, flush=True)
+    return p.returncode
+
+for name, file, old, new in [
+    ('M4-backup-config-literal', v / 'enviro_backup.service.in', '@ROOT@/config/backup.json', '/home/pistrommy/projects/enviroplus/config/backup.json'),
+    ('resolved-interpreter-alias', s / 'systemd_units.py', 'sys.executable', 'str(__import__("pathlib").Path(sys.executable).resolve())'),
+]:
+    saved = file.read_bytes()
+    try:
+        assert old in saved.decode()
+        # M4 affects only the ExecStart argument, preserving Documentation.
+        text = saved.decode()
+        if name.startswith('M4'):
+            text = '\n'.join(line.replace(old,new) if line.startswith('ExecStart=') else line for line in text.splitlines()) + '\n'
+        else:
+            text = text.replace(old,new)
+        file.write_text(text)
+        assert run(name, v, ['tests/test_service_units.py']) == 1
+    finally:
+        file.write_bytes(saved)
+assert run('enviro-owning', v, ['tests/test_provider_health.py','tests/test_service_units.py','tests/test_sqlite_backup.py']) == 0
+assert run('shared-owning', s, ['tests/test_systemd_units.py']) == 0
