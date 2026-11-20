@@ -402,3 +402,11 @@ renders it. This caller/context discrepancy is CONFIRMED; an actual backup
 failure is UNCONFIRMED. Raised in brokerc7d08b87 for adjudication; the directed
 implementation stands and is not silently redesigned. Source landing and
 coordinated deployment still await the operator; no production change here.
+
+Disposition156ead81: the caller premise discrepancy is CONFIRMED and FOLDED
+into Stocks#346. Stocks now renders only config paths inside its own resolved
+root; foreign completion lanes stay audited. Enviro service_units remains its
+render owner. The old all-lanes caller FAILS the new preservation assertion;
+22 owning backup/reconciler cases PASS after correction. No venv heuristic,
+new field or foreign generation service. The unexecuted backup-failure claim
+remains UNCONFIRMED; the observed ownership defect is closed by the change.
