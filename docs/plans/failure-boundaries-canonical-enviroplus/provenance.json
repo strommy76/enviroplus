@@ -1,0 +1,5 @@
+{
+  "canonical_source_revision": "2878e61cb69104bcf1d405e68b82ac672420c6b8",
+  "result": "full canonical Ruff check/format and268 tests pass",
+  "scope": "Evidence only, no source or deployed-effect change. Canonical XML remains at original workspace path; full final report retained here."
+}

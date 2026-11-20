@@ -1,0 +1,79 @@
+[
+  {
+    "case": "missing-enabled-default-control",
+    "argv": [
+      "/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/stocks-worktree/.venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_holdout_policy.py::test_enabled_policy_cannot_lose_its_required_cutoff",
+      "-q"
+    ],
+    "exit_code": 1
+  },
+  {
+    "case": "failed-open-close-control",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_sensor_io.py::test_controller_capability_failure_closes_the_opened_bus",
+      "-q"
+    ],
+    "exit_code": 1
+  },
+  {
+    "case": "last-success-bme-control",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_local_sensor_projection.py",
+      "-q"
+    ],
+    "exit_code": 1
+  },
+  {
+    "case": "last-success-gas-control",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_local_sensor_projection.py",
+      "-q"
+    ],
+    "exit_code": 1
+  },
+  {
+    "case": "last-success-pi-control",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_local_sensor_projection.py",
+      "-q"
+    ],
+    "exit_code": 1
+  },
+  {
+    "case": "last-success-lux-control",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_local_sensor_projection.py",
+      "-q"
+    ],
+    "exit_code": 1
+  },
+  {
+    "case": "last-success-cpu-control",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_local_sensor_projection.py",
+      "-q"
+    ],
+    "exit_code": 1
+  }
+]

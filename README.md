@@ -145,6 +145,7 @@ All tuning values (hardware addresses, thresholds, intervals, display) live in t
 ### 5. Run as a systemd service
 
 ```bash
+PYTHONPATH=.. python -m service_units
 sudo systemctl link "$PWD/enviro_dash.service"
 sudo systemctl enable --now enviro_dash
 ```
@@ -342,7 +343,7 @@ Backup service/timer files are derived outputs. After editing `config/backup.jso
 render them before linking or reconciling systemd units:
 
 ```bash
-python -m shared.backup_units --config config/backup.json
+python -m service_units
 ```
 
 The `.in` files own unit policy; backup configuration alone owns cadence, jitter

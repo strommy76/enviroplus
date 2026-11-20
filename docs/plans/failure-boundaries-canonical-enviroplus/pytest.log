@@ -1,0 +1,26 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.0.3, pluggy-1.6.0
+rootdir: /home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviroplus-worktree
+configfile: pyproject.toml
+collected 268 items
+
+tests/test_collector_wiring.py ......                                    [  2%]
+tests/test_collectors.py .....................                           [ 10%]
+tests/test_dash_loop.py ......................................           [ 24%]
+tests/test_env_completeness.py .....                                     [ 26%]
+tests/test_local_sensor_projection.py .                                  [ 26%]
+tests/test_nws_wx.py ......                                              [ 28%]
+tests/test_provider_collector.py ......................................  [ 42%]
+tests/test_provider_contract.py ........................................ [ 57%]
+......                                                                   [ 60%]
+tests/test_provider_health.py ......                                     [ 62%]
+tests/test_raw_retention.py ....................................         [ 75%]
+tests/test_raw_retention_root_key.py ..                                  [ 76%]
+tests/test_raw_retention_write_failure.py ......                         [ 78%]
+tests/test_room_dashboard.py .                                           [ 79%]
+tests/test_screens.py ..............................................     [ 96%]
+tests/test_sensor_io.py .....                                            [ 98%]
+tests/test_sqlite_backup.py .....                                        [100%]
+
+- generated xml file: /home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/final-canonical/enviroplus/pytest.xml -
+============================= 268 passed in 12.21s =============================

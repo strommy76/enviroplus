@@ -1,5 +1,5 @@
 [Unit]
-Description=AirNow (EPA) Air Quality Poller (provider capture contract)
+Description=Ambient Weather Poller
 After=network-online.target
 Wants=network-online.target
 # A Tier 1 (raw retention) write failure ends the collector rather than letting
@@ -10,9 +10,9 @@ OnFailure=stocks_ops_alert@%n.service
 [Service]
 Type=simple
 User=pistrommy
-WorkingDirectory=/home/pistrommy/projects/enviroplus
-Environment=PYTHONPATH=/home/pistrommy/projects
-ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python provider_collector.py --contract contracts/airnow_current.json
+WorkingDirectory=@ROOT@
+Environment="PYTHONPATH=@ROOT@/.."
+ExecStart="@PYTHON@" ambient_wx.py
 Restart=always
 RestartSec=10
 # Flat restart every 10 s, with no stop limit (the systemd default of 5

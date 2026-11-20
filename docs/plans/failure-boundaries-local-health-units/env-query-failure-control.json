@@ -1,0 +1,18 @@
+{
+  "source_base": "8a157469b71e8f59dd8015eb7c63f0106bb4f089",
+  "method": {
+    "source": "provider_health.py",
+    "replace": "        subprocess.CalledProcessError,\n",
+    "with": "",
+    "restore_bytes": true,
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_provider_health.py::test_local_readings_follow_native_producer_authority",
+      "-k",
+      "query_error"
+    ]
+  },
+  "exit_code": 1
+}

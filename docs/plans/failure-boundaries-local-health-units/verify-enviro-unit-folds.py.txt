@@ -1,0 +1,45 @@
+"""One-use focused checks and actual source violations for directed Enviro folds."""
+from pathlib import Path
+import json, os, subprocess
+
+h = Path('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119')
+b = h.parent / 'backup-config-fleet-20261118'
+enviro = h / 'enviroplus-worktree'
+shared = b / 'shared-worktree'
+out = Path(__file__).parent
+env = os.environ | json.loads((h / 'final-canonical/enviroplus/result.json').read_text())['explicit_nonsecret_bindings']
+python = '/home/pistrommy/.virtualenvs/pimoroni/bin/python'
+results = []
+
+def run(name, root, tests):
+    argv = [python, '-m', 'pytest', *tests]
+    with (out / (name + '.log')).open('x') as log:
+        proc = subprocess.run(argv, cwd=root, env=env, stdout=log, stderr=subprocess.STDOUT)
+    results.append({'name': name, 'argv': argv, 'exit_code': proc.returncode})
+    (out / 'env-shared-result.json').write_text(json.dumps(results, indent=2) + '\n')
+    print(name, proc.returncode, flush=True)
+    return proc.returncode
+
+health = enviro / 'provider_health.py'
+template = enviro / 'config/unit_templates/enviro_provider_health.service.in'
+renderer = shared / 'systemd_units.py'
+controls = [
+    ('literal-interpreter-control', template, '@PYTHON@', '/usr/bin/python3', ['tests/test_service_units.py']),
+    ('literal-root-control', template, 'WorkingDirectory=@ROOT@', 'WorkingDirectory=/home/pistrommy/projects/enviroplus', ['tests/test_service_units.py']),
+    ('omitted-local-lane-control', health, 'for lane in policy["lanes"]:', 'for lane in (item for item in policy["lanes"] if "producer_unit" not in item):', ['tests/test_provider_health.py::test_local_readings_follow_native_producer_authority']),
+    ('disabled-still-monitored-control', health, 'if state.get("LoadState") == "loaded" and state.get("UnitFileState") == "disabled":', 'if False:', ['tests/test_provider_health.py::test_local_readings_follow_native_producer_authority']),
+    ('missing-producer-still-monitored-control', health, 'if state.get("LoadState") == "not-found":', 'if False:', ['tests/test_provider_health.py::test_local_readings_follow_native_producer_authority']),
+    ('rendering-interpreter-control', renderer, 'sys.executable', '"/usr/bin/python3"', ['tests/test_service_units.py']),
+]
+for name, path, old, new, tests in controls:
+    saved = path.read_bytes()
+    text = saved.decode()
+    assert text.count(old) >= 1, name
+    try:
+        path.write_text(text.replace(old, new))
+        assert run(name, enviro, tests) == 1, name
+    finally:
+        path.write_bytes(saved)
+        assert path.read_bytes() == saved
+assert run('env-owning-final', enviro, ['tests/test_provider_health.py', 'tests/test_service_units.py', 'tests/test_sqlite_backup.py']) == 0
+assert run('shared-owning-renderer', shared, ['tests/test_systemd_units.py']) == 0

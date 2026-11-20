@@ -1,0 +1,47 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_cli_reports_failure_and_preserves_all_lane_results ____________
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-provider-exit-violation-tmp/test_cli_reports_failure_and_p0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff48735e00>
+capsys = <_pytest.capture.CaptureFixture object at 0x7fff49276a50>
+
+    def test_cli_reports_failure_and_preserves_all_lane_results(tmp_path, monkeypatch, capsys):
+        """A missing real provider table must reach the exit/OnFailure boundary."""
+        import provider_health
+    
+        path, _, _ = observations(tmp_path)
+        with sqlite3.connect(path) as db:
+            db.execute("DROP TABLE nws_weather")
+        monkeypatch.setenv("SQLITE_PATH", str(path))
+        # Environment acquisition is outside the SQL/CLI-failure property.
+        monkeypatch.setattr(provider_health, "load_env", lambda *args, **kwargs: None)
+>       assert provider_health.main() == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = <function main at 0x7fff483f89a0>()
+E        +    where <function main at 0x7fff483f89a0> = <module 'provider_health' from '/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviroplus-worktree/provider_health.py'>.main
+
+tests/test_provider_health.py:76: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[
+  {
+    "lane": "ambient_outdoor",
+    "problem": "observation_stale",
+    "observed_at": "2026-11-19T16:00:00+00:00",
+    "age_seconds": 2282.748368
+  },
+  {
+    "lane": "nws",
+    "problem": "observation_unreadable",
+    "detail": "OperationalError: no such table: nws_weather"
+  },
+  {
+    "lane": "airnow",
+    "problem": null,
+    "observed_at": "2026-11-19T10:00:00-05:00",
+    "age_seconds": 5882.748368
+  }
+]
+=========================== short test summary info ============================
+FAILED tests/test_provider_health.py::test_cli_reports_failure_and_preserves_all_lane_results
+1 failed, 4 deselected in 1.58s

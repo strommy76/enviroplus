@@ -1,0 +1,42 @@
+# Independent review — enviroplus f088d528 (base 0350abe), E1/E2/F4
+
+Reviewed against the direction records (6984c89c, d0a26347, 0657f232, 6a9f33b9, 3e34118d, ac12a55e, 648ab3e1) and the accepted plan in `docs/plans/failure-boundaries.md`. Judged from source content and the real control logs; test counts, the checks JSON, and the author's own axiom rows were treated as claims, not evidence.
+
+## Findings
+
+| # | Location | Status | Reaching input | Consequence | Smallest correction / cost |
+|---|---|---|---|---|---|
+| 1 | `provider_health.py:5‑6` (`from shared.config_service import …` with no `sys.path.insert`), same in `provider_health_units.py:4`; `enviro_provider_health.service.in` ExecStart carries no `Environment`/`EnvironmentFile` | **CONFIRMED seam deviation; runtime failure UNCONFIRMED** (deployed interpreter env not inspectable from this seat) | Every timer invocation: `python -m provider_health`, WorkingDirectory=repo, systemd-clean env | All five sibling entrypoints (`ambient_wx`, `nws_wx`, `enviro_dash3`, `local_sensors`, `provider_collector`) self-insert `/home/pistrommy/projects`; PROJECT-CONFIG itself requires explicit `PYTHONPATH=..` for `shared` availability. No in-packet evidence any producer imports `shared` without explicit path setup (the subprocess test inherits pytest's PYTHONPATH; the backup seed may have been a supervised run). If the venv has no ambient mechanism: `ModuleNotFoundError` every 60 s — E2 never evaluates anything and `OnFailure` pages continuously (throttled only by alert repage) | One line: `sys.path.insert(0, "/home/pistrommy/projects")` in `provider_health.py` (and `provider_health_units.py`), matching siblings — ~2 lines; or prove importability in the already-pending first supervised unit run before enabling the timer |
+| 2 | `enviro_provider_health.timer.in` `OnBootSec=0`; service has no `After=`/ordering vs collectors | CONFIRMED behavior; deployed effect pending | Every reboot / downtime longer than a lane bound | Boot-time check runs before collectors write fresh rows; newest rows are genuinely stale → exit 1 → page on every reboot. True-but-transient condition; arguably correct (data *is* missing) but is recurring operator noise | One template value (small positive `OnBootSec`) — 1 line — or accept as residual; adjudicate |
+| 3 | `provider_health.py:22‑38` — `ZoneInfo(lane["timezone"])` raises `ZoneInfoNotFoundError` (KeyError), outside the `except (sqlite3.Error, OSError, ValueError, StopIteration)` tuple | CONFIRMED from content; low severity | A mis-edited committed `config/provider_health.json` timezone | Whole check aborts with traceback; sibling lane results lost from the printed output (exit still nonzero, alert still fires — loud, per plan's "config errors fail loudly") | Add `KeyError` to the tuple if per-lane isolation is wanted to cover policy defects too — 1 token; acceptable as-is |
+| 4 | `failure-boundaries-violation-observations.json` — duplicate `enviro-provider-isolation-violation` records (exit 0 then exit 1) | Verified, not a defect | — | The exit‑0 record is a first mutation attempt that didn't take; the review artifact discloses rejecting the no-op control and the final log shows the real exit‑1 violation. Provenance is honest; noted only so concurrence is not silent | None |
+| 5 | `sqlite_backup.py` `estimate()` branch | Verified, not a defect | — | Estimate follows `require("SQLITE_PATH")` through the same `main()` seam as capture (two branches apart); only capture has a focused test. Same-key seam, low residual risk | None required; a one-line estimate assertion could ride along if the file is touched again |
+
+No other findings. Specifically checked and conforming: per-lane health isolation, console-only presence predicate reuse (`outdoor_presence_sql`), AirNow fold‑0/1 abbreviation disambiguation, ambient/NWS/AirNow ts parsing against the real writer formats, RetentionWriteError→process-end in all four writers, F4 literal removal from both code and `config/backup.json`, no new durable store/log/scheduler, tests isolated from live retention, and all six retained control logs demonstrating real violations at base or on mutation (db-binding `assert 1 == 2` at base; 11 fatal-init failures at base; each provider mutation failing its owning test).
+
+## Source-specific axiom check
+
+| Axiom | Result | Location / construction |
+|---|---|---|
+| 1 Truth | CONFORMS | Health reads actual latest observations, not log/retention proxies (`provider_health.check`); missing/stale/unreadable are named problems, never inferred freshness; F4 removes the second source of DB truth (`sqlite_backup.main` → `SQLITE_PATH`) |
+| 2 Cognition | CONFORMS | Presence predicate derived from the collector's own measurement-role constants; no curated roster or whitelist added; contract vocabulary unchanged |
+| 3 Antifragility | CONFORMS (source) / UNCONFIRMED (deployed timer) | `SensorIO._observe` pops the failed device only; siblings retained (control-observed at base). Lane isolation control-observed. Native timer/alert effect gated |
+| 4 KISS | CONFORMS | One class, one read-only oneshot, no retry/backoff framework, no new store; every retained test names a violation demonstrated in a real control log. Finding 1 is under-provision, not over |
+| 5 Boundaries | CONFORMS | Per-lane causes survive; nonzero exit on real missing/stale/unreadable; storage failures end writers loudly. Finding 3 is the one exception class that escapes per-lane framing, but fails loud |
+| 6 Maintenance | CONFORMS | Import-time driver init removed; dash composes owners; superseded `source_path` literal removed everywhere it was live; PROJECT-CONFIG/.gitignore updated; nested template dir avoids colliding with the backup renderer's root `*.service.in` discovery (verified by that test's `(p.stem for p in root.glob("*.service.in"))` unpacking) |
+| Preamble admission | CONFORMS | Each mechanism names its observed failure: issue #30's fatal LTR/BME coupling, the 11‑18/19 breaker outage (648ab3e1), audit F4. Nothing protects an imaginary case |
+
+## Missing input preventing confirmation
+
+- `dynamic_config.pi5.json` — SensorIO's hardware-key contract (`bme280_addr`, `tmp119_addr`, `spi_*`, `display_*`) and `display.tap_proximity`/`thresholds.co2_ppm` can't be confirmed against the config document.
+- Installed driver library sources (`enviroplus.gas.available/cleanup`, `pms5003.setup()`, `sensirion` error hierarchy — the test's claim that `I2cError` subclasses `OSError` is load-bearing for SCD41 lane isolation and taken from the plan's read, not verifiable here), `st7735`.
+- Live `.env` values the derivations cite (AW_POLL_S=60, NWS 7200/600, AIRNOW_POLL_S=1800) — correctly path-referenced only; the fit arithmetic can't be re-derived.
+- `shared` members beyond the four included (`backup_service`, `backup_units`, `backup_estimates`, `backup_records`, `duplicacy_cli`, `logging_service`, `signal_handler`) — the producer-injection (`--output-dir`) and nested-template assumptions rest on the passing native-lane design, whose run is binary-gated.
+- The diff itself: whole-file review cannot distinguish changed files from context (e.g., whether `enviro_dash.service`/`enviro_screens.py` are in this delta).
+- Deployed state: venv import mechanism (Finding 1), unit installation, dashboard-disabled status — explicitly behind the gate.
+
+## Verdict
+
+**Would not block.** No confirmed defect in the authorized outcome's source logic; Finding 1 is severe-if-real but one line to close (or one supervised run to refute) and is exactly what the already-declared deployment qualification covers. I would require Finding 1's disposition — add the two path-insert lines or prove importability — **before the timer is enabled**, and put Findings 2 and 3 to the operator as conscious residuals.
+
+Limits: no code execution, no live state, whole-file review without the delta, control logs taken as given (they are internally consistent and show the asserted failures), hardware and canonical/deployed checks all pending behind the resource hold as the packet states. I do not request another source review round; the remaining defect class is deployment-environment integration (interpreter path mechanism, unit installation and ordering), which is settled by the planned activation qualification, not by further source review. No other review's findings were supplied; nothing here is silent concurrence with an unseen review.

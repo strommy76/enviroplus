@@ -1,0 +1,980 @@
+===== DIRECTION: Bryan 2026-11-19 22:00 EST verbatim: "1) How could a fetch ever not have a timestamp? 2) What? Does this actually happen? 3) NO hardcoding!". Bryan 22:07 decision: adding or disconnecting hardware must not cause persistent failures (pi-config#31 tracks the config refactor). pi-claude folds: (1) Stocks: age failed fetch items from the run's own attempt/completion time; (2) Enviro: local readings lane gated on the producer unit's native state (not-found/disabled -> inactive with detail; enabled+stale -> problem; failed read -> unreadable); (3) no hardcoded interpreter/root in any Enviro unit template, derived at render time (interpreter = rendering process sys.executable, root = config location) via a narrow Shared renderer extension; no new config field.
+===== SHARED ca500fe..be66533
+diff --git a/backup_units.py b/backup_units.py
+index faaece8..560d984 100644
+--- a/backup_units.py
++++ b/backup_units.py
+@@ -28,7 +28,7 @@ def rendered_units(config_path):
+         },
+     }
+     return {
+-        template.stem: render_unit(template.read_text(), sections)
++        template.stem: render_unit(template.read_text(), sections, root=root)
+         for template, sections in directives.items()
+     }
+ 
+diff --git a/systemd_units.py b/systemd_units.py
+index 3c59c5a..ae246d2 100644
+--- a/systemd_units.py
++++ b/systemd_units.py
+@@ -1,8 +1,14 @@
+ """Render configured directives into an existing systemd unit template."""
+ 
++import sys
+ 
+-def render_unit(text, sections):
++
++def render_unit(text, sections, *, root=None):
+     """Preserve unit policy; replace only the supplied section directives."""
++    if root is not None:
++        text = text.replace("@PYTHON@", sys.executable).replace(
++            "@ROOT@", root.as_posix()
++        )
+     section = None
+     output = []
+     for line in text.splitlines():
+diff --git a/tests/test_systemd_units.py b/tests/test_systemd_units.py
+new file mode 100644
+index 0000000..ce27be3
+--- /dev/null
++++ b/tests/test_systemd_units.py
+@@ -0,0 +1,24 @@
++"""Native rendering inputs remain the sole interpreter/root authority."""
++
++import sys
++from configparser import ConfigParser
++from pathlib import Path
++import shlex
++
++from shared.systemd_units import render_unit
++
++
++def test_template_binds_rendering_interpreter_root_and_owned_directives(
++    tmp_path, monkeypatch
++):
++    interpreter = str(tmp_path / "python environment/bin/python")
++    monkeypatch.setattr(sys, "executable", interpreter)
++    text = '[Service]\nExecStart="@PYTHON@" -m capture\nWorkingDirectory=@ROOT@\nTimeoutStartSec=1s\n'
++    rendered = render_unit(
++        text, {"Service": {"TimeoutStartSec": ["2s"]}}, root=tmp_path
++    )
++    unit = ConfigParser(interpolation=None)
++    unit.read_string(rendered)
++    assert shlex.split(unit["Service"]["ExecStart"]) == [interpreter, "-m", "capture"]
++    assert Path(unit["Service"]["WorkingDirectory"]) == tmp_path
++    assert unit["Service"]["TimeoutStartSec"] == "2s"
+===== STOCKS 4657b0c..e224939
+diff --git a/src/services/db/repositories/daily_capture_completion.py b/src/services/db/repositories/daily_capture_completion.py
+index e4fa3fb..42eb2cc 100644
+--- a/src/services/db/repositories/daily_capture_completion.py
++++ b/src/services/db/repositories/daily_capture_completion.py
+@@ -33,7 +33,7 @@ def latest_projection_outcomes(
+     if execution_plane is not None:
+         parameters["execution_plane"] = execution_plane
+     rows = fetchall_dicts(
+-        "SELECT DISTINCT ON (item.key) item.key AS symbol,run_id::text,status,"
++        "SELECT DISTINCT ON (item.key) item.key AS symbol,run_id::text,status,completed_at,"
+         "item.value AS outcome FROM observation.capture_run "
+         "CROSS JOIN LATERAL jsonb_each("
+         "COALESCE(telemetry->'request_spans','{}'::jsonb) || "
+diff --git a/src/services/observation/daily_history_coverage.py b/src/services/observation/daily_history_coverage.py
+index 49b42cb..4dd7449 100644
+--- a/src/services/observation/daily_history_coverage.py
++++ b/src/services/observation/daily_history_coverage.py
+@@ -66,9 +66,16 @@ def runtime_coverage_results(
+     """
+     results = []
+     for item in coverage_results(symbols, outcomes):
+-        if item["problem"] is None or "acquired_at" in item:
++        if item["problem"] is None or item["problem"] == "capture_failed":
+             original_problem = item["problem"]
+-            age = (checked_at - datetime.fromisoformat(item["acquired_at"])).total_seconds()
++            if "acquired_at" in item:
++                observed = datetime.fromisoformat(item["acquired_at"])
++            else:
++                # A failed fetch acquired no provider return. Its completed
++                # attempt still has a real ledger clock and must age.
++                observed = outcomes[item["symbol"]]["completed_at"]
++                item = {**item, "attempt_completed_at": observed.isoformat()}
++            age = (checked_at - observed).total_seconds()
+             item = {**item, "age_seconds": age}
+             if age < 0:
+                 item["problem"] = "capture_after_check_time"
+diff --git a/tests/test_acquisition_health.py b/tests/test_acquisition_health.py
+index f6e706a..11e1113 100644
+--- a/tests/test_acquisition_health.py
++++ b/tests/test_acquisition_health.py
+@@ -1,11 +1,15 @@
+ """Serving-only properties substitute possible off-database health observations."""
+ 
++import json
+ from datetime import UTC, datetime, timedelta
++from types import SimpleNamespace
+ 
++import psycopg
+ import pytest
+ 
+-from src.services.data import acquisition_health
++from src.services.data import acquisition_health, freshness
+ from src.services.ops.systemd_unit_audit import load_systemd_unit_audit_config
++from src.services.tier1 import Tier1ContractError
+ 
+ 
+ def healthy_store_results():
+@@ -40,13 +44,56 @@ def test_capture_completion_obligation_uses_existing_auditor(timer_name):
+     assert "JOB_RESULT=done" in lane.completion_journal_matches
+ 
+ 
++@pytest.mark.parametrize("failure", ["database", "contract"])
++def test_store_failure_cannot_become_a_healthy_sweep(monkeypatch, capsys, failure):
++    error = (
++        psycopg.OperationalError("database unavailable")
++        if failure == "database"
++        else Tier1ContractError("T1_CONTRACT_SCHEMA", "unsupported admitted contract")
++    )
++
++    def fail():
++        raise error
++
++    monkeypatch.setattr(
++        acquisition_health, "build_tier1_health_reader", lambda: SimpleNamespace(snapshot=fail)
++    )
++    # This sibling is outside the failed-reader/CLI property. Zero watchdog
++    # breaches is a possible real legacy result; the actual composition runs.
++    monkeypatch.setattr(
++        acquisition_health,
++        "_legacy_health",
++        lambda: acquisition_health.AcquisitionStoreHealth(
++            "stocks_acquisition", {"unverified_delivery_breaches": 0}, ()
++        ),
++    )
++    monkeypatch.setattr(
++        freshness.DataFreshnessService,
++        "sweep",
++        lambda self: freshness.FreshnessSweepResult(datetime.now(UTC), (), (), ()),
++    )
++    assert freshness.main() == 1
++    payload = json.loads(capsys.readouterr().out)
++    assert payload["ok"] is False
++    stores = {store["store"]: store for store in payload["acquisition_stores"]}
++    assert stores == {
++        "stocks_tier1": {
++            "store": "stocks_tier1",
++            "observations": {"error": f"{type(error).__name__}: {error}"},
++            "problems": ["observation_failed"],
++        },
++        "stocks_acquisition": {
++            "store": "stocks_acquisition",
++            "observations": {"unverified_delivery_breaches": 0},
++            "problems": [],
++        },
++    }
++
++
+ @pytest.mark.parametrize("failed_store", ["stocks_tier1", "stocks_acquisition"])
+ def test_unreadable_store_preserves_sibling(monkeypatch, failed_store):
+     """An actual health reader timeout leaves the other store's observations."""
+     from contextlib import nullcontext
+-    from types import SimpleNamespace
+-
+-    import psycopg
+ 
+     now = datetime.now(UTC)
+ 
+diff --git a/tests/test_acquisition_health_postgres.py b/tests/test_acquisition_health_postgres.py
+index 848aaa0..bb45632 100644
+--- a/tests/test_acquisition_health_postgres.py
++++ b/tests/test_acquisition_health_postgres.py
+@@ -5,7 +5,6 @@ import json
+ from contextlib import contextmanager
+ from dataclasses import replace
+ from datetime import UTC, datetime, timedelta
+-from types import SimpleNamespace
+ from uuid import uuid4
+ 
+ import psycopg
+@@ -13,7 +12,7 @@ import pytest
+ 
+ from src.services.data import acquisition_health, freshness
+ from src.services.observation import acquisition_capture
+-from src.services.tier1 import ArtifactEvidence, Tier1ContractError
++from src.services.tier1 import ArtifactEvidence
+ from src.services.tier1.health import Tier1HealthReader
+ from tests.test_acquisition_store import scratch_store as scratch_store
+ from tests.test_tier1_kernel import AdjustableClock, _begin, _contract_document, _outcome
+@@ -221,29 +220,6 @@ def test_observation_time_follows_visible_acquisitions(kernel, scratch_store, mo
+     )
+ 
+ 
+-@pytest.mark.parametrize("failure", ["database", "contract"])
+-def test_store_failure_cannot_become_a_healthy_sweep(monkeypatch, failure):
+-    error = (
+-        psycopg.OperationalError("database unavailable")
+-        if failure == "database"
+-        else Tier1ContractError("T1_CONTRACT_SCHEMA", "unsupported admitted contract")
+-    )
+-
+-    def fail():
+-        raise error
+-
+-    monkeypatch.setattr(
+-        acquisition_health, "build_tier1_health_reader", lambda: SimpleNamespace(snapshot=fail)
+-    )
+-    monkeypatch.setattr(
+-        freshness.DataFreshnessService,
+-        "sweep",
+-        lambda self: freshness.FreshnessSweepResult(datetime.now(UTC), (), (), ()),
+-    )
+-    with pytest.raises(type(error), match=str(error).replace("[", r"\[").replace("]", r"\]")):
+-        freshness.main()
+-
+-
+ @pytest.mark.parametrize(
+     ("index_name", "table_name", "column_name"),
+     (
+diff --git a/tests/test_daily_capture_completion.py b/tests/test_daily_capture_completion.py
+index 2755b05..6a5f60b 100644
+--- a/tests/test_daily_capture_completion.py
++++ b/tests/test_daily_capture_completion.py
+@@ -1,13 +1,14 @@
+ """Completion selection binds provider, basis, coverage, and historical visibility."""
+ 
+ import json
+-from datetime import UTC, datetime
++from datetime import UTC, datetime, timedelta
+ 
+ import psycopg
+ from psycopg.rows import dict_row
+ from psycopg.types.json import Jsonb
+ 
+ from src.services.db.repositories import daily_capture_completion as completion
++from src.services.observation.daily_history_coverage import runtime_coverage_results
+ 
+ 
+ def test_completed_capture_uses_configured_lane_and_recorded_coverage(monkeypatch):
+@@ -135,3 +136,61 @@ def test_actual_sql_excludes_failed_partial_and_future_captures(
+             == "first"
+         )
+         conn.rollback()
++
++
++def test_failed_request_clock_survives_the_real_repository_query(
++    requires_test_database, verified_test_database, monkeypatch
++):
++    """Native result columns, not a hand-built result, feed failed-attempt aging."""
++    from src.services.observation.yfinance_projection import PROJECTION_CONTRACT
++
++    now = datetime(2026, 11, 19, 16, tzinfo=UTC)
++    completed = now - timedelta(hours=1)
++    lane = completion.daily_bar_lane()
++    prefix = (
++        "WITH capture_runs(run_id,source_id,lane,status,params,completed_at,telemetry) AS "
++        "(VALUES ('00000000-0000-0000-0000-000000000002'::uuid,"
++        "%s::text,%s::text,'failed'::text,%s::jsonb,"
++        "%s::timestamptz,%s::jsonb)) "
++    )
++    values = (
++        lane["source_id"],
++        lane["lane"],
++        Jsonb(
++            {
++                "period": lane["period"],
++                "projection_contract": PROJECTION_CONTRACT,
++                "output": "quotes_and_actions",
++                "execution_plane": "runtime",
++            }
++        ),
++        completed,
++        Jsonb({"failed_requests": {"TEST": {"error": "provider unavailable"}}}),
++    )
++    with psycopg.connect(verified_test_database.dsn, row_factory=dict_row) as conn:
++        conn.execute("SET TRANSACTION READ ONLY")
++
++        def fetch(statement, params):
++            return conn.execute(
++                prefix + statement.replace("observation.capture_run", "capture_runs"),
++                values + params,
++            ).fetchall()
++
++        monkeypatch.setattr(completion, "fetchall_dicts", fetch)
++        outcomes = completion.latest_projection_outcomes(
++            symbols=["TEST"],
++            projection_contract=PROJECTION_CONTRACT,
++            asof=now,
++            execution_plane="runtime",
++        )
++        assert outcomes["TEST"]["completed_at"] == completed
++        (result,) = runtime_coverage_results(
++            ["TEST"],
++            outcomes,
++            checked_at=now,
++            max_staleness_seconds=timedelta(hours=1).total_seconds() - 1,
++        )
++        assert result["problem"] == "capture_stale"
++        assert result["upstream_problem"] == "capture_failed"
++        assert result["attempt_completed_at"] == completed.isoformat()
++        assert "acquired_at" not in result
+diff --git a/tests/test_data_freshness.py b/tests/test_data_freshness.py
+index 184d750..605b18a 100644
+--- a/tests/test_data_freshness.py
++++ b/tests/test_data_freshness.py
+@@ -100,6 +100,7 @@ def healthy_request_coverage(monkeypatch):
+         "failed_stale",
+         "failed_future",
+         "failed_no_timestamp",
++        "failed_no_timestamp_stale",
+         "absent",
+         "stale_runtime",
+         "future_runtime",
+@@ -158,14 +159,27 @@ def test_requested_span_problem_reaches_real_sweep_json_and_cli(
+         span["acquired_at"] = (now - timedelta(seconds=lane.max_staleness_seconds + 1)).isoformat()
+     if failure in ("future_runtime", "failed_future"):
+         span["acquired_at"] = (now + timedelta(seconds=1)).isoformat()
+-    if failure == "failed_no_timestamp":
+-        del span["acquired_at"]
++    if failure in ("failed_no_timestamp", "failed_no_timestamp_stale"):
++        span = {"start": "2026-10-15", "end": "2026-10-16", "error": "provider unavailable"}
+     outcomes = {
+         "TEST": {
+             "run_id": "00000000-0000-0000-0000-000000000002",
+             "status": "failed"
+-            if failure in ("failed", "failed_stale", "failed_future", "failed_no_timestamp")
++            if failure
++            in (
++                "failed",
++                "failed_stale",
++                "failed_future",
++                "failed_no_timestamp",
++                "failed_no_timestamp_stale",
++            )
+             else "completed",
++            "completed_at": now
++            - timedelta(
++                seconds=lane.max_staleness_seconds + 1
++                if failure == "failed_no_timestamp_stale"
++                else 0
++            ),
+             "outcome": span,
+         }
+     }
+@@ -183,20 +197,31 @@ def test_requested_span_problem_reaches_real_sweep_json_and_cli(
+     assert result.ok() is acquired
+     assert (result.lanes[0].problem is None) is acquired
+     assert result.lanes[0].stale is (
+-        failure in ("stale_runtime", "future_runtime", "failed_stale", "failed_future")
++        failure
++        in (
++            "stale_runtime",
++            "future_runtime",
++            "failed_stale",
++            "failed_future",
++            "failed_no_timestamp_stale",
++        )
+     )
+     monkeypatch.setattr(freshness, "run_freshness_sweep", lambda: result)
+     assert freshness.main() == (0 if acquired else 1)
+     payload = json.loads(capsys.readouterr().out)
+     reported = payload["lanes"][0]["request_coverage"][0]
+     assert reported["symbol"] == "TEST"
+-    if failure in ("failed_stale", "failed_future"):
++    if failure in ("failed_stale", "failed_future", "failed_no_timestamp_stale"):
+         assert reported["upstream_problem"] == "capture_failed"
+     if failure == "failed_no_timestamp":
+         assert reported["problem"] == "capture_failed"
+     if failure != "absent":
+         assert (reported["start"], reported["end"]) == ("2026-10-15", "2026-10-16")
+-        assert reported["artifact_id"] == "00000000-0000-0000-0000-000000000001"
++        if failure not in ("failed_no_timestamp", "failed_no_timestamp_stale"):
++            assert reported["artifact_id"] == "00000000-0000-0000-0000-000000000001"
++        else:
++            assert reported["attempt_completed_at"] == outcomes["TEST"]["completed_at"].isoformat()
++            assert "acquired_at" not in reported
+ 
+ 
+ def test_data_freshness_config_rejects_unknown_binding(tmp_path) -> None:
+diff --git a/tests/test_systemd_completion_audit.py b/tests/test_systemd_completion_audit.py
+index d5eb5b2..10059d1 100644
+--- a/tests/test_systemd_completion_audit.py
++++ b/tests/test_systemd_completion_audit.py
+@@ -9,6 +9,7 @@ import subprocess
+ from dataclasses import replace
+ from datetime import UTC, datetime
+ from functools import partial
++from pathlib import Path
+ from types import SimpleNamespace
+ 
+ import pytest
+@@ -268,7 +269,11 @@ def test_native_get_unit_failure_is_critical(tmp_path, monkeypatch):
+ 
+ def test_real_deadman_receives_completion_findings(native_observation, monkeypatch):
+     lane, _, _ = native_observation
+-    config = replace(audit.load_systemd_unit_audit_config(), completion_lanes=(lane,))
++    config = replace(
++        audit.load_systemd_unit_audit_config(),
++        production_repo_root=Path(__file__).resolve().parents[1],
++        completion_lanes=(lane,),
++    )
+     monkeypatch.setattr(audit, "load_systemd_unit_audit_config", lambda: config)
+     monkeypatch.setattr(
+         audit.SystemdUnitAuditService,
+===== ENVIRO 2878e61..0cb2d10
+diff --git a/.gitignore b/.gitignore
+index 2616a73..689bf8d 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -19,10 +19,6 @@ raw-capture-tools/
+ # Linked worktrees (enumerated by `git worktree list`, never committed)
+ .worktrees/
+ 
+-# Derived systemd backup units; edit config/backup.json or the .in templates.
+-/enviro_backup.service
+-/enviro_backup.timer
+-
+-# Derived from config/provider_health.json and matching .in templates.
+-/enviro_provider_health.service
+-/enviro_provider_health.timer
++# Native unit outputs are derived from the policy templates.
++/*.service
++/*.timer
+diff --git a/PROJECT-CONFIG.md b/PROJECT-CONFIG.md
+index c8b2dc3..5567f97 100644
+--- a/PROJECT-CONFIG.md
++++ b/PROJECT-CONFIG.md
+@@ -71,13 +71,15 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
+   `provider_collector.py --contract <c> --replay DAY...` is the supported path
+   that re-derives a contract's derived table from canonical retention through
+   the same projection and write path live uses.
+-- Repo-managed service files describe the intended service content. Which
++- Unit policy templates describe the intended service content; service_units
++  derives current files through the shared renderer and backup owner, using the
++  rendering interpreter and config-root location. Which
+   hardware-specific dashboard unit is active is host residue and must be proven
+   from the running service manager, not inferred from this repository.
+ - Backup orchestration, native incremental delivery and retention use the shared backup service;
+   provider collectors and the dashboard do not implement competing backup paths.
+ 
+-- `provider_health.py` checks the configured derived-observation freshness obligations in `config/provider_health.json`. It preserves independent lane errors and uses the existing operations alert. Generate its native units with `PYTHONPATH=.. python -m provider_health_units`; the hardware dashboard remains independently disabled until reconnected.
++- `provider_health.py` checks the configured derived-observation freshness obligations in `config/provider_health.json`. It preserves independent lane errors and uses the existing operations alert. The local readings lane is active only for the natively enabled producer; disabled/not-installed is explicitly inactive. Generate all native units with `PYTHONPATH=.. python -m service_units`; the hardware dashboard remains independently out of service until reconnected.
+ 
+ ## Supported Validation
+ 
+diff --git a/README.md b/README.md
+index 1f609a1..7273084 100644
+--- a/README.md
++++ b/README.md
+@@ -145,6 +145,7 @@ All tuning values (hardware addresses, thresholds, intervals, display) live in t
+ ### 5. Run as a systemd service
+ 
+ ```bash
++PYTHONPATH=.. python -m service_units
+ sudo systemctl link "$PWD/enviro_dash.service"
+ sudo systemctl enable --now enviro_dash
+ ```
+@@ -342,7 +343,7 @@ Backup service/timer files are derived outputs. After editing `config/backup.jso
+ render them before linking or reconciling systemd units:
+ 
+ ```bash
+-python -m shared.backup_units --config config/backup.json
++python -m service_units
+ ```
+ 
+ The `.in` files own unit policy; backup configuration alone owns cadence, jitter
+diff --git a/config/provider_health.json b/config/provider_health.json
+index 4cf4e1b..226dda1 100644
+--- a/config/provider_health.json
++++ b/config/provider_health.json
+@@ -6,7 +6,8 @@
+     "nws_derivation": "Existing NWS_MAX_OBSERVATION_AGE_S7200 admission bound + NWS_POLL_S600 + owner REQUEST_TIMEOUT_S15 =7815s.",
+     "airnow_derivation": "AirNow hourly timestamp granularity3600s + about3600s publication lag + AIRNOW_POLL_S1800 + contract timeout15 =9015s. https://airnow-blue.app.cloud.gov/about-the-data/ and https://docs.airnowapi.org/faq, checked2026-11-19.",
+     "provisional": "All bounds are provisional: settle the distribution of successful observation ages and false alerts under loaded, healthy collection. Ambient fit is finite current-day new arrivals; AirNow publication lag is approximate, not an SLA. No outage is relabelled healthy to fit these bounds.",
+-    "timezone": "AirNow location is Satellite Beach; America/New_York resolves its observed EST/EDT metadata, which must agree. Ambient ts is UTC by its projector; NWS ts carries its own offset."
++    "timezone": "AirNow location is Satellite Beach; America/New_York resolves its observed EST/EDT metadata, which must agree. Ambient ts is UTC by its projector; NWS ts carries its own offset.",
++    "local_readings": "Active only when the configured producer is natively loaded/enabled. Not installed/disabled is explicitly inactive, not healthy. Age allowance derives from selected CONFIG_PATH intervals in load_policy; provisional until loaded healthy publication-age/I/O measurements at activation. Interim native activation authority pending pi-config#31."
+   },
+   "check_interval_seconds": 60,
+   "lanes": [
+@@ -27,6 +28,12 @@
+       "query": "SELECT ts, local_time_zone AS timezone_abbreviation FROM epa_air_quality ORDER BY ts DESC LIMIT 1",
+       "timezone": "America/New_York",
+       "max_age_seconds": 9015
++    },
++    {
++      "name": "local_readings",
++      "producer_unit": "enviro_dash.service",
++      "query": "SELECT MAX(ts) AS ts FROM readings",
++      "timezone": "UTC"
+     }
+   ]
+ }
+diff --git a/airnow_wx.service b/config/unit_templates/airnow_wx.service.in
+similarity index 78%
+rename from airnow_wx.service
+rename to config/unit_templates/airnow_wx.service.in
+index ae7cd29..3aeee8a 100644
+--- a/airnow_wx.service
++++ b/config/unit_templates/airnow_wx.service.in
+@@ -10,9 +10,9 @@ OnFailure=stocks_ops_alert@%n.service
+ [Service]
+ Type=simple
+ User=pistrommy
+-WorkingDirectory=/home/pistrommy/projects/enviroplus
+-Environment=PYTHONPATH=/home/pistrommy/projects
+-ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python provider_collector.py --contract contracts/airnow_current.json
++WorkingDirectory=@ROOT@
++Environment="PYTHONPATH=@ROOT@/.."
++ExecStart="@PYTHON@" provider_collector.py --contract contracts/airnow_current.json
+ Restart=always
+ RestartSec=10
+ # Flat restart every 10 s, with no stop limit (the systemd default of 5
+diff --git a/ambient_wx.service b/config/unit_templates/ambient_wx.service.in
+similarity index 81%
+rename from ambient_wx.service
+rename to config/unit_templates/ambient_wx.service.in
+index 3965588..df877d6 100644
+--- a/ambient_wx.service
++++ b/config/unit_templates/ambient_wx.service.in
+@@ -10,9 +10,9 @@ OnFailure=stocks_ops_alert@%n.service
+ [Service]
+ Type=simple
+ User=pistrommy
+-WorkingDirectory=/home/pistrommy/projects/enviroplus
+-Environment=PYTHONPATH=/home/pistrommy/projects
+-ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python ambient_wx.py
++WorkingDirectory=@ROOT@
++Environment="PYTHONPATH=@ROOT@/.."
++ExecStart="@PYTHON@" ambient_wx.py
+ Restart=always
+ RestartSec=10
+ # Flat restart every 10 s, with no stop limit (the systemd default of 5
+diff --git a/enviro_dash.service b/config/unit_templates/enviro_dash.service.in
+similarity index 88%
+rename from enviro_dash.service
+rename to config/unit_templates/enviro_dash.service.in
+index 40e9b03..1cd1d58 100644
+--- a/enviro_dash.service
++++ b/config/unit_templates/enviro_dash.service.in
+@@ -12,8 +12,8 @@ OnFailure=stocks_ops_alert@%n.service
+ [Service]
+ Type=simple
+ User=pistrommy
+-WorkingDirectory=/home/pistrommy/projects/enviroplus
+-ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python enviro_dash3.py
++WorkingDirectory=@ROOT@
++ExecStart="@PYTHON@" enviro_dash3.py
+ Restart=on-failure
+ # PROVISIONAL inherited spacing: settle from observed recovery time/attempt cost.
+ RestartSec=30
+diff --git a/config/unit_templates/enviro_provider_health.service.in b/config/unit_templates/enviro_provider_health.service.in
+index 8815f70..c34145b 100644
+--- a/config/unit_templates/enviro_provider_health.service.in
++++ b/config/unit_templates/enviro_provider_health.service.in
+@@ -5,6 +5,6 @@ OnFailure=stocks_ops_alert@%n.service
+ [Service]
+ Type=oneshot
+ User=pistrommy
+-WorkingDirectory=/home/pistrommy/projects/enviroplus
+-ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python -m provider_health
+-Environment=PYTHONPATH=/home/pistrommy/projects
++WorkingDirectory=@ROOT@
++ExecStart="@PYTHON@" -m provider_health
++Environment="PYTHONPATH=@ROOT@/.."
+diff --git a/nws_wx.service b/config/unit_templates/nws_wx.service.in
+similarity index 82%
+rename from nws_wx.service
+rename to config/unit_templates/nws_wx.service.in
+index e13694d..e304086 100644
+--- a/nws_wx.service
++++ b/config/unit_templates/nws_wx.service.in
+@@ -10,9 +10,9 @@ OnFailure=stocks_ops_alert@%n.service
+ [Service]
+ Type=simple
+ User=pistrommy
+-WorkingDirectory=/home/pistrommy/projects/enviroplus
+-Environment=PYTHONPATH=/home/pistrommy/projects
+-ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python nws_wx.py
++WorkingDirectory=@ROOT@
++Environment="PYTHONPATH=@ROOT@/.."
++ExecStart="@PYTHON@" nws_wx.py
+ Restart=always
+ RestartSec=10
+ # Flat restart every 10 s, with no stop limit (the systemd default of 5
+diff --git a/enviro_backup.service.in b/enviro_backup.service.in
+index b693625..1153f09 100644
+--- a/enviro_backup.service.in
++++ b/enviro_backup.service.in
+@@ -1,6 +1,6 @@
+ [Unit]
+ Description=Enviro+ offsite backup (database snapshot + canonical raw tier)
+-Documentation=file:///home/pistrommy/projects/enviroplus/config/backup.json
++Documentation=file://@ROOT@/config/backup.json
+ # The native Drive API needs a routable network path.
+ After=network-online.target
+ Wants=network-online.target
+@@ -15,9 +15,9 @@ OnFailure=stocks_ops_alert@%n.service
+ Type=oneshot
+ User=pistrommy
+ Group=pistrommy
+-WorkingDirectory=/home/pistrommy/projects/enviroplus
+-Environment=PYTHONPATH=/home/pistrommy/projects/enviroplus:/home/pistrommy/projects
+-ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python -m shared.backup_service --config /home/pistrommy/projects/enviroplus/config/backup.json
++WorkingDirectory=@ROOT@
++Environment="PYTHONPATH=@ROOT@:@ROOT@/.."
++ExecStart="@PYTHON@" -m shared.backup_service --config "@ROOT@/config/backup.json"
+ 
+ # Timing directives are generated from config/backup.json.
+ 
+diff --git a/enviro_backup.timer.in b/enviro_backup.timer.in
+index 0d54e95..1c1d6b9 100644
+--- a/enviro_backup.timer.in
++++ b/enviro_backup.timer.in
+@@ -1,6 +1,6 @@
+ [Unit]
+ Description=Daily Enviro+ offsite backup
+-Documentation=file:///home/pistrommy/projects/enviroplus/config/backup.json
++Documentation=file://@ROOT@/config/backup.json
+ 
+ [Timer]
+ # Project-configured quiet-hour calendar; no fleet-wide frequency assumption.
+diff --git a/provider_health.py b/provider_health.py
+index 7ff7ea5..1c8f4f3 100644
+--- a/provider_health.py
++++ b/provider_health.py
+@@ -2,6 +2,7 @@
+ 
+ import json
+ import sqlite3
++import subprocess
+ from datetime import datetime, timezone
+ from pathlib import Path
+ from zoneinfo import ZoneInfo
+@@ -11,12 +12,51 @@ from shared.config_service import load_env, require
+ from ambient_wx import outdoor_presence_sql
+ 
+ 
++def producer_state(unit):
++    result = subprocess.run(
++        ["systemctl", "show", unit, "--property=LoadState,UnitFileState"],
++        check=True,
++        capture_output=True,
++        text=True,
++    )
++    return dict(line.split("=", 1) for line in result.stdout.splitlines())
++
++
++def load_policy(root):
++    policy = json.loads((root / "config/provider_health.json").read_text())
++    capture = json.loads(Path(require("CONFIG_PATH")).read_text())
++    for lane in policy["lanes"]:
++        if "producer_unit" in lane:
++            # Provisional: interval-start age spans the closed and open publish
++            # grids, plus check phase and display-loop delay. Settle loaded
++            # healthy publication ages/sensor I/O when hardware is activated.
++            lane["max_age_seconds"] = (
++                2 * capture["intervals"]["publish_s"]
++                + policy["check_interval_seconds"]
++                + capture["intervals"]["display_refresh_s"]
++            )
++    return policy
++
++
+ def check(database, policy, now):
+     results = []
+     # A broken query/observation belongs to its lane, not its siblings.
+     for lane in policy["lanes"]:
+         result = {"lane": lane["name"], "problem": None}
+         try:
++            if "producer_unit" in lane:
++                state = producer_state(lane["producer_unit"])
++                if state.get("LoadState") == "not-found":
++                    result.update(active=False, detail="producer not installed")
++                    results.append(result)
++                    continue
++                if state.get("LoadState") == "loaded" and state.get("UnitFileState") == "disabled":
++                    result.update(active=False, detail="producer disabled")
++                    results.append(result)
++                    continue
++                if state.get("LoadState") != "loaded" or state.get("UnitFileState") != "enabled":
++                    raise ValueError(f"unreadable producer state: {state}")
++                result["active"] = True
+             with sqlite3.connect(f"file:{database}?mode=ro", uri=True) as db:
+                 db.row_factory = sqlite3.Row
+                 row = db.execute(
+@@ -43,7 +83,13 @@ def check(database, policy, now):
+                     result["problem"] = "observation_in_future"
+                 elif age > lane["max_age_seconds"]:
+                     result["problem"] = "observation_stale"
+-        except (sqlite3.Error, OSError, ValueError, StopIteration) as error:
++        except (
++            sqlite3.Error,
++            OSError,
++            ValueError,
++            StopIteration,
++            subprocess.CalledProcessError,
++        ) as error:
+             result.update(
+                 problem="observation_unreadable", detail=f"{type(error).__name__}: {error}"
+             )
+@@ -54,7 +100,7 @@ def check(database, policy, now):
+ def main():
+     root = Path(__file__).resolve().parent
+     load_env(str(root / ".env"), expect_key="SQLITE_PATH")
+-    policy = json.loads((root / "config/provider_health.json").read_text())
++    policy = load_policy(root)
+     results = check(require("SQLITE_PATH"), policy, datetime.now(timezone.utc))
+     print(json.dumps(results, indent=2))
+     return int(any(result["problem"] is not None for result in results))
+diff --git a/provider_health_units.py b/provider_health_units.py
+deleted file mode 100644
+index 10f7014..0000000
+--- a/provider_health_units.py
++++ /dev/null
+@@ -1,25 +0,0 @@
+-"""Generate the provider-health timer from its single cadence policy."""
+-
+-import json
+-from pathlib import Path
+-
+-from shared.systemd_units import render_unit
+-
+-
+-def rendered_units(root):
+-    policy = json.loads((root / "config/provider_health.json").read_text())
+-    return {
+-        "enviro_provider_health.service": (
+-            root / "config/unit_templates/enviro_provider_health.service.in"
+-        ).read_text(),
+-        "enviro_provider_health.timer": render_unit(
+-            (root / "config/unit_templates/enviro_provider_health.timer.in").read_text(),
+-            {"Timer": {"OnUnitActiveSec": [str(policy["check_interval_seconds"])]}},
+-        ),
+-    }
+-
+-
+-if __name__ == "__main__":
+-    root = Path(__file__).resolve().parent
+-    for name, content in rendered_units(root).items():
+-        (root / name).write_text(content)
+diff --git a/service_units.py b/service_units.py
+new file mode 100644
+index 0000000..bb70d22
+--- /dev/null
++++ b/service_units.py
+@@ -0,0 +1,27 @@
++"""Derive Enviro native units through the shared renderer and backup owner."""
++
++import json
++from pathlib import Path
++
++from shared.backup_units import rendered_units as backup_units
++from shared.systemd_units import render_unit
++
++
++def rendered_units(root):
++    policy = json.loads((root / "config/provider_health.json").read_text())
++    units = {
++        template.stem: render_unit(template.read_text(), {}, root=root)
++        for template in (root / "config/unit_templates").glob("*.in")
++    }
++    units["enviro_provider_health.timer"] = render_unit(
++        units["enviro_provider_health.timer"],
++        {"Timer": {"OnUnitActiveSec": [str(policy["check_interval_seconds"])]}},
++    )
++    units.update(backup_units(root / "config/backup.json"))
++    return units
++
++
++if __name__ == "__main__":
++    root = Path(__file__).resolve().parent
++    for name, content in rendered_units(root).items():
++        (root / name).write_text(content)
+diff --git a/tests/test_provider_health.py b/tests/test_provider_health.py
+index 7aa4948..7e0d2b7 100644
+--- a/tests/test_provider_health.py
++++ b/tests/test_provider_health.py
+@@ -2,12 +2,28 @@
+ 
+ import json
+ import sqlite3
++import subprocess
+ from datetime import datetime, timedelta, timezone
+ from pathlib import Path
+ 
++import pytest
++
++import provider_health
+ from ambient_wx import ensure_schema
+ from provider_health import check
+ 
++native_producer_state = provider_health.producer_state
++
++
++@pytest.fixture(autouse=True)
++def disabled_hardware_outside_provider_properties(monkeypatch):
++    # Native activation is outside the existing external-provider SQL properties.
++    monkeypatch.setattr(
++        provider_health,
++        "producer_state",
++        lambda unit: {"LoadState": "loaded", "UnitFileState": "disabled"},
++    )
++
+ 
+ def observations(tmp_path):
+     policy = json.loads(
+@@ -71,11 +87,14 @@ def test_cli_reports_failure_and_preserves_all_lane_results(tmp_path, monkeypatc
+     with sqlite3.connect(path) as db:
+         db.execute("DROP TABLE nws_weather")
+     monkeypatch.setenv("SQLITE_PATH", str(path))
++    capture = tmp_path / "capture.json"
++    capture.write_text(json.dumps({"intervals": {"publish_s": 60, "display_refresh_s": 2}}))
++    monkeypatch.setenv("CONFIG_PATH", str(capture))
+     # Environment acquisition is outside the SQL/CLI-failure property.
+     monkeypatch.setattr(provider_health, "load_env", lambda *args, **kwargs: None)
+     assert provider_health.main() == 1
+     results = json.loads(capsys.readouterr().out)
+-    assert len(results) == 3
++    assert len(results) == 4
+     assert results[1]["problem"] == "observation_unreadable"
+ 
+ 
+@@ -89,8 +108,22 @@ def test_clean_entrypoints_use_the_declared_shared_binding(tmp_path):
+     import shared
+ 
+     root = Path(__file__).resolve().parents[1]
++    # Actual documented sibling layout, including the selected Shared owner;
++    # an arbitrary worktree parent need not carry the sibling checkout.
++    (tmp_path / "shared").symlink_to(
++        Path(shared.__file__).resolve().parent, target_is_directory=True
++    )
++    app = tmp_path / "enviroplus"
++    app.mkdir()
++    for source in root.glob("*.py"):
++        shutil.copy(source, app)
++    shutil.copytree(root / "config", app / "config")
++    for template in root.glob("*.in"):
++        shutil.copy(template, app)
+     environment = {key: value for key, value in os.environ.items() if key != "PYTHONPATH"}
+-    service = (root / "config/unit_templates/enviro_provider_health.service.in").read_text()
++    from service_units import rendered_units
++
++    service = rendered_units(app)["enviro_provider_health.service"]
+     import shlex
+ 
+     for line in service.splitlines():
+@@ -99,18 +132,63 @@ def test_clean_entrypoints_use_the_declared_shared_binding(tmp_path):
+                 key, value = binding.split("=", 1)
+                 environment[key] = value
+     subprocess.run(
+-        [sys.executable, "-c", "import provider_health"], cwd=root, env=environment, check=True
+-    )
+-    # Reproduce the documented sibling layout with the actual selected Shared owner.
+-    (tmp_path / "shared").symlink_to(
+-        Path(shared.__file__).resolve().parent, target_is_directory=True
++        [sys.executable, "-c", "import provider_health"], cwd=app, env=environment, check=True
+     )
+-    app = tmp_path / "enviroplus"
+-    app.mkdir()
+-    shutil.copy(root / "provider_health_units.py", app)
+-    shutil.copytree(root / "config", app / "config")
+     environment["PYTHONPATH"] = ".."
+-    subprocess.run(
+-        [sys.executable, "-m", "provider_health_units"], cwd=app, env=environment, check=True
+-    )
++    subprocess.run([sys.executable, "-m", "service_units"], cwd=app, env=environment, check=True)
+     assert (app / "enviro_provider_health.timer").is_file()
++
++
++@pytest.mark.parametrize(
++    ("load_state", "file_state", "reading", "problem"),
++    [
++        ("loaded", "enabled", "missing", "observation_missing"),
++        ("loaded", "enabled", "stale", "observation_stale"),
++        ("loaded", "disabled", "missing", None),
++        ("not-found", "", "missing", None),
++        ("query_error", "", "missing", "observation_unreadable"),
++        ("loaded", "static", "missing", "observation_unreadable"),
++    ],
++)
++def test_local_readings_follow_native_producer_authority(
++    tmp_path, monkeypatch, load_state, file_state, reading, problem
++):
++    path, _, now = observations(tmp_path)
++    capture = tmp_path / "capture.json"
++    capture.write_text(json.dumps({"intervals": {"publish_s": 60, "display_refresh_s": 2}}))
++    monkeypatch.setenv("CONFIG_PATH", str(capture))
++    policy = provider_health.load_policy(Path(__file__).resolve().parents[1])
++    lane = next(item for item in policy["lanes"] if "producer_unit" in item)
++    assert lane["max_age_seconds"] == 2 * 60 + policy["check_interval_seconds"] + 2
++    with sqlite3.connect(path) as db:
++        db.execute("CREATE TABLE readings (ts TEXT PRIMARY KEY)")
++        if reading == "stale":
++            old = now - timedelta(seconds=lane["max_age_seconds"] + 1)
++            db.execute("INSERT INTO readings VALUES (?)", (old.isoformat(),))
++
++    def native(command, **kwargs):
++        assert command == [
++            "systemctl",
++            "show",
++            lane["producer_unit"],
++            "--property=LoadState,UnitFileState",
++        ]
++        assert kwargs["check"] is True
++        if load_state == "query_error":
++            raise subprocess.CalledProcessError(1, command)
++        return subprocess.CompletedProcess(
++            command, 0, f"LoadState={load_state}\nUnitFileState={file_state}\n", ""
++        )
++
++    monkeypatch.setattr(provider_health, "producer_state", native_producer_state)
++    monkeypatch.setattr(provider_health.subprocess, "run", native)
++    results = check(path, policy, now)
++    local = next(item for item in results if item["lane"] == lane["name"])
++    assert local["problem"] == problem
++    if load_state == "not-found":
++        assert local["active"] is False
++        assert local["detail"] == "producer not installed"
++    elif file_state == "disabled":
++        assert local["active"] is False
++        assert local["detail"] == "producer disabled"
++    assert all(item["problem"] is None for item in results if item is not local)
+diff --git a/tests/test_service_units.py b/tests/test_service_units.py
+new file mode 100644
+index 0000000..a35c646
+--- /dev/null
++++ b/tests/test_service_units.py
+@@ -0,0 +1,36 @@
++"""All current native units use rendering-process and config-root bindings."""
++
++import shlex
++import shutil
++import sys
++from configparser import ConfigParser
++from pathlib import Path
++
++from service_units import rendered_units
++
++
++def test_all_units_derive_interpreter_and_root(tmp_path, monkeypatch):
++    source = Path(__file__).resolve().parents[1]
++    root = tmp_path / "relocated project"
++    shutil.copytree(source / "config", root / "config")
++    for template in source.glob("*.in"):
++        shutil.copy(template, root)
++    interpreter = str(tmp_path / "other environment/bin/python")
++    monkeypatch.setattr(sys, "executable", interpreter)
++    units = rendered_units(root)
++    assert {path.stem for path in (root / "config/unit_templates").glob("*.in")} < units.keys()
++    for name, content in units.items():
++        unit = ConfigParser(interpolation=None)
++        unit.read_string(content)
++        if name.endswith(".service"):
++            assert shlex.split(unit["Service"]["ExecStart"])[0] == interpreter, name
++            assert Path(unit["Service"]["WorkingDirectory"]) == root, name
++            if "Environment" in unit["Service"]:
++                for binding in shlex.split(unit["Service"]["Environment"]):
++                    if binding.startswith("PYTHONPATH="):
++                        assert all(
++                            Path(value).resolve() in (root, root.parent)
++                            for value in binding.partition("=")[2].split(":")
++                        )
++        if "Documentation" in unit["Unit"]:
++            assert unit["Unit"]["Documentation"] == f"file://{root}/config/backup.json"

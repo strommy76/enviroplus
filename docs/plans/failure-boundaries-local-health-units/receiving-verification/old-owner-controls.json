@@ -1,0 +1,24 @@
+[
+  {
+    "name": "old-inactive",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_provider_health.py::test_local_readings_follow_native_producer_authority",
+      "-k",
+      "masked or linked"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "old-rootless-python",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_systemd_units.py::test_interpreter_binding_does_not_require_project_root"
+    ],
+    "exit_code": 1
+  }
+]

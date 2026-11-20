@@ -148,6 +148,11 @@ def has_outdoor_reading(d: dict) -> bool:
     return any(k in d for k in _OUTDOOR_KEYS)
 
 
+def outdoor_presence_sql():
+    """The same outdoor measurement roles, expressed for a derived-row health read."""
+    return " OR ".join(f'"{key}" IS NOT NULL' for key in _OUTDOOR_KEYS)
+
+
 def row_from_observation(d: dict) -> dict:
     """Map a provider observation to an `outdoor` row. Live and replay both
     call this, so a replayed row is the row live would have written."""

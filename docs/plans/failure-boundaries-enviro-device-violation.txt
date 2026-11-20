@@ -1,0 +1,564 @@
+FFFFFFFFFFF                                                              [100%]
+=================================== FAILURES ===================================
+______________ test_gas_failure_is_retained_and_siblings_continue ______________
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-device-violation-tmp/test_gas_failure_is_retained_a0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff90b7dba0>
+
+    def test_gas_failure_is_retained_and_siblings_continue(tmp_path, monkeypatch):
+>       run = Run(
+            tmp_path, monkeypatch, rows=2, gas_reads=iter([OSError("i2c read failed"), None, None])
+        )
+
+tests/test_dash_loop.py:354: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dash_loop.py:329: in __init__
+    runpy.run_path(str(app / "enviro_dash3.py"), run_name="__main__")
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+../enviro-device-violation-tmp/test_gas_failure_is_retained_a0/app/enviro_dash3.py:435: in <module>
+    sample = read_sample()
+             ^^^^^^^^^^^^^
+../enviro-device-violation-tmp/test_gas_failure_is_retained_a0/app/enviro_dash3.py:281: in read_sample
+    g = gas.read_all()
+        ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def read_all():
+        outcome = next(gas_reads)
+        if isinstance(outcome, Exception):
+>           raise outcome
+E           OSError: i2c read failed
+
+tests/test_dash_loop.py:213: OSError
+----------------------------- Captured stderr call -----------------------------
+{"ts": "2026-11-19 11:35:45", "level": "INFO", "module": "enviro_dash3", "msg": "Enviro+ dash v3 starting"}
+------------------------------ Captured log call -------------------------------
+INFO     enviro_dash:enviro_dash3.py:427 Enviro+ dash v3 starting
+_ test_each_driver_boundary_preserves_other_measurements[bme280_init-pressure] _
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-device-violation-tmp/test_each_driver_boundary_pres0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff90b7d5b0>
+boundary = 'bme280_init', failed_column = 'pressure'
+
+    @pytest.mark.parametrize(
+        "boundary,failed_column",
+        [
+            ("bme280_init", "pressure"),
+            ("bme280_read", "pressure"),
+            ("ltr559_init", "lux"),
+            ("ltr559_read", "lux"),
+            ("pms5003_init", "pm1"),
+            ("scd41_init", "co2_ppm"),
+        ],
+    )
+    def test_each_driver_boundary_preserves_other_measurements(
+        tmp_path, monkeypatch, boundary, failed_column
+    ):
+        """A bus/probe/read OSError is retained without stopping unrelated acquisitions."""
+>       run = Run(
+            tmp_path,
+            monkeypatch,
+            rows=2,
+            failures={boundary: [OSError("disconnected")]},
+            scd41_reads=itertools.repeat((600, 23.0, 45.0)),
+        )
+
+tests/test_dash_loop.py:840: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dash_loop.py:329: in __init__
+    runpy.run_path(str(app / "enviro_dash3.py"), run_name="__main__")
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+../enviro-device-violation-tmp/test_each_driver_boundary_pres0/app/enviro_dash3.py:189: in <module>
+    _bme_sensor = bme280.BME280(i2c_addr=_bme_addr, i2c_dev=_bus)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_dash_loop.py:106: in __init__
+    fault("bme280_init")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'bme280_init'
+
+    def fault(name):
+        errors = failures.get(name, [])
+        if errors:
+>           raise errors.pop(0)
+E           OSError: disconnected
+
+tests/test_dash_loop.py:90: OSError
+_ test_each_driver_boundary_preserves_other_measurements[bme280_read-pressure] _
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-device-violation-tmp/test_each_driver_boundary_pres1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff8fb12e70>
+boundary = 'bme280_read', failed_column = 'pressure'
+
+    @pytest.mark.parametrize(
+        "boundary,failed_column",
+        [
+            ("bme280_init", "pressure"),
+            ("bme280_read", "pressure"),
+            ("ltr559_init", "lux"),
+            ("ltr559_read", "lux"),
+            ("pms5003_init", "pm1"),
+            ("scd41_init", "co2_ppm"),
+        ],
+    )
+    def test_each_driver_boundary_preserves_other_measurements(
+        tmp_path, monkeypatch, boundary, failed_column
+    ):
+        """A bus/probe/read OSError is retained without stopping unrelated acquisitions."""
+>       run = Run(
+            tmp_path,
+            monkeypatch,
+            rows=2,
+            failures={boundary: [OSError("disconnected")]},
+            scd41_reads=itertools.repeat((600, 23.0, 45.0)),
+        )
+
+tests/test_dash_loop.py:840: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dash_loop.py:329: in __init__
+    runpy.run_path(str(app / "enviro_dash3.py"), run_name="__main__")
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+../enviro-device-violation-tmp/test_each_driver_boundary_pres1/app/enviro_dash3.py:435: in <module>
+    sample = read_sample()
+             ^^^^^^^^^^^^^
+../enviro-device-violation-tmp/test_each_driver_boundary_pres1/app/enviro_dash3.py:263: in read_sample
+    _bme_sensor.update_sensor()
+tests/test_dash_loop.py:109: in update_sensor
+    fault("bme280_read")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'bme280_read'
+
+    def fault(name):
+        errors = failures.get(name, [])
+        if errors:
+>           raise errors.pop(0)
+E           OSError: disconnected
+
+tests/test_dash_loop.py:90: OSError
+----------------------------- Captured stderr call -----------------------------
+{"ts": "2026-11-19 11:35:53", "level": "INFO", "module": "enviro_dash3", "msg": "Enviro+ dash v3 starting"}
+------------------------------ Captured log call -------------------------------
+INFO     enviro_dash:enviro_dash3.py:427 Enviro+ dash v3 starting
+___ test_each_driver_boundary_preserves_other_measurements[ltr559_init-lux] ____
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-device-violation-tmp/test_each_driver_boundary_pres2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff90823460>
+boundary = 'ltr559_init', failed_column = 'lux'
+
+    @pytest.mark.parametrize(
+        "boundary,failed_column",
+        [
+            ("bme280_init", "pressure"),
+            ("bme280_read", "pressure"),
+            ("ltr559_init", "lux"),
+            ("ltr559_read", "lux"),
+            ("pms5003_init", "pm1"),
+            ("scd41_init", "co2_ppm"),
+        ],
+    )
+    def test_each_driver_boundary_preserves_other_measurements(
+        tmp_path, monkeypatch, boundary, failed_column
+    ):
+        """A bus/probe/read OSError is retained without stopping unrelated acquisitions."""
+>       run = Run(
+            tmp_path,
+            monkeypatch,
+            rows=2,
+            failures={boundary: [OSError("disconnected")]},
+            scd41_reads=itertools.repeat((600, 23.0, 45.0)),
+        )
+
+tests/test_dash_loop.py:840: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dash_loop.py:329: in __init__
+    runpy.run_path(str(app / "enviro_dash3.py"), run_name="__main__")
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+../enviro-device-violation-tmp/test_each_driver_boundary_pres2/app/enviro_dash3.py:190: in <module>
+    ltr559_sensor = LTR559()
+                    ^^^^^^^^
+tests/test_dash_loop.py:114: in __init__
+    fault("ltr559_init")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'ltr559_init'
+
+    def fault(name):
+        errors = failures.get(name, [])
+        if errors:
+>           raise errors.pop(0)
+E           OSError: disconnected
+
+tests/test_dash_loop.py:90: OSError
+___ test_each_driver_boundary_preserves_other_measurements[ltr559_read-lux] ____
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-device-violation-tmp/test_each_driver_boundary_pres3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff90bd57b0>
+boundary = 'ltr559_read', failed_column = 'lux'
+
+    @pytest.mark.parametrize(
+        "boundary,failed_column",
+        [
+            ("bme280_init", "pressure"),
+            ("bme280_read", "pressure"),
+            ("ltr559_init", "lux"),
+            ("ltr559_read", "lux"),
+            ("pms5003_init", "pm1"),
+            ("scd41_init", "co2_ppm"),
+        ],
+    )
+    def test_each_driver_boundary_preserves_other_measurements(
+        tmp_path, monkeypatch, boundary, failed_column
+    ):
+        """A bus/probe/read OSError is retained without stopping unrelated acquisitions."""
+>       run = Run(
+            tmp_path,
+            monkeypatch,
+            rows=2,
+            failures={boundary: [OSError("disconnected")]},
+            scd41_reads=itertools.repeat((600, 23.0, 45.0)),
+        )
+
+tests/test_dash_loop.py:840: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dash_loop.py:329: in __init__
+    runpy.run_path(str(app / "enviro_dash3.py"), run_name="__main__")
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+../enviro-device-violation-tmp/test_each_driver_boundary_pres3/app/enviro_dash3.py:435: in <module>
+    sample = read_sample()
+             ^^^^^^^^^^^^^
+../enviro-device-violation-tmp/test_each_driver_boundary_pres3/app/enviro_dash3.py:275: in read_sample
+    sample["ltr559_lux"] = ltr559_sensor.get_lux()
+                           ^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_dash_loop.py:117: in get_lux
+    fault("ltr559_read")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'ltr559_read'
+
+    def fault(name):
+        errors = failures.get(name, [])
+        if errors:
+>           raise errors.pop(0)
+E           OSError: disconnected
+
+tests/test_dash_loop.py:90: OSError
+----------------------------- Captured stderr call -----------------------------
+{"ts": "2026-11-19 11:35:58", "level": "INFO", "module": "enviro_dash3", "msg": "Enviro+ dash v3 starting"}
+------------------------------ Captured log call -------------------------------
+INFO     enviro_dash:enviro_dash3.py:427 Enviro+ dash v3 starting
+___ test_each_driver_boundary_preserves_other_measurements[pms5003_init-pm1] ___
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-device-violation-tmp/test_each_driver_boundary_pres4')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff8fb81f50>
+boundary = 'pms5003_init', failed_column = 'pm1'
+
+    @pytest.mark.parametrize(
+        "boundary,failed_column",
+        [
+            ("bme280_init", "pressure"),
+            ("bme280_read", "pressure"),
+            ("ltr559_init", "lux"),
+            ("ltr559_read", "lux"),
+            ("pms5003_init", "pm1"),
+            ("scd41_init", "co2_ppm"),
+        ],
+    )
+    def test_each_driver_boundary_preserves_other_measurements(
+        tmp_path, monkeypatch, boundary, failed_column
+    ):
+        """A bus/probe/read OSError is retained without stopping unrelated acquisitions."""
+>       run = Run(
+            tmp_path,
+            monkeypatch,
+            rows=2,
+            failures={boundary: [OSError("disconnected")]},
+            scd41_reads=itertools.repeat((600, 23.0, 45.0)),
+        )
+
+tests/test_dash_loop.py:840: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dash_loop.py:329: in __init__
+    runpy.run_path(str(app / "enviro_dash3.py"), run_name="__main__")
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+../enviro-device-violation-tmp/test_each_driver_boundary_pres4/app/enviro_dash3.py:191: in <module>
+    pms5003_sensor = PMS5003(device=_pms_device)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_dash_loop.py:126: in __init__
+    fault("pms5003_init")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'pms5003_init'
+
+    def fault(name):
+        errors = failures.get(name, [])
+        if errors:
+>           raise errors.pop(0)
+E           OSError: disconnected
+
+tests/test_dash_loop.py:90: OSError
+__ test_each_driver_boundary_preserves_other_measurements[scd41_init-co2_ppm] __
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-device-violation-tmp/test_each_driver_boundary_pres5')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff8fb82b50>
+boundary = 'scd41_init', failed_column = 'co2_ppm'
+
+    @pytest.mark.parametrize(
+        "boundary,failed_column",
+        [
+            ("bme280_init", "pressure"),
+            ("bme280_read", "pressure"),
+            ("ltr559_init", "lux"),
+            ("ltr559_read", "lux"),
+            ("pms5003_init", "pm1"),
+            ("scd41_init", "co2_ppm"),
+        ],
+    )
+    def test_each_driver_boundary_preserves_other_measurements(
+        tmp_path, monkeypatch, boundary, failed_column
+    ):
+        """A bus/probe/read OSError is retained without stopping unrelated acquisitions."""
+>       run = Run(
+            tmp_path,
+            monkeypatch,
+            rows=2,
+            failures={boundary: [OSError("disconnected")]},
+            scd41_reads=itertools.repeat((600, 23.0, 45.0)),
+        )
+
+tests/test_dash_loop.py:840: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dash_loop.py:329: in __init__
+    runpy.run_path(str(app / "enviro_dash3.py"), run_name="__main__")
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+../enviro-device-violation-tmp/test_each_driver_boundary_pres5/app/enviro_dash3.py:196: in <module>
+    scd41_sensor = Scd4xDevice(
+tests/test_dash_loop.py:142: in __init__
+    fault("scd41_init")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'scd41_init'
+
+    def fault(name):
+        errors = failures.get(name, [])
+        if errors:
+>           raise errors.pop(0)
+E           OSError: disconnected
+
+tests/test_dash_loop.py:90: OSError
+_____ test_display_and_proximity_failure_do_not_stop_capture[display_init] _____
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-device-violation-tmp/test_display_and_proximity_fai0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff8f18c9b0>
+caplog = <_pytest.logging.LogCaptureFixture object at 0x7fff8f1e4c20>
+boundary = 'display_init'
+
+    @pytest.mark.parametrize(
+        "boundary", ["display_init", "display_begin", "display_write", "proximity"]
+    )
+    def test_display_and_proximity_failure_do_not_stop_capture(tmp_path, monkeypatch, caplog, boundary):
+>       run = Run(tmp_path, monkeypatch, rows=2, failures={boundary: [OSError("device offline")]})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dash_loop.py:872: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dash_loop.py:329: in __init__
+    runpy.run_path(str(app / "enviro_dash3.py"), run_name="__main__")
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+../enviro-device-violation-tmp/test_display_and_proximity_fai0/app/enviro_dash3.py:172: in <module>
+    disp = st7735.ST7735(
+tests/test_dash_loop.py:96: in __init__
+    fault("display_init")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'display_init'
+
+    def fault(name):
+        errors = failures.get(name, [])
+        if errors:
+>           raise errors.pop(0)
+E           OSError: device offline
+
+tests/test_dash_loop.py:90: OSError
+____ test_display_and_proximity_failure_do_not_stop_capture[display_begin] _____
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-device-violation-tmp/test_display_and_proximity_fai1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff8f18d6d0>
+caplog = <_pytest.logging.LogCaptureFixture object at 0x7fff8fb8b110>
+boundary = 'display_begin'
+
+    @pytest.mark.parametrize(
+        "boundary", ["display_init", "display_begin", "display_write", "proximity"]
+    )
+    def test_display_and_proximity_failure_do_not_stop_capture(tmp_path, monkeypatch, caplog, boundary):
+>       run = Run(tmp_path, monkeypatch, rows=2, failures={boundary: [OSError("device offline")]})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dash_loop.py:872: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dash_loop.py:329: in __init__
+    runpy.run_path(str(app / "enviro_dash3.py"), run_name="__main__")
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+../enviro-device-violation-tmp/test_display_and_proximity_fai1/app/enviro_dash3.py:180: in <module>
+    disp.begin()
+tests/test_dash_loop.py:99: in begin
+    fault("display_begin")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'display_begin'
+
+    def fault(name):
+        errors = failures.get(name, [])
+        if errors:
+>           raise errors.pop(0)
+E           OSError: device offline
+
+tests/test_dash_loop.py:90: OSError
+____ test_display_and_proximity_failure_do_not_stop_capture[display_write] _____
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-device-violation-tmp/test_display_and_proximity_fai2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff8f2698d0>
+caplog = <_pytest.logging.LogCaptureFixture object at 0x7fff90de5a90>
+boundary = 'display_write'
+
+    @pytest.mark.parametrize(
+        "boundary", ["display_init", "display_begin", "display_write", "proximity"]
+    )
+    def test_display_and_proximity_failure_do_not_stop_capture(tmp_path, monkeypatch, caplog, boundary):
+>       run = Run(tmp_path, monkeypatch, rows=2, failures={boundary: [OSError("device offline")]})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dash_loop.py:872: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dash_loop.py:329: in __init__
+    runpy.run_path(str(app / "enviro_dash3.py"), run_name="__main__")
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+../enviro-device-violation-tmp/test_display_and_proximity_fai2/app/enviro_dash3.py:477: in <module>
+    disp.display(screens.render(page, state))
+tests/test_dash_loop.py:102: in display
+    fault("display_write")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'display_write'
+
+    def fault(name):
+        errors = failures.get(name, [])
+        if errors:
+>           raise errors.pop(0)
+E           OSError: device offline
+
+tests/test_dash_loop.py:90: OSError
+----------------------------- Captured stderr call -----------------------------
+{"ts": "2026-11-19 11:36:11", "level": "INFO", "module": "enviro_dash3", "msg": "Enviro+ dash v3 starting"}
+------------------------------ Captured log call -------------------------------
+INFO     enviro_dash:enviro_dash3.py:427 Enviro+ dash v3 starting
+______ test_display_and_proximity_failure_do_not_stop_capture[proximity] _______
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-device-violation-tmp/test_display_and_proximity_fai3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff90bd8bb0>
+caplog = <_pytest.logging.LogCaptureFixture object at 0x7fff8f1d2c40>
+boundary = 'proximity'
+
+    @pytest.mark.parametrize(
+        "boundary", ["display_init", "display_begin", "display_write", "proximity"]
+    )
+    def test_display_and_proximity_failure_do_not_stop_capture(tmp_path, monkeypatch, caplog, boundary):
+>       run = Run(tmp_path, monkeypatch, rows=2, failures={boundary: [OSError("device offline")]})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dash_loop.py:872: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dash_loop.py:329: in __init__
+    runpy.run_path(str(app / "enviro_dash3.py"), run_name="__main__")
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+../enviro-device-violation-tmp/test_display_and_proximity_fai3/app/enviro_dash3.py:479: in <module>
+    page, near = wait_for_next_frame(page, near)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../enviro-device-violation-tmp/test_display_and_proximity_fai3/app/enviro_dash3.py:397: in wait_for_next_frame
+    proximity = ltr559_sensor.get_proximity()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_dash_loop.py:121: in get_proximity
+    fault("proximity")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'proximity'
+
+    def fault(name):
+        errors = failures.get(name, [])
+        if errors:
+>           raise errors.pop(0)
+E           OSError: device offline
+
+tests/test_dash_loop.py:90: OSError
+----------------------------- Captured stderr call -----------------------------
+{"ts": "2026-11-19 11:36:12", "level": "INFO", "module": "enviro_dash3", "msg": "Enviro+ dash v3 starting"}
+------------------------------ Captured log call -------------------------------
+INFO     enviro_dash:enviro_dash3.py:427 Enviro+ dash v3 starting
+=========================== short test summary info ============================
+FAILED tests/test_dash_loop.py::test_gas_failure_is_retained_and_siblings_continue
+FAILED tests/test_dash_loop.py::test_each_driver_boundary_preserves_other_measurements[bme280_init-pressure]
+FAILED tests/test_dash_loop.py::test_each_driver_boundary_preserves_other_measurements[bme280_read-pressure]
+FAILED tests/test_dash_loop.py::test_each_driver_boundary_preserves_other_measurements[ltr559_init-lux]
+FAILED tests/test_dash_loop.py::test_each_driver_boundary_preserves_other_measurements[ltr559_read-lux]
+FAILED tests/test_dash_loop.py::test_each_driver_boundary_preserves_other_measurements[pms5003_init-pm1]
+FAILED tests/test_dash_loop.py::test_each_driver_boundary_preserves_other_measurements[scd41_init-co2_ppm]
+FAILED tests/test_dash_loop.py::test_display_and_proximity_failure_do_not_stop_capture[display_init]
+FAILED tests/test_dash_loop.py::test_display_and_proximity_failure_do_not_stop_capture[display_begin]
+FAILED tests/test_dash_loop.py::test_display_and_proximity_failure_do_not_stop_capture[display_write]
+FAILED tests/test_dash_loop.py::test_display_and_proximity_failure_do_not_stop_capture[proximity]
+11 failed, 23 deselected in 32.74s

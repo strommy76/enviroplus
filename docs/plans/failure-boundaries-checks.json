@@ -1,0 +1,53 @@
+{
+  "focused_final": {
+    "exit": 0,
+    "selected_cases": 22
+  },
+  "ruff_check": "passed entire repo",
+  "ruff_format": "passed31files",
+  "held": "Whole canonical, native timer/alert, actual hardware effect pending; HAT remains disconnected/disabled.",
+  "review_fold_controls": [
+    {
+      "name": "enviro-review-driver-violation",
+      "source_paths": [
+        "sensor_io.py"
+      ],
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-c",
+        "import shared; import pytest; raise SystemExit(pytest.main(['tests/test_dash_loop.py', '-q', '-k', 'driver_gpio_exit or installed_gas_setup', '--basetemp=/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-review-driver-violation-tmp']))"
+      ],
+      "exit": 1
+    },
+    {
+      "name": "enviro-review-startup-violation",
+      "source_paths": [
+        "config/unit_templates/enviro_provider_health.service.in"
+      ],
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-c",
+        "import shared; import pytest; raise SystemExit(pytest.main(['tests/test_provider_health.py', '-q', '-k', 'clean_entrypoints', '--basetemp=/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-review-startup-violation-tmp']))"
+      ],
+      "exit": 1
+    }
+  ],
+  "corrected_focused": {
+    "exit": 0,
+    "selected_cases": 48,
+    "skipped": 1,
+    "source": "enviro-corrected-final.log",
+    "limits": "Owning failure boundaries only; not canonical or installed effect."
+  },
+  "ruff": {
+    "check": "whole repo passed",
+    "format": "31 files passed"
+  },
+  "environment_correction": "Native Duplicacy consumer excluded from first focused run for absent DUPLICACY_TEST_BINARY; separate genuine owner qualification uses the provisioned test binary.",
+  "native_sqlite_owner": {
+    "exit": 0,
+    "selected_cases": 5,
+    "source": "enviro-native-owner.log",
+    "binding": "DUPLICACY_TEST_BINARY references existing provisioned binary; actual native consumer executed"
+  }
+}

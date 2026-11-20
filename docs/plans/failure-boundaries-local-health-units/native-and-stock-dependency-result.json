@@ -1,0 +1,17 @@
+{
+  "stock_backup_units_unchanged": true,
+  "prior_shared_revision": "ca500feb82778b278cae9ff15161377e8c3a2cb5",
+  "native_producer_state": {
+    "LoadState": "not-found",
+    "UnitFileState": ""
+  },
+  "native_inactive_lane_result": [
+    {
+      "lane": "local_readings",
+      "problem": null,
+      "active": false,
+      "detail": "producer not installed"
+    }
+  ],
+  "scope": "Read-only candidate/native observation; no hardware or timer activation and no production-store access."
+}

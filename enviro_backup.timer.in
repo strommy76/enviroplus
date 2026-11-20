@@ -1,6 +1,6 @@
 [Unit]
 Description=Daily Enviro+ offsite backup
-Documentation=file:///home/pistrommy/projects/enviroplus/config/backup.json
+Documentation=file://@ROOT@/config/backup.json
 
 [Timer]
 # Project-configured quiet-hour calendar; no fleet-wide frequency assumption.

@@ -82,36 +82,48 @@ def _install_drivers(
     tmp119_reads,
     tmp119_init,
     tmp119_calls,
+    failures,
 ):
+    def fault(name):
+        errors = failures.get(name, [])
+        if errors:
+            raise errors.pop(0)
+
     class Display:
         width, height = 160, 80
 
         def __init__(self, **kwargs):
-            pass
+            fault("display_init")
 
         def begin(self):
-            pass
+            fault("display_begin")
 
         def display(self, image):
-            pass
+            fault("display_write")
 
     class BME280:
         def __init__(self, **kwargs):
-            pass
+            fault("bme280_init")
 
         def update_sensor(self):
+            fault("bme280_read")
             self.temperature, self.humidity, self.pressure = next(bme_reads)
 
     class LTR559:
+        def __init__(self, i2c_dev=None):
+            fault("ltr559_init")
+
         def get_lux(self):
+            fault("ltr559_read")
             return 120.0
 
         def get_proximity(self):
+            fault("proximity")
             return next(proximity_reads)
 
     class PMS5003:
         def __init__(self, **kwargs):
-            pass
+            fault("pms5003_init")
 
         def read(self):
             outcome = next(pms_reads)
@@ -127,6 +139,7 @@ def _install_drivers(
         (not ready) or a (co2, temp_c, rh) sample, or raises what the driver raises."""
 
         def __init__(self, channel):
+            fault("scd41_init")
             self._sample = None
 
         def stop_periodic_measurement(self):
@@ -173,7 +186,7 @@ def _install_drivers(
     module(
         "sensirion_i2c_driver",
         CrcCalculator=lambda *a: None,
-        I2cConnection=lambda t: None,
+        I2cConnection=lambda t: object(),
         LinuxI2cTransceiver=lambda path: None,
     )
     module("sensirion_i2c_driver.errors", I2cError=I2cError)
@@ -183,7 +196,17 @@ def _install_drivers(
     module("adafruit_tmp117", TMP117=TMP117)
     module("adafruit_extended_bus", ExtendedI2C=lambda bus: None)
     module("st7735", ST7735=Display)
-    module("smbus2", SMBus=lambda *a, **k: None)
+
+    class SMBus:
+        fd = None
+
+        def open(self, bus):
+            self.fd = 1
+
+        def close(self):
+            self.fd = None
+
+    module("smbus2", SMBus=SMBus)
     module("bme280", BME280=BME280)
     module("ltr559", LTR559=LTR559)
     module(
@@ -201,7 +224,13 @@ def _install_drivers(
         return types.SimpleNamespace(oxidising=45000.0, reducing=105000.0, nh3=150000.0)
 
     enviroplus = module("enviroplus")
-    enviroplus.gas = module("enviroplus.gas", read_all=read_all)
+    enviroplus.gas = module(
+        "enviroplus.gas",
+        read_all=read_all,
+        setup=lambda: None,
+        available=lambda: True,
+        cleanup=lambda: None,
+    )
 
 
 GOOD = frame(1, 2, 3)
@@ -224,11 +253,13 @@ class Run:
         proximity_reads=None,
         tmp119_reads=None,
         tmp119_init=None,
+        failures=None,
+        prepare_gas=None,
     ):
         self.scd41_calls, self.states, self.tmp119_calls = [], [], []
         app = tmp_path / "app"
         app.mkdir()
-        for name in ("enviro_dash3.py", "enviro_screens.py", "local_sensors.py"):
+        for name in ("enviro_dash3.py", "enviro_screens.py", "local_sensors.py", "sensor_io.py"):
             shutil.copy(REPO / name, app / name)
         self.config = json.loads((REPO / "dynamic_config.pi5.json").read_text())
         # A clock that advances a second per read: with one-second intervals
@@ -264,9 +295,12 @@ class Run:
             tmp119_reads or itertools.repeat(24.5),
             tmp119_init or itertools.repeat(None),
             self.tmp119_calls,
+            failures or {},
         )
+        if prepare_gas is not None:
+            prepare_gas()
         monkeypatch.syspath_prepend(str(app))
-        for name in ("enviro_screens", "local_sensors"):
+        for name in ("enviro_screens", "local_sensors", "sensor_io"):
             monkeypatch.delitem(sys.modules, name, raising=False)
         import enviro_screens
 
@@ -335,10 +369,15 @@ def test_failed_pm_read_is_stored_as_null_not_the_last_good_value(tmp_path, monk
     assert run.readings("pm1, pm25, pm10") == [(1.0, 2.0, 3.0), (None,) * 3, (None,) * 3]
 
 
-def test_sensor_error_ends_the_process(tmp_path, monkeypatch):
-    gas = iter([None, OSError("i2c read failed")])
-    with pytest.raises(OSError, match="i2c read failed"):
-        Run(tmp_path, monkeypatch, rows=99, gas_reads=gas)
+def test_gas_failure_is_retained_and_siblings_continue(tmp_path, monkeypatch):
+    run = Run(
+        tmp_path, monkeypatch, rows=2, gas_reads=iter([OSError("i2c read failed"), None, None])
+    )
+    assert run.readings("oxidising, pressure, temp_f") == [
+        (None, 1016.0, 76.1),
+        (45.0, 1016.0, 76.1),
+    ]
+    assert "i2c read failed" in run.tier1()[0][1]["mics6814_ohms_error"]
 
 
 def test_tier1_keeps_every_read_as_the_driver_returned_it(tmp_path, monkeypatch):
@@ -800,3 +839,136 @@ def test_old_bme_read_list_keeps_last_pressure_and_does_not_invent_tmp_history(
     row = local_sensors.derive_row([sample], 1)
     assert row["pressure"] == 1015.03
     assert row["temp_f"] is None
+
+
+@pytest.mark.parametrize(
+    "boundary,failed_column",
+    [
+        ("bme280_init", "pressure"),
+        ("bme280_read", "pressure"),
+        ("ltr559_init", "lux"),
+        ("ltr559_read", "lux"),
+        ("pms5003_init", "pm1"),
+        ("scd41_init", "co2_ppm"),
+    ],
+)
+def test_each_driver_boundary_preserves_other_measurements(
+    tmp_path, monkeypatch, boundary, failed_column
+):
+    """A bus/probe/read OSError is retained without stopping unrelated acquisitions."""
+    run = Run(
+        tmp_path,
+        monkeypatch,
+        rows=2,
+        failures={boundary: [OSError("disconnected")]},
+        scd41_reads=itertools.repeat((600, 23.0, 45.0)),
+    )
+    first = dict(
+        zip(
+            ("pressure", "lux", "pm1", "co2_ppm", "temp_f"),
+            run.readings("pressure,lux,pm1,co2_ppm,temp_f")[0],
+        )
+    )
+    assert first[failed_column] is None
+    for key, value in first.items():
+        if key != failed_column:
+            assert value is not None
+    assert any(
+        "disconnected" in str(value)
+        for key, value in run.tier1()[0][1].items()
+        if key.endswith("_error")
+    )
+    assert all(value is not None for value in run.readings("pressure,lux,pm1,co2_ppm,temp_f")[1])
+    if boundary.startswith("bme280"):
+        # Pressure compensation is optional; missing BME cannot veto SCD41.
+        assert first["co2_ppm"] == 600
+
+
+@pytest.mark.parametrize(
+    "boundary", ["display_init", "display_begin", "display_write", "proximity"]
+)
+def test_display_and_proximity_failure_do_not_stop_capture(tmp_path, monkeypatch, caplog, boundary):
+    run = Run(tmp_path, monkeypatch, rows=2, failures={boundary: [OSError("device offline")]})
+    assert run.readings("temp_f,pressure,pm1") == [(76.1, 1016.0, 1.0)] * 2
+    assert "device offline" in caplog.text
+    if boundary == "proximity":
+        assert "ltr559_proximity_error" in run.tier1()[1][1]
+
+
+@pytest.mark.parametrize("boundary", ["pms5003_init", "display_init"])
+def test_driver_gpio_exit_does_not_exit_capture(tmp_path, monkeypatch, boundary):
+    """Installed gpiodevice emits SystemExit when a chip/pin cannot be claimed."""
+    run = Run(tmp_path, monkeypatch, rows=2, failures={boundary: [SystemExit("GPIO unavailable")]})
+    assert run.readings("temp_f,pressure") == [(76.1, 1016.0)] * 2
+
+
+@pytest.mark.parametrize("failed_setup", ["mode", "heater"])
+def test_installed_gas_setup_must_complete_before_reading(tmp_path, monkeypatch, failed_setup):
+    """Real installed driver: failed setup retries; a later read error keeps its heater handle."""
+    import atexit
+    import importlib.metadata
+    import importlib.util
+
+    source = Path(importlib.metadata.distribution("enviroplus").locate_file("enviroplus/gas.py"))
+    trace = {"adcs": 0, "modes": 0, "claims": 0, "voltages": 0}
+    fault_remaining = [True]
+
+    class ADC:
+        def __init__(self, **kwargs):
+            trace["adcs"] += 1
+            self._ads1015 = types.SimpleNamespace(_i2c=types.SimpleNamespace(close=lambda: None))
+            self._ads1115 = types.SimpleNamespace(_i2c=types.SimpleNamespace(close=lambda: None))
+
+        def detect_chip_type(self):
+            return "ADS1015"
+
+        def set_mode(self, mode):
+            trace["modes"] += 1
+            if failed_setup == "mode" and fault_remaining[0]:
+                fault_remaining[0] = False
+                raise OSError("I2C configuration failed")
+
+        def set_programmable_gain(self, value):
+            pass
+
+        def set_sample_rate(self, value):
+            pass
+
+        def get_voltage(self, channel):
+            trace["voltages"] += 1
+            if trace["voltages"] == 4:
+                raise OSError("transient measurement error")
+            return 1.0
+
+    def prepare():
+        import ads1015
+        import gpiodevice
+
+        monkeypatch.setattr(ads1015, "ADS1015", ADC)
+
+        def claim(*args):
+            if failed_setup == "heater" and fault_remaining[0]:
+                fault_remaining[0] = False
+                raise SystemExit("GPIO heater unavailable")
+            trace["claims"] += 1
+            return types.SimpleNamespace(set_value=lambda *a: None), 0
+
+        monkeypatch.setattr(gpiodevice, "get_pin", claim)
+        monkeypatch.setattr(atexit, "register", lambda fn: fn)
+        parent = sys.modules["enviroplus"]
+        parent.__path__ = [str(source.parent)]
+        spec = importlib.util.spec_from_file_location("enviroplus.gas", source)
+        module = importlib.util.module_from_spec(spec)
+        monkeypatch.setitem(sys.modules, "enviroplus.gas", module)
+        parent.gas = module
+        spec.loader.exec_module(module)
+
+    run = Run(tmp_path, monkeypatch, rows=3, prepare_gas=prepare)
+    readings = run.readings("oxidising,temp_f,pressure")
+    assert readings[0] == (None, 76.1, 1016.0)
+    assert readings[1][0] is not None
+    assert readings[2] == (None, 76.1, 1016.0)
+    assert trace["adcs"] == 2
+    assert trace["modes"] == 2
+    assert trace["claims"] == 1
+    assert "mics6814_ohms_error" in run.tier1()[0][1]

@@ -10,9 +10,9 @@ OnFailure=stocks_ops_alert@%n.service
 [Service]
 Type=simple
 User=pistrommy
-WorkingDirectory=/home/pistrommy/projects/enviroplus
-Environment=PYTHONPATH=/home/pistrommy/projects
-ExecStart=/home/pistrommy/.virtualenvs/pimoroni/bin/python nws_wx.py
+WorkingDirectory=@ROOT@
+Environment="PYTHONPATH=@ROOT@/.."
+ExecStart="@PYTHON@" nws_wx.py
 Restart=always
 RestartSec=10
 # Flat restart every 10 s, with no stop limit (the systemd default of 5

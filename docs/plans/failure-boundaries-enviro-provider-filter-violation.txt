@@ -1,0 +1,21 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_console_only_arrival_cannot_renew_outdoor_freshness ___________
+
+tmp_path = PosixPath('/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviro-provider-filter-violation-tmp/test_console_only_arrival_cann0')
+
+    def test_console_only_arrival_cannot_renew_outdoor_freshness(tmp_path):
+        path, policy, now = observations(tmp_path)
+        old = now - timedelta(seconds=policy["lanes"][0]["max_age_seconds"] + 1)
+        with sqlite3.connect(path) as db:
+            db.execute("DELETE FROM outdoor")
+            db.execute("INSERT INTO outdoor(ts,tempf) VALUES (?,75)", (old.isoformat(),))
+            db.execute("INSERT INTO outdoor(ts,tempinf) VALUES (?,74)", (now.isoformat(),))
+        results = check(path, policy, now)
+>       assert results[0]["problem"] == "observation_stale"
+E       AssertionError: assert None == 'observation_stale'
+
+tests/test_provider_health.py:38: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_provider_health.py::test_console_only_arrival_cannot_renew_outdoor_freshness
+1 failed, 4 deselected in 3.02s

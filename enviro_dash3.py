@@ -107,17 +107,6 @@ from datetime import datetime, timezone
 
 sys.path.insert(0, "/home/pistrommy/projects")
 
-import bme280
-import smbus2
-import st7735
-from adafruit_extended_bus import ExtendedI2C
-from adafruit_tmp117 import TMP117
-from enviroplus import gas
-from ltr559 import LTR559
-from pms5003 import PMS5003, ChecksumMismatchError, ReadTimeoutError, SerialTimeoutError
-from sensirion_driver_adapters.i2c_adapter.i2c_channel import I2cChannel
-from sensirion_i2c_driver import CrcCalculator, I2cConnection, LinuxI2cTransceiver
-from sensirion_i2c_scd4x.device import Scd4xDevice
 from shared.config_service import load_env, require
 from shared.db_service import connect
 from shared.logging_service import setup_logger
@@ -126,6 +115,7 @@ import enviro_screens as screens
 import local_sensors
 from raw_retention import OUTCOME_OK, OUTCOME_PARTIAL, retain
 from raw_retention import configure as configure_retention
+from sensor_io import SensorIO
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 _BASE = os.path.dirname(os.path.abspath(__file__))
@@ -167,151 +157,26 @@ cfg = load_config()
 _db = connect(SQLITE_PATH)
 local_sensors.ensure_schema(_db)
 
-# ── Display ────────────────────────────────────────────────────────────────────
-_hw = cfg["hardware"]
-disp = st7735.ST7735(
-    port=_hw["spi_port"],
-    cs=_hw["spi_cs"],
-    dc=_hw["display_dc"],
-    backlight=_hw["display_backlight"],
-    rotation=_hw["display_rotation"],
-    spi_speed_hz=_hw["spi_speed_hz"],
+# Hardware has its own lazy, per-device boundaries. No device gates storage.
+io = SensorIO(
+    cfg["hardware"],
+    int(os.environ.get("I2C_BUS", 1)),
+    os.environ.get("PMS5003_DEVICE", "/dev/ttyAMA0"),
+    os.environ.get("CPU_TEMP_PATH", "/sys/class/thermal/thermal_zone0/temp"),
+    log,
 )
-disp.begin()
-W, H = disp.width, disp.height  # 160 × 80
-
-# ── Sensors ────────────────────────────────────────────────────────────────────
-_i2c_bus = int(os.environ.get("I2C_BUS", 1))
-_pms_device = os.environ.get("PMS5003_DEVICE", "/dev/ttyAMA0")
-_cpu_temp_path = os.environ.get("CPU_TEMP_PATH", "/sys/class/thermal/thermal_zone0/temp")
-_bus = smbus2.SMBus(_i2c_bus)
-_bme_addr = _hw["bme280_addr"]
-_bme_sensor = bme280.BME280(i2c_addr=_bme_addr, i2c_dev=_bus)
-ltr559_sensor = LTR559()
-pms5003_sensor = PMS5003(device=_pms_device)
-
-# SCD41 shares the I2C bus; 0x62 is fixed in the part. Sensirion's CRC-8
-# parameters (poly 0x31, init 0xFF) are from its datasheet and driver examples.
-SCD41_ADDR = 0x62
-scd41_sensor = Scd4xDevice(
-    I2cChannel(
-        I2cConnection(LinuxI2cTransceiver(f"/dev/i2c-{_i2c_bus}")),
-        slave_address=SCD41_ADDR,
-        crc=CrcCalculator(8, 0x31, 0xFF, 0x0),
-    )
-)
-_scd41_measuring = False
-
-# Cabled room thermometer: the supported driver owns conversion/startup timing.
-_tmp119_bus = ExtendedI2C(_i2c_bus)
-_tmp119_sensor = None
-
-
-def _read_tmp119(sample):
-    global _tmp119_sensor
-    if _tmp119_sensor is None:
-        try:
-            _tmp119_sensor = TMP117(_tmp119_bus, address=_hw["tmp119_addr"])
-        except (OSError, ValueError, AttributeError) as error:
-            # Documented bus/probe/device-ID errors from the constructor only.
-            sample["tmp119_error"] = repr(error)
-            log.warning("TMP119 initialization failed: %s", error)
-            return
-    try:
-        sample["tmp119"] = {"temperature_c": _tmp119_sensor.temperature}
-    except OSError as error:
-        _tmp119_sensor = None
-        sample["tmp119_error"] = repr(error)
-        log.warning("TMP119 read failed: %s", error)
-
-
-def _scd41_start():
-    """(Re)start periodic measurement, one sample per 5 s. A previous process
-    may have left it running, and the part takes no other command until it
-    stops; the driver waits out the stop itself. Called again on the next read
-    after a failure, so a breakout reconnected later resumes."""
-    global _scd41_measuring
-    scd41_sensor.stop_periodic_measurement()
-    scd41_sensor.start_periodic_measurement()
-    _scd41_measuring = True
 
 
 def _utc_iso():
     return datetime.fromtimestamp(time.time(), timezone.utc).isoformat()
 
 
-def _pi_raw():
-    with open("/proc/loadavg") as f:
-        loadavg_1m = float(f.read().split()[0])
-    with open("/proc/meminfo") as f:
-        mem_available_kb = next(
-            int(line.split()[1]) for line in f if line.startswith("MemAvailable")
-        )
-    with open("/proc/uptime") as f:
-        uptime_s = float(f.read().split()[0])
-    return {"loadavg_1m": loadavg_1m, "mem_available_kb": mem_available_kb, "uptime_s": uptime_s}
-
-
 def read_sample():
-    """One loop's reads, each as its driver returned it: the Tier 1 record.
-
-    PMS5003, SCD41 and TMP119 are cabled peripherals: a failed read is that lane's
-    recorded error, and the other lanes are still recorded. A failure in the
-    HAT's own sensors (BME280, LTR559, MICS6814) ends the process, so the
-    unit's restart/OnFailure policy reports it."""
-    sample = {"read_utc": _utc_iso()}
-    _bme_sensor.update_sensor()
-    # Keep the retained list shape; old records have several complete reads.
-    sample["bme280"] = [
-        {
-            "temperature": _bme_sensor.temperature,
-            "humidity": _bme_sensor.humidity,
-            "pressure": _bme_sensor.pressure,
-        }
-    ]
-    _read_tmp119(sample)
-    with open(_cpu_temp_path) as f:
-        sample["cpu_temp_milli_c"] = int(f.read())
-    sample["ltr559_lux"] = ltr559_sensor.get_lux()
-    # Proximity drives page taps only, so Tier 1 keeps the taps (operator,
-    # 2026-10-20 23:11): each with the reading that crossed the threshold.
+    """Retain every available lane and each failed acquisition independently."""
+    sample = io.read(_utc_iso())
     if _tap_events:
         sample["ltr559_taps"] = _tap_events[:]
         _tap_events.clear()
-    g = gas.read_all()
-    sample["mics6814_ohms"] = {"oxidising": g.oxidising, "reducing": g.reducing, "nh3": g.nh3}
-    sample["pi"] = _pi_raw()
-
-    try:
-        sample["pms5003_frame_hex"] = bytes(pms5003_sensor.read().raw_data).hex()
-    except (ReadTimeoutError, SerialTimeoutError, ChecksumMismatchError) as e:
-        sample["pms5003_error"] = repr(e)
-        log.warning("PMS5003 read failed: %s — reinitializing", e)
-        try:
-            pms5003_sensor.setup()  # reinit serial without re-claiming GPIO
-        except Exception as reinit_err:
-            log.warning("PMS5003 reinit failed: %s", reinit_err)
-
-    global _scd41_measuring
-    try:
-        if not _scd41_measuring:
-            _scd41_start()
-        if scd41_sensor.get_data_ready_status():
-            # Sensirion recommends continuous pressure compensation; it applies
-            # to the next sample. BME280 reports hPa, the driver takes Pa.
-            scd41_sensor.set_ambient_pressure(sample["bme280"][-1]["pressure"] * 100)
-            co2, scd_t, scd_rh = scd41_sensor.read_measurement()
-            sample["scd41"] = {
-                "co2_ppm": co2.value,
-                "temperature_c": scd_t.value,
-                "rh": scd_rh.value,
-            }
-    except OSError as e:
-        # I2cError subclasses OSError; the transceiver's own address ioctl
-        # raises a plain OSError. Either is this lane's failed read.
-        _scd41_measuring = False
-        sample["scd41_error"] = repr(e)
-        log.warning("SCD41 read failed: %s", e)
     return sample
 
 
@@ -394,7 +259,10 @@ def wait_for_next_frame(page, near):
     d = cfg["display"]
     deadline = time.monotonic() + cfg["intervals"]["display_refresh_s"]
     while time.monotonic() < deadline:
-        proximity = ltr559_sensor.get_proximity()
+        proximity = io.proximity()
+        if proximity is None:
+            time.sleep(max(0, deadline - time.monotonic()))
+            break
         now_near = proximity >= d["tap_proximity"]
         if now_near and not near:
             _tap_events.append(
@@ -405,7 +273,7 @@ def wait_for_next_frame(page, near):
                 }
             )
             page = (page + 1) % len(screens.PAGES)
-            disp.display(screens.render(page, state))
+            io.display(screens.render(page, state))
         near = now_near
         time.sleep(PROXIMITY_MEAS_S)
     return page, near
@@ -414,8 +282,8 @@ def wait_for_next_frame(page, near):
 # ── Main loop ─────────────────────────────────────────────────────────────────
 # Every read reaches Tier 1 first. When a read opens a new publish interval, the
 # finished interval's records become one `readings` row through derive_row, the
-# projection --replay uses. Any error outside the cabled lanes ends the process:
-# the unit's restart policy retries it, and repeated failure reaches OnFailure.
+# projection --replay uses. Storage/configuration errors still end the process;
+# device and display errors belong to their independent I/O boundaries.
 page, near = 0, False
 # pending: the open interval's records; pending_s: the publish_s grid that
 # opened it. A hot-reloaded publish_s changes the bucket numbering, so the open
@@ -474,7 +342,7 @@ try:
             "wind_hist": winds,
             "thresholds": cfg["thresholds"],
         }
-        disp.display(screens.render(page, state))
+        io.display(screens.render(page, state))
 
         page, near = wait_for_next_frame(page, near)
 except KeyboardInterrupt:

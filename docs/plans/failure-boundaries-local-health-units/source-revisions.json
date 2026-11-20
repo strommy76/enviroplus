@@ -1,0 +1,9 @@
+{
+  "source_revisions": {
+    "stocks": "bcd934d367077bf97582a9761439d633611a4f2c",
+    "enviroplus": "13a62bf369d43a2516fb6d47631987f9f34fa789",
+    "shared": "d0f4abe9c185b7715e4506b73324aaafe5ba7f86"
+  },
+  "test_inputs": "Whole files at these source revisions; subsequent evidence commits do not change runtime/test/config bytes. Stock old-runtime controls usefffcc84 and repaired tests from this Stocks source; SQL removal control uses the current owner with the named one-column deletion.",
+  "scope": "Directed folds only; original full canonicals are not rerun or relabeled. Native read-only observation is not service activation/deployed timer proof."
+}

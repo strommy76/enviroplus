@@ -19,6 +19,6 @@ raw-capture-tools/
 # Linked worktrees (enumerated by `git worktree list`, never committed)
 .worktrees/
 
-# Derived systemd backup units; edit config/backup.json or the .in templates.
-/enviro_backup.service
-/enviro_backup.timer
+# Native unit outputs are derived from the policy templates.
+/*.service
+/*.timer

@@ -41,7 +41,7 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
   `enviro_backup.service` invokes the shared backup CLI. Use
   `systemctl start enviro_backup.service` for a manual run, so the native service
   owner prevents overlap with the timer. Do not run a concurrent direct CLI.
-  `sqlite_backup.py` owns SQLite capture/estimation and artifact-bound restore validation;
+  `sqlite_backup.py` owns SQLite capture/estimation from the collectors' required `SQLITE_PATH` and artifact-bound restore validation;
   raw files use the native tree input and shared filesystem estimate. Database backups
   include irreplaceable legacy rows and are protected as authoritative. Delivery/run/maintenance
   observations are append-only authority; payloads/caches and status views are derived.
@@ -55,7 +55,7 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
   compensation is calibrated against TMP119; existing canonical retention records
   the actual settings and API outcomes as `local_sensor_calibration`. Runtime capture
   never writes the offset automatically or layers a software correction over it.
-- `enviro_dash3.py` owns the local sensors, their display, and the canonical
+- `sensor_io.py` owns lazy independent driver/display I/O; `enviro_dash3.py` owns capture scheduling and the canonical
   `local_sensors` retention; `local_sensors.py` owns the `readings` projection
   and its `--replay`.
 - `ambient_wx.py` and `nws_wx.py` independently own their provider collection
@@ -71,11 +71,15 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
   `provider_collector.py --contract <c> --replay DAY...` is the supported path
   that re-derives a contract's derived table from canonical retention through
   the same projection and write path live uses.
-- Repo-managed service files describe the intended service content. Which
+- Unit policy templates describe the intended service content; service_units
+  derives current files through the shared renderer and backup owner, using the
+  rendering interpreter and config-root location. Which
   hardware-specific dashboard unit is active is host residue and must be proven
   from the running service manager, not inferred from this repository.
 - Backup orchestration, native incremental delivery and retention use the shared backup service;
   provider collectors and the dashboard do not implement competing backup paths.
+
+- `provider_health.py` checks the configured derived-observation freshness obligations in `config/provider_health.json`. It preserves independent lane errors and uses the existing operations alert. The local readings lane is active only for the natively enabled producer; disabled/not-installed is explicitly inactive. Generate all native units with `PYTHONPATH=.. python -m service_units`; the hardware dashboard remains independently out of service until reconnected.
 
 ## Supported Validation
 

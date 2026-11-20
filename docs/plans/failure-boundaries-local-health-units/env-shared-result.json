@@ -1,0 +1,84 @@
+[
+  {
+    "name": "literal-interpreter-control",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_service_units.py"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "literal-root-control",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_service_units.py"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "omitted-local-lane-control",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_provider_health.py::test_local_readings_follow_native_producer_authority"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "disabled-still-monitored-control",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_provider_health.py::test_local_readings_follow_native_producer_authority"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "missing-producer-still-monitored-control",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_provider_health.py::test_local_readings_follow_native_producer_authority"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "rendering-interpreter-control",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_service_units.py"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "env-owning-final",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_provider_health.py",
+      "tests/test_service_units.py",
+      "tests/test_sqlite_backup.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "shared-owning-renderer",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_systemd_units.py"
+    ],
+    "exit_code": 0
+  }
+]

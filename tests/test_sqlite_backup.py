@@ -73,6 +73,7 @@ def test_enviro_runs_real_producers_through_common_service(tmp_path, monkeypatch
     )
     source = tmp_path / "live.db"
     database(source).close()
+    monkeypatch.setenv("SQLITE_PATH", str(source))
     raw = tmp_path / "raw"
     raw.mkdir()
     (raw / "capture.ndjson").write_bytes(b'{"original":true}\n')
@@ -88,16 +89,11 @@ def test_enviro_runs_real_producers_through_common_service(tmp_path, monkeypatch
         "components": {
             "database": {
                 "authority": "authoritative",
-                "source_path": str(source),
                 "capture_argv": [
                     sys.executable,
                     "-m",
                     "sqlite_backup",
                     "capture",
-                    "--config",
-                    str(config),
-                    "--component",
-                    "database",
                 ],
                 "capture_timeout_seconds": 300,
                 "estimate_argv": [
@@ -105,10 +101,6 @@ def test_enviro_runs_real_producers_through_common_service(tmp_path, monkeypatch
                     "-m",
                     "sqlite_backup",
                     "estimate",
-                    "--config",
-                    str(config),
-                    "--component",
-                    "database",
                 ],
                 "estimate": {
                     "capture_evidence_bytes": 379,
@@ -123,25 +115,16 @@ def test_enviro_runs_real_producers_through_common_service(tmp_path, monkeypatch
                     sys.executable,
                     "-m",
                     "shared.backup_estimates",
-                    "--config",
-                    str(config),
-                    "--component",
-                    "raw_capture",
                 ],
                 "estimate": {"native_metadata_bytes_per_file": 163},
             },
             "observations": {
                 "authority": "authoritative",
-                "source_path": str(tmp_path / "state/observations"),
                 "capture_argv": None,
                 "estimate_argv": [
                     sys.executable,
                     "-m",
                     "shared.backup_estimates",
-                    "--config",
-                    str(config),
-                    "--component",
-                    "observations",
                 ],
                 "estimate": {"native_metadata_bytes_per_file": 1024},
             },
@@ -266,3 +249,45 @@ def test_native_unit_uses_common_owner_and_project_cadence(tmp_path):
     assert service_config["Service"]["TimeoutStartSec"] == "2713"
     assert timer_config["Timer"]["OnCalendar"] == "*-*-* 10:17:00 UTC"
     assert timer_config["Timer"]["RandomizedDelaySec"] == "23"
+
+
+def test_capture_follows_only_the_collectors_sqlite_binding(tmp_path, monkeypatch):
+    """Changing SQLITE_PATH must move the real captured DB without editing backup config."""
+    import subprocess
+
+    # Retain the formerly authoritative literal only as a deliberately stale input.
+    host = {
+        "environment_file": None,
+        "components": {"database": {"source_path": str(tmp_path / "first.db")}},
+    }
+    config = tmp_path / "backup.json"
+    config.write_text(json.dumps({"project": "enviroplus", "hosts": {socket.gethostname(): host}}))
+    for name, count in (("first", 1), ("second", 2)):
+        source = tmp_path / (name + ".db")
+        connection = database(source)
+        if count == 2:
+            connection.execute("INSERT INTO readings VALUES ('second source')")
+            connection.commit()
+        connection.close()
+        monkeypatch.setenv("SQLITE_PATH", str(source))
+        output = tmp_path / name
+        output.mkdir()
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "sqlite_backup",
+                "capture",
+                "--config",
+                str(config),
+                "--component",
+                "database",
+                "--output-dir",
+                str(output),
+            ],
+            check=True,
+            text=True,
+            capture_output=True,
+        )
+        assert json.loads(result.stdout)["facts"]["table_rows"]["readings"] == count
+        assert verify(output)["source"] == str(source)

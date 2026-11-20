@@ -1,0 +1,283 @@
+## Current receiving-fold amendment — November19
+
+### E4 correction — November19 23:01
+
+Pi f0312af1 (sent November19 22:55:35 EST) relays Bryan's 22:55 residual
+direction and reopens only the local CONFIG_PATH coupling. Same lasting C/H
+increment and silent-failure declaration, branch and review artifact; no landing,
+deployment, hardware activation, new review round or other reopened finding.
+Remove load_policy's pre-loop local-config read: main reads provider policy;
+only the natively active local lane reads dashboard config and derives its age
+inside its existing try. Missing binding/file or invalid JSON yields that lane's
+observation_unreadable and nonzero exit while provider siblings remain present.
+Malformed provider policy remains loud; no KeyError suppression or fallback.
+The existing owner search found load_policy only in main, its owning test and
+policy metadata (historical evidence is immutable). Remove that helper and
+update these live dependents. First add one bad-dashboard CLI regression and
+observe old-order failure; then correct and run the owning module and Ruff.
+Pi directly verifies the whole resulting source under the existing round.
+
+Current Python JSON documentation confirms invalid input raises JSONDecodeError,
+a ValueError handled by the existing lane boundary; Shared require raises its
+own ConfigError, which must be caught explicitly at that boundary. No new parser
+or retry machinery is needed. Approach agrees with current supported interfaces:
+https://docs.python.org/3/library/json.html#json.JSONDecodeError (checked today).
+
+Construction axiom-check, before mutation of implementation:
+| Axiom | Falsification question, location and prospective result |
+|---|---|
+|1 Truth|Can local config failure erase provider evidence or read as health? CONFORMS: check retains sibling results and local explicit failure; main remains nonzero.|
+|2 Cognition|Is a new flag, curated lane roster or fallback introduced? CONFORMS: existing native producer gate and policy drive check.|
+|3 Antifragility|Does changing/breaking dashboard config interrupt unrelated providers? CONFORMS: read and calculation move inside active local lane's try.|
+|4 KISS|Does correction add a second loader/validation mechanism? CONFORMS: remove load_policy and reuse existing JSON/config owners and catch.|
+|5 Boundaries|Are inactive producer, active unreadable local config and invalid provider policy distinguishable? CONFORMS: native gate precedes local read; local unreadable vs loud provider-policy error.|
+|6 Maintenance|Do helper references or dependent tests preserve superseded coupling? CONFORMS: update main, owning test and policy metadata together.|
+|Preamble|Is machinery added beyond the observed cross-lane failure? CONFORMS: move existing work, one explicit existing-owner exception, one regression.|
+
+All-section assessment: A/B original operator direction/executor unchanged;
+C/H declaration above; D same directed fold; E reverse earlier E4 closure from
+actual ordering; F no secret reads; G source only; a minimum; b repo authority;
+c remove needless loader; d no deployed-effect claim; e/f same increment/artifact;
+g allowance unchanged/derived/provisional; h existing owners searched/reused;
+i causal ordering corrected; j no store change; k existing Pi direct verification
+with prior GLM input limitation disclosed; l/o E4 confirmed and folded, G-c closed;
+m no host-specific fallback; n local failure explicit; p/q remove helper/live
+references and update dependent tests; r observe actual pre-fix failure.
+
+Same lasting/silent/irreversible C/H increment, branches and review artifacts.
+Pi09430141/94723643 accept the exact folds below for direct verification; no
+new seat round unless the design grows. Current details, evidence, all-section
+and axiom assessment are in failure-boundaries-review.md.
+
+E1 retains shared BME/LTR and SCD bus ownership and closes both failed gas bus handles. E2 refits the actual between-arrival age, provisionally159.304253s; Ambient activation remains held. F4 removes duplicate producer env loading.
+
+No new host policy follows the reboot; the blanket scheduling gate is withdrawn.
+The current test-database owner must release it before this suite uses it.
+Canonical, operator landing and deployed effect remain separate prerequisites;
+older dated clearances below are provenance, not current clearance for these folds.
+
+# Enviroplus: independent sensor capture and provider health
+
+Authority: Bryan's November19 10:33 every-sensor isolation decision (6984c89c),
+10:45/10:50 scope decisions (d0a26347/6a9f33b9), Pi0657f232 and3e34118d.
+One change covers enviroplus#30 E1/E2 and the confirmed auditF4 backup-source
+binding defect. Broad .env/config cleanup and future Stocks-host-move coupling
+are deferred. No hardware re-enable before the actual HAT is reconnected.
+
+## Declaration and sequence
+Lasting runtime implementation. Failure CAN be silent (missing sensor/provider
+observations or backing up an obsolete DB) and irreversible (missed raw reads;
+legacy pre-retention rows have no reconstruction). Driver errors surface in the
+retained acquisition record and journal; provider staleness has the existing
+alert boundary; real storage failure still stops the writer loudly. Revert the
+cohesive source/config/unit change for future behavior. Never reconstruct or
+delete canonical/legacy data to make a check pass; Git cannot recover missed data.
+
+Use one isolated branch/review artifact based on reviewed0350abe, leaving the
+backup worktree frozen. Implementation/source checks may proceed now; no deploy
+or heavy test while restore and its queued Stocks canonical run. Commit this
+plan with the change, open one draft PR, run owning and canonical checks after
+the resource gate. Implementation gets OpenAI+GLM family review through the
+existing fleet interface, finding adjudication, then Pi's receiving review.
+Landing, installed-effect acceptance and hardware activation remain distinct.
+
+## Actual source and minimum change
+
+E1 is confirmed directly: enviro_dash3 initializes display/SPI, I2C, BME280,
+LTR559, PMS and SCD41 at import; some reads/taps/display calls also escape lane
+handling. local_sensors.derive_row indexes BME/lux/gas/CPU unconditionally.
+Existing cabled-read isolation is incomplete at construction/bus boundaries.
+
+Extract hardware acquisition into one cohesive local sensor I/O module with lazy,
+independent driver initialization/read boundaries, including the display hardware.
+The existing enviro_screens renderer remains pure; no separate adapter file is added. The entrypoint composes these
+owners with existing raw retention and projection; it is not another hardware
+registry/plugin framework. Each real sensor (including host metrics) records
+its own failed acquisition without invented measurements; siblings still read.
+Proximity and display failures cannot terminate capture. A reconnected device
+reinitializes through its driver on a later ordinary cycle, without a new retry
+service/backoff tree. SCD41 can read without BME pressure compensation when BME
+is absent; no replacement pressure is invented. Every available driver return
+retains its present raw shape. Failed-only fields project NULL, never a stale
+held value or another sensor's replacement. Local projection uses the existing
+last_with seam for all nullable lanes. Storage/config failures remain real
+process failures; no broad exception wrapper around retention or writes.
+
+E2 is confirmed directly in complete Ambient/NWS/provider collector loops:
+provider errors are retained/logged while processes continue; OnFailure alone
+cannot detect their missing data. Search the existing health surfaces, then add
+one small read-only provider-freshness owner and one native timer/service using
+the existing alert template. Evaluate each configured lane independently;
+record query failures and still evaluate siblings, exit nonzero for actual
+missing/stale/unreadable data. Read timestamp and validity from existing provider
+schemas/contracts, including Ambient console-only rows (a new timestamp with
+no outdoor values cannot establish outdoor health) and AirNow's provider-local
+observation time. Do not add a second acquisition log, watchdog DB or per-provider
+monitor service. Derive cadence and stale bounds from existing provider settings,
+documented update times and retained healthy intervals; provisional values name
+the settling measurement at definition. Do not invent a fixed multiplier or
+activate an unfitted threshold. Use the existing shared unit renderer; no new
+scheduler or broad unit conversion.
+
+F4 is confirmed directly: sqlite_backup.main reads the literal component
+source_path while collectors read SQLITE_PATH. Bind SQLite capture and estimate
+to that existing required host key through the existing environment owner,
+then remove the superseded literal. Keep raw-tree source binding aligned with
+its actual collector owner if the current source read confirms the same defect;
+do not invent an environment key for an unconfirmed path. The common backup
+engine retains its opaque producer contract. A config binding edit must capture
+the newly selected real scratch DB, not keep successfully verifying the old one.
+No live .env edit until an actual required binding is known; any needed edit is
+covered by effort-instance authority1cb01280 with backup/mode600/keys-only record.
+
+## Premise and verification
+Inputs read: complete enviro_dash3, local_sensors, sqlite_backup, Ambient/NWS/
+provider collector loops, AirNow contract, dynamic_config.pi5 and PROJECT-CONFIG
+at0350abe; shared renderer5830f0e; full issue30 and audit report. The deployed
+CONFIG_PATH remains a host fact, not inferred from a tracked profile name.
+Driver-specific APIs/timing must be checked against the installed supported
+libraries before moving initialization, not reimplemented. Existing SQLite read-only
+and snapshot interfaces remain owners; no migration/replay accompanies this change.
+
+Tests inject a real-driver-producible initialization/read failure at each sensor
+and display boundary, then observe sibling raw records and derived rows through
+the real capture/projection seam. Reinserting fatal propagation must make the
+owning test fail. Missing lanes produce NULL; genuine storage-write failures
+must still raise. Use synthetic SQLite/retention inputs, never production writes.
+Provider monitor tests exercise actual missing/stale/partial rows and one failing
+query with healthy sibling results. F4 uses two distinct real SQLite DB files and
+an environment-only source change through the public producer. Full canonical
+pytest/Ruff follow the resource gate; real hardware/installed timer/alert effects
+are separate deployment evidence. An unavailable HAT is recorded, not simulated
+as a successful hardware validation.
+
+## Construction axiom-check
+
+| Axiom / falsification question | Prospective assessment |
+|---|---|
+|1 Truth: can an error/stale value or old DB be asserted as a current observation? | CONFORMS: preserve irreducible reads/errors; NULL absent values; bind backup to the collector's authoritative host key. |
+|2 Cognition: is driver/provider discovery replaced by a curated fact roster? | CONFORMS: hardware drivers own their protocols; configured measurement roles are policy, provider schemas/contracts own interpretation; no discovery registry added. |
+|3 Antifragility: can a single device/display/provider failure stop independent capture? | CONFORMS: independent lazy device boundaries and per-lane health results; storage remains a true shared dependency. |
+|4 KISS: does a mechanism protect an absent use case? | CONFORMS: observed LTR failure stopped all capture; provider outage history and literal backup path are live cases. One monitor/clock, existing retention/alert owners. |
+|5 Boundaries: is failure swallowed to look healthy? | CONFORMS: per-sensor retained errors/journal, provider nonzero health, real store failure propagated. |
+|6 Maintenance: does the change grow the dashboard gravity well or duplicate derivation? | CONFORMS: extract hardware/display I/O and health; reuse raw retention, last_with and the one projection/live-replay path. |
+|Preamble | CONFORMS: isolation replaces fatal shared startup; one independent monitor closes observed indefinite silent outages. No broad .env migration, speculative watchdog or new data store. |
+
+A/B dated relays/executor; C/H above; D only directed E1/E2/F4 and required
+consumers; E raw/deployed evidence over tests; F no secret values; G no live
+activation during recovery; a–c minimum/enduring owners; d/e/f one cohesive
+increment, distinct effect, operator landing; g derive/label thresholds;
+h reuse driver/retention/projection/backup seams; i actual fatal coupling and
+wrong-source causes; j raw/legacy authority preserved and projections rebuildable;
+k declared family review then receiving review; l absent hardware/measurement
+explicit; m same acquisition contract under missing hardware; n/o explicit
+failures/dispositions; p/q remove fatal design statements/superseded paths and
+update tests/docs; r real implementation violations observed, no mirrored oracle.
+
+## Plan-review adjudication and implementation shape
+
+PiClaude accepted November19 11:07 (`ac12a55e`) with minimum-structure and
+net-source-line reporting constraints. One `sensor_io.py` owns hardware and
+independent resource lifetimes; no separate display-adapter file/framework was
+added. Keeping retryable driver/display handles out of the interval/retention
+entrypoint removes its existing gravity well; the one owner also preserves PMS
+GPIO handles across serial reinitialization. The installed gas driver latches
+an absent ADC; its public availability/cleanup plus module reload resets that
+failed setup for a later normal read, without writing driver-private flags.
+The exact installed driver APIs were read before moving them.
+
+`provider_health.py` is one read-only SQLite checker over committed freshness
+obligations. Ambient's presence predicate comes from the collector's existing
+measurement roles, including console-only rows. AirNow local timestamps must
+agree with their recorded timezone abbreviation under the configured civil
+zone, including the repeated autumn hour. The units are derived with the shared
+renderer from `config/provider_health.json`; nested templates avoid changing the
+backup renderer's existing single-template discovery contract. No health store,
+second log, timer per provider, new .env key or service activation is introduced.
+
+All current-day retained Ambient records were inspected through the supported
+reader/classifier. Its first observation is left-censored (Nov18 21:59 UTC),
+repeated up to46792s old: outage evidence, never a healthy freshness allowance.
+194 newly advancing observations had maximum first-arrival age84.006878s;
+159.006878s adds the actual60s poll and15s request budget. NWS reuses its7200s
+admission plus600s poll/15s request; AirNow combines documented hourly granularity
+and approximate one-hour publication lag with actual1800s poll/15s request.
+These fitted/derived bounds remain provisional at definition with their settling
+measurements. The E2 source reads actual latest observations, not log activity.
+
+The live ENVIRO_RAW_ROOT key is absent; collectors use their declared repository
+raw-capture root, matching backup configuration. The conditional raw-path concern
+is closed without change from that source check; no new key/resolver is needed.
+F4 removes the obsolete DB literal and invokes the existing environment owner.
+The backup test deliberately leaves an obsolete literal pointing at its first
+scratch DB, then changes only SQLITE_PATH: both captures must follow the binding.
+
+Operator evidence November19 11:25 (source: broker648ab3e1, PiClaude sent11:25:55):
+Bryan identified the preceding Ambient outage as a breaker trip caused by the
+entryway light shorting in rain, restored about06:00 EST. This confirms the old
+returns are off-nominal outage samples to exclude from the nominal fit, and the
+real stopped-controller condition E2 must surface. This is a recorded decision,
+not a verbatim quotation; the original relay travels with the review inputs.
+## Operator folds — November19 22:00/22:07
+
+Authority9d4a016c/cb3d5c42/e3b27595: none of E3 or unit-path duplication is
+accepted as residual. Same lasting/silent/irreversible C/H branch and artifact.
+There is no HAT config switch: the native producer unit is the current authority.
+One systemctl show reads LoadState and UnitFileState for the policy's producer.
+Loaded/enabled checks local readings through the existing SQLite lane; disabled
+or not-found is explicitly inactive with detail, never described as healthy.
+The22:35 receiving fold also admits masked/linked as explicit inactive states.
+Any other state or failed query is observation_unreadable. This native gate is
+interim pending pi-config#31; no new flag, store or controller is added.
+
+Local age allowance derives from the selected CONFIG_PATH publish grid: two
+publish intervals (rows are keyed at interval start and published on the next
+interval), plus the existing health-check phase and display-loop interval.
+This is provisional at definition: settle loaded healthy publication ages and
+sensor-I/O delays when hardware is activated. No hardware activation here.
+This checks producer freshness, not a new sensor-completeness whitelist.
+
+Remove literal interpreter/root bindings from every current Enviro unit policy.
+The existing project renderer becomes service_units and derives nested collector/
+dashboard/provider units, plus backup output through shared.backup_units. Old
+static source files become derived outputs; current consumers/docs follow.
+Shared render_unit substitutes only @PYTHON@ from sys.executable and @ROOT@
+from the caller's config-root location. Backup's existing renderer supplies
+that root. No configured interpreter duplicate or shadow backup implementation.
+Shared's narrow follow-up is authorized by cb3d5c42, stays in its existing
+branch/artifact, and is held for final-content landing/coordinated deployment.
+
+Current primary systemctl/systemd.service documentation was checked November19:
+show exposes native properties; enabled state differs from runtime activity.
+The selected producer actually reports not-found on this Pi, matching the
+explicit operator disposition. Native state vocabulary can evolve: unknown
+state remains unreadable, not an inferred disablement. Source method agrees
+with the current supported interface; no stale alternative is retained.
+https://www.freedesktop.org/software/systemd/man/latest/systemctl.html
+
+Construction axiom-check at provider_health, service_units and Shared unit owners:
+| Axiom | Falsification question / prospective result |
+|---|---|
+|1 Truth|Does absent hardware or a failed manager read become healthy? CONFORMS: inactive detail vs explicit unreadable are distinct.|
+|2 Cognition|Is a second activation flag or curated unit census introduced? CONFORMS: native state and template discovery; no second declaration.|
+|3 Antifragility|Do changed interpreter/root or one unreadable producer hide independent lanes? CONFORMS: derive paths and retain lane isolation.|
+|4 KISS|Does implementation exceed the actual lost health/path defects? CONFORMS: one native read and existing renderer only.|
+|5 Boundaries|Can unknown unit state or stale active readings pass quietly? CONFORMS: explicit unreadable/stale and inactive records.|
+|6 Maintenance|Do old literal templates or renderer entrypoints survive live? CONFORMS: replace all current unit policies and migrate the owning entrypoint.|
+|Preamble|Is a new mechanism beyond the minimum added? CONFORMS: no registry/controller/backup engine; existing owners extended.|
+
+A/B relayed operator decisions/executor; C/H same risk; D Shared extension
+authorized after source search; E false switch premise corrected from actual
+content; F no secrets; G no deploy/activation; a minimum; b repo evidence;
+c service_units states actual function; d source/effect distinct; e/f same
+branches/artifacts; g age derived/provisional; h current renderer/native API;
+i actual native/source defects; j stores unchanged; k Pi directly verifies
+the directed folds; l evidence status explicit; m host-derived paths;
+n unreadable stays failure; o residuals folded; p/q retire static/old entrypoint
+surfaces and repair dependent tests/docs; r actual-source violations required.
+
+Coordinated deployment must regenerate all Enviro units through service_units
+in the checkout-update step, BEFORE daemon-reload, then verify native LoadState
+for AirNow, NWS, Ambient and provider health. No early reload may leave the
+former tracked-file symlinks dangling. This is sequencing of the authorized
+deployment, not a new runtime service.

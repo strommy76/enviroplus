@@ -1,0 +1,20 @@
+{
+  "baseline": "aeee648cf9e996536382886a709eb7f209079298",
+  "shared": "f42d0c4b64dccf2e466f0f6751ba3cb30a90e911",
+  "regression_on_baseline": {
+    "exit_code": 1,
+    "result": "JSONDecodeError before lane output"
+  },
+  "owning_module": {
+    "exit_code": 0,
+    "passed": 15
+  },
+  "ruff_check_exit": 0,
+  "ruff_format_check_exit": 0,
+  "production_changed": false,
+  "source_files": [
+    "provider_health.py",
+    "tests/test_provider_health.py",
+    "config/provider_health.json"
+  ]
+}

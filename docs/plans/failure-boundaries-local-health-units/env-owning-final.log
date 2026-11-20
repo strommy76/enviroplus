@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.0.3, pluggy-1.6.0
+rootdir: /home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviroplus-worktree
+configfile: pyproject.toml
+collected 18 items
+
+tests/test_provider_health.py ............                               [ 66%]
+tests/test_service_units.py .                                            [ 72%]
+tests/test_sqlite_backup.py .....                                        [100%]
+
+============================== 18 passed in 3.46s ==============================

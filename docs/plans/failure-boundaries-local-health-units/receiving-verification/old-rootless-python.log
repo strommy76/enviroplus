@@ -1,0 +1,26 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.0.3, pluggy-1.6.0
+rootdir: /home/pistrommy/projects/.tmp/backup-config-fleet-20261118/shared-worktree
+configfile: pyproject.toml
+collected 1 item
+
+tests/test_systemd_units.py F                                            [100%]
+
+=================================== FAILURES ===================================
+____________ test_interpreter_binding_does_not_require_project_root ____________
+
+    def test_interpreter_binding_does_not_require_project_root():
+        text = '[Service]\nExecStart="@PYTHON@" -m capture\n'
+        rendered = render_unit(text, {})
+        unit = ConfigParser(interpolation=None)
+        unit.read_string(rendered)
+>       assert shlex.split(unit["Service"]["ExecStart"]) == [sys.executable, "-m", "capture"]
+E       AssertionError: assert ['@PYTHON@', '-m', 'capture'] == ['/home/pistr...m', 'capture']
+E         
+E         At index 0 diff: '@PYTHON@' != '/home/pistrommy/.virtualenvs/pimoroni/bin/python'
+E         Use -v to get more diff
+
+tests/test_systemd_units.py:32: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_systemd_units.py::test_interpreter_binding_does_not_require_project_root
+============================== 1 failed in 0.03s ===============================

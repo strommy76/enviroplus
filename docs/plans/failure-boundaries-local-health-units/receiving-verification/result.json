@@ -1,0 +1,44 @@
+[
+  {
+    "name": "M4-backup-config-literal",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_service_units.py"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "resolved-interpreter-alias",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_service_units.py"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "enviro-owning",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_provider_health.py",
+      "tests/test_service_units.py",
+      "tests/test_sqlite_backup.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "shared-owning",
+    "argv": [
+      "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_systemd_units.py"
+    ],
+    "exit_code": 0
+  }
+]

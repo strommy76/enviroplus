@@ -1,0 +1,52 @@
+{
+  "authority": [
+    "3a8e77e4",
+    "2fc0e439"
+  ],
+  "repository": "enviroplus",
+  "revision": "2878e61cb69104bcf1d405e68b82ac672420c6b8",
+  "shared_revision": "f577432f1a7f52fd05de6328bd8d808fb63e9359",
+  "started_utc": "2026-11-20T00:09:00.723535+00:00",
+  "explicit_nonsecret_bindings": {
+    "PYTHONPATH": "/home/pistrommy/projects/.tmp/backup-config-fleet-20261118/test-imports:/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/enviroplus-worktree",
+    "PATH": "/home/pistrommy/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin",
+    "DUPLICACY_TEST_BINARY": "/home/pistrommy/projects/.tmp/backup-config-fleet-20261118/tools/duplicacy_linux_arm64_3.3.0",
+    "TMPDIR": "/tmp/qual-enviroplus-itix2e7j",
+    "PYTHONUNBUFFERED": "1"
+  },
+  "steps": [
+    {
+      "stage": "ruff-check",
+      "argv": [
+        "/home/pistrommy/projects/stocks/.venv/bin/ruff",
+        "check",
+        "."
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.15181747500173515
+    },
+    {
+      "stage": "ruff-format",
+      "argv": [
+        "/home/pistrommy/projects/stocks/.venv/bin/ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.04953489099716535
+    },
+    {
+      "stage": "pytest",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-c",
+        "from pathlib import Path;import shared;assert Path(shared.__file__).resolve().parent==Path('/home/pistrommy/projects/.tmp/backup-config-fleet-20261118/shared-worktree');import pytest;raise SystemExit(pytest.main(['--basetemp=/tmp/qual-enviroplus-itix2e7j/pytest', '--junitxml=/home/pistrommy/projects/.tmp/hardcoded-config-audit-20261119/final-canonical/enviroplus/pytest.xml']))"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 13.191844791999756
+    }
+  ],
+  "status": "passed",
+  "completed_utc": "2026-11-20T00:09:14.119095+00:00"
+}

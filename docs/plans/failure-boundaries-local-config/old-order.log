@@ -1,0 +1,69 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______________ test_bad_dashboard_config_keeps_provider_results _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-pistrommy/pytest-92/test_bad_dashboard_config_keep0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fff0d096520>
+capsys = <_pytest.capture.CaptureFixture object at 0x7fff0d346ba0>
+
+    def test_bad_dashboard_config_keeps_provider_results(tmp_path, monkeypatch, capsys):
+        path, policy, _ = observations(tmp_path)
+        now = datetime.now(timezone.utc)
+        with sqlite3.connect(path) as db:
+            db.execute("UPDATE outdoor SET ts = ?", (now.isoformat(),))
+            db.execute("UPDATE nws_weather SET ts = ?", (now.isoformat(),))
+            local = now.astimezone(provider_health.ZoneInfo("America/New_York"))
+            db.execute(
+                "UPDATE epa_air_quality SET ts = ?, local_time_zone = ?",
+                (local.replace(tzinfo=None).isoformat(), local.tzname()),
+            )
+        capture = tmp_path / "capture.json"
+        capture.write_text("{broken JSON")
+        monkeypatch.setenv("SQLITE_PATH", str(path))
+        monkeypatch.setenv("CONFIG_PATH", str(capture))
+        monkeypatch.setattr(provider_health, "load_env", lambda *args, **kwargs: None)
+        monkeypatch.setattr(
+            provider_health,
+            "producer_state",
+            lambda unit: {"LoadState": "loaded", "UnitFileState": "enabled"},
+        )
+>       assert provider_health.main() == 1
+               ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_provider_health.py:163: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+provider_health.py:106: in main
+    policy = load_policy(root)
+             ^^^^^^^^^^^^^^^^^
+provider_health.py:27: in load_policy
+    capture = json.loads(Path(require("CONFIG_PATH")).read_text())
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.13/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.13/json/decoder.py:345: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.decoder.JSONDecoder object at 0x7fff0dcaeba0>, s = '{broken JSON'
+idx = 0
+
+    def raw_decode(self, s, idx=0):
+        """Decode a JSON document from ``s`` (a ``str`` beginning with
+        a JSON document) and return a 2-tuple of the Python
+        representation and the index in ``s`` where the document ended.
+    
+        This can be used to decode a JSON document from a string that may
+        have extraneous data at the end.
+    
+        """
+        try:
+>           obj, end = self.scan_once(s, idx)
+                       ^^^^^^^^^^^^^^^^^^^^^^
+E           json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+
+/usr/lib/python3.13/json/decoder.py:361: JSONDecodeError
+=========================== short test summary info ============================
+FAILED tests/test_provider_health.py::test_bad_dashboard_config_keeps_provider_results
+1 failed in 0.12s
