@@ -1,0 +1,41 @@
+{
+  "authority": "30d69d99-1be4-40fe-85c3-552f55e0a77a",
+  "runtime_revisions": {
+    "authority": "9a0d1b0d-f511-4cec-8be1-3b5455356ce5",
+    "shared": "f42d0c4b64dccf2e466f0f6751ba3cb30a90e911",
+    "stocks_merge": "0972547eb9e45c7c9e948006c7888c71f94f94da",
+    "stocks_accepted": "1591d0798bc1fce3b490cfc7c05174b624632c98",
+    "enviroplus_merge": "f179669cf9d4cd6ca1c29be19592750dc91a98b8",
+    "enviroplus_accepted": "4f30aabb4295f157e54d81da43535cdac0c9492f"
+  },
+  "reconciler_exit_code": 0,
+  "reconciler_actions": [],
+  "backup_service_need_daemon_reload": false,
+  "backup_timer_need_daemon_reload": false,
+  "next_backup_elapse": "2026-11-20 02:10 EST",
+  "read_only_audit_exit_code": 2,
+  "completion_unit_source_drift": [],
+  "other_findings": [
+    {
+      "detail": "expected or pattern-discovered unit is failed in systemd",
+      "problem": "failed_unit_present",
+      "unit_name": "fnspid_forward_accrual.service"
+    },
+    {
+      "detail": "expected or pattern-discovered unit is failed in systemd",
+      "problem": "failed_unit_present",
+      "unit_name": "fnspid_forward_accrual_monitor.service"
+    },
+    {
+      "detail": "expected or pattern-discovered unit is failed in systemd",
+      "problem": "failed_unit_present",
+      "unit_name": "prepared_input_revision_monitor.service"
+    },
+    {
+      "detail": "no retained successful completion; next timer elapse does not prove prior success",
+      "problem": "completion_evidence_missing",
+      "unit_name": "stocks_postgres_backup.service"
+    }
+  ],
+  "backup_result_0210": "pending"
+}

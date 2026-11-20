@@ -70,3 +70,16 @@ document-edit findings raised without new corrective scope; F no secret values;
 d source/effect separate; f exact accepted landings with C declarations; h owners
 invoked; j data unchanged; k/l/o source limitations and observed defects explicit;
 p/q generated artifacts follow approved source; r no new blanket test claim.
+
+## Receiving deployment correction — November19 23:30
+
+Pi30d69d99 confirmed stale native cache despite correct source/rendered bytes.
+The post-deploy generating dry-run rewrote backup files after reload; prior
+clean-plan evidence did not establish NeedDaemonReload=no. Directed supported
+--execute regenerated then reloaded once, exit0/actions[]. Native service and
+timer now both NeedDaemonReload=no; read-only audit then retains those flags
+and has no completion_unit_source_drift. Its exit2 still reports three existing
+failed units and no prior backup completion, none suppressed. Exact causal
+source read, before/after observations, full audit and axiom verification are
+in reload-followup-*; the02:10 completion remains pending. Production/source
+revisions unchanged. No new implementation or broad planner redesign.

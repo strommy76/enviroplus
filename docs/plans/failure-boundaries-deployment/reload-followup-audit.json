@@ -1,0 +1,354 @@
+{
+  "failed_units": [
+    {
+      "unit_name": "enviro_provider_health.service"
+    },
+    {
+      "unit_name": "fnspid_forward_accrual.service"
+    },
+    {
+      "unit_name": "fnspid_forward_accrual_monitor.service"
+    },
+    {
+      "unit_name": "prepared_input_revision_monitor.service"
+    },
+    {
+      "unit_name": "qual-stocks-failure-boundaries-20261119.service"
+    },
+    {
+      "unit_name": "qual-stocks-failure-boundaries-current-20261119.service"
+    }
+  ],
+  "findings": [
+    {
+      "detail": "expected or pattern-discovered unit is failed in systemd",
+      "problem": "failed_unit_present",
+      "unit_name": "fnspid_forward_accrual.service"
+    },
+    {
+      "detail": "expected or pattern-discovered unit is failed in systemd",
+      "problem": "failed_unit_present",
+      "unit_name": "fnspid_forward_accrual_monitor.service"
+    },
+    {
+      "detail": "expected or pattern-discovered unit is failed in systemd",
+      "problem": "failed_unit_present",
+      "unit_name": "prepared_input_revision_monitor.service"
+    },
+    {
+      "detail": "no retained successful completion; next timer elapse does not prove prior success",
+      "problem": "completion_evidence_missing",
+      "unit_name": "stocks_postgres_backup.service"
+    }
+  ],
+  "installed_units": [
+    {
+      "unit_file_state": "linked",
+      "unit_name": "alpaca_corporate_actions.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "alpaca_corporate_actions.timer"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "alpaca_minute_capture.service"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "alpaca_minute_coverage.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "alpaca_minute_coverage.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "alpaca_minute_monitor.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "alpaca_minute_monitor.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "attention_capture_monitor.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "attention_capture_monitor.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "attention_capture_scheduler.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "attention_capture_scheduler.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "daily_rebalance.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "daily_rebalance.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "fnspid_forward_accrual.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "fnspid_forward_accrual.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "fnspid_forward_accrual_monitor.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "fnspid_forward_accrual_monitor.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "headline_sentiment_scoring.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "headline_sentiment_scoring.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "headline_sentiment_scoring_monitor.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "headline_sentiment_scoring_monitor.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "instrument_flow_capture.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "instrument_flow_capture.timer"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "market_monitor.service"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "post_rebalance_noop_detector.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "post_rebalance_noop_detector.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "post_rebalance_noop_detector_health.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "post_rebalance_noop_detector_health.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "prepared_input_revision_monitor.service"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "sentiment_capture_scheduler.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "sentiment_capture_scheduler.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "sentiment_derivation.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "sentiment_derivation.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "sentiment_gold_benchmark_refresh.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "sentiment_gold_benchmark_refresh.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "stocks.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "stocks.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "stocks_acquisition_capture.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "stocks_acquisition_capture.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "stocks_alert_deadman.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "stocks_alert_deadman.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "stocks_data_accuracy.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "stocks_data_accuracy.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "stocks_data_freshness.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "stocks_data_freshness.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "stocks_factor_attribution_refresh.service"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "stocks_fred_backfill.service"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "stocks_market_capture.service"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "stocks_ops_alert@.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "stocks_postgres.service"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "stocks_postgres_backup.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "stocks_postgres_backup.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "stocks_unit_audit.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "stocks_unit_audit.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "strategy_preparation.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "strategy_preparation.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "strategy_session_execution.service"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "tsc_alert_ledger_monitor.service"
+    },
+    {
+      "unit_file_state": "enabled",
+      "unit_name": "tsc_alert_ledger_monitor.timer"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "tsc_alert_ledger_remark.service"
+    },
+    {
+      "unit_file_state": "linked",
+      "unit_name": "tsc_alert_ledger_remark.timer"
+    }
+  ],
+  "ok": false,
+  "repo_declared_units": [
+    "alpaca_corporate_actions.service",
+    "alpaca_corporate_actions.timer",
+    "alpaca_minute_capture.service",
+    "alpaca_minute_coverage.service",
+    "alpaca_minute_coverage.timer",
+    "alpaca_minute_monitor.service",
+    "alpaca_minute_monitor.timer",
+    "attention_capture_monitor.service",
+    "attention_capture_monitor.timer",
+    "attention_capture_scheduler.service",
+    "attention_capture_scheduler.timer",
+    "daily_rebalance.service",
+    "daily_rebalance.timer",
+    "fnspid_forward_accrual.service",
+    "fnspid_forward_accrual.timer",
+    "fnspid_forward_accrual_monitor.service",
+    "fnspid_forward_accrual_monitor.timer",
+    "headline_sentiment_scoring.service",
+    "headline_sentiment_scoring.timer",
+    "headline_sentiment_scoring_monitor.service",
+    "headline_sentiment_scoring_monitor.timer",
+    "instrument_flow_capture.service",
+    "instrument_flow_capture.timer",
+    "market_monitor.service",
+    "post_rebalance_noop_detector.service",
+    "post_rebalance_noop_detector.timer",
+    "post_rebalance_noop_detector_health.service",
+    "post_rebalance_noop_detector_health.timer",
+    "prepared_input_revision_monitor.service",
+    "sentiment_capture_scheduler.service",
+    "sentiment_capture_scheduler.timer",
+    "sentiment_derivation.service",
+    "sentiment_derivation.timer",
+    "sentiment_gold_benchmark_refresh.service",
+    "sentiment_gold_benchmark_refresh.timer",
+    "stocks.service",
+    "stocks.timer",
+    "stocks_acquisition_capture.service",
+    "stocks_acquisition_capture.timer",
+    "stocks_alert_deadman.service",
+    "stocks_alert_deadman.timer",
+    "stocks_data_accuracy.service",
+    "stocks_data_accuracy.timer",
+    "stocks_data_freshness.service",
+    "stocks_data_freshness.timer",
+    "stocks_factor_attribution_refresh.service",
+    "stocks_fred_backfill.service",
+    "stocks_market_capture.service",
+    "stocks_ops_alert@.service",
+    "stocks_postgres.service",
+    "stocks_postgres_backup.service",
+    "stocks_postgres_backup.timer",
+    "stocks_unit_audit.service",
+    "stocks_unit_audit.timer",
+    "strategy_preparation.service",
+    "strategy_preparation.timer",
+    "strategy_session_execution.service",
+    "tsc_alert_ledger_monitor.service",
+    "tsc_alert_ledger_monitor.timer",
+    "tsc_alert_ledger_remark.service",
+    "tsc_alert_ledger_remark.timer"
+  ]
+}

@@ -1,0 +1,8 @@
+Id=stocks_postgres_backup.service
+ActiveState=inactive
+NeedDaemonReload=no
+
+NextElapseUSecRealtime=Fri 2026-11-20 02:10:00 EST
+Id=stocks_postgres_backup.timer
+ActiveState=active
+NeedDaemonReload=no

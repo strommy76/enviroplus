@@ -18,3 +18,25 @@ Construction axiom-check:
 Preamble: only mechanisms already owned/required to execute accepted source, no new infrastructure.
 
 All sections: A/B relayed operator authority/designated executor; C/H same declarations above; D discoveries outside scope raised while unaffected work continues; E actual native content/effects; F no secrets read; G full land/deploy boundary authorized; a minimum; b live-state/repo evidence; c existing service names; d distinct source/effect evidence; e/f same cohesive increment/existing landing records; g existing budgets/cadences unchanged; h supported owners; i no new corrective claim; j no data mutation; k accepted receiving round/input limitation remains disclosed; l status claim limits; m current native host; n failures explicit; o no new residual disposition; p/q generate/install accepted replacements, preserve unrelated edits; r prior test evidence bounded, deployment proof observational.
+
+## Native reload follow-up — November19 23:29
+
+Authority Pi30d69d99 (sent23:27:49EST) folds the confirmed native stale-load
+finding into this same deployment. Both backup units actually show
+NeedDaemonReload=yes; their mtime23:16:07 matches the author's post-execution
+reconciler dry-run. That supported planner calls render_backup_units, whose
+Shared write_units rewrites outputs even when bytes are unchanged. Thus the
+verification dry-run itself invalidated systemd's cached load after reload.
+Run the same supported reconciler with --execute once; its initial reload
+will load regenerated current files. Then use native show and the read-only
+audit owner, NOT another generating reconcile dry-run. No runtime source fix,
+threshold change, extra service or schema change is included. Broader planner
+write semantics are raised as a discovery, not silently redesigned.
+
+Same C/H/full-section and six construction questions apply:1 native flags/audit
+determine actual load;2 no new authority/registry;3 existing owner convergence;
+4 one supported invocation rather than a new mechanism;5 command errors and
+audit findings remain explicit;6 verification no longer supersedes the load it
+claims to check. All CONFORMS prospectively at owner execute/native show/audit.
+Preamble: no new mechanism. k receiving Pi verifies this directed operation;
+D any lasting planner redesign is outside this action. Backup02:10 stillpending.
