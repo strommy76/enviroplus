@@ -1,0 +1,37 @@
+"""Nullable lanes use their newest successful read within the current interval."""
+
+from local_sensors import derive_row
+
+
+def test_nullable_lanes_keep_their_latest_success_then_remain_null_without_one():
+    samples = [
+        {
+            "read_utc": "2026-11-19T00:00:01+00:00",
+            "bme280": [{"pressure": 1000}],
+            "mics6814_ohms": {"oxidising": 1000, "reducing": 2000, "nh3": 3000},
+            "pi": {"loadavg_1m": 2.5, "mem_available_kb": 2048, "uptime_s": 101},
+            "ltr559_lux": 17.5,
+            "cpu_temp_milli_c": 42000,
+        },
+        {
+            "read_utc": "2026-11-19T00:00:02+00:00",
+            "bme280": [{"pressure": 1012}],
+            "mics6814_ohms": {"oxidising": 4000, "reducing": 5000, "nh3": 6000},
+        },
+        {"read_utc": "2026-11-19T00:00:03+00:00", "bme280_error": "I/O failed"},
+    ]
+    expected = {
+        "pressure": 1012,
+        "oxidising": 4,
+        "reducing": 5,
+        "ammonia": 6,
+        "cpu_load": 2.5,
+        "mem_free_mb": 2,
+        "uptime_s": 101,
+        "lux": 17.5,
+        "cpu_temp_c": 42,
+    }
+    row = derive_row(samples, 60)
+    assert {key: row[key] for key in expected} == expected
+    empty = derive_row(samples[-1:], 60)
+    assert all(empty[key] is None for key in expected)

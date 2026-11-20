@@ -1,3 +1,83 @@
+## Directed fold verification — November19
+
+Pi ef5e8387 withdrew JSON-bool rejection and confirmed GLM lacked the actual
+plans; Pi owns that same-round input correction, not duplicate root seats.
+S1 missing enabled-key case now expects KeyError specifically; actual
+get(enabled,False) mutation FAILS it. S2 root-only filter removed. S3 live
+attribution docstring names its own Wants-pulled unit. S4 dependency JSON loses
+all three ExecStart copies; commands stay in native unit files. The existing
+renderer test changes the actual unit command: old policy FAILS, corrected
+policy preserves it. Public --render-units completes with no changed unit bytes.
+
+Enviro E1: native regular-file I2C capability ioctl fails after a real open;
+removing actual close-on-open-failure makes the new owning fd test FAIL. Five
+separate actual last_with->last-sample-only replacements EACH make the new
+pure projection test FAIL (BME/gas/Pi/lux/CPU). Existing raw measurement units
+and explicit NULL semantics drive expectations, not captured implementation
+outputs. No tests added to the dashboard gravity well. E2 adds AttributeError
+only to the gas observation tuple, so private-cleanup failure remains a retained
+gas error; adding it only to the except whose body performs cleanup would not
+catch it. No generic swallowed AttributeError, compatibility manager or driver
+pin added; upgrade trigger remains unconfirmed, no hardware qualification claim.
+
+All40 Stock and44 Enviro owning focused cases PASS; seven actual-source controls
+FAIL with exact source restoration. Full raw results/method/receiving reports
+are adjacent. Construction axiom/Preamble rows above now verify CONFORMS at
+these exact owners/observations; all-section triage unchanged. S5/E3/template
+interpreter residual decisions remain with Bryan, no new logic for them. Pi
+verifies this delta; then one full canonical at each frozen final head. No
+canonical or landing/deployment success inferred from these focused passes.
+
+## Receiving round folds — November19, source3a8e77e4
+
+Read both complete receiving reports. Same lasting/silent/irreversible C/H
+increment and existing branches/artifacts; no new service, data store or runtime
+budget. Pi directly verifies folds, then directs ONE full repository canonical
+at each final head, replacing non-repetition for that final run only. Landing
+and deployment still need their own original scope. S5/E3/template-path residuals
+remain for Bryan's disposition; no changes are made to those pending choices.
+
+Construction/adjudication: missing-enabled test, dead root guard, stale docstring
+and duplicate ExecStart policy are CONFIRMED; one source remains in each unit.
+Enviro close-on-open-failure and nullable interval projection are existing correct
+logic with missing discriminating evidence; add real-native fd and pure projection
+tests in their owning files, not the dashboard gravity well. Catch AttributeError
+only at the gas observation boundary: an error from cleanup inside an except
+cannot be caught by adding it to that same except's matching types. Preserve
+actual error record/siblings, never except/pass or fabricated success. Driver
+attribute rename is an UNCONFIRMED trigger, but the unpinned private-API boundary
+is real; one explicit gas error type avoids a version-dependent whole-capture
+crash without a new compatibility/driver framework.
+
+Strict-boolean validation is WITHDRAWN by Pi ef5e8387:09430141 expressly removed
+that guard and c9 accepted it. The missing-enabled-key assertion is the actual
+evidence gap; it is corrected without a boolean/NaT guard. No conflicting
+reviewer ruling is presented as Bryan's words. GLM's stated missing plan/record input is also raised as
+k limitation; its blanket current-source clearance is not accepted over content.
+
+Construction axiom-check (exact changed owners/tests are named below):
+| Axiom | Falsification question / proposed result |
+|---|---|
+|1 Truth|Do commands or review authority gain a second source? CONFORMS: unit command remains canonical, source reports scope/rulings explicit.|
+|2 Cognition|Is a compatibility roster or inferred sensor fact added? CONFORMS: no roster; actual installed fd/driver and existing lane schema only.|
+|3 Antifragility|Can missing controller capability or gas-private-API error disable siblings? CONFORMS: current close path tested; gas error stays at gas boundary.|
+|4 KISS|Does a guard or duplicate mechanism survive without a reaching case? CONFORMS: dead filter/command copies removed; only directed missing evidence added.|
+|5 Boundaries|Can missing enabled, absent sample or fd-open failure read as success? CONFORMS: required-key exception, NULL/within-interval last success and real fd failure exercised.|
+|6 Maintenance|Are projection cases added to the large dashboard entrypoint test? CONFORMS: small owning projection test module; existing native fd owner reused.|
+|Preamble|Does this exceed the actual directed defects/evidence gaps? CONFORMS: bounded removals, one gas error type and concrete controls only.|
+
+All-section triage: A/B original directions/executor; C/H same declaration;
+D/E prior-rule and input-gap conflicts raised while other work continues;
+F no secrets; G no landing/deploy; a minimal; b repo/broker authority;
+c names describe functions; d source/native effect distinct; e/f same artifacts;
+g no runtime values; h current unit/driver/projection owners; i actual controls;
+j no store change; k Pi's receiving verification/input correction stays its own;
+l trigger/coverage limits explicit; m no hardware effect claim; n errors retained;
+o every seat finding dispositioned, residuals await operator; p/q remove old
+policy copies/docstring and adjust real fixture; r actual-source controls define
+what positive tests evidence. No extra author seats or repeat full run before
+Pi's directed final-head verification.
+
 ### Consumer fixture review fold — November19
 
 Astra1 and GLMF1 CONFIRMED: observations still carried its obsolete source_path

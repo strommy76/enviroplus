@@ -53,3 +53,34 @@ with patch('os.open', open_device), patch.object(
         cwd=Path(__file__).resolve().parents[1],
         check=True,
     )
+
+
+def test_controller_capability_failure_closes_the_opened_bus(tmp_path):
+    device = tmp_path / "i2c-device"
+    device.touch()
+    code = """
+import logging, os, sys
+from unittest.mock import patch
+from sensor_io import SensorIO
+real_open = os.open
+def open_device(path, *args, **kwargs):
+    if isinstance(path, str) and path.startswith('/dev/i2c-'):
+        path = sys.argv[1]
+    return real_open(path, *args, **kwargs)
+with patch('os.open', open_device):
+    io = SensorIO({}, 1, '/unused', '/unused', logging.getLogger('bus-open'))
+    before = len(os.listdir('/proc/self/fd'))
+    try:
+        io._bus()
+    except OSError:
+        pass
+    else:
+        raise AssertionError('regular file cannot answer the real I2C capability ioctl')
+    assert io.bus.fd is None
+    assert len(os.listdir('/proc/self/fd')) == before
+"""
+    subprocess.run(
+        [sys.executable, "-c", code, str(device)],
+        cwd=Path(__file__).resolve().parents[1],
+        check=True,
+    )

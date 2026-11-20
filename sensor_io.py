@@ -63,7 +63,9 @@ class SensorIO:
         self._observe(sample, "tmp119", self._tmp, (OSError, ValueError, AttributeError))
         self._observe(sample, "cpu_temp_milli_c", lambda: int(Path(self.cpu_temp_path).read_text()))
         self._observe(sample, "ltr559_lux", lambda: self._ltr().get_lux())
-        self._observe(sample, "mics6814_ohms", self._gas)
+        self._observe(
+            sample, "mics6814_ohms", self._gas, (OSError, RuntimeError, SystemExit, AttributeError)
+        )
         self._observe(sample, "pi", self._pi)
         self._observe(
             sample,
