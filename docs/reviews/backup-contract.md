@@ -1,3 +1,7 @@
+> Current qualification is the final94338d9 receipt below. Earlier sections
+> are preserved historical review records, including superseded transport proposals
+> and startup-residual decisions; they do not describe current code or open choices.
+
 # Backup configuration and retained copies
 
 Authority: Bryan's November18 project-count/configuration decisions397a7ca8/
@@ -302,3 +306,110 @@ Full raw method, output and JUnit: existing private evidence directory
 backup-ff98-canonical.py and backup-ff98-enviroplus-{canonical.json,pytest.log,pytest.xml,ruff-check.log,ruff-format.log}.
 The installed Pi Shared remainsf42d0c4; no canonical backup/restore operation
 was triggered by this synthetic qualification.
+
+
+## Final Shared94338d9 consumer qualification — November21
+
+Authority: Pi c013acb4 and Flow d72f87cc froze exact Shared
+94338d9d7e704cd6ceb9d6c99b246da615ab747a and directed qualification of unchanged
+Enviro a81932888484ff51a7b81f501f22752a2f3a888c. Same branch/artifact/round,
+no consumer source change or extra review round. Source/landing/deployment are
+separate. Original C/H/k declaration remains; this addition is a one-use factual
+qualification receipt, not a new runtime mechanism or policy.
+
+Actual full canonical:278passed/0failures/0errors/0skips in16.18spytest, both
+Ruff commands exit0. All five tests in test_sqlite_backup.py included: native
+SQLite capture/validation, real Duplicacy delivery/recovery and independent
+source failure, config-driven units and the capture binding. No assertion,
+expectation, marker selection, skip or runtime/test implementation changed.
+
+Method: complete exact-owner git archive, actual shared.__file__ asserted before
+pytest.main and preserved in childPYTHONPATH; deployed Pimoroni interpreter and
+qualified nativeDuplicacy3.3.0 (same bytes as production). Parent D-Bus binding
+retained, with isolation supplied by the actual Shared child adapter. Private
+NVMe scratch selected through TMPDIR/basetemp rather than the capacity-limited
+RAM-backed /tmp; native observable contracts unchanged. Complete JUnit parsed.
+No passing-test property beyond actual observed violations is inferred.
+
+History retained: a3b8 owner failed277/1, KeyError snapshot_id in native cohort
+recovery. Shared restored that consumed field. The subsequent214a owner passed
+278/0 but was reopened for other receiving corrections; neither old result is
+relabelled94338d9. Current consumer code/config/test bytes remain unchanged since
+the actual a819 execution; a later doc-only receipt commit is mapped separately.
+Installed PiShared remainsf42, pre-existing local edits untouched. No production
+backup, data change, main landing, service action or Shared advancement here.
+
+Axiom/Preamble verification:1 exactowner/nativecontract and honestrevisionbinding;
+2 project-configured inputs, no registry;3 changedowner exercised throughactual
+producers;4 onlyrequiredexistingchecks/receipt;5 nonzero/skip cannotreadassuccess;
+6 existingbranch/artifact andunchangeddependentcode. Preamble: mandatory directed
+qualification closes the actual consumer regression, no new mechanism. A-H/a-r:
+authority/executor/declaredC/H preserved, no scopegrowth/secretvalues, source and
+deployed effects distinct, tests native/properties bounded, append-only stores
+unchanged, previous fullauthor/receiving reviews retained; this qualification
+adds observed evidence rather than a new review requirement or verdict.
+
+Complete execution receipt:
+
+```json
+{
+  "project": "enviroplus",
+  "source_revision": "a81932888484ff51a7b81f501f22752a2f3a888c",
+  "shared_revision": "94338d9d7e704cd6ceb9d6c99b246da615ab747a",
+  "shared_source": "/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/backup-shared-9433-y92tzrr_/shared",
+  "native_binary": "/home/pistrommy/projects/.tmp/backup-config-fleet-20261118/tools/duplicacy_linux_arm64_3.3.0",
+  "native_sha256": "0e28cc3d943b2357136364d73a66ac82309ed9ecc36a3f9fea64b23ca1f8427c",
+  "started_utc": "2026-11-21T17:28:21.719019+00:00",
+  "steps": [
+    {
+      "stage": "ruff-check",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "."
+      ],
+      "exit_code": 0,
+      "seconds": 0.14903114500339143
+    },
+    {
+      "stage": "ruff-format",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "exit_code": 0,
+      "seconds": 0.05062066699611023
+    },
+    {
+      "stage": "pytest",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-c",
+        "import shared,pathlib,pytest,sys; assert str(pathlib.Path(shared.__file__).parent)==sys.argv[1]; print(\"QUALIFIED_SHARED_SOURCE=\"+str(pathlib.Path(shared.__file__).parent),flush=True); raise SystemExit(pytest.main(sys.argv[2:]))",
+        "/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/backup-shared-9433-y92tzrr_/shared",
+        "-vv",
+        "--basetemp=/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/enviroplus-9433-canonical-mjmxexef/pytest",
+        "--junitxml=/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/backup-9433-enviroplus-pytest.xml"
+      ],
+      "exit_code": 0,
+      "seconds": 17.00971817498794
+    }
+  ],
+  "status": "passed",
+  "production_operations": false,
+  "parent_dbus_present": true,
+  "completed_utc": "2026-11-21T17:28:38.931973+00:00"
+}
+```
+
+Raw method/output/JUnit in the existing effort directory:
+backup-9433-canonical.py, backup-9433-owner.json and
+backup-9433-enviroplus-{canonical.json,pytest.log,pytest.xml,ruff-check.log,ruff-format.log}.
+Coordinated landing remains Bryan's decision after the complete bundle's review;
+this passing source qualification is not deployed-effect acceptance.
