@@ -84,6 +84,8 @@ def test_enviro_runs_real_producers_through_common_service(tmp_path, monkeypatch
     host = {
         "environment_file": None,
         "state_dir": str(tmp_path / "state"),
+        "component_order": ["database", "raw_capture", "observations"],
+        "records_component": "observations",
         "duplicacy_binary": binary,
         "metadata_timeout_seconds": 300,
         "components": {
@@ -120,6 +122,7 @@ def test_enviro_runs_real_producers_through_common_service(tmp_path, monkeypatch
             },
             "observations": {
                 "authority": "authoritative",
+                "source_path": str(tmp_path / "state/observations"),
                 "capture_argv": None,
                 "estimate_argv": [
                     sys.executable,

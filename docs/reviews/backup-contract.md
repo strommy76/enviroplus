@@ -62,3 +62,53 @@ precedes exclusive record creation; Enviro runtime validates only consumed
 configuration sections. Current source qualification follows this batch; earlier
 counts above are observations at their explicitly named prior revisions. No
 operator-held calendar/retirement/publication choice is implemented.
+
+
+## November21 consumer-contract fixture fold (PR33)
+
+Authority: Pi Claude f33414a5 (November21 08:52EST) adjudicated the record,
+lifted the hold and directed fixture fold1 into this existing branch/artifact/
+round. Bryan November20 17:37 coordinate-consumers direction remains the source
+as relayed in90001661; this is no landing decision. Withdrawn folds2/9/10/14
+(.env token, capacity timeouts, copy counts and notification routing) are excluded.
+
+C/H: lasting configuration/test integration; original silent/irreversible backup
+risk and k review continue. Missing fixture fields fail loudly in pytest, but an
+invalid native input would leave the intended integration unexercised. Revert
+consumers alone only while Pi Shared remainsf42d0c4; after advancement, revert
+Shared first. Source rollback cannot reconstruct missed backups or deleted data.
+
+The production JSON additions and the native fixture each declare only order,
+records identity and the actual observations path. No runtime service, assertion,
+timeout, copy count, expectation, fallback, mock or helper is changed. Search of
+all tracked tests for Shared backup consumers/config builders found one complete
+orchestrator fixture, in tests/test_sqlite_backup.py; the separate capture-only
+fixture calls the producer and does not consume orchestration/records inputs.
+
+Observed method: export exact Shared1d14ae12 with git archive to an isolated
+temporary package; preload that real package and assert its __file__ before
+pytest.main, preserving child imports through the test's existing absolute
+PYTHONPATH binding. Use the deployed Pimoroni interpreter and qualified native
+DUPLICACY_TEST_BINARY3.3.0. At Enviro01e118 before the three fixture additions,
+the real integration failed KeyError(component_order), before producer execution.
+With the additions, all five existing SQLite/native tests passed4.25s against
+that owner, including real native delivery/recovery and missing-source failure.
+This is bounded before/after integration evidence, not a claim that every test
+has mutation-proven assertions or that Shared was deployed.
+
+Flow Claude f6656faf supplies reviewed Shared93afcaf44f7f3a17ddd814b403c6411a7ab3893f.
+Final canonical checks use both installedf42 and an isolated complete93af archive,
+with exact source-path assertions and the same qualified binary. Their terminal
+receipts and final full-content author/receiving review dispositions belong on
+this PR at the final consumer revision; older counts above remain dated records.
+No installed Shared, canonical data, production backup or service changes.
+
+Axiom construction/verification:1 exact fixture keys/path match the owner's
+actual contract;2 explicit fixture membership only, no curated registry;3 same
+input works with old injection and new explicit interface;4 exactly three missing
+bindings, no new mechanism;5 original loud boundary retained, no masked failure;
+6 one dependent fixture follows the owner. Preamble admits only inputs needed to
+reach the already-existing native integration. A-H/a-r retain executor/scope,
+C/H/k, secrets by reference, one existing branch/record/artifact, actual producer
+interfaces and isolated test data; final outcomes are never inferred from old
+receipts. No new store, policy, value, review artifact or production activation.
