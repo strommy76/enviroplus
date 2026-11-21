@@ -144,8 +144,8 @@ attempts,0events gives one-sided95% upper1-0.05**(1/200)=1.4867%; detection
 probability is86.60% if true rate1%, and18.14% if0.1%. These are model-conditional,
 not production incidence bounds: sequential trials can correlate and startup
 conditions vary. Do not pool heterogeneous arms or infer absence/different rates.
-D-Bus causation remains UNCONFIRMED; no environment change is justified by these
-results. Presence in the earlier failed process is UNCONFIRMED: the harness
+From this measurement alone, D-Bus causation is UNCONFIRMED; no environment
+change is justified by these results. Presence in the earlier failed process is UNCONFIRMED: the harness
 currently inherits the key, but that run did not record it.
 
 Method/raw provenance: existing private evidence directory
@@ -154,3 +154,39 @@ its duplicacy-startup/results.json plus600logs, original native panic log bound
 by failed maintenance observation. Canonical receipts name actual e432574 and
 both Shared revisions; this evidence-only addition changes no executable byte.
 PiClaude adjudicates cause/disposition; gate/landing remain held pending that.
+
+
+### Source-confirmed cause and current-production reachability
+
+PiClaude306e7226 (November21 09:00EST) closes the dependency finding without
+action on this outcome. Root independently checked the actual binary's embedded
+module identities, complete pinned upstream sources, both installed unit profiles,
+private .env key presence through python-dotenv (no values reported), and a native
+transient-unit presence probe. The zero-event samples alone did not establish this.
+
+[keyring1661cbebc508](https://github.com/gilbertchen/keyring/blob/1661cbebc508/keyring_linux.go#L162)
+init returns on SessionBus failure at165. If connection succeeds but openSession
+fails, line173 formats the live service object with a string verb. The native
+panic stack's reflective map walk matches that branch; the connection's worker
+mutates maps concurrently. Binary embeds this keyring revision and godbus4.1.0.
+[godbus4.1.0](https://github.com/godbus/dbus/blob/v4.1.0/conn.go#L84)
+uses the session-address environment value, otherwise its
+[platform resolver](https://github.com/godbus/dbus/blob/v4.1.0/conn_other.go#L14)
+executes dbus-launch. Both installed units have no session-address/XDG binding
+or PAMName; neither project .env declares those keys. The matched system-unit
+probe has neither key and no dbus-launch executable. Thus, under these measured
+production inputs and pinned library, SessionBus fails before the racy branch.
+This is conditional reachability, not a future-environment guarantee or a
+statistical proof of absence. The failing stack proves the bus-success/error-
+formatting branch; its exact historical address value remains unrecorded.
+
+Closed without action: no defect in the authorized deployed outcome is reached
+by current production inputs. No binary/environment/retry/test change is made.
+The two278-pass canonical receipts at e432574 stand with the initial failed run
+retained. Only this existing artifact changed after that tested source revision.
+Final author/receiving review and Bryan landing remain distinct requirements.
+
+Production/test binary identity and both unit/.env key-presence readings are
+recorded in the same private evidence directory as
+startup-native-presence-and-hash-receipt.json; only names/presence and public
+binary digests are retained, never credential values.
