@@ -10,6 +10,12 @@
     "BSPiLHX": {
       "environment_file": "/home/pistrommy/projects/enviroplus/.env",
       "state_dir": "/home/pistrommy/projects/enviroplus/.backup-staging/native",
+      "component_order": [
+        "database",
+        "raw_capture",
+        "observations"
+      ],
+      "records_component": "observations",
       "duplicacy_binary": "/home/pistrommy/.local/bin/duplicacy",
       "metadata_timeout_seconds": 300,
       "components": {
@@ -53,6 +59,7 @@
         },
         "observations": {
           "authority": "authoritative",
+          "source_path": "/home/pistrommy/projects/enviroplus/.backup-staging/native/observations",
           "capture_argv": null,
           "estimate_argv": [
             "python",
