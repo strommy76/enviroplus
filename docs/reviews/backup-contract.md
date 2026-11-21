@@ -212,3 +212,93 @@ Production/test binary identity and both unit/.env key-presence readings are
 recorded in the same private evidence directory as
 startup-native-presence-and-hash-receipt.json; only names/presence and public
 binary digests are retained, never credential values.
+
+
+### Frozen Shared qualification, November21 (5587eb0c)
+
+Bryan09:23EST directed the fix via b46935d6; Sharedff98ea86d17fd319e4fd43736c5871eb81a1f2fe
+implements the copied-child-environment/single session-address removal at the
+Duplicacy seam. It changes neither caller nor process environment. This directed
+fix supersedes the residual-acceptance proposal at9117af6e; historical failures
+and reviews above remain provenance. Qualification does not install Shared or
+claim the old production runtime is repaired. Landing/deployment remain separate.
+
+Pi5587eb0c directed qualification of unchanged Enviro09b1e1b against that exact
+frozen owner with the real binary, full canonical and receipts in this artifact;
+no new review round or consumer implementation change. Actual result:278passed,
+0failures/0errors/0skips; all five existing SQLite/native cases included. Both
+Ruff commands passed. The runner retained its D-Bus variable; the qualified
+Shared child boundary supplies the directed isolation, not a test-harness scrub.
+
+Method: exactgitarchiveexport isolated at the recorded path, assert actual
+shared.__file__ before pytest.main and pass the same package via childPYTHONPATH.
+Use the declared Pimoroni interpreter, canonical default selection and qualified
+Duplicacy3.3.0. Complete XML parsed for all278cases; no mutation-proof or deployed
+backup/restore claim inferred. No assertion, skip, binary or service change.
+This receipt-only commit changes documentation; test execution remains attributed
+to09b1e1b, never relabelled to its later documentation commit.
+
+Complete execution receipt:
+
+```json
+{
+  "project": "enviroplus",
+  "source_revision": "09b1e1bba25aefd16d5a469b8d8f73ed09a2a567",
+  "shared_revision": "ff98ea86d17fd319e4fd43736c5871eb81a1f2fe",
+  "shared_source": "/tmp/backup-shared-ff98-fd5n0c01/shared",
+  "native_binary": "/home/pistrommy/projects/.tmp/backup-config-fleet-20261118/tools/duplicacy_linux_arm64_3.3.0",
+  "native_sha256": "0e28cc3d943b2357136364d73a66ac82309ed9ecc36a3f9fea64b23ca1f8427c",
+  "started_utc": "2026-11-21T15:11:13.765806+00:00",
+  "steps": [
+    {
+      "stage": "ruff-check",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "."
+      ],
+      "exit_code": 0,
+      "seconds": 0.06240398800582625
+    },
+    {
+      "stage": "ruff-format",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "exit_code": 0,
+      "seconds": 0.035294805013109
+    },
+    {
+      "stage": "pytest",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-c",
+        "import shared,pathlib,pytest,sys; assert str(pathlib.Path(shared.__file__).parent)==sys.argv[1]; print(\"QUALIFIED_SHARED_SOURCE=\"+str(pathlib.Path(shared.__file__).parent),flush=True); raise SystemExit(pytest.main(sys.argv[2:]))",
+        "/tmp/backup-shared-ff98-fd5n0c01/shared",
+        "-vv",
+        "--basetemp=/tmp/enviroplus-ff98-canonical-4zftefi3/pytest",
+        "--junitxml=/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/backup-ff98-enviroplus-pytest.xml"
+      ],
+      "exit_code": 0,
+      "seconds": 10.309040060994448
+    }
+  ],
+  "status": "passed",
+  "production_operations": false,
+  "parent_dbus_present": true,
+  "completed_utc": "2026-11-21T15:11:24.174597+00:00"
+}
+```
+
+Full raw method, output and JUnit: existing private evidence directory
+/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/
+backup-ff98-canonical.py and backup-ff98-enviroplus-{canonical.json,pytest.log,pytest.xml,ruff-check.log,ruff-format.log}.
+The installed Pi Shared remainsf42d0c4; no canonical backup/restore operation
+was triggered by this synthetic qualification.
