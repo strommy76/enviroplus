@@ -112,3 +112,45 @@ reach the already-existing native integration. A-H/a-r retain executor/scope,
 C/H/k, secrets by reference, one existing branch/record/artifact, actual producer
 interfaces and isolated test data; final outcomes are never inferred from old
 receipts. No new store, policy, value, review artifact or production activation.
+
+
+### Native startup measurement, November21 (PiClaude1a68ea61)
+
+The first installed-f42 canonical at e432574 had277passes/1failure: all three
+synthetic deliveries succeeded, but raw_capture/local retention's native process
+exited2 with concurrent-map panic in keyring.init.0. An unchanged-source repeat
+and reviewed93af canonical each passed278/0skips; neither resolves that panic.
+
+Method:200 sequential fresh `duplicacy -h` processes per arm, each wrapped with
+Python printing only DBUS_SESSION_BUS_ADDRESS presence before os.execv. Arms:
+current inherited environment; the same with only that key removed; and
+`sudo -n systemd-run --quiet --collect --wait --pipe`, unique collected transient
+unit, deriving User/Group/WorkingDirectory/Environment from actual
+systemctl-show enviro_backup.service. The latter matches the unit's configured
+entry environment, not a full backup's later loaded application environment.
+All runs used the same3.3.0 binary, identical to production by SHA256
+0e28cc3d943b2357136364d73a66ac82309ed9ecc36a3f9fea64b23ca1f8427c.
+No backup, canonical unit edit, binary/retry/test/assertion change. Raw stdout,
+exit code, elapsed time, presence marker and help-reached were saved per attempt.
+
+| Arm | Panics / attempts | Other failures | D-Bus key present |
+|---|---|---|---|
+| Current | 0 / 200 | 0 | 200 / 200 |
+| Key removed | 0 / 200 | 0 | 0 / 200 |
+| System unit | 0 / 200 | 0 | 0 / 200 |
+
+All600 completed help successfully. At200 Bernoulli independent fixed-rate
+attempts,0events gives one-sided95% upper1-0.05**(1/200)=1.4867%; detection
+probability is86.60% if true rate1%, and18.14% if0.1%. These are model-conditional,
+not production incidence bounds: sequential trials can correlate and startup
+conditions vary. Do not pool heterogeneous arms or infer absence/different rates.
+D-Bus causation remains UNCONFIRMED; no environment change is justified by these
+results. Presence in the earlier failed process is UNCONFIRMED: the harness
+currently inherits the key, but that run did not record it.
+
+Method/raw provenance: existing private evidence directory
+.tmp/stocks-action-window-rca-20261120, duplicacy-startup-measurement.py and
+its duplicacy-startup/results.json plus600logs, original native panic log bound
+by failed maintenance observation. Canonical receipts name actual e432574 and
+both Shared revisions; this evidence-only addition changes no executable byte.
+PiClaude adjudicates cause/disposition; gate/landing remain held pending that.
