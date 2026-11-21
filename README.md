@@ -315,6 +315,16 @@ The existing `enviro_backup.service` invokes `shared.backup_service`; its `OnFai
 continues to use the host's existing notification owner. Duplicacy preferences/cache stay
 outside source trees. Source data is never changed by this adoption.
 
+`sqlite_backup measure` reports only allocated SQLite page bytes from `SQLITE_PATH`.
+Shared pairs that source measurement with actual whole captured payload bytes,
+before delivery, in append-only capture observations. The newest own capture
+supplies the ratio; missing/damaged history or a latest zero-source pair uses the
+configured provisional cold ratio/margin/evidence allowance with its diagnosis.
+Delivery estimates use actual payload bytes, not an original-source denominator.
+Direct raw trees have staging size zero. The coordinated contract targets Shared
+`37b2aef990cf2392f9776bce7ef0336fa5557477`; land and activate the coupled set together
+only under the corresponding operator decisions.
+
 At the separately directed installation, bind the operator's direct existing-app native
 Google token by private file/environment reference, qualify Drive quota against the physical
 E: mirror, and settle current-corpus capacity and cloud deadlines before activation. No

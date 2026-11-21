@@ -1,3 +1,191 @@
+## Current common-estimator consumer migration — November21
+
+Authority: Bryan16:31 through ac097b18; Pi4b824abe assigned the consumer fold,
+then Flow7d3c6d21 held withdrawn055. Flow a68b86f3/325a2286 and Pi de8d8af2
+now release integration against corrected Shared `37b2aef990cf2392f9776bce7ef0336fa5557477`.
+One coordinated landing set: Shared10, Lexx1099, Stocks351, Enviro33. No landing,
+installed-package advance, production run or activation is authorized here.
+
+C/H: lasting source-measurement/config/observation integration. A wrong source,
+ratio or diagnostic can silently lose backup coverage or misstate authoritative
+capture evidence. Revert the cohesive source/config/Shared-pin increment; Git
+cannot recover missed captures or undo native writes/pruning. Whole final author
+and receiving review apply, with GLM's actual monthly429 unavailable, not a pass.
+A source-only reversal is valid only with the compatible coupled Shared owner.
+
+The reviewed contract uses `measure_argv`/`measure` only. Domain producers return
+original source_bytes/derivation; direct trees also return source_files. Native
+capture, validation, source binding and restore remain with their domain owners.
+Shared alone owns prediction, output measurement, native overhead and append-only
+capture observations. Latest own completed capture is selected by parsed time,
+independent of delivery/cohort success. Its original source and whole payload are
+separate from prediction. Old delivery payload sizes never become denominators.
+Cold ratio, margin, evidence allowance and native overhead remain per-component
+config, exact and PROVISIONAL, with next-capture/format-change settling measures.
+No reserve, affine model, new store/collector/guard or per-project calculator.
+
+Construction review of the accepted Shared plan and current corrections is in
+Shared's existing plan and backup-validation records. Its complete committed
+`common-estimator-calibration-source.json` contains the EXACT method and results
+used here, verified byte/content equal to our original method/results; its
+`common-estimator-source-packet.json` retains all13 original Stocks pairs, and
+calibration-source also retains all5 original Enviro pairs. These are input
+revision references, not summaries replacing the originals. Allocation before
+capture is not the dump MVCC snapshot; configured evidence is an allowance,
+not every old manifest's exact length. Whole-payload margins remain unchanged.
+
+Shared receiving at this pin: root read corrected owners/owning tests/reports;
+independent Astra reran original Linux zero/denied-tree proofs and50 focused
+cases, with no remaining correction class. Pi's full Linux XML independently
+parsed192cases/0failure/error/skip. Author Windows XML192cases/52skips,140passes
+remains platform-limited. These results qualify Shared, NOT this consumer's
+new bytes or future prediction accuracy. Required consumer canonicals, final
+source-violation observations, whole reviews and receiving remain PENDING.
+
+| Axiom | Prospective falsification at the current consumer content | Result |
+|---|---|---|
+|1 Truth|Can source measurement fabricate history or reuse old payload bytes as source? Domain measure returns native source only; Shared37 owns actual capture pairs.|CONFORMS in construction|
+|2 Cognition|Is a curated provider roster/new learner introduced? Existing config selects sources and exact own measurements calibrate policy.|CONFORMS in construction|
+|3 Antifragility|Are old estimate aliases or silent fallback retained? Remove project estimators/old modes, preserve native errors; Shared37 diagnoses unusable history.|CONFORMS in construction|
+|4 KISS|Does a parallel prediction owner or new service remain? Existing native modules shrink to measurement/capture/verify; shared owner is reused.|CONFORMS in construction|
+|5 Boundaries|Can invalid policy or incomplete capture become successful truth? Shared37 validates before effects, measures before append and retains three diagnostic outcomes.|CONFORMS at received owner; consumer integration pending|
+|6 Maintenance|Do live configuration, documentation and tests restore obsolete ownership? PC/runbook/config follow measure-only and pin37; reverse-consumer search removes old wrappers.|CONFORMS in construction; final search pending|
+|Preamble|Does work exceed the assigned common-sizing migration? Only native adapters, derived exact config and dependent tests/docs change; no extra mechanism.|CONFORMS in construction|
+
+All sections: A/B dated delegated source and assigned actors; C/H risk/lifetime
+above; D same branches/review artifacts; E actual content/behavior and distinct
+remaining effect boundary; F references, no secrets; G no landing/activation.
+a/b/c minimum named owners, state remains in live-state/repo; d source vs effect
+distinct; e/f cohesive existing artifacts/default checks; g exact provisional
+fits; h supported native/Shared interfaces; i actual allocation/payload ownership
+cause; j originals never rewritten; k same review round/unavailable-family gap;
+l actual/derived/unknown distinguished; m same observable source contract;
+n loud native failures and retained preflight diagnostics; o named corrections
+adjudicated; p calculator/alias removal; q native tests preserve oracles; r final
+passes claim only properties with observed source violations, not every test.
+
+### Calibration at the pinned source
+
+Inputs/method/results: Shared37 `docs/reviews/backup-validation/` files named
+above, plus original capture/delivery SHA256s in each sample below. This result
+is reproduced by the original one-use calibration method, already committed
+whole in Shared37; future adequacy remains UNCONFIRMED.
+
+```json
+{
+  "enviroplus:database": {
+    "samples": [
+      {
+        "run_id": "e8ead7c7be28411ba895359ccacb7c9e",
+        "captured_utc": "2026-11-19T02:43:27.309871+00:00",
+        "source_allocation_bytes": 112533504,
+        "artifact_bytes": 107970560,
+        "whole_payload_bytes": 107970939,
+        "artifact_ratio": "13180/13737",
+        "whole_payload_ratio": "1894227/1974272",
+        "delivery_path": "/home/pistrommy/projects/enviroplus/.backup-staging/native/observations/e6d4cc9abf76490c969c6adbb6d40609.json",
+        "delivery_sha256": "6335030dbdd4fac6e8fc9eebe30c042e4776257db35c1fc0381fdf367881514c",
+        "capture_path": "/home/pistrommy/projects/enviroplus/.backup-staging/native/work/e8ead7c7be28411ba895359ccacb7c9e/database/capture.log",
+        "capture_sha256": "7df326d6778eb095739ec5513760a4bca167fedaf0424cc753eba2e584830eeb"
+      },
+      {
+        "run_id": "f76d918e64ab4c8fa5df1746cc3c5523",
+        "captured_utc": "2026-11-19T02:58:37.813899+00:00",
+        "source_allocation_bytes": 112533504,
+        "artifact_bytes": 107970560,
+        "whole_payload_bytes": 107970939,
+        "artifact_ratio": "13180/13737",
+        "whole_payload_ratio": "1894227/1974272",
+        "delivery_path": "/home/pistrommy/projects/enviroplus/.backup-staging/native/observations/01fc9e8633c64783b672ca690def6498.json",
+        "delivery_sha256": "8206b78e2cda3366d0d76de0e68a6f300a3c241aead26149a595a66e9487e2c7",
+        "capture_path": "/home/pistrommy/projects/enviroplus/.backup-staging/native/work/f76d918e64ab4c8fa5df1746cc3c5523/database/capture.log",
+        "capture_sha256": "829a260b5dbc3c522a543b653fe77fce46cd6002dd5ec076695f01b40b78577e"
+      },
+      {
+        "run_id": "591d40b9f0394a09b63794320218168e",
+        "captured_utc": "2026-11-19T09:23:24.473338+00:00",
+        "source_allocation_bytes": 112537600,
+        "artifact_bytes": 107974656,
+        "whole_payload_bytes": 107975035,
+        "artifact_ratio": "26361/27475",
+        "whole_payload_ratio": "3085001/3215360",
+        "delivery_path": "/home/pistrommy/projects/enviroplus/.backup-staging/native/observations/41dce2692f494039a5f5cfd27de86702.json",
+        "delivery_sha256": "7db6348140aaf7a8d8501f36de505ac82150b44e87335fc1c4899e98f2c7f12b",
+        "capture_path": "/home/pistrommy/projects/enviroplus/.backup-staging/native/work/591d40b9f0394a09b63794320218168e/database/capture.log",
+        "capture_sha256": "1fb2ee0917cd4a31cecf7de98df20a631ab0c2c286cae04b952d9504d7fb395d"
+      },
+      {
+        "run_id": "26029250808f45f4928d82b2caa6a4b0",
+        "captured_utc": "2026-11-20T09:25:00.008718+00:00",
+        "source_allocation_bytes": 112783360,
+        "artifact_bytes": 108212224,
+        "whole_payload_bytes": 108212603,
+        "artifact_ratio": "26419/27535",
+        "whole_payload_ratio": "108212603/112783360",
+        "delivery_path": "/home/pistrommy/projects/enviroplus/.backup-staging/native/observations/ac0552e982ad454da3d4861b4d2c9ef3.json",
+        "delivery_sha256": "ebe9e3a575ff076ec240536d0175f60482b6d9084bb8d6833c6de4a79db76576",
+        "capture_path": "/home/pistrommy/projects/enviroplus/.backup-staging/native/work/26029250808f45f4928d82b2caa6a4b0/database/capture.log",
+        "capture_sha256": "8334604588b053e9d11ae04e6f652d6cbcac88317a01e03956a812bc90117be2"
+      },
+      {
+        "run_id": "42cebd1799e140d5953aee35e13c04dd",
+        "captured_utc": "2026-11-21T09:23:16.295973+00:00",
+        "source_allocation_bytes": 113029120,
+        "artifact_bytes": 108449792,
+        "whole_payload_bytes": 108450171,
+        "artifact_ratio": "26477/27595",
+        "whole_payload_ratio": "108450171/113029120",
+        "delivery_path": "/home/pistrommy/projects/enviroplus/.backup-staging/native/observations/be53a11056a34dc0a3f89a92b7380696.json",
+        "delivery_sha256": "a622a09ef8fb5bb0a42402d677baafaad34adb39f4fe562ba81dfeacc5bb1fce",
+        "capture_path": "/home/pistrommy/projects/enviroplus/.backup-staging/native/work/42cebd1799e140d5953aee35e13c04dd/database/capture.log",
+        "capture_sha256": "66b90d79af6633dd8f0d11b9ab0113be81f29571591197da7b53c72bae461dc9"
+      }
+    ],
+    "cold_artifact_ratio": {
+      "numerator": 26477,
+      "denominator": 27595
+    },
+    "consecutive_relative_variation": {
+      "artifact_ratio": {
+        "fraction": {
+          "numerator": 82,
+          "denominator": 5005863
+        },
+        "decimal": 1.638079188343748e-05,
+        "all_relative_changes": [
+          "0",
+          "557/362120500",
+          "82/5005863",
+          "82/5027809"
+        ]
+      },
+      "whole_payload_ratio": {
+        "fraction": {
+          "numerator": 278164,
+          "denominator": 16989100507
+        },
+        "decimal": 1.637308578434676e-05,
+        "all_relative_changes": [
+          "0",
+          "2287/1486968195",
+          "278164/16989100507",
+          "9735740/597225355957"
+        ]
+      }
+    },
+    "settling": "next complete own capture source/payload pair; warm whole-payload measurement supersedes artifact-only cold seed plus evidence"
+  }
+}
+```
+
+The directed native dangling-link observation and full one-use method are retained
+whole in the coupled Stocks351 review artifact; all three actual direct roots
+had native find exit0/no dangling links at23:05:10Z. No compatibility logic added.
+
+---
+
+## Historical implementation and verification
+
 > Current qualification is the final94338d9 receipt below. Earlier sections
 > are preserved historical review records, including superseded transport proposals
 > and startup-residual decisions; they do not describe current code or open choices.

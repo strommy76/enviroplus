@@ -98,22 +98,25 @@ def test_enviro_runs_real_producers_through_common_service(tmp_path, monkeypatch
                     "capture",
                 ],
                 "capture_timeout_seconds": 300,
-                "estimate_argv": [
+                "measure_argv": [
                     sys.executable,
                     "-m",
                     "sqlite_backup",
-                    "estimate",
+                    "measure",
                 ],
                 "estimate": {
                     "capture_evidence_bytes": 379,
                     "native_overhead_fraction": {"numerator": 0, "denominator": 107970939},
+                    "cold_start_ratio": {"numerator": 1, "denominator": 1},
+                    "margin": {"numerator": 0, "denominator": 1},
+                    "derivation": "Native fixture unit ratio; restore oracles exercise captured data, not production calibration",
                 },
             },
             "raw_capture": {
                 "authority": "authoritative",
                 "source_path": str(raw),
                 "capture_argv": None,
-                "estimate_argv": [
+                "measure_argv": [
                     sys.executable,
                     "-m",
                     "shared.backup_estimates",
@@ -124,7 +127,7 @@ def test_enviro_runs_real_producers_through_common_service(tmp_path, monkeypatch
                 "authority": "authoritative",
                 "source_path": str(tmp_path / "state/observations"),
                 "capture_argv": None,
-                "estimate_argv": [
+                "measure_argv": [
                     sys.executable,
                     "-m",
                     "shared.backup_estimates",
@@ -269,10 +272,31 @@ def test_capture_follows_only_the_collectors_sqlite_binding(tmp_path, monkeypatc
         source = tmp_path / (name + ".db")
         connection = database(source)
         if count == 2:
-            connection.execute("INSERT INTO readings VALUES ('second source')")
+            # A value larger than a native page makes the two source byte
+            # counts distinct, so wrong-source measurement cannot pass by luck.
+            page_size = connection.execute("PRAGMA page_size").fetchone()[0]
+            connection.execute("INSERT INTO readings VALUES (?)", ("x" * (page_size + 1),))
             connection.commit()
         connection.close()
         monkeypatch.setenv("SQLITE_PATH", str(source))
+        measurement = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "sqlite_backup",
+                "measure",
+                "--config",
+                str(config),
+                "--component",
+                "database",
+            ],
+            check=True,
+            text=True,
+            capture_output=True,
+        )
+        measured = json.loads(measurement.stdout)
+        assert measured["source_bytes"] == source.stat().st_size
+        assert set(measured) == {"source_bytes", "derivation"}
         output = tmp_path / name
         output.mkdir()
         result = subprocess.run(
