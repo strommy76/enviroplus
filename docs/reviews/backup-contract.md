@@ -189,7 +189,8 @@ Shared93af backup_restore.retrieve builds os.environ | storage.environment, and
 Duplicacy defaults to os.environ.copy(); run() likewise passes inherited process
 environment. These are real supported pathways inside the authorized outcome.
 The canonical harness also reaches the branch. Receiving Opus reported2panics/
-4000starts with D-Bus and0/2000without (9117af6e); 2/4000 is an observed0.05% per
+4000starts with D-Bus and0/2000without in an 8-way concurrent experiment
+(9117af6e); 2/4000 is an observed0.05% per
 startup in that sample, not a per-restore or future-production failure guarantee.
 The original200-trial D-Bus-present arm alone supplies its1.4867% bound; no pooled
 0/600 bound is claimed.
