@@ -139,9 +139,10 @@ exit code, elapsed time, presence marker and help-reached were saved per attempt
 | Key removed | 0 / 200 | 0 | 0 / 200 |
 | System unit | 0 / 200 | 0 | 0 / 200 |
 
-All600 completed help successfully. At200 Bernoulli independent fixed-rate
-attempts,0events gives one-sided95% upper1-0.05**(1/200)=1.4867%; detection
-probability is86.60% if true rate1%, and18.14% if0.1%. These are model-conditional,
+All600 completed help successfully. For the D-Bus-present arm alone (0/200),
+200 independent fixed-rate Bernoulli attempts give a one-sided95% upper
+1-0.05**(1/200)=1.4867%; detection probability is86.60% if true rate1%, and18.14%
+if0.1%. These are model-conditional,
 not production incidence bounds: sequential trials can correlate and startup
 conditions vary. Do not pool heterogeneous arms or infer absence/different rates.
 From this measurement alone, D-Bus causation is UNCONFIRMED; no environment
@@ -153,13 +154,15 @@ Method/raw provenance: existing private evidence directory
 its duplicacy-startup/results.json plus600logs, original native panic log bound
 by failed maintenance observation. Canonical receipts name actual e432574 and
 both Shared revisions; this evidence-only addition changes no executable byte.
-PiClaude adjudicates cause/disposition; gate/landing remain held pending that.
+Receiving adjudication9117af6e below corrects the scope/disposition; landing
+remains held for Bryan, including the open residual decision.
 
 
-### Source-confirmed cause and current-production reachability
+### Source-confirmed cause and pathway reachability
 
-PiClaude306e7226 (November21 09:00EST) closes the dependency finding without
-action on this outcome. Root independently checked the actual binary's embedded
+Receiving adjudication9117af6e (November21 09:14EST) supersedes306e7226: the
+startup defect is reachable in supported manual runs, so it is not closed without
+action. Root independently checked the actual binary's embedded
 module identities, complete pinned upstream sources, both installed unit profiles,
 private .env key presence through python-dotenv (no values reported), and a native
 transient-unit presence probe. The zero-event samples alone did not establish this.
@@ -174,17 +177,35 @@ uses the session-address environment value, otherwise its
 [platform resolver](https://github.com/godbus/dbus/blob/v4.1.0/conn_other.go#L14)
 executes dbus-launch. Both installed units have no session-address/XDG binding
 or PAMName; neither project .env declares those keys. The matched system-unit
-probe has neither key and no dbus-launch executable. Thus, under these measured
-production inputs and pinned library, SessionBus fails before the racy branch.
-This is conditional reachability, not a future-environment guarantee or a
+probe has neither key and no dbus-launch executable. Thus, for the two scheduled
+units under these measured inputs and pinned library, SessionBus fails before
+the racy branch. This exclusion does not cover manual backup/restore or the
+canonical harness, and is neither a future-environment guarantee nor a
 statistical proof of absence. The failing stack proves the bus-success/error-
 formatting branch; its exact historical address value remains unrecorded.
 
-Closed without action: no defect in the authorized deployed outcome is reached
-by current production inputs. No binary/environment/retry/test change is made.
-The two278-pass canonical receipts at e432574 stand with the initial failed run
-retained. Only this existing artifact changed after that tested source revision.
-Final author/receiving review and Bryan landing remain distinct requirements.
+Supported manual backup and restore from a session-bus shell are REACHABLE:
+Shared93af backup_restore.retrieve builds os.environ | storage.environment, and
+Duplicacy defaults to os.environ.copy(); run() likewise passes inherited process
+environment. These are real supported pathways inside the authorized outcome.
+The canonical harness also reaches the branch. Receiving Opus reported2panics/
+4000starts with D-Bus and0/2000without (9117af6e); 2/4000 is an observed0.05% per
+startup in that sample, not a per-restore or future-production failure guarantee.
+The original200-trial D-Bus-present arm alone supplies its1.4867% bound; no pooled
+0/600 bound is claimed.
+
+OPEN operator-owned residual undero: Bryan must accept it or direct a fix at
+landing. PiClaude recommends ACCEPT: observed startup rate is low, failure is
+loud (exit2), manual restore is incident-only, and recovery is inspecting/removing
+its newly created partial target before rerunning. That cleanup is a recovery
+procedure requiring its own authorized target, not an automatic deletion or a
+promise of next-attempt success. A Shared child-environment change would alter
+frozen93af and reopen its affected review. No binary/environment/retry/test or
+Shared change is made here. The two278-pass canonical receipts at e432574 stand
+with the initial failed run retained. Only this existing artifact changed after
+that tested source revision. Code is accepted by the receiving seats; this record
+correction is subject to PiClaude verification. Landing and residual acceptance
+remain Bryan's decisions.
 
 Production/test binary identity and both unit/.env key-presence readings are
 recorded in the same private evidence directory as
