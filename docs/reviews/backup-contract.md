@@ -511,6 +511,30 @@ are root's bounded evidence closure, with receiving still pending.
 ```
 
 
+### Same-round independent terminal closure
+
+The following original bounded closure was read whole. Root CONFIRMED its
+counts, source-to-receipt mapping and every supporting-file identity against the
+actual bytes. No finding remains; no further source/evidence review round is
+needed. Appending this unchanged closure is evidence only and does not relabel
+the preceding receipts or authorize landing/activation.
+
+# Paired consumer terminal evidence closure
+
+**Confirmed. Both canonical gates passed on the named consumer sources with Shared 37b2aef990cf2392f9776bce7ef0336fa5557477. No terminal-evidence defect remains.**
+
+| Consumer | Tested source → receipt commit | Independent reading of committed evidence |
+|---|---|---|
+| Stocks | 678b32de8fe3d5475cf7289297a4976e3c70b8cf → 343a3eff6db9203ab2b36c27e36e08a85a6dbedf | 3,865 JUnit cases and 3,865 stdout passes. Zero failures, errors or skips. Pytest reported 56 deselections, 15 warnings and 1,450.46 seconds. Ruff check and format exited 0. The wrapper recorded the dedicated test PostgreSQL container exited before and after. |
+| Enviroplus | 70cfbcee727c480f4ed1a49761099e77d03773e2 → 2a2bb69934372ab61ddc61eceab13093b7f62ca5 | 278 JUnit cases and 278 stdout passes. Zero failures, errors or skips. Pytest reported 15.15 seconds. Ruff check and format exited 0. |
+
+I read the receipt metadata, parsed every terminal JUnit case, counted the individual stdout passes and verified the asserted Shared import path in both logs. I compared every file in both published supporting-input manifests against its named Git blob, SHA256 and original run artifact. All 11 Stocks and 5 Enviroplus entries match, including the public stdout. Each tested-to-receipt Git diff contains only the existing review document and its qualification evidence. Source, tests, configuration and operating documents match the tested commits. Enviroplus names the exact Stocks receipt commit containing the common method. The embedded one-use wrapper matches its original and binds the clean source HEAD, native executable hash, child import and step statuses.
+
+Both reports retain the full preceding independent review. The final dispositions acknowledge all three dependent-test findings. The interrupted f6c871b receipt records pytest exit 2. At c6c6909 the earlier full JUnit contains exactly one failed retired startup command. The corrected targeted JUnit contains one successful case. The final gate supersedes that failure for the corrected source. The separately retained numerical and source/shape controls support the original bounded property claims. A canonical count establishes the gate result only.
+
+The construction table and original review preserve earlier cutoffs. The front status and final qualification sections give the completed consumer gates and distinguish the separately assigned receiving decision. GLM remains recorded as unavailable. This evidence closes the outstanding item under the prior axiom check, particularly source identity, boundary outcomes, provenance and directions E/H/k/l/o/r. No tests were rerun. Coordinated landing, deployment and production effect remain separate.
+
+
 ---
 
 ## Historical implementation and verification
