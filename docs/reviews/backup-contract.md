@@ -981,3 +981,23 @@ and disable auto-checkpoint to retain committed WAL. A separate connection reads
 the page-product oracle and confirms nonzero freelist; the test also establishes
 that main-file length differs. The second bound source keeps its larger live row.
 No production behavior or source store changes. Validation/review results follow.
+
+
+### Receiving closure results and author adjudication
+
+Root read the whole original reports and whole independent Astra closure. C1/C2
+are CONFIRMED/CLOSED on actual corrected content; both source mutations failed
+the intended assertion (4096 and 12288 versus independent allocation20480).
+The complete module passed5/5; full a60bce6df0f7a9af2a2c1995d7437735c7354c76
+canonical against Shared37b2aef passed278,0fail/error/skip (pytest13.75s). Ruff
+check/format both0. No claim beyond these measured properties or deployed effect.
+
+Original reports, actual one-use method, terminal receipt and all four complete
+log/XML pairs are committed unchanged in docs/reviews/backup-validation with
+receiving-* names; production native source is byte-identical before/after.
+Full independent author closure: receiving-consumer-author-closure-astra.md.
+The existing GLM monthly-quota unavailability remains a family gap, not a pass.
+No further author defect class remains; hand back for Pi Claude's requested
+class-only receiving closure. The prior broad canonical receipt remains historical;
+the new receipt binds the actual strengthened-test source a60bce6. Any later
+receipt commit changes review evidence only. No landing/deployment authorized.

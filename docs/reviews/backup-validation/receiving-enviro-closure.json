@@ -1,0 +1,113 @@
+{
+  "source_revision": "a60bce6df0f7a9af2a2c1995d7437735c7354c76",
+  "shared_revision": "37b2aef990cf2392f9776bce7ef0336fa5557477",
+  "shared_source": "/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/backup-shared-37b2aef/shared",
+  "native_sha256": "0e28cc3d943b2357136364d73a66ac82309ed9ecc36a3f9fea64b23ca1f8427c",
+  "production_operations": false,
+  "steps": [
+    {
+      "stage": "sqlite-baseline",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-c",
+        "import shared,pathlib,pytest,sys;assert str(pathlib.Path(shared.__file__).parent)==sys.argv[1];raise SystemExit(pytest.main(sys.argv[2:]))",
+        "/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/backup-shared-37b2aef/shared",
+        "tests/test_sqlite_backup.py",
+        "-q",
+        "--basetemp=/home/pistrommy/projects/.tmp/rc-111ke6jq/sqlite-baseline",
+        "--junitxml=/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/receiving-sqlite-baseline.xml"
+      ],
+      "exit_code": 0,
+      "seconds": 9.440494203998242,
+      "tests": 5,
+      "failures": [],
+      "errors": [],
+      "skips": []
+    },
+    {
+      "stage": "sqlite-main-file",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-c",
+        "import shared,pathlib,pytest,sys;assert str(pathlib.Path(shared.__file__).parent)==sys.argv[1];raise SystemExit(pytest.main(sys.argv[2:]))",
+        "/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/backup-shared-37b2aef/shared",
+        "tests/test_sqlite_backup.py::test_capture_follows_only_the_collectors_sqlite_binding",
+        "-q",
+        "--basetemp=/home/pistrommy/projects/.tmp/rc-111ke6jq/sqlite-main-file",
+        "--junitxml=/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/receiving-sqlite-main-file.xml"
+      ],
+      "exit_code": 1,
+      "seconds": 1.0842878650000785,
+      "tests": 1,
+      "failures": [
+        "test_capture_follows_only_the_collectors_sqlite_binding"
+      ],
+      "errors": [],
+      "skips": []
+    },
+    {
+      "stage": "sqlite-exclude-free",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-c",
+        "import shared,pathlib,pytest,sys;assert str(pathlib.Path(shared.__file__).parent)==sys.argv[1];raise SystemExit(pytest.main(sys.argv[2:]))",
+        "/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/backup-shared-37b2aef/shared",
+        "tests/test_sqlite_backup.py::test_capture_follows_only_the_collectors_sqlite_binding",
+        "-q",
+        "--basetemp=/home/pistrommy/projects/.tmp/rc-111ke6jq/sqlite-exclude-free",
+        "--junitxml=/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/receiving-sqlite-exclude-free.xml"
+      ],
+      "exit_code": 1,
+      "seconds": 1.0523387599969283,
+      "tests": 1,
+      "failures": [
+        "test_capture_follows_only_the_collectors_sqlite_binding"
+      ],
+      "errors": [],
+      "skips": []
+    },
+    {
+      "stage": "ruff-check",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "."
+      ],
+      "exit_code": 0
+    },
+    {
+      "stage": "ruff-format",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "exit_code": 0
+    },
+    {
+      "stage": "enviro-canonical",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-c",
+        "import shared,pathlib,pytest,sys;assert str(pathlib.Path(shared.__file__).parent)==sys.argv[1];raise SystemExit(pytest.main(sys.argv[2:]))",
+        "/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/backup-shared-37b2aef/shared",
+        ".",
+        "-q",
+        "--basetemp=/home/pistrommy/projects/.tmp/rc-111ke6jq/enviro-canonical",
+        "--junitxml=/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/receiving-enviro-canonical.xml"
+      ],
+      "exit_code": 0,
+      "seconds": 14.69491409600596,
+      "tests": 278,
+      "failures": [],
+      "errors": [],
+      "skips": []
+    }
+  ],
+  "status": "passed"
+}
