@@ -7,8 +7,6 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-from shared.backup_configuration import load_configuration
-from shared.backup_estimates import fractional_tree_estimate, fractional_upload_bytes
 from shared.backup_records import write_record
 from shared.config_service import require
 
@@ -59,19 +57,15 @@ def verify(directory: Path) -> dict:
     return evidence
 
 
-def estimate(source: Path, settings: dict) -> dict:
+def measure(source: Path) -> dict:
     with sqlite3.connect(f"file:{source}?mode=ro", uri=True) as connection:
         size = (
             connection.execute("PRAGMA page_count").fetchone()[0]
             * connection.execute("PRAGMA page_size").fetchone()[0]
         )
-    staging = size + settings["capture_evidence_bytes"]
     return {
-        "staging_bytes": staging,
-        "upload_bytes": fractional_upload_bytes(staging, settings["native_overhead_fraction"]),
         "source_bytes": size,
-        "source_files": 2,
-        "derivation": "Current allocated SQLite pages plus measured capture evidence and provisional native encoding fraction; no compression credit",
+        "derivation": "Current allocated SQLite pages",
     }
 
 
@@ -82,26 +76,20 @@ def main() -> int:
     capture_parser.add_argument("--config", type=Path, required=True)
     capture_parser.add_argument("--component", required=True)
     capture_parser.add_argument("--output-dir", type=Path, required=True)
-    estimate_parser = mode.add_parser("estimate")
-    estimate_parser.add_argument("--config", type=Path, required=True)
-    estimate_parser.add_argument("--component", required=True)
-    estimate_parser.add_argument("--output-dir", type=Path)
+    measure_parser = mode.add_parser("measure")
+    measure_parser.add_argument("--config", type=Path, required=True)
+    measure_parser.add_argument("--component", required=True)
     restore_parser = mode.add_parser("verify")
     restore_parser.add_argument("directory", type=Path)
     args = parser.parse_args()
     if args.mode == "verify":
         result = verify(args.directory)
     else:
-        _, config, _ = load_configuration(args.config)
-        component = config["components"][args.component]
+        source = Path(require("SQLITE_PATH"))
         if args.mode == "capture":
-            result = capture(Path(require("SQLITE_PATH")), args.output_dir)
-        elif args.output_dir is not None:
-            result = fractional_tree_estimate(
-                args.output_dir, component["estimate"]["native_overhead_fraction"]
-            )
+            result = capture(source, args.output_dir)
         else:
-            result = estimate(Path(require("SQLITE_PATH")), component["estimate"])
+            result = measure(source)
     print(json.dumps(result))
     return 0
 

@@ -10,6 +10,12 @@
     "BSPiLHX": {
       "environment_file": "/home/pistrommy/projects/enviroplus/.env",
       "state_dir": "/home/pistrommy/projects/enviroplus/.backup-staging/native",
+      "component_order": [
+        "database",
+        "raw_capture",
+        "observations"
+      ],
+      "records_component": "observations",
       "duplicacy_binary": "/home/pistrommy/.local/bin/duplicacy",
       "metadata_timeout_seconds": 300,
       "components": {
@@ -22,47 +28,56 @@
             "capture"
           ],
           "capture_timeout_seconds": 3600,
-          "estimate_argv": [
-            "python",
-            "-m",
-            "sqlite_backup",
-            "estimate"
-          ],
           "estimate": {
             "capture_evidence_bytes": 379,
-            "provisional": "Observed first actual Drive seed: payload107970939B, uploaded30711KiB (rounded native stats). Net encoding cost is below payload, so overhead floors at0 without compression credit. Refit from future scheduled native costs after source/format changes.",
             "native_overhead_fraction": {
               "numerator": 0,
               "denominator": 107970939
-            }
-          }
+            },
+            "cold_start_ratio": {
+              "numerator": 26477,
+              "denominator": 27595
+            },
+            "margin": {
+              "numerator": 278164,
+              "denominator": 16989100507
+            },
+            "derivation": "Observed first actual Drive seed: payload107970939B, uploaded30711KiB (rounded native stats). Net encoding cost is below payload, so overhead floors at0 without compression credit. Refit from future scheduled native costs after source/format changes. PROVISIONAL common-estimator calibration: cold_start_ratio is the maximum actual artifact/pre-capture allocation ratio from 5 own Nov19-21 source/capture pairs; capture_evidence_bytes is added separately only while cold. margin is the maximum absolute consecutive RELATIVE whole-payload/source ratio change for this component. Exact method, every source hash and all sample columns: captured-component-calibration-manifest.json/results.json in the existing effort evidence. No other-project margin, compression/dedup credit, fabricated history or guaranteed tail. The newest own successful Shared capture observation supersedes the cold seed. Refit on the next own capture and capture-format/source changes."
+          },
+          "measure_argv": [
+            "python",
+            "-m",
+            "sqlite_backup",
+            "measure"
+          ]
         },
         "raw_capture": {
           "authority": "authoritative",
           "source_path": "/home/pistrommy/projects/enviroplus/raw-capture",
           "capture_argv": null,
-          "estimate_argv": [
-            "python",
-            "-m",
-            "shared.backup_estimates"
-          ],
           "estimate": {
             "native_metadata_bytes_per_file": 163,
             "provisional": "Native current-corpus831-file seed reported131KiB logical metadata; upper-rounded132KiB /831, ceiling163B per file. Refit when source-name/file-count shape changes or observed native cost exceeds this fit. No compression/dedup credit."
-          }
-        },
-        "observations": {
-          "authority": "authoritative",
-          "capture_argv": null,
-          "estimate_argv": [
+          },
+          "measure_argv": [
             "python",
             "-m",
             "shared.backup_estimates"
-          ],
+          ]
+        },
+        "observations": {
+          "authority": "authoritative",
+          "source_path": "/home/pistrommy/projects/enviroplus/.backup-staging/native/observations",
+          "capture_argv": null,
           "estimate": {
             "native_metadata_bytes_per_file": 1024,
             "provisional": "Uses the existing two-file native seed metadata upper allowance per file. Settle against actual UUID-named observation-tree native statistics before activation; no compression/dedup credit."
-          }
+          },
+          "measure_argv": [
+            "python",
+            "-m",
+            "shared.backup_estimates"
+          ]
         }
       },
       "destinations": {

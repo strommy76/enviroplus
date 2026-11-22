@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.291" timestamp="2026-11-21T19:34:08.542892-05:00" hostname="BSPiLHX"><testcase classname="tests.test_sqlite_backup" name="test_capture_follows_only_the_collectors_sqlite_binding" time="0.154"><failure message="assert 4096 == 20480">tmp_path = PosixPath('/home/pistrommy/projects/.tmp/rc-111ke6jq/sqlite-main-file/test_capture_follows_only_the_0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7ffefe0a2780&gt;
+
+    def test_capture_follows_only_the_collectors_sqlite_binding(tmp_path, monkeypatch):
+        """Changing SQLITE_PATH must move the real captured DB without editing backup config."""
+        import subprocess
+    
+        # Retain the formerly authoritative literal only as a deliberately stale input.
+        host = {
+            "environment_file": None,
+            "components": {"database": {"source_path": str(tmp_path / "first.db")}},
+        }
+        config = tmp_path / "backup.json"
+        config.write_text(json.dumps({"project": "enviroplus", "hosts": {socket.gethostname(): host}}))
+        for name, count in (("first", 1), ("second", 2)):
+            source = tmp_path / (name + ".db")
+            connection = database(source)
+            if count == 2:
+                # A value larger than a native page makes the two source byte
+                # counts distinct, so wrong-source measurement cannot pass by luck.
+                page_size = connection.execute("PRAGMA page_size").fetchone()[0]
+                connection.execute("INSERT INTO readings VALUES (?)", ("x" * (page_size + 1),))
+                connection.commit()
+            # Retain allocated free pages and committed WAL: neither main-file length
+            # nor used pages is the allocation denominator of the production fit.
+            page_size = connection.execute("PRAGMA page_size").fetchone()[0]
+            connection.execute("PRAGMA wal_autocheckpoint=0")
+            connection.execute("CREATE TABLE allocation_probe (value BLOB)")
+            connection.execute("INSERT INTO allocation_probe VALUES (zeroblob(?))", (page_size + 1,))
+            connection.commit()
+            connection.execute("DROP TABLE allocation_probe")
+            connection.commit()
+            with sqlite3.connect(f"file:{source}?mode=ro", uri=True) as oracle:
+                allocated = (
+                    oracle.execute("PRAGMA page_count").fetchone()[0]
+                    * oracle.execute("PRAGMA page_size").fetchone()[0]
+                )
+                assert oracle.execute("PRAGMA freelist_count").fetchone()[0] &gt; 0
+            assert allocated != source.stat().st_size
+            monkeypatch.setenv("SQLITE_PATH", str(source))
+            measurement = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "sqlite_backup",
+                    "measure",
+                    "--config",
+                    str(config),
+                    "--component",
+                    "database",
+                ],
+                check=True,
+                text=True,
+                capture_output=True,
+            )
+            measured = json.loads(measurement.stdout)
+&gt;           assert measured["source_bytes"] == allocated
+E           assert 4096 == 20480
+
+tests/test_sqlite_backup.py:313: AssertionError</failure></testcase></testsuite></testsuites>

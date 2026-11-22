@@ -41,9 +41,14 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
   `enviro_backup.service` invokes the shared backup CLI. Use
   `systemctl start enviro_backup.service` for a manual run, so the native service
   owner prevents overlap with the timer. Do not run a concurrent direct CLI.
-  `sqlite_backup.py` owns SQLite capture/estimation from the collectors' required `SQLITE_PATH` and artifact-bound restore validation;
-  raw files use the native tree input and shared filesystem estimate. Database backups
-  include irreplaceable legacy rows and are protected as authoritative. Delivery/run/maintenance
+  `sqlite_backup.py` owns source measurement and SQLite capture from the collectors'
+  required `SQLITE_PATH`, plus artifact-bound restore validation. Shared owns sizing
+  from the latest own completed capture's original-source/whole-payload pair and
+  configured provisional cold policy. The coupled backup contract targets Shared
+  `37b2aef990cf2392f9776bce7ef0336fa5557477`; deploy the reviewed Shared with the
+  consumers, never activate them independently. Direct raw files have no staging copy;
+  Shared measures their tree and adds configured native overhead. Database backups
+  include irreplaceable legacy rows and are protected as authoritative. Capture/delivery/run/maintenance
   observations are append-only authority; payloads/caches and status views are derived.
 - Tests must isolate the raw-retention root and must never write to the live
   canonical capture tree.
