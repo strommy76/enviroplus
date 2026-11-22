@@ -1001,3 +1001,20 @@ No further author defect class remains; hand back for Pi Claude's requested
 class-only receiving closure. The prior broad canonical receipt remains historical;
 the new receipt binds the actual strengthened-test source a60bce6. Any later
 receipt commit changes review evidence only. No landing/deployment authorized.
+
+
+Pi receiving is CLOSED by broker062d2df4-6d18-4162-a28c-ffdeb1b1f09d,
+November21 19:35 EST, after its independent5/5 and actual file-length mutation
+failure. Corrected sourcea60bce6 and Stocksefcb356 are ancestors of pushed current
+heads; later commits change only review evidence. Root verified source/receipts
+before accepting this bounded closure; no landing/activation is implied.
+
+Artifact transport correction only: the Opus report supplied initially declared
+its AGENTS table condensed. Broker02ffac32-a006-4997-b983-91ac3cc4c636 supplies
+the uncondensed33-row table verbatim, now retained unchanged as
+receiving-original-opus-agents-table-verbatim.md beside the unchanged original
+findings/section text. Together these are the complete receiving hand-back, not
+a new review or gate. The author read and adjudicated all rows: their CONFORMS k
+claim evidences that seat's work only and does not erase the actual GLM gap;
+p/r findings are closed as demonstrated above; other scope-limited observations
+remain bounded to inspected source, not deployed-effect acceptance.
