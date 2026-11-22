@@ -39,8 +39,9 @@ independent Astra reran original Linux zero/denied-tree proofs and50 focused
 cases, with no remaining correction class. Pi's full Linux XML independently
 parsed192cases/0failure/error/skip. Author Windows XML192cases/52skips,140passes
 remains platform-limited. These results qualify Shared, NOT this consumer's
-new bytes or future prediction accuracy. Required consumer canonicals, final
-source-violation observations, whole reviews and receiving remain PENDING.
+new bytes or future prediction accuracy. Both consumer canonicals and author review are complete at the named
+revisions below. Final receiving remains PENDING; no independent landing or
+activation is implied.
 
 | Axiom | Prospective falsification at the current consumer content | Result |
 |---|---|---|
@@ -181,6 +182,334 @@ whole in Shared37; future adequacy remains UNCONFIRMED.
 The directed native dangling-link observation and full one-use method are retained
 whole in the coupled Stocks351 review artifact; all three actual direct roots
 had native find exit0/no dangling links at23:05:10Z. No compatibility logic added.
+
+### Root verification against every current section
+
+Object: Stocks678b32d (runtimef6c871b) and Enviro70cfbce on Shared37, including actual current
+source/config/tests/live contract documents and the full original reviews.
+This is source/preparation review. Production effect and operator landing are
+separate, unclaimed boundaries. Final test receipts below supply their own scope.
+
+| Axiom / determinate falsification question | Located result |
+|---|---|
+|1 Truth: can payload or prediction masquerade as original source? | CONFORMS: measure returns native source; Shared37 writes the original/actual pair before delivery. Config and raw18-pair inputs distinguish allocation/archive/whole payload.|
+|2 Adaptive cognition: is a parallel learner, roster or rule tree introduced? | CONFORMS: deleted PG learner, existing config bindings and Shared newest-own algorithm only.|
+|3 Antifragility: do changed source/evidence shapes require stale aliases or history edits? | CONFORMS for inspected inputs: SQLite binding/page variation exercised, verify accepts artifact facts without obsolete optional size field; Shared37 handles empty/damaged history. Future tail accuracy UNCONFIRMED.|
+|4 KISS: does unused production or test logic remain from the old learner? | CONFORMS: calculator, postcapture prediction CLI, second size query/field and native history scaffolding removed; no new service/model/guard.|
+|5 Determinate boundaries: can false source identity/output/numeric bytes cross unnoticed? | CONFORMS for the observed violations: four source association/shape alterations and native SELECT1 fail intended assertions; native failure/restore contracts stay separate.|
+|6 Directional maintenance: do native owners/config/docs/tests disagree? | CONFORMS: actual config CLI matches source-only adapters, PC/DR/README pin37, historical review evidence is not current contract.|
+|Preamble: does any added mechanism exceed present need? | CONFORMS: source adapters replace duplicated prediction; only existing native oracle is retargeted. Calibration/receipts are derived evidence, not new runtime mechanisms.|
+
+| Section | Content / evidence / limit |
+|---|---|
+|A|Dated Bryan direction through ac097b18 and Pi4b824abe/de8d8af2 retained; no repeat approval sought for assigned work.|
+|B|Root executes assigned Pi consumer branches; Shared owner and Pi receiving retain their roles.|
+|C|Current construction header declares lasting silent/authoritative-state risks and limited revert; accepted Shared plan carries primary-practice premise checks.|
+|D|All corrections belong to the existing common-sizing fold; no host/backup service scope expansion.|
+|E|Native source/capture/restore content and actual observed failures govern; passing counts do not establish future capacity or production effect.|
+|F|Only public VAR/file references and nonsecret source/evidence used; no credential values in reports.|
+|G|Only local repo preparation and isolated test DB/scratch native operations; no landing, production backup, cloud write, pruning or activation.|
+|H|One-use methods, actual results and input revisions preserved with this same artifact; no executable service or standing analysis store introduced.|
+|a|Smallest complete measurement/Shared ownership fold; deleted superseded work.|
+|b|Durable state remains in repo/live-state, not agent memory.|
+|c|measure/capture/verify name their native function; no work-produced proxy owner.|
+|d|This is complete-source review plus isolated consumer qualification, not deployed-effect review.|
+|e|One coupled Shared/Lexx/Stocks/Enviro landing set; not independently activated fragments.|
+|f|Existing branches/PRs/artifacts, C declarations on implementation commits, canonical before landing decision; no merge authority inferred.|
+|g|Cold fractions/margins/native overhead/evidence from exact own observations, explicitly PROVISIONAL with next-capture/format settling; no new runtime comfort values.|
+|h|Native PostgreSQL/SQLite and Shared supported writer/service/sizing interfaces reused; no private parallel estimator.|
+|i|Original allocation-equals-payload cause corrected at shared ownership; numeric test gap corrected at real measurement, never production code rigged to pass.|
+|j|Authoritative source/capture/delivery records unchanged/append-only; policy fits and status remain derived.|
+|k|Whole independent Astra author review and own adjudication complete; actual GLM monthly429 unavailable is explicit; peer receiving remains separately assigned.|
+|l|Observed mutations and native input checks are distinguished from unconfirmed future behavior and production effect.|
+|m|Same observable measure/capture contract in both environments; platform-limited Shared Windows results distinguished from192-case Pi gate.|
+|n|Native source/capture/verify failures stay loud; Shared37 retains preflight diagnosis in all3 required outcomes.|
+|o|All three whole-review dependent-test findings CONFIRMED/CLOSED, no remaining source class; no silent residual acceptance or unnecessary round.|
+|p|PG prediction owner, aliases, second query/field and dead test history scaffolding removed; unchanged historical reports remain provenance only.|
+|q|Tests follow current code responsibility; independent native allocation oracle moved to measure, all capture/restore/corruption expectations preserved.|
+|r|Five actual source alterations yield9 intended failures/5 controls across the observed cases; baselines and canonical alone are not blanket proof. Initial prerequisite-only failures and interrupted gate receive no passing credit.|
+
+
+## Whole author review and final qualification
+
+Independent whole-content Astra review below was read in full. Root CONFIRMED
+its three Stocks dependent-test findings from actual source: (1) stubbed shape/binding
+cases did not prove native numeric truth, (2) retired learner history scaffolding
+was no longer consumed; (3) one active startup vector and derived observation
+still called the removed estimate command. All are CLOSED by the same-round
+test-only corrections through678b32d. Runtime/config bytes remain f6c871b. No source defect/class remains.
+GLM's actual monthly429 is an unavailable review family under k, not a passing
+seat or unanimity. Earlier GLM findings are not relabelled to these revisions.
+No new broad round follows absent an actual remaining defect class.
+
+Root independently read all changed native interfaces/configuration/live
+contracts, original data/calibration and reviewer claims. The current native
+PostgreSQL source binding/capture/byte facts/verify and SQLite facts/capture/
+verify functions are AST-identical to their actual PR-base implementations
+(ast.dump without source-location attributes). This is narrowly source identity,
+not deployed proof or a substitute for the real native tests. Methods/results
+and named input revisions follow; authoritative originals are never rewritten.
+
+### Original independent review, unchanged
+
+# Coupled consumer source review against Shared 37b2aef
+
+**Both consumers hand prediction to Shared and retain their native measurement, capture and verification responsibilities. All four configured captured-source calibrations reproduce. One Stocks native-test sensitivity gap was confirmed at the original reviewed head.** The application’s PostgreSQL query is correct; its original measurement test would permit an incorrect positive database size. This is a test finding, not a runtime failure.
+
+The original frozen review objects are Stocks f6c871b5c6bcda7238c110d5cb83726984b767b1 against 41c1749def1b9ebe0c9647f79c9983208a14d145 and Enviroplus 70cfbcee727c480f4ed1a49761099e77d03773e2 against f179669cf9d4cd6ca1c29be19592750dc91a98b8. Both target Shared 37b2aef990cf2392f9776bce7ef0336fa5557477. I read the complete changed Git objects, each current project authority, publication/runbook and existing review artifact, retiring source/tests in the prior revisions, original fits and config, and the already-qualified acting Shared interfaces. Historical sections were evaluated as provenance. This is the existing source-review round.
+
+### Findings and integration
+
+| Property | Judgment and actual evidence |
+|---|---|
+| Stocks native measurement oracle | **Confirmed defect at f6c871b.** The native integration fixture asserted a positive result and the field shape. The three declaration/binding cases stub database_size. In isolated copies of the frozen code and these three unchanged tests, replacing only SELECT pg_database_size(current_database()) with SELECT 1 produced **three passes**. That incorrect positive number would also satisfy the former native threshold. The independent native database-size comparison that belonged to the retired capture field should instead apply to measure's active source_bytes contract. The test-only remedy reinstates an independent psql oracle without restoring the second production query. |
+| PostgreSQL runtime source binding and output | **Confirmed.** Three declarations invoke postgres_capture measure. Each resolves the selected component's configured database/user through the existing native source owner, guards aliased database bindings and asks PostgreSQL for its allocated bytes; the result has source_bytes and derivation only. Both native pg_dump selection and the independent archive/hash/restore oracles remain. The runtime capture no longer asks for a second database size. The old learner and its post-capture CLI/imports have no remaining live call. Existing extra evidence fields in older archives do not prevent verification of their recorded artifact digest. |
+| SQLite runtime source binding and output | **Confirmed.** Both measurement and VACUUM INTO use the collector's required SQLITE_PATH. Measurement multiplies SQLite page count by page size without writing the source. In scratch I used the actual configured CLI prefix, created a committed SQLite input and observed 8,192 source bytes, two output keys, the expected table row, and successful independent verify. The unchanged captured evidence pins integrity, row counts, byte count and SHA-256. The binding test supplies two real database files; inserting a value larger than the second source’s own page size makes a wrong source distinguishable. The closed/checkpointed fixtures make file size an independent byte oracle in that test. |
+| Common service contract | **Confirmed.** Both actual configs pass Shared's order, records role/path, deadlines and complete captured-policy validators. Direct observations and the Enviroplus raw tree call Shared’s measurement module; they have no staging copy. Capture programs emit native output, Shared measures the actual tree and records the original source/payload pair before delivery. No consumer recreates the learner, stores a synthetic pair, or ships a reserve. Evidence/status and future recovery retain their separate native owners. |
+| Scope and dependency cleanup | **Confirmed.** The retired PostgreSQL fields, obsolete estimate CLI/wrappers and project-owned sizing tests do not remain on a live source path. The active DR/runbook and ownership files target the same Shared revision. Prior archived review statements are distinguishable as historical. Synthetic records-role/path scaffolding in the initial native PostgreSQL fixture is unnecessary for its source-only measurement and was pointed out to the author. No runtime fallback, authorization gate, clock service or speculative extra guard is warranted. |
+| Wrong source/output controls | **Confirmed within their named properties.** Original cases passed 3 Stocks / 1 Enviroplus. Substituting a wrong selected PostgreSQL component failed 2 of 3; adding a budget field failed all 3. Wrong SQLite binding and extra output each failed the owning case. Examined the source alterations, restored source, native output and JUnit records. These controls establish binding and output shape; they did not establish the numerical SQL property identified above. |
+
+### Independent fit verification
+
+For each raw row I joined the actual source allocation with its own captured artifact and whole payload, read the original native delivery and capture documents, and sorted within component by capture time. The cold policy uses the largest observed artifact/source ratio. The margin uses the largest absolute consecutive relative change in whole-payload/source ratio. I invoked Shared 37's actual exclusive writer on disposable copies of the historical manifests in the current format; no original was rewritten.
+
+| Source | Pairs | Cold ratio | Whole-payload margin | Serialized capture evidence |
+|---|---:|---|---|---:|
+| Stocks main | 5 | 17385691663/151902018919 | 3248852222399104738/2623232969191436933291 | 345 B |
+| Stocks acquisition | 4 | 7982625/50896231 | 266844285355/134143073451989 | 351 B |
+| Stocks Tier 1 | 4 | 14419409786/45952793959 | 6223093929527573908/687773553078896365693 | 349 B |
+| Enviroplus database | 5 | 26477/27595 | 278164/16989100507 | 379 B |
+
+Each config matched its exact row. All 13 serialized Stocks examples agreed within their component and all five Enviroplus examples yielded 379 B. These are provisional allowances with next compatible native capture/format-change settling. Neither these samples nor a passing canonical establish future capacity or deployed effect.
+
+### Axiom check
+
+| Governing question | Verdict |
+|---|---|
+| 1. Truth is absolute. Do the producers and measurements agree with the chosen native sources? | **CONFORMS in the runtime owners and calibration.** PostgreSQL and SQLite measure native allocation without claiming captured payload size. The original Stocks native proof was insufficient for exact numeric truth and is separately dispositioned. |
+| 2. Cognition is adaptive. Does either consumer maintain an additional learner, roster or fallback? | **CONFORMS.** Existing declared components and env bindings identify sources. Shared alone combines actual latest own pairs and measured provisional cold policy. |
+| 3. Antifragility is doctrine. Does switching ownership break prior-format evidence or different real inputs? | **CONFORMS for the inspected formats.** Domain verify reads artifact-bound facts; it does not depend on the former optional allocation field. SQLite source selection is distinguished by real differing page counts. Both consumers require a compatible Shared owner; neither claims prediction accuracy for a changed data distribution. |
+| 4. KISS. Does a second estimator/query or useless retry remain on the live path? | **CONFORMS at runtime.** Obsolete capture-time allocation query and estimate branches are gone. Remove the stale records-role test scaffolding; it is not a production requirement. |
+| 5. Boundaries are determinate. Are source-only outputs, capture failure and restore verification kept distinct? | **CONFORMS.** Real binding/output controls and the unchanged artifact/payload validation paths establish those limited contracts. The new native numeric oracle is necessary to distinguish wrong positive PostgreSQL results. |
+| 6. Maintenance is directional. Do all active dependent interfaces follow the change? | **CONFORMS for the runtime/docs; the initial Stocks test requires the confirmed correction.** Config, domain CLIs and live operational ownership move together. Past reports retain historical meaning. |
+| Preamble. Can the migration and its tests be justified from the reaching requirements? | **CONFORMS.** Each retained project function owns a native responsibility, and the four policies derive from measured inputs. The added native assertion repairs an observed gap within an existing test; it adds no service or duplicate production query. |
+
+### Execution guidance
+
+| Sections | Assessment |
+|---|---|
+| A / B / C | Bryan's Nov 21 direction through ac097b18 and the assigned integration releases govern the two branches against 37b2aef. This persistent coupled change can silently mismeasure captured input; rollback must respect the Shared version boundary. |
+| D / E | Both test findings were raised within the existing fold. Original data and executed controls establish particular behavior; no deployment evidence or authorization inferred. |
+| F / G / H | No private environment values entered review. No production or isolated canonical DB was touched by this reviewer. Temporary native inputs and immutable evidence were used for short-lived verification. |
+| a / b / c | One estimator and one source of each observation. Names state source measurement, capture or verification. No independent project policy framework. |
+| d / e / f | The existing coupled PRs are the landing increment. Current gates, final operator landing decision, and separate activation/effect review remain distinct. |
+| g / h / i | Own measured calibration, exact rational arithmetic, native database procedures and Shared writer/validators derive the inputs. The discarded extra query belonged to the retired learner; correcting the independent test is a separate concern. |
+| j / k / l | Authoritative evidence remains append-only; models and replay are derived. This assigned independent whole-source review is complete on the specified content. The GLM monthly 429 is an unavailable seat; future prediction, successful landing and activation remain unconfirmed. |
+| m / n / o | The source-only CLI contract holds across both domains, preserving native domain-specific failure paths. The original native measurement test reproduces a real blind spot; no unrelated guard is necessary. |
+| p / q / r | Retire old project estimation and tests but keep or retarget independent measurement/restore oracles. Shape and wrong-binding violations are separated from native numeric evidence and from general canonical success. |
+
+### Corrected Stocks source and terminal evidence
+
+**The two named Stocks findings are closed at c6c6909cc2e9574fdc409de32ac4e94e11169b93.** I compared the complete correction to f6c871b. Only the existing native test and existing review artifact differ. Production source, configuration, calibration and runtime capture/restore paths are identical. The fixture drops retired observation history state and now asserts equality between measure()['source_bytes'] and an independent psql query on the verified disposable database.
+
+I inspected the native mutation XML and JSON. With only the production query changed to SELECT 1, the corrected native cases failed at the intended numerical assertion: **1 versus 7,748,967 B**, and **1 versus 7,757,159 B**. Both failures occurred at the new oracle. The source was restored byte-for-byte against c6c6909 and the test container returned to its original exited state. The earlier attempt lacking the native binary failed at its prerequisite and supplies **no** numeric evidence. The native counterexample closes the initial test-power gap. Axiom 6 and the scope/fixture qualification in Axiom 4 now **CONFORM** on corrected source.
+
+Enviroplus **70cfbce passed its full canonical** on Shared 37: Ruff and format checks exited zero; 278 JUnit cases, zero skips, failures and errors. The original Stocks f6c871b canonical was deliberately interrupted after 63 passes and is not credited as a qualified run. **Final Stocks canonical success remains unconfirmed at this source-review cutoff.** Its terminal receipt can be assessed without another source review.
+
+**Source disposition: no remaining defect class in the authorized consumer migration.** The pending final Stocks canonical, receiving decision, coordinated landing and deployment remain separate from this verdict.
+
+### Correction to earlier removal claim and dependent-fixture closure — Stocks 678b32d
+
+**Confirmed finding, closed at 678b32de8fe3d5475cf7289297a4976e3c70b8cf.** My earlier statement that complete consumer removal was verified at c6c6909 missed a live test invocation. The full c6c6909 JUnit contained 3,865 cases: 3,864 passed and the sole failure invoked the retired PostgreSQL `estimate` subcommand. The probe reported parser exit 2 and no environment acquisition. That gate failed; it did not establish full removal.
+
+I compared the three corrected files against c6c6909. The executable startup census vector now calls `measure` with the same config and component. The derived fixture still declares `store: derived`. Exactly one of 181 observations differs, and only its argv and reference provenance changed. The one-use method invokes the existing census.census on the selected executable. Its saved observed row exactly matches the new Git row, and its five recorded input blob IDs match the actual config, producer, vector, census and probe at 678b32d. The existing review artifact contains the actual method and the original before/observed receipt.
+
+The generated row retains environment acquisition and the `os.mkdir` work boundary. The same startup test still exercises the normal, acquisition-disabled and missing-file cases. The corrected JUnit records one passing `measure` case with no skips, failures or errors. This establishes the dependent startup boundary only. Neither the producer nor the assertions changed, no alias was restored, and no authoritative data was rewritten.
+
+The correction satisfies the existing axiom check and Preamble: the original failed gate identified a reachable live dependency; the original owning generator produced its replacement; present dataflow, test oracles, provenance, and authority remain aligned. This specifically closes directions p/q/r on the missed dependent. **Remaining source or fixture defect class: none.** At this cutoff the full new Stocks canonical was running, its terminal result unconfirmed. The unchanged Enviroplus 278-test result stands. No additional review round, landing or deployment is inferred.
+
+
+### Method/provenance binding
+
+The common one-use canonical and source-violation methods are committed whole in
+the coupled Stocks351 review artifact at 343a3eff6db9203ab2b36c27e36e08a85a6dbedf.
+They name the tested consumer/Shared revisions, exact commands and source
+alterations. This report contains the whole original reviewer product, not a
+summary substituting for it. The same full method was executed with project
+`enviroplus`; it preserves the service-selected Pimoroni interpreter and child
+import binding. No extra review or validation is inferred from the Stocks gate.
+
+```json
+{
+  "shared_revision": "37b2aef990cf2392f9776bce7ef0336fa5557477",
+  "started_utc": "2026-11-21T23:19:21.073512+00:00",
+  "cases": [
+    {
+      "project": "enviroplus",
+      "revision": "70cfbcee727c480f4ed1a49761099e77d03773e2",
+      "label": "baseline-enviroplus",
+      "source": "sqlite_backup.py",
+      "before": null,
+      "after": null,
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-c",
+        "import shared,pathlib,pytest,sys;assert str(pathlib.Path(shared.__file__).parent)==sys.argv[1];raise SystemExit(pytest.main(sys.argv[2:]))",
+        "/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/backup-shared-37b2aef/shared",
+        "tests/test_sqlite_backup.py::test_capture_follows_only_the_collectors_sqlite_binding",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/common-consumer-proof-baseline-enviroplus.xml"
+      ],
+      "exit_code": 0,
+      "tests": 1,
+      "failures": [],
+      "errors": [],
+      "skips": []
+    },
+    {
+      "project": "enviroplus",
+      "revision": "70cfbcee727c480f4ed1a49761099e77d03773e2",
+      "label": "sqlite-source-binding",
+      "source": "sqlite_backup.py",
+      "before": "result = measure(source)",
+      "after": "result = measure(Path(json.loads(args.config.read_text())[\"hosts\"][__import__(\"socket\").gethostname()][\"components\"][args.component][\"source_path\"]))",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-c",
+        "import shared,pathlib,pytest,sys;assert str(pathlib.Path(shared.__file__).parent)==sys.argv[1];raise SystemExit(pytest.main(sys.argv[2:]))",
+        "/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/backup-shared-37b2aef/shared",
+        "tests/test_sqlite_backup.py::test_capture_follows_only_the_collectors_sqlite_binding",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/common-consumer-proof-sqlite-source-binding.xml"
+      ],
+      "exit_code": 1,
+      "tests": 1,
+      "failures": [
+        "test_capture_follows_only_the_collectors_sqlite_binding"
+      ],
+      "errors": [],
+      "skips": []
+    },
+    {
+      "project": "enviroplus",
+      "revision": "70cfbcee727c480f4ed1a49761099e77d03773e2",
+      "label": "sqlite-source-only",
+      "source": "sqlite_backup.py",
+      "before": "\"source_bytes\": size,",
+      "after": "\"source_bytes\": size, \"staging_bytes\": size,",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-c",
+        "import shared,pathlib,pytest,sys;assert str(pathlib.Path(shared.__file__).parent)==sys.argv[1];raise SystemExit(pytest.main(sys.argv[2:]))",
+        "/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/backup-shared-37b2aef/shared",
+        "tests/test_sqlite_backup.py::test_capture_follows_only_the_collectors_sqlite_binding",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/common-consumer-proof-sqlite-source-only.xml"
+      ],
+      "exit_code": 1,
+      "tests": 1,
+      "failures": [
+        "test_capture_follows_only_the_collectors_sqlite_binding"
+      ],
+      "errors": [],
+      "skips": []
+    }
+  ],
+  "completed_utc": "2026-11-21T23:19:28.630830+00:00"
+}
+```
+
+### Final canonical receipt — Enviro70cfbce + Shared37
+
+Actual full canonical:278passed,0failures/errors/skips,15.15s pytest; both Ruff
+commands0. Exact source70cfbce, supplied qualified native executable and asserted/
+propagated Shared37 import remain in the original receipt. No top-level D-Bus
+scrub or production operation. Subsequent receipt-only documentation changes
+neither tested runtime/config nor tests; this gate is not repeated or relabelled.
+Full original stdout/XML are supporting inputs in backup-validation. Native
+SQLite capture, actual raw-tree delivery/recovery, source binding and artifact-
+bound verification were exercised; actual installed/deployed effects are still
+separate. Original source review cutoff remains unchanged; these terminal facts
+are root's bounded evidence closure, with receiving still pending.
+
+#### Original receipt
+
+```json
+{
+  "project": "enviroplus",
+  "source_revision": "70cfbcee727c480f4ed1a49761099e77d03773e2",
+  "shared_revision": "37b2aef990cf2392f9776bce7ef0336fa5557477",
+  "shared_source": "/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/backup-shared-37b2aef/shared",
+  "native_binary": "/home/pistrommy/projects/.tmp/backup-config-fleet-20261118/tools/duplicacy_linux_arm64_3.3.0",
+  "native_sha256": "0e28cc3d943b2357136364d73a66ac82309ed9ecc36a3f9fea64b23ca1f8427c",
+  "started_utc": "2026-11-21T23:20:17.585581+00:00",
+  "steps": [
+    {
+      "stage": "ruff-check",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "."
+      ],
+      "exit_code": 0,
+      "seconds": 0.04796266701305285
+    },
+    {
+      "stage": "ruff-format",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "exit_code": 0,
+      "seconds": 0.043568214983679354
+    },
+    {
+      "stage": "pytest",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-c",
+        "import shared,pathlib,pytest,sys;assert str(pathlib.Path(shared.__file__).parent)==sys.argv[1];print(\"QUALIFIED_SHARED_SOURCE=\"+str(pathlib.Path(shared.__file__).parent),flush=True);raise SystemExit(pytest.main(sys.argv[2:]))",
+        "/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/backup-shared-37b2aef/shared",
+        "-vv",
+        "--basetemp=/home/pistrommy/projects/.tmp/bc-6k3mneqh/pytest",
+        "--junitxml=/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/common-consumer-enviroplus-pytest.xml"
+      ],
+      "exit_code": 0,
+      "seconds": 15.809487177000847
+    }
+  ],
+  "status": "passed",
+  "production_operations": false,
+  "parent_dbus_present": true,
+  "temporary_root": "/home/pistrommy/projects/.tmp/bc-6k3mneqh",
+  "completed_utc": "2026-11-21T23:20:33.487740+00:00"
+}
+```
+
+#### Supporting input SHA256s
+
+```json
+{
+  "common-consumer-enviroplus-canonical.json": "600f164dce37d90869302748fc5b5b5a8b574211b19c8fc982998afa12ee6179",
+  "common-consumer-enviroplus-pytest.xml": "07e6f9a9dcd98279a004959c3ed2fb9df400ffbc47391fdcfff6e0ca7880e5a3",
+  "common-consumer-enviroplus-pytest.log": "8b6e9d63bd7636636f838a2b9f445c101001f57d3eb947eb8edd19c91aada3dc",
+  "common-consumer-enviroplus-ruff-check.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+  "common-consumer-enviroplus-ruff-format.log": "b986f72e5fee819de817a2ad854b3a4e9213a918167065625b92daa2002369f0"
+}
+```
+
 
 ---
 

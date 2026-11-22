@@ -1,0 +1,55 @@
+{
+  "project": "enviroplus",
+  "source_revision": "70cfbcee727c480f4ed1a49761099e77d03773e2",
+  "shared_revision": "37b2aef990cf2392f9776bce7ef0336fa5557477",
+  "shared_source": "/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/backup-shared-37b2aef/shared",
+  "native_binary": "/home/pistrommy/projects/.tmp/backup-config-fleet-20261118/tools/duplicacy_linux_arm64_3.3.0",
+  "native_sha256": "0e28cc3d943b2357136364d73a66ac82309ed9ecc36a3f9fea64b23ca1f8427c",
+  "started_utc": "2026-11-21T23:20:17.585581+00:00",
+  "steps": [
+    {
+      "stage": "ruff-check",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "."
+      ],
+      "exit_code": 0,
+      "seconds": 0.04796266701305285
+    },
+    {
+      "stage": "ruff-format",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "exit_code": 0,
+      "seconds": 0.043568214983679354
+    },
+    {
+      "stage": "pytest",
+      "argv": [
+        "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+        "-c",
+        "import shared,pathlib,pytest,sys;assert str(pathlib.Path(shared.__file__).parent)==sys.argv[1];print(\"QUALIFIED_SHARED_SOURCE=\"+str(pathlib.Path(shared.__file__).parent),flush=True);raise SystemExit(pytest.main(sys.argv[2:]))",
+        "/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/backup-shared-37b2aef/shared",
+        "-vv",
+        "--basetemp=/home/pistrommy/projects/.tmp/bc-6k3mneqh/pytest",
+        "--junitxml=/home/pistrommy/projects/.tmp/stocks-action-window-rca-20261120/common-consumer-enviroplus-pytest.xml"
+      ],
+      "exit_code": 0,
+      "seconds": 15.809487177000847
+    }
+  ],
+  "status": "passed",
+  "production_operations": false,
+  "parent_dbus_present": true,
+  "temporary_root": "/home/pistrommy/projects/.tmp/bc-6k3mneqh",
+  "completed_utc": "2026-11-21T23:20:33.487740+00:00"
+}
