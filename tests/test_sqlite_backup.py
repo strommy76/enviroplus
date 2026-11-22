@@ -277,7 +277,22 @@ def test_capture_follows_only_the_collectors_sqlite_binding(tmp_path, monkeypatc
             page_size = connection.execute("PRAGMA page_size").fetchone()[0]
             connection.execute("INSERT INTO readings VALUES (?)", ("x" * (page_size + 1),))
             connection.commit()
-        connection.close()
+        # Retain allocated free pages and committed WAL: neither main-file length
+        # nor used pages is the allocation denominator of the production fit.
+        page_size = connection.execute("PRAGMA page_size").fetchone()[0]
+        connection.execute("PRAGMA wal_autocheckpoint=0")
+        connection.execute("CREATE TABLE allocation_probe (value BLOB)")
+        connection.execute("INSERT INTO allocation_probe VALUES (zeroblob(?))", (page_size + 1,))
+        connection.commit()
+        connection.execute("DROP TABLE allocation_probe")
+        connection.commit()
+        with sqlite3.connect(f"file:{source}?mode=ro", uri=True) as oracle:
+            allocated = (
+                oracle.execute("PRAGMA page_count").fetchone()[0]
+                * oracle.execute("PRAGMA page_size").fetchone()[0]
+            )
+            assert oracle.execute("PRAGMA freelist_count").fetchone()[0] > 0
+        assert allocated != source.stat().st_size
         monkeypatch.setenv("SQLITE_PATH", str(source))
         measurement = subprocess.run(
             [
@@ -295,7 +310,7 @@ def test_capture_follows_only_the_collectors_sqlite_binding(tmp_path, monkeypatc
             capture_output=True,
         )
         measured = json.loads(measurement.stdout)
-        assert measured["source_bytes"] == source.stat().st_size
+        assert measured["source_bytes"] == allocated
         assert set(measured) == {"source_bytes", "derivation"}
         output = tmp_path / name
         output.mkdir()
@@ -318,3 +333,4 @@ def test_capture_follows_only_the_collectors_sqlite_binding(tmp_path, monkeypatc
         )
         assert json.loads(result.stdout)["facts"]["table_rows"]["readings"] == count
         assert verify(output)["source"] == str(source)
+        connection.close()

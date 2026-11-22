@@ -954,3 +954,30 @@ backup-9433-canonical.py, backup-9433-owner.json and
 backup-9433-enviroplus-{canonical.json,pytest.log,pytest.xml,ruff-check.log,ruff-format.log}.
 Coordinated landing remains Bryan's decision after the complete bundle's review;
 this passing source qualification is not deployed-effect acceptance.
+
+
+## Receiving closure: current ownership and live SQLite allocation oracle
+
+Pi Claude broker73114890-4c54-4e61-b430-6c621c9dcf11 (November21 19:31 EST),
+with complete Opus/OpenAI receiving reports read, identified C1 and C2. Both are
+CONFIRMED from current content: the architecture document still assigned project
+estimation; the checkpointed SQLite test admitted st_size and freelist-subtraction
+mutants. Runtime measurement remains correct. Original old estimator at Enviro PR
+base uses the same PRAGMA page_count*page_size denominator as current measure,
+so no cold-fit reinterpretation or runtime correction is admitted.
+
+Construction axiom-check, existing plan: (1) preserve native measurement truth and
+remove current ownership contradiction; (2) no curated facts/rosters; (3) exercise
+the actual WAL/freelist input; (4) edit one existing test and one sentence only;
+(5) independent native oracle plus nonzero test failures; (6) update the dependent
+document/test without growing runtime. All six CONFORM. Preamble: no new mechanism
+beyond the named existing failure; the test closes a demonstrated silent coverage
+gap. Existing C/H declaration and coordinated landing boundary still govern.
+
+C1 correction changes only the live architecture ownership sentence. C2 extends
+the existing binding test: allocate an overflow beyond one native page and drop
+its table without vacuum to retain freelist pages; retain the writer connection
+and disable auto-checkpoint to retain committed WAL. A separate connection reads
+the page-product oracle and confirms nonzero freelist; the test also establishes
+that main-file length differs. The second bound source keeps its larger live row.
+No production behavior or source store changes. Validation/review results follow.
