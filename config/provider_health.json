@@ -2,7 +2,7 @@
   "_meta": {
     "purpose": "Provider freshness obligations over existing derived observations; no new store.",
     "cadence_derivation": "60s is the smallest current collector poll: AW60, NWS600, AirNow1800. Timer is derived from this policy.",
-    "ambient_derivation": "Measured maximum next valid outdoor arrival minus previous retained outdoor observation timestamp = 144.304253s over188 contiguous valid intervals after operator-reported06:00EST breaker restoration through16:21:06.866765UTC. Reset on every failed/non-outdoor return (126excluded in window); no age-based filter. Add only the acquisition owner REQUEST_TIMEOUT_S=15s for request allowance beyond the empirical interval: 159.304253s. This replaces the arrival-lag-plus-assumed-poll fit; method/full metadata in docs/plans/provider-health-intervals.*. Ambient remains unactivated pending receiving/native qualification.",
+    "ambient_derivation": "Measured 2026-11-25 over the retained outdoor table and 14 days of this check's own output. Inter-arrival gaps (last 30 days): 60s 31240, 120s 1521, 180s 102, 240s 19, 300s 1, then sparse and 59 outages >=20min; the distribution breaks after 240s, so up to three consecutive missed one-minute uploads is routine provider jitter. Observed lag from observation timestamp to this check, healthy periods: checked ages top out at 150s with 60s gaps, so 90s. Bound = 240 + 90 = 330s. Replay of 14 days of checks: 55 stale episodes at 159.3s (6 shorter than 5min), 49 at 330s (none shorter than 5min); the remaining episodes are real outages (22 of 5-15min, 18 of 15-60min, 9 longer). Supersedes the 2026-11-19 single-day fit (144.304253s + REQUEST_TIMEOUT_S 15). Operator direction 2026-11-25 12:55 EST.",
     "nws_derivation": "Existing NWS_MAX_OBSERVATION_AGE_S7200 admission bound + NWS_POLL_S600 + owner REQUEST_TIMEOUT_S15 =7815s.",
     "airnow_derivation": "AirNow hourly timestamp granularity3600s + about3600s publication lag + AIRNOW_POLL_S1800 + contract timeout15 =9015s. https://airnow-blue.app.cloud.gov/about-the-data/ and https://docs.airnowapi.org/faq, checked2026-11-19.",
     "provisional": "All bounds are provisional: settle the distribution of successful observation ages and false alerts under loaded, healthy collection. Ambient fit is finite current-day new arrivals; AirNow publication lag is approximate, not an SLA. No outage is relabelled healthy to fit these bounds.",
@@ -15,7 +15,7 @@
       "name": "ambient_outdoor",
       "query": "SELECT MAX(ts) AS ts FROM outdoor WHERE {outdoor_presence}",
       "timezone": "UTC",
-      "max_age_seconds": 159.304253
+      "max_age_seconds": 330
     },
     {
       "name": "nws",
