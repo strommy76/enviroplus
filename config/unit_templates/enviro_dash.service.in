@@ -3,7 +3,7 @@ Description=Enviro+ Dashboard
 After=network-online.target
 Wants=network-online.target
 # Serial sensors are optional lanes; no UART device binds dashboard lifetime.
-OnFailure=stocks_ops_alert@%n.service
+OnFailure=ops_alert@%n.service
 # No start limit beyond the systemd default (5 starts / 10 s), which the 30 s
 # spacing never reaches: a Tier 1 write failure (e.g. a full disk) ends the
 # process, and recovery must resume by itself once the fault clears rather
