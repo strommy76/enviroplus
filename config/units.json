@@ -1,0 +1,8 @@
+{
+  "owner": "enviroplus",
+  "render": "service_units:rendered_units",
+  "enable": {"source": "install_section"},
+  "operator_control": true,
+  "interpreter": "/home/pistrommy/.virtualenvs/pimoroni/bin/python",
+  "pythonpath": ["/home/pistrommy/projects", "/home/pistrommy/projects/enviroplus"]
+}

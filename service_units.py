@@ -1,7 +1,9 @@
-"""Derive Enviro native units through the shared renderer and backup owner."""
+"""Derive Enviro native units through the shared renderer and backup owner.
+
+shared.unit_install renders these in memory and installs root-owned copies (config/units.json).
+"""
 
 import json
-from pathlib import Path
 
 from shared.backup_units import rendered_units as backup_units
 from shared.systemd_units import render_unit
@@ -19,9 +21,3 @@ def rendered_units(root):
     )
     units.update(backup_units(root / "config/backup.json"))
     return units
-
-
-if __name__ == "__main__":
-    root = Path(__file__).resolve().parent
-    for name, content in rendered_units(root).items():
-        (root / name).write_text(content)

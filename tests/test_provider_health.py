@@ -134,9 +134,7 @@ def test_clean_entrypoints_use_the_declared_shared_binding(tmp_path):
     subprocess.run(
         [sys.executable, "-c", "import provider_health"], cwd=app, env=environment, check=True
     )
-    environment["PYTHONPATH"] = ".."
-    subprocess.run([sys.executable, "-m", "service_units"], cwd=app, env=environment, check=True)
-    assert (app / "enviro_provider_health.timer").is_file()
+    assert "enviro_provider_health.timer" in rendered_units(app)
 
 
 def test_bad_dashboard_config_keeps_provider_results(tmp_path, monkeypatch, capsys):
