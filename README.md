@@ -352,6 +352,8 @@ the native selected revision's file boundaries, not a claim of a cross-file tran
 Existing backup objects remain outside this effort and are not deleted or qualified here.
 
 Backup service/timer units are derived from `config/backup.json` when they are staged. After
-editing it, stage and install as above. The `.in` files own unit policy; backup configuration
-alone owns cadence, jitter and the enclosing deadline. `python3 -m shared.unit_install check
---owner-config config/units.json` reports drift between the repo and the installed copies.
+editing it, stage and install as above, and run `PYTHONPATH=.. python -m service_units` to
+refresh the repo-root renders (git-ignored), which the stocks completion audit reads. The `.in`
+files own unit policy; backup configuration alone owns cadence, jitter and the enclosing deadline.
+`PYTHONPATH=.. python3 -m shared.unit_install check --owner-config config/units.json` reports
+drift between the repo and the installed copies.

@@ -77,7 +77,7 @@ derived SQLite store (`readings` and the provider tables), and their backup lane
   that re-derives a contract's derived table from canonical retention through
   the same projection and write path live uses.
 - Unit policy templates describe the intended service content; service_units
-  derives the units `shared.unit_install` installs, through the shared renderer and backup owner, using the
+  derives the units `shared.unit_install` installs (and, run as a module, the repo-root renders the stocks completion audit reads), through the shared renderer and backup owner, using the
   rendering interpreter and config-root location. Which
   hardware-specific dashboard unit is active is host residue and must be proven
   from the running service manager, not inferred from this repository.
