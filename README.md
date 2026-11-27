@@ -144,10 +144,12 @@ All tuning values (hardware addresses, thresholds, intervals, display) live in t
 
 ### 5. Run as a systemd service
 
+The host keeps root-owned copies of every unit (pi-config#32). `config/units.json` declares
+them; stage, review the diff and root-relevant directives, then paste the printed script (it
+asks for the operator's password):
+
 ```bash
-PYTHONPATH=.. python -m service_units
-sudo systemctl link "$PWD/enviro_dash.service"
-sudo systemctl enable --now enviro_dash
+PYTHONPATH=.. python3 -m shared.unit_install stage --owner-config config/units.json
 ```
 
 Check status:
@@ -349,13 +351,9 @@ restored `capture.json`; it never queries later live data as an oracle. Raw reco
 the native selected revision's file boundaries, not a claim of a cross-file transaction.
 Existing backup objects remain outside this effort and are not deleted or qualified here.
 
-Backup service/timer files are derived outputs. After editing `config/backup.json`,
-render them before linking or reconciling systemd units:
-
-```bash
-python -m service_units
-```
-
-The `.in` files own unit policy; backup configuration alone owns cadence, jitter
-and the enclosing deadline. Generated unit files are ignored by Git. Apply the
-existing systemd link/reconcile and daemon-reload steps after rendering.
+Backup service/timer units are derived from `config/backup.json` when they are staged. After
+editing it, stage and install as above, and run `PYTHONPATH=.. /home/pistrommy/.virtualenvs/pimoroni/bin/python -m service_units` to
+refresh the repo-root renders (git-ignored), which the stocks completion audit reads. The `.in`
+files own unit policy; backup configuration alone owns cadence, jitter and the enclosing deadline.
+`PYTHONPATH=.. python3 -m shared.unit_install check --owner-config config/units.json` reports
+drift between the repo and the installed copies.
