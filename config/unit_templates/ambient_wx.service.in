@@ -5,7 +5,7 @@ Wants=network-online.target
 # A Tier 1 (raw retention) write failure ends the collector rather than letting
 # it derive rows the canonical tier does not hold. Every failed exit alerts
 # (systemd 257 triggers OnFailure= on each one, restart or not).
-OnFailure=stocks_ops_alert@%n.service
+OnFailure=ops_alert@%n.service
 
 [Service]
 Type=simple

@@ -1,6 +1,6 @@
 [Unit]
 Description=Provider observation freshness
-OnFailure=stocks_ops_alert@%n.service
+OnFailure=ops_alert@%n.service
 
 [Service]
 Type=oneshot
